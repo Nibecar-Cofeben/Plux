@@ -164,13 +164,14 @@
         const lines = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('-'));
         
         for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes('Gem') && lines[i+1]) GEMINI_API_KEY = lines[i+1];
-            if (lines[i].includes('Grq') && lines[i+1]) GROQ_API_KEY = lines[i+1];
-            if (lines[i].includes('Mistral') && lines[i+1]) MISTRAL_API_KEY = lines[i+1];
-            if (lines[i].includes('Open Router') && lines[i+1]) OPENROUTER_API_KEY = lines[i+1];
-            if (lines[i].includes('MuleRouter') && lines[i+1]) MULE_ROUTER_API_KEY = lines[i+1];
+            const line = lines[i];
+            if (line.startsWith('AIzaSy')) GEMINI_API_KEY = line;
+            else if (line.startsWith('gsk_')) GROQ_API_KEY = line;
+            else if (line.startsWith('sk-or-')) OPENROUTER_API_KEY = line;
+            else if (line.startsWith('sk-mr-')) MULE_ROUTER_API_KEY = line;
+            else if (line.includes('Mistral') && lines[i+1]) MISTRAL_API_KEY = lines[i+1];
         }
-        console.log(' Keys loaded dynamically from .env.');
+        console.log('🔑 Keys loaded dynamically from .env.');
       } catch (e) {
         console.error('Failed to load API keys:', e);
       }
@@ -215,9 +216,11 @@
     async function initFirebaseAuth() {
       try {
         await firebase.auth().signInAnonymously();
-        console.log(" Autenticación anónima conectada.");
+        console.log("🔥 Autenticación anónima conectada.");
+        db = firebase.firestore();
+        console.log("🔥 Firestore db inicializada.");
       } catch (error) {
-        console.error(" Error en autenticación anónima:", error);
+        console.error("🔥 Error en autenticación anónima:", error);
       }
     }
 
@@ -688,6 +691,7 @@
     // ================== INICIALIZACI ==================
     document.addEventListener('DOMContentLoaded', async function() {
       await loadKeys();
+      await initFirebaseAuth();
       loadFromStorage();
       const savedTheme = localStorage.getItem('PluxTheme');
       if (savedTheme && ['theme-claro','theme-oscuro','theme-tokyo','theme-grid','theme-terminal','theme-starship','theme-ares'].includes(savedTheme)) setTheme(savedTheme);
@@ -1047,9 +1051,10 @@
     // 4. Mistral Small               Last resort
     // ============================================================
     const OPENROUTER_FREE_MODELS = [
-      'mistralai/mistral-7b-instruct:free',
-      'meta-llama/llama-3.1-8b-instruct:free',
-      'google/gemma-2-9b-it:free'
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'meta-llama/llama-3.2-3b-instruct:free',
+      'qwen/qwen3-coder:free',
+      'deepseek/deepseek-v4-flash:free'
     ];
     const AI_SYSTEM_PROMPT = 'You are a travel planning AI. CRITICAL: You MUST respond with ONLY valid JSON. NO greetings, NO explanations, NO markdown code blocks, NO conversational text. Just the raw JSON object.';
 
@@ -1100,7 +1105,7 @@
       // 2. Try Gemini 1.5 Flash
       try {
         console.log(' AI_CORE: Intentando con Gemini 1.5 Flash...');
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         const resp = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1138,7 +1143,7 @@
             'Authorization': `Bearer ${GROQ_API_KEY}`
           },
           body: JSON.stringify({
-            model: "llama3-70b-8192",
+            model: "llama-3.3-70b-versatile",
             messages: [
               { role: "system", content: AI_SYSTEM_PROMPT },
               { role: "user", content: prompt }
@@ -1215,7 +1220,7 @@
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                 'HTTP-Referer': window.location.origin,
-                'X-Title': 'PluxTravel Planner'
+                'X-Title': 'PluxTravel'
               },
               body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 })
             });
@@ -1226,12 +1231,33 @@
           } catch(e) { /* try next */ }
         }
       }
+      if (GEMINI_API_KEY) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+          const geminiContents = messages.map(msg => ({
+            role: msg.role === 'assistant' || msg.role === 'system' ? 'model' : 'user',
+            parts: [{ text: msg.content }]
+          }));
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: geminiContents })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) return text;
+          }
+        } catch (e) {
+          console.warn('Gemini chat failed', e);
+        }
+      }
       // Fallback to Groq for chat
       try {
         const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
-          body: JSON.stringify({ model: "llama3-70b-8192", messages, temperature: 0.7, max_tokens: 1024 })
+          body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages, temperature: 0.7, max_tokens: 1024 })
         });
         const data = await resp.json();
         return data.choices?.[0]?.message?.content || 'Lo siento, no pude procesar tu consulta.';
@@ -1239,10 +1265,6 @@
         return 'Lo siento, no pude procesar tu consulta en este momento.';
       }
     }
-
-
-
-
 
     // ================== GENERADOR AUTOMÁTICO DE ITINERARIO ==================
     async function generarItinerarioAuto(destId) {
@@ -2736,6 +2758,11 @@
         `;
     }
 
+    function cerrarColaboradores() {
+        const modal = document.getElementById('modal-colaboradores');
+        if (modal) modal.style.display = 'none';
+    }
+
     function añadirDesdeFeed(titulo) {
       if (!destinos || destinos.length === 0) {
         showToast('Por favor, añade un destino primero usando el botón "+ Añadir Destino"', 'error');
@@ -2783,7 +2810,7 @@
   window.agregarDestino = agregarDestino;
   window.mostrarResumen = mostrarResumen;
   window.cerrarResumen = cerrarResumen;
-  window.abrirColab = abrirColab;
+  window.abrirColab = abrirColaboradores;
   window.unirseAViaje = unirseAViaje;
   window.abrirPreferencias = abrirPreferencias;
   window.guardarPreferencias = guardarPreferencias;

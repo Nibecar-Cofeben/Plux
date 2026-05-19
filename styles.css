@@ -569,18 +569,10 @@
     }
     /* Transporte con tramos (icono avión) */
     .transport-icon {
-      position: absolute; bottom:15px; right:20px; font-size:1.35rem; /* Reduced from 1.5rem to 1.35rem */
-      opacity:0.3; cursor:pointer;
+      position: absolute; bottom:15px; right:20px; font-size:1.5rem; opacity:0.3; cursor:pointer;
       transition:opacity 0.3s, transform 0.3s; color:var(--gris);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
     }
-    .transport-icon:not([disabled]):not(.disabled):hover {
-      opacity:1;
-      transform:scale(1.2) skew(-10deg); /* Scale and skew instead of just scale+rotate */
-      color:var(--azul); /* Blue color matching theme */
-    }
+    .transport-icon:hover { opacity:1; transform:scale(1.3) rotate(5deg); color:var(--verde); }
     .transport-fields {
       margin:15px 0 10px; padding:15px; background:rgba(0,0,0,0.3); border-radius:12px; display:none; flex-direction:column; gap:15px;
       animation:slideDown 0.3s ease;
@@ -818,7 +810,7 @@
     .vista-linea-tiempo { position: relative; padding-left: 40px; }
     .vista-linea-tiempo::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 4px; background: var(--border); border-radius: 2px; }
     .ciudad-block.timeline { position: relative; margin-bottom: 40px; border-left: none; }
-    .ciudad-block.timeline::before { content: ' a '; position: absolute; left: -38px; top: 15px; background: var(--card); padding: 5px; border-radius: 50%; border: 2px solid var(--verde); font-size: 1.2rem; }
+    .ciudad-block.timeline::before { content: ' ✈ '; position: absolute; left: -38px; top: 15px; background: var(--card); padding: 5px; border-radius: 50%; border: 2px solid var(--verde); font-size: 1.2rem; }
     .dia-resumen.timeline { position: relative; margin-left: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px; }
     .dia-resumen.timeline::before { content: ''; position: absolute; left: -31px; top: 10px; width: 12px; height: 12px; border-radius: 50%; background: var(--rosa); box-shadow: 0 0 10px var(--rosa); }
     .evento-resumen.timeline { display: flex; gap: 15px; align-items: center; margin-bottom: 10px; }
@@ -1332,23 +1324,7 @@
   font-size: 1.15rem;
 }
 
-#app .transport-icon {
-  right: 16px;
-  bottom: 12px;
-  width: auto;
-  max-width: 130px;
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgba(255,255,255,0.06);
-  font-size: 0.75rem;
-  line-height: 1;
-  opacity: 0.85;
-}
 
-#app .transport-icon:hover {
-  transform: none;
-}
 
 #app .tramo-fields {
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -1455,11 +1431,7 @@
     font-size: 1rem;
   }
 
-  #app .transport-icon {
-    position: static;
-    display: inline-flex;
-    margin: 8px 0 0;
-  }
+
 
   #app .evento-actions,
   #app .dia-actions {

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FLUX · 404</title>
+  <style>
+    /* ===== TEMAS (copiados de tu estilo) ===== */
+    .theme-claro {
+      --fondo: #ffffff;
+      --card: #f3f4f6;
+      --texto: #1f2937;
+      --border: #d1d5db;
+      --placeholder: #9ca3af;
+      --gris: #6b7280;
+    }
+    .theme-oscuro {
+      --fondo: #0f172a;
+      --card: #1e293b;
+      --texto: #ffffff;
+      --border: #334155;
+      --placeholder: #64748b;
+      --gris: #94a3b8;
+    }
+    .theme-tokyo {
+      --fondo: #1a1b26;
+      --card: #24283b;
+      --texto: #c0caf5;
+      --border: #414868;
+      --placeholder: #565f89;
+      --gris: #9aa5ce;
+    }
+
+    /* ===== ACENTOS POR IDIOMA (opcional, para mantener coherencia) ===== */
+    .lang-es {
+      --verde: #34d399;
+      --azul:  #3b82f6;
+      --rosa:  #ec4899;
+    }
+    .lang-en {
+      --verde: #60a5fa;
+      --azul:  #8b5cf6;
+      --rosa:  #f472b6;
+    }
+    .lang-fr {
+      --verde: #2563eb;
+      --azul:  #dc2626;
+      --rosa:  #fbbf24;
+    }
+    .lang-de {
+      --verde: #000000;
+      --azul:  #dd0000;
+      --rosa:  #ffce00;
+    }
+    .lang-it {
+      --verde: #008c45;
+      --azul:  #ffffff;
+      --rosa:  #cd212a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: background 0.5s ease, color 0.3s ease;
+      overflow: hidden;
+    }
+    /* selectores flotantes */
+    .top-selectors {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 200;
+      animation: slideRight 0.5s ease;
+    }
+    .lang-button, .theme-button {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--verde), var(--azul));
+      border: 2px solid var(--texto);
+      color: var(--texto);
+      font-weight: bold;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lang-button:hover, .theme-button:hover {
+      transform: scale(1.15) rotate(5deg);
+      box-shadow: 0 0 25px var(--rosa);
+    }
+    .lang-dropdown, .theme-dropdown {
+      position: absolute;
+      top: 60px;
+      right: 0;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 8px 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none;
+      flex-direction: column;
+      min-width: 100px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .lang-dropdown.show, .theme-dropdown.show {
+      display: flex;
+    }
+    .lang-option, .theme-option {
+      padding: 12px 20px;
+      cursor: pointer;
+      color: var(--texto);
+      font-weight: 500;
+      transition: background 0.2s, transform 0.2s;
+      text-align: center;
+    }
+    .lang-option:hover, .theme-option:hover {
+      background: rgba(255,255,255,0.15);
+      transform: translateX(5px);
+    }
+    .lang-option.active, .theme-option.active {
+      background: linear-gradient(90deg, var(--verde), var(--azul));
+      font-weight: bold;
+      color: white;
+    }
+
+    /* logo burbuja grande */
+    .logo-bubble {
+      width: 280px;
+      height: 120px;
+      background: linear-gradient(90deg, var(--verde), var(--azul));
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.5rem;
+      font-weight: 900;
+      letter-spacing: -2px;
+      color: white;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 40px rgba(52,211,153,0.4);
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.5s;
+      animation: pulseGlow 2s infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 10px 40px rgba(52,211,153,0.4); transform: scale(1); }
+      50% { box-shadow: 0 15px 60px rgba(52,211,153,0.8); transform: scale(1.02); }
+      100% { box-shadow: 0 10px 40px rgba(52,211,153,0.4); transform: scale(1); }
+    }
+    .logo-bubble:hover {
+      transform: scale(1.08) translateY(-10px) rotate(2deg);
+      box-shadow: 0 20px 60px rgba(52,211,153,0.8);
+    }
+
+    .message {
+      font-size: 2rem;
+      margin: 20px 0;
+      color: var(--texto);
+      animation: fadeInUp 0.8s ease;
+    }
+    .sub-message {
+      font-size: 1.2rem;
+      color: var(--gris);
+      margin-bottom: 40px;
+      animation: fadeInUp 1s ease;
+    }
+
+    /* botón principal */
+    .main-btn {
+      padding: 18px 40px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: white;
+      background: linear-gradient(45deg, var(--verde), var(--azul));
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(52,211,153,0.3);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInScale 1.2s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .main-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    .main-btn:hover::after {
+      width: 300px;
+      height: 300px;
+    }
+    .main-btn:hover {
+      transform: translateY(-6px) scale(1.05);
+      box-shadow: 0 15px 50px rgba(52,211,153,0.7);
+    }
+
+    /* versión y footer */
+    .version {
+      position: absolute;
+      bottom: 10px;
+      right: 20px;
+      font-size: 0.9rem;
+      color: var(--gris);
+      opacity: 0.5;
+      letter-spacing: 1px;
+      z-index: 150;
+      transition: opacity 0.3s, transform 0.3s;
+      animation: fadeIn 1s ease;
+    }
+    .version:hover {
+      opacity: 1;
+      transform: scale(1.1) rotate(2deg);
+    }
+
+    .footer-logo {
+      position: absolute;
+      bottom: 10px;
+      left: 20px;
+      font-size: 1rem;
+      color: var(--gris);
+      opacity: 0.6;
+      letter-spacing: 2px;
+      font-weight: 300;
+      text-transform: uppercase;
+      transition: opacity 0.3s, transform 0.3s;
+      animation: fadeInUp 0.8s ease;
+    }
+    .footer-logo:hover {
+      opacity: 1;
+      transform: translateY(-2px) scale(1.05);
+    }
+
+    /* animaciones */
+    @keyframes slideRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* responsive */
+    @media (max-width: 600px) {
+      .logo-bubble { width: 200px; height: 100px; font-size: 3rem; }
+      .message { font-size: 1.5rem; }
+      .main-btn { font-size: 1.2rem; padding: 14px 30px; }
+    }
+  </style>
+</head>
+<body class="theme-oscuro lang-es">
+
+  <!-- Selectores de idioma y tema (igual que en tu app) -->
+  <div class="top-selectors">
+    <div class="lang-button" id="langButton">ES</div>
+    <div class="lang-dropdown" id="langDropdown">
+      <div class="lang-option active" data-lang="es">ES</div>
+      <div class="lang-option" data-lang="en">EN</div>
+      <div class="lang-option" data-lang="fr">FR</div>
+      <div class="lang-option" data-lang="de">DE</div>
+      <div class="lang-option" data-lang="it">IT</div>
+    </div>
+    <div class="theme-button" id="themeButton">🎨</div>
+    <div class="theme-dropdown" id="themeDropdown">
+      <div class="theme-option" data-theme="theme-claro">Claro</div>
+      <div class="theme-option active" data-theme="theme-oscuro">Oscuro</div>
+      <div class="theme-option" data-theme="theme-tokyo">Tokyo Night</div>
+    </div>
+  </div>
+
+  <!-- Contenido principal 404 -->
+  <div class="logo-bubble">404</div>
+  <div class="message">Página no encontrada</div>
+  <div class="sub-message">Parece que te has perdido en el flujo</div>
+  <a href="index.html" class="main-btn">← Volver al inicio</a>
+
+  <!-- Versión y pie de página -->
+  <div class="version">v.D5.01</div>
+  <div class="footer-logo">nibecar cofeben</div>
+
+  <script>
+    // ===== GESTIÓN DE TEMA E IDIOMA (simplificada, igual que en tu app) =====
+    let currentLang = 'es';
+    let currentTheme = 'theme-oscuro';
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.body.className = document.body.className.replace(/lang-\w+/, `lang-${lang}`);
+      if (!document.body.className.includes(`lang-${lang}`)) {
+        document.body.classList.add(`lang-${lang}`);
+      }
+      document.getElementById('langButton').textContent = lang.toUpperCase();
+      document.querySelectorAll('.lang-option').forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.lang === lang);
+      });
+      // Actualizar textos si se desea (aquí no hay muchos textos dinámicos)
+    }
+
+    function setTheme(theme) {
+      currentTheme = theme;
+      document.body.className = document.body.className.replace(/theme-\w+/, theme);
+      if (!document.body.className.includes(theme)) {
+        document.body.classList.add(theme);
+      }
+      document.querySelectorAll('.theme-option').forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.theme === theme);
+      });
+      localStorage.setItem('fluxTheme', theme);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('fluxTheme');
+      if (savedTheme && ['theme-claro', 'theme-oscuro', 'theme-tokyo'].includes(savedTheme)) {
+        setTheme(savedTheme);
+      } else {
+        setTheme('theme-oscuro');
+      }
+      setLanguage('es');
+
+      // Eventos de los botones flotantes
+      document.getElementById('langButton').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('langDropdown').classList.toggle('show');
+      });
+      document.getElementById('themeButton').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('themeDropdown').classList.toggle('show');
+      });
+      document.addEventListener('click', () => {
+        document.getElementById('langDropdown').classList.remove('show');
+        document.getElementById('themeDropdown').classList.remove('show');
+      });
+
+      document.querySelectorAll('.lang-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setLanguage(e.target.dataset.lang);
+        });
+      });
+      document.querySelectorAll('.theme-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setTheme(e.target.dataset.theme);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

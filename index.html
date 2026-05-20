@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plux.D5.08 - Tu viaje</title>
+  <link rel="icon" type="image/ico" href="favico.ico">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css?v=1779141446518">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Firebase (compat) -->
+  <script defer src="/__/firebase/10.9.0/firebase-app-compat.js"></script>
+  <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
+  <script defer src="/__/firebase/10.9.0/firebase-firestore-compat.js"></script>
+  <script defer src="/__/firebase/init.js"></script>
+  <script defer src="script.js?v=1779216022088"></script>
+</head>
+<body class="theme-oscuro lang-es">
+  <div id="toast-container"></div>
+  <div id="ares-esc-banner">PRESIONA ESC PARA SALIR DE ARES</div>
+  <div id="bg-parallax"></div>
+  <div class="welcome" id="welcome">
+    <div class="top-selectors">
+      <div class="lang-button" id="langButton">ES</div>
+      <div class="lang-dropdown" id="langDropdown">
+        <div class="lang-option active" data-lang="es">ES</div>
+        <div class="lang-option" data-lang="en">EN</div>
+        <div class="lang-option" data-lang="fr">FR</div>
+        <div class="lang-option" data-lang="de">DE</div>
+        <div class="lang-option" data-lang="it">IT</div>
+      </div>
+      <div class="theme-button" id="themeButton">🎨</div>
+      <div class="theme-dropdown" id="themeDropdown"></div>
+    </div>
+    <div class="logo-bubble">PLUX</div>
+
+    <div class="main-buttons">
+      <button class="main-btn" id="startBtn" style="flex: 1 1 45%;">Empieza tu viaje</button>
+      <button class="main-btn" id="tripsBtn" style="flex: 1 1 45%;">Tus viajes</button>
+      <button class="main-btn discover-btn" id="discoverBtn" onclick="abrirDescubrir()" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
+      <button class="main-btn tools-btn" id="toolsBtn" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
+      <button class="main-btn" onclick="abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="pet.png" style="width:24px; height:24px; border-radius:50%;"> IA</button>
+    </div>
+
+    <!-- Inspiration Cards -->
+    <div class="inspo-section">
+      <div class="inspo-title">Inspiración · Destinos Populares</div>
+      <div class="inspo-scroll">
+        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=400&q=80')" onclick="explorarInspo('Roma')">
+          <div class="inspo-card-flag">IT</div>
+          <div class="inspo-card-label">Roma</div>
+        </div>
+        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80')" onclick="explorarInspo('Tokio')">
+          <div class="inspo-card-flag">JP</div>
+          <div class="inspo-card-label">Tokio</div>
+        </div>
+        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?w=400&q=80')" onclick="explorarInspo('Nueva York')">
+          <div class="inspo-card-flag">US</div>
+          <div class="inspo-card-label">Nueva York</div>
+        </div>
+        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80')" onclick="explorarInspo('París')">
+          <div class="inspo-card-flag">FR</div>
+          <div class="inspo-card-label">París</div>
+        </div>
+        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=400&q=80')" onclick="explorarInspo('Buenos Aires')">
+          <div class="inspo-card-flag">AR</div>
+          <div class="inspo-card-label">Bs. Aires</div>
+        </div>
+        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=400&q=80')" onclick="explorarInspo('Bangkok')">
+          <div class="inspo-card-flag">TH</div>
+          <div class="inspo-card-label">Bangkok</div>
+        </div>
+        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1527838832700-5059252407fa?w=400&q=80')" onclick="explorarInspo('Dubái')">
+          <div class="inspo-card-flag">AE</div>
+          <div class="inspo-card-label">Dubái</div>
+        </div>
+        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80')" onclick="explorarInspo('Barcelona')">
+          <div class="inspo-card-flag">ES</div>
+          <div class="inspo-card-label">Barcelona</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="version">v.D6.00</div>
+    <div class="footer-logo">nibecar cofeben</div>
+  </div>
+
+  <div id="modal-panel-herramientas">
+    <div class="panel-herramientas-content">
+      <div class="panel-herramientas-header">
+        <h2 id="herramientasTitle">Más herramientas</h2>
+        <span class="close-panel" onclick="cerrarPanelHerramientas()">×</span>
+      </div>
+      <div class="herramientas-grid">
+        <button class="herramienta-btn" onclick="abrirCalendario()" id="btnCalendario">Calendario</button>
+        <button class="herramienta-btn" onclick="abrirConversor()" id="btnConversor">Conversor</button>
+        <button class="herramienta-btn" onclick="abrirChecklist()" id="btnChecklist">Checklist</button>
+        <button class="herramienta-btn" onclick="abrirMapa()" id="btnMapa">Ver mapa</button>
+        <button class="herramienta-btn" onclick="abrirPreferencias()" style="background:var(--azul);">Preferencias</button>
+        <button class="herramienta-btn" style="background:var(--rosa); border-color:var(--rosa);" onclick="document.getElementById('modal-viaje-activo').style.display='flex'">Modo Viaje Activo</button>
+      </div>
+      <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
+        <p style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación?</p>
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="join-code-input" placeholder="Ej: XJ92LK" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
+          <button class="btn-add-feed" style="background:var(--verde);" onclick="unirseAViaje()">Unirse</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-calendario">
+    <div class="calendario-content">
+      <div class="calendario-header">
+        <h2 id="calendarioTitle">Calendario</h2>
+        <span class="close-calendario" onclick="cerrarCalendario()">×</span>
+      </div>
+      <div class="calendario-completo">
+        <div class="calendario-nav">
+          <button onclick="cambiarMes(-1)">←</button>
+          <h3 id="mesActual"></h3>
+          <button onclick="cambiarMes(1)">→</button>
+        </div>
+        <div id="calendario-grid" class="calendario-grid"></div>
+      </div>
+      <div id="eventos-dia" class="eventos-dia">
+        <h3 id="eventosDiaTitle">Eventos del día</h3>
+        <div id="eventos-dia-lista"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-viajes">
+    <div class="modal-content">
+      <span class="close-modal" onclick="cerrarModalViajes()">×</span>
+      <h2 id="modalTitle">Tus viajes</h2>
+      <div class="modal-tabs">
+        <button class="tab-btn active" data-tab="guardados"> Guardados</button>
+        <button class="tab-btn" data-tab="plantillas"> Plantillas</button>
+      </div>
+      <div class="tab-content active" id="tab-guardados">
+        <div class="save-trip">
+          <input type="text" id="nombreViaje" placeholder="Nombre">
+          <button onclick="guardarViaje()" id="guardarViajeBtn">Guardar viaje actual</button>
+        </div>
+        <div class="import-export">
+          <button onclick="importarViaje()" id="importarBtn"> Importar viaje (JSON)</button>
+          <button onclick="exportarViajeActual()" id="exportarBtn"> Exportar viaje actual</button>
+          <input type="file" id="fileImport" accept=".json" style="display:none;">
+        </div>
+        <div class="trip-list" id="tripList"></div>
+      </div>
+      <div class="tab-content" id="tab-plantillas">
+        <div class="save-trip">
+          <input type="text" id="nombrePlantilla" placeholder="Nombre">
+          <button onclick="guardarComoPlantilla()" id="guardarPlantillaBtn">Guardar como plantilla</button>
+        </div>
+        <div class="trip-list" id="plantillasList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-presentacion">
+    <div class="presentacion-content">
+      <div class="presentacion-header">
+        <h2 id="presentacionTitle">Presentación del viaje</h2>
+        <button onclick="cerrarPresentacion()" id="cerrarPresentacionBtn">Cerrar</button>
+      </div>
+      <div id="presentacion-contenido"></div>
+      <div class="presentacion-nav">
+        <button onclick="presentacionAnterior()" id="anteriorBtn">← Anterior</button>
+        <button onclick="presentacionSiguiente()" id="siguienteBtn">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de descubrir -->
+  <div id="modal-descubrir">
+    <div class="descubrir-content">
+      <div class="descubrir-header">
+        <h2 id="descubrirTitle">Descubrir (Feed de Inspiración)</h2>
+        <span class="close-panel" onclick="cerrarDescubrir()">×</span>
+      </div>
+      <div id="descubrirDestinos" style="margin-bottom:15px;"></div>
+      <div class="descubrir-results" id="descubrirResultados"></div>
+    </div>
+  </div>
+
+  <!-- Modal Viaje Activo Dashboard -->
+  <div id="modal-viaje-activo">
+    <div class="presentacion-content" style="background:var(--fondo); border:2px solid var(--rosa);">
+      <div class="presentacion-header">
+        <h2 style="color:var(--rosa);">¡Viaje Activo! - Tu itinerario de hoy</h2>
+        <span class="close-panel" onclick="document.getElementById('modal-viaje-activo').style.display='none'">×</span>
+      </div>
+      <div id="viajeActivoContent" style="padding:10px;"></div>
+      <div class="viaje-activo-footer" style="padding: 15px; display: flex; gap: 10px; justify-content: center; border-top: 1px solid var(--border);">
+        <button class="btn-add-feed" onclick="abrirColaboradores()">Colaboradores / Invitar</button>
+        <button class="btn-add-feed" style="background:var(--gris);" onclick="document.getElementById('modal-viaje-activo').style.display='none'">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Colaboradores / Invitar -->
+  <div id="modal-colaboradores">
+    <div class="colaboradores-content">
+      <div class="colaboradores-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="color:var(--verde); margin:0;">Colaboradores</h2>
+        <span class="close-panel" onclick="document.getElementById('modal-colaboradores').style.display='none'">×</span>
+      </div>
+      <div id="lista-colaboradores" style="margin-bottom:20px;"></div>
+      <div id="invite-code-container" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px dashed var(--border); text-align:center; display:none; margin-top:10px;">
+        <p style="font-size:0.8rem; color:var(--gris); margin-bottom:5px;">C DE ACCESO:</p>
+        <h3 id="display-invite-code" style="color:var(--rosa); letter-spacing:4px; font-size:2rem; margin:0;"></h3>
+      </div>
+      <div class="colab-actions" style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn-add-feed" style="background:var(--azul); flex:1;" onclick="generarCodigoInApp()">Generar Código de Invitación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Detalle Lugar (Descubrir) -->
+  <div id="modal-detalle-lugar" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; display:none; align-items:center; justify-content:center; padding:20px;">
+    <div class="detalle-lugar-content" style="background:var(--card); border:1px solid var(--border); border-radius:24px; max-width:600px; width:100%; max-height:80vh; overflow-y:auto; padding:25px; position:relative;">
+        <span class="close-panel" onclick="document.getElementById('modal-detalle-lugar').style.display='none'" style="position:absolute; top:15px; right:20px; font-size:2rem; cursor:pointer;">×</span>
+        <div id="detalleLugarBody"></div>
+    </div>
+  </div>
+
+  <!-- FLOATING CHAT BUTTON -->
+  
+  <button id="chat-float-btn" onclick="abrirChatIA()" title="Pluxy" style="display:flex !important; align-items:center; justify-content:center; padding:0; overflow:hidden;">
+    <img src="pet.png" alt="Pluxy" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+    <span class="chat-badge" id="chat-badge" style="display:none;">✨</span>
+  </button>
+
+  <!-- MODAL: CHAT IA AGENTE -->
+  <div id="modal-chat-ia" onclick="if(event.target===this)cerrarChatIA()">
+    <div class="chat-container">
+      <div class="chat-header">
+        <div>
+          <h3>Pluxy · Tu asistente de viaje</h3>
+          <div class="chat-header-info">Preguntame cualquier cosa sobre tu viaje</div>
+        </div>
+        <button onclick="cerrarChatIA()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;padding:0;display:flex;align-items:center;justify-content:center;">×</button>
+      </div>
+      <div class="chat-quick-btns" id="chat-quick-btns">
+        <button class="chat-quick-btn" onclick="chatSend('Quiero planear un viaje a Roma con mi familia')"> Planear viaje</button>
+        <button class="chat-quick-btn" onclick="chatSend('Crear checklist para mi viaje')">Checklist</button>
+        <button class="chat-quick-btn" onclick="chatSend('¿Cuánto me va a costar el viaje?')">Costo</button>
+        <button class="chat-quick-btn" onclick="chatSend('Sugerime actividades para mis destinos')">Sugerencias</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-msg ai">¡Hola! Soy tu asistente de viaje Plux. Contame qué tenés en mente; puedo ayudarte a crear tu checklist, calcular costos o sugerir actividades.</div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Escribí tu mensaje..." onkeydown="if(event.key==='Enter')chatSend()">
+        <button onclick="chatSend()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHECKLIST PERSONALIZADA -->
+  <div id="modal-checklist" onclick="if(event.target===this)cerrarChecklist()">
+    <div class="checklist-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 style="color:var(--verde);margin:0;">Mi Checklist de Viaje</h2>
+        <button onclick="cerrarChecklist()" style="background:none;border:none;color:var(--gris);font-size:2rem;cursor:pointer;">×</button>
+      </div>
+      <div class="checklist-progress">
+        <div class="checklist-progress-bar" id="checklist-progress-bar" style="width:0%"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <span id="checklist-count" style="color:var(--gris);font-size:0.85rem;">0 de 0 completados</span>
+        <button onclick="generarChecklistIA()" style="padding:6px 14px;font-size:0.8rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white;border-radius:8px;cursor:pointer;margin-left:auto;">Regenerar con IA</button>
+      </div>
+      <div id="checklist-body"></div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <input type="text" id="checklist-add-input" placeholder="Añadir item manualmente..." style="flex:1;padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:white;">
+        <button onclick="agregarItemChecklist(document.getElementById('checklist-add-input').value)" style="padding:10px 16px;background:var(--verde);border:none;color:black;border-radius:8px;font-weight:bold;cursor:pointer;">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" id="app" style="display:none;">
+
+    <div class="back-button" onclick="volverAWelcome()">←</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+      <h1 id="appTitle" style="margin:0;">Plux · Organiza tu aventura</h1>
+      <button onclick="document.getElementById('modal-colaboradores').style.display='flex'" style="background:var(--verde); color:black; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:8px;">Invitar</button>
+    </div>
+    <div class="datos-generales">
+      <div class="fila-dato">
+        <label id="lugarSalidaLabel">Lugar de salida:</label>
+        <input type="text" id="lugarSalida" placeholder="Ej. Buenos Aires">
+      </div>
+      <div class="fila-dato">
+        <label id="personasLabel">Personas:</label>
+        <input type="number" id="numPersonas" min="1" value="1">
+      </div>
+      <div class="fila-dato">
+        <label id="fechaInicioLabel">Fecha de inicio:</label>
+        <input type="datetime-local" id="fechaInicio" value="">
+      </div>
+    </div>
+    <div class="add-destino">
+      <input type="text" id="nuevoDestino" placeholder="Destino">
+      <button id="addDestBtn">+ Añadir</button>
+    </div>
+    <div class="destinos" id="destinos"></div>
+
+    <div class="datos-generales" style="margin-top:20px;">
+      <div class="fila-dato">
+        <label id="vueltaLabel">Vuelta (opcional):</label>
+        <div class="campo-vuelta">
+          <input type="text" id="vuelta" placeholder="Descripción">
+          <input type="number" id="vueltaPrecio" placeholder="€" value="0">
+        </div>
+      </div>
+      <div id="vuelta-costos-adicionales"></div>
+      <button onclick="agregarCostoVuelta()">+ Costo adicional vuelta</button>
+    </div>
+
+    <button id="btn-resumen">Ver Resumen del Viaje</button>
+  </div>
+
+  <div id="pantalla-resumen">
+    <span class="close-resumen" onclick="cerrarResumen()">×</span>
+    <div class="resumen-content" id="resumenContent">
+
+      <!-- HERO -->
+      <div class="resumen-hero">
+        <h2 id="summaryTitle">Tu Viaje Completo</h2>
+        <p id="resumen-subtitle" style="color:var(--gris);margin:0;"></p>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="resumen-actions" style="margin-bottom:24px;">
+        <button class="view-toggle" onclick="toggleVistaResumen()" id="toggleVistaBtn">⏱ Línea de tiempo</button>
+        <button onclick="exportarPDF()" id="pdfBtn">PDF</button>
+        <button onclick="exportarGoogleCalendar()" id="calendarBtn">Google Calendar</button>
+        <button onclick="compartirViaje()" id="compartirBtn">Compartir</button>
+        <button onclick="abrirMapaResumen()" id="mapaResumenBtn">Ver mapa</button>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="stat-grid" id="stat-grid"></div>
+
+      <!-- CHARTS + MINI MAP -->
+      <div class="resumen-chart-section">
+        <div class="chart-box">
+          <h4>Ruta del viaje</h4>
+          <div id="resumen-map-mini"></div>
+        </div>
+      </div>
+
+      <!-- ITINERARY DETAIL -->
+      <div id="resumenContenido"></div>
+
+      <div class="switch-vaca-container" style="display:none;" id="vaca-control">
+        <span>Dividir gastos (Vaca):</span>
+        <label class="switch">
+          <input type="checkbox" id="vaca-toggle" onchange="renderResumen()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      
+      <div id="costoGlobal" class="costo-total"></div>
+      <div id="vacaGlobal" class="vaca-result" style="text-align: right;"></div>
+    </div>
+  </div>
+
+
+  <div id="modal-mapa">
+    <div class="mapa-content">
+      <div class="mapa-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h2 style="color:var(--verde); margin:0;">Mapa del viaje</h2>
+        <span class="close-panel" onclick="cerrarMapa()" style="font-size:2rem; cursor:pointer;">×</span>
+      </div>
+      <div id="map" style="height: calc(100% - 50px); border-radius:12px;"></div>
+    </div>
+  </div>
+
+  <div id="modal-conversor">
+    <div class="conversor-content">
+      <div class="conversor-header">
+        <h2>Conversor</h2>
+        <span class="close-conversor" onclick="cerrarConversor()">×</span>
+      </div>
+      <div class="conversor-row">
+        <input type="number" id="conv-cantidad" value="1" min="0" step="0.01">
+        <select id="conv-origen">
+          <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+          <option value="JPY">JPY</option>
+          <option value="ARS">ARS</option>
+          <option value="MXN">MXN</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+          <option value="CHF">CHF</option>
+          <option value="CNY">CNY</option>
+        </select>
+      </div>
+      <div class="conversor-row">
+        <span style="color:var(--gris);">→</span>
+        <select id="conv-destino">
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="JPY">JPY</option>
+          <option value="ARS">ARS</option>
+          <option value="MXN">MXN</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+          <option value="CHF">CHF</option>
+          <option value="CNY">CNY</option>
+        </select>
+      </div>
+      <div id="conversor-resultado"></div>
+      <button onclick="convertirMoneda()" style="width:100%;">Convertir</button>
+    </div>
+  </div>
+
+  <div id="plux-labs-panel">
+      <h3 style="color:#00ff41;">PLUX_LABS // V.D5.09</h3>
+      <button class="labs-btn" onclick="document.getElementById('plux-labs-panel').style.display='none'" style="color:#ef4444; border-color:#ef4444;">CERRAR</button>
+      
+      <div class="labs-section">
+          <h4>CONVERSOR_UNIDADES_RARAS</h4>
+          <input type="number" id="lab-conv-val" placeholder="Valor" style="width:80px; background:black; color:#00ff41; border:1px solid #00ff41;">
+          <select id="lab-conv-type" style="background:black; color:#00ff41; border:1px solid #00ff41;">
+              <option value="f-c">°F a °C</option>
+              <option value="mi-km">Mi a Km</option>
+              <option value="gal-l">Gal a L</option>
+          </select>
+          <button class="labs-btn" onclick="ejecutarConversorLabs()">CALCULAR</button>
+          <p id="lab-conv-res">--</p>
+      </div>
+
+      <div class="labs-section">
+          <h4>PASAPORTE_DIGITAL</h4>
+          <div id="passport-display" style="display:flex; flex-wrap:wrap;"></div>
+      </div>
+
+      <div class="labs-section">
+          <h4>CHECKLIST_ANTES_DE_SALIR</h4>
+          <div id="checklist-display" style="font-size:12px;"></div>
+      </div>
+  </div>
+</body>
+</html>

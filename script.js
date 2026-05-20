@@ -198,6 +198,7 @@
     }
 
     let isSyncing = false; // Prevent loops
+    let unsubSnapshot = null; // Store active Firestore listener
     function loadFromStorage() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -226,7 +227,11 @@
 
     function activarListenerNube() {
       if (db && syncCode) {
-        db.collection("viajes_compartidos").doc(syncCode).onSnapshot(doc => {
+        if (unsubSnapshot) {
+          unsubSnapshot(); // Desuscribirse del viaje anterior para no mezclar ediciones
+          console.log("Desuscrito del viaje anterior.");
+        }
+        unsubSnapshot = db.collection("viajes_compartidos").doc(syncCode).onSnapshot(doc => {
           if (doc.exists && !isSyncing) {
             isSyncing = true;
             importarViajeString(doc.data().data, false);
@@ -312,8 +317,10 @@
       }, 3000);
     }
 
-    function unirseAViaje() {
-      const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+    function unirseAViaje(inputId = 'join-code-input-herramientas') {
+      const codeInput = document.getElementById(inputId);
+      if (!codeInput) return;
+      const code = codeInput.value.trim().toUpperCase();
       if(!code) { showToast('Ingresa un código válido', 'error'); return; }
       
       if (db) {
@@ -950,9 +957,8 @@
             <button class="close-icon" onclick="eliminarDestino(${d.id})">×</button>
           </div>
           <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap;">
-            <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer;">✈️</div>
-            <button onclick="generarItinerarioAuto(${d.id})" style="padding:6px 14px; font-size:0.8rem; background:linear-gradient(135deg, #6366f1, #8b5cf6); border:none; color:white; border-radius:8px; cursor:pointer;">Generar itinerario</button>
-          </div>
+            <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;">✈</div>
+            <button onclick="generarItinerarioAuto(${d.id})" style="padding:6px 14px; font-size:0.8rem; background:linear-gradient(135deg, #6366f1, #8b5cf6); border:none; color:white; border-radius:8px; cursor:pointer;">🪄 Generar itinerario</button>
           </div>
           <div class="transport-fields" id="transport-${d.id}">
             <div class="tramos-container" id="tramos-${d.id}"></div>
@@ -1009,7 +1015,7 @@
         if (touristPlaces.length === 0) { container.innerHTML = ''; return; }
 
         let html = '<h4 style="color:var(--verde); margin-bottom:8px;">Lugares turísticos cercanos</h4>';
-        html += '<div style="display:flex; gap:10px; overflow-a:auto; padding-bottom:10px;">';
+        html += '<div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;">';
         
         touristPlaces.forEach(page => {
           const img = page.thumbnail?.source ? `<img src="${page.thumbnail.source}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:8px;">` : '';

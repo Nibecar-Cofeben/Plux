@@ -6,7 +6,7 @@
   <title>Plux.D5.08 - Tu viaje</title>
   <link rel="icon" type="image/ico" href="favico.ico">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="styles.css?v=1779224755000">
+  <link rel="stylesheet" href="styles.css?v=1779311446023">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -18,7 +18,7 @@
   <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
   <script defer src="/__/firebase/10.9.0/firebase-firestore-compat.js"></script>
   <script defer src="/__/firebase/init.js"></script>
-  <script defer src="script.js?v=1779224755000"></script>
+  <script defer src="script.js?v=1779311446023"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -107,8 +107,8 @@
       <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
         <p style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación?</p>
         <div style="display:flex; gap:10px;">
-          <input type="text" id="join-code-input" placeholder="Ej: XJ92LK" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
-          <button class="btn-add-feed" style="background:var(--verde);" onclick="unirseAViaje()">Unirse</button>
+          <input type="text" id="join-code-input-herramientas" placeholder="Ej: XJ92LK" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
+          <button class="btn-add-feed" style="background:var(--verde);" onclick="unirseAViaje('join-code-input-herramientas')">Unirse</button>
         </div>
       </div>
     </div>
@@ -152,6 +152,13 @@
           <button onclick="importarViaje()" id="importarBtn"> Importar viaje (JSON)</button>
           <button onclick="exportarViajeActual()" id="exportarBtn"> Exportar viaje actual</button>
           <input type="file" id="fileImport" accept=".json" style="display:none;">
+        </div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
+          <p style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación?</p>
+          <div style="display:flex; gap:10px;">
+            <input type="text" id="join-code-input-viajes" placeholder="Ej: XJ92LK" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
+            <button class="btn-add-feed" style="background:var(--verde);" onclick="unirseAViaje('join-code-input-viajes')">Unirse</button>
+          </div>
         </div>
         <div class="trip-list" id="tripList"></div>
       </div>

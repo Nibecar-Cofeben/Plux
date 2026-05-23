@@ -6,7 +6,7 @@
   <title>Plux.D5.08 - Tu viaje</title>
   <link rel="icon" type="image/ico" href="favico.ico">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="styles.css?v=1779311446023">
+  <link rel="stylesheet" href="styles.css?v=1779320000000">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -18,7 +18,7 @@
   <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
   <script defer src="/__/firebase/10.9.0/firebase-firestore-compat.js"></script>
   <script defer src="/__/firebase/init.js"></script>
-  <script defer src="script.js?v=1779311446029"></script>
+  <script defer src="script.js?v=1779320000000"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -36,14 +36,14 @@
       </div>
       <div class="theme-button" id="themeButton">🎨</div>
       <div class="theme-dropdown" id="themeDropdown"></div>
-      <div class="user-button" id="cuentaButton" onclick="abrirCuenta()" title="Tu cuenta">👤</div>
+      <div class="user-button" id="cuentaButton" title="Tu cuenta">👤</div>
     </div>
     <div class="logo-bubble">PLUX</div>
 
     <div class="main-buttons">
       <button class="main-btn" id="startBtn" style="flex: 1 1 45%;">Empieza tu viaje</button>
       <button class="main-btn" id="tripsBtn" style="flex: 1 1 45%;">Tus viajes</button>
-      <button class="main-btn discover-btn" id="discoverBtn" onclick="abrirDescubrir()" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
+      <button class="main-btn discover-btn" id="discoverBtn" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
       <button class="main-btn tools-btn" id="toolsBtn" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
       <button class="main-btn" onclick="abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="pet.png" style="width:24px; height:24px; border-radius:50%;"> PLUXY</button>
     </div>
@@ -162,6 +162,10 @@
           </div>
         </div>
         <div class="trip-list" id="tripList"></div>
+        <div id="colab-trips-section" style="display:none; margin-top:25px; padding-top:20px; border-top:1px solid var(--border);">
+          <h3 style="color:var(--verde); margin-bottom:12px; font-size:1.1rem; text-align:left;">Viajes compartidos con vos</h3>
+          <div class="trip-list" id="sharedTripList"></div>
+        </div>
       </div>
       <div class="tab-content" id="tab-plantillas">
         <div class="save-trip">
@@ -222,8 +226,18 @@
         <span class="close-panel" onclick="document.getElementById('modal-colaboradores').style.display='none'">×</span>
       </div>
       <div id="lista-colaboradores" style="margin-bottom:20px;"></div>
+      
+      <!-- Invitar por Nickname -->
+      <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:15px; text-align:left;">
+        <p style="font-size:0.85rem; color:var(--gris); margin-bottom:8px;">Invitar por Nickname</p>
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="invite-nickname-input" placeholder="Ej: messi" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
+          <button class="btn-add-feed" style="background:var(--verde); color:black; font-weight:bold; padding: 0 15px; min-height: 40px;" onclick="invitarColaboradorPorNickname()">Invitar</button>
+        </div>
+      </div>
+
       <div id="invite-code-container" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px dashed var(--border); text-align:center; display:none; margin-top:10px;">
-        <p style="font-size:0.8rem; color:var(--gris); margin-bottom:5px;">C DE ACCESO:</p>
+        <p style="font-size:0.8rem; color:var(--gris); margin-bottom:5px;">CÓDIGO DE ACCESO:</p>
         <h3 id="display-invite-code" style="color:var(--rosa); letter-spacing:4px; font-size:2rem; margin:0;"></h3>
       </div>
       <div class="colab-actions" style="display:flex; gap:10px; margin-top:20px;">
@@ -468,11 +482,36 @@
       <span class="close-panel" onclick="cerrarCuenta()">×</span>
       <div class="cuenta-avatar" id="cuentaAvatar">👤</div>
       <div class="cuenta-nickname-display" id="cuentaNicknameDisplay" style="display:none;"></div>
-      <h2 id="cuentaTitle">Tu Perfil</h2>
+      <h2 id="cuentaTitle" style="text-align:center;">Tu Perfil</h2>
+      
       <div class="cuenta-form" id="cuentaForm">
-        <input type="text" id="nickname-input" placeholder="Elegí un nickname..." maxlength="20" autocomplete="off">
-        <button onclick="guardarNickname()">Guardar Nickname</button>
+        <div class="cuenta-tabs" style="display:flex; justify-content:center; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px; width:100%;">
+          <button class="cuenta-tab active" id="tab-login-btn" onclick="switchCuentaTab('login')" style="background:transparent; border:none; color:white; border-bottom:2px solid var(--verde); font-weight:bold; cursor:pointer; padding:5px 15px;">Iniciar Sesión</button>
+          <button class="cuenta-tab" id="tab-register-btn" onclick="switchCuentaTab('register')" style="background:transparent; border:none; color:var(--gris); font-weight:normal; cursor:pointer; padding:5px 15px;">Registrarse</button>
+        </div>
+        
+        <!-- Formulario Iniciar Sesión -->
+        <div id="form-login" style="display:flex; flex-direction:column; gap:12px; width:100%;">
+          <input type="text" id="login-nickname" placeholder="Escribí tu nickname..." maxlength="20" autocomplete="off" style="width:100%;">
+          <div id="login-password-container" style="display:none; flex-direction:column; gap:6px;">
+            <input type="password" id="login-password" placeholder="Escribí tu contraseña..." autocomplete="off" style="width:100%;">
+          </div>
+          <button onclick="iniciarSesionPlux()" style="background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold;">Ingresar</button>
+        </div>
+
+        <!-- Formulario Registrarse -->
+        <div id="form-register" style="display:none; flex-direction:column; gap:12px; width:100%;">
+          <input type="text" id="register-nickname" placeholder="Elegí un nickname..." maxlength="20" autocomplete="off" style="width:100%;">
+          <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--gris); cursor:pointer; user-select:none; margin: 4px 0;">
+            <input type="checkbox" id="register-has-password" onchange="toggleRegisterPassword()" style="width:16px; height:16px; accent-color:var(--verde);"> Proteger con contraseña
+          </label>
+          <div id="register-password-container" style="display:none; flex-direction:column; gap:6px;">
+            <input type="password" id="register-password" placeholder="Elegí una contraseña..." autocomplete="off" style="width:100%;">
+          </div>
+          <button onclick="crearCuentaPlux()" style="background:linear-gradient(135deg, var(--rosa), var(--violeta)); font-weight:bold;">Crear Cuenta</button>
+        </div>
       </div>
+
       <div class="cuenta-info" id="cuentaInfo" style="display:none;">
         <div class="cuenta-info-row"><span>Idioma</span><span id="cuentaIdioma">ES</span></div>
         <div class="cuenta-info-row"><span>Tema</span><span id="cuentaTema">Oscuro</span></div>

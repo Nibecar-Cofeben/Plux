@@ -21,7 +21,7 @@
         view_modes: { cards: "Vista tarjetas", timeline: "Vista línea tiempo", presentation: "Vista presentación" },
         herramientas_title: "Más herramientas", calendario_title: "Calendario", mapa_btn: "Ver mapa",
         eventos_dia_title: "Eventos del día", estadisticas: { duracion: "Duración (días)", eventos: "Eventos", coste_total: "Coste total", coste_persona: "Coste/persona", destinos: "Destinos" },
-        temas: { claro: "plux: Claro", oscuro: "plux: Oscuro", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
+        temas: { claro: "Claro", oscuro: "Oscuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Lugar de salida", costo_extra_vuelta: "Costo extra vuelta", tramo: "Tramo", origen: "Origen",
         destino: "Destino", medio: "Medio", precio: "Precio", escala: "Escala", agregar_tramo: "+ Agregar tramo", agregar_escala: "+ Escala"
       },
@@ -45,7 +45,7 @@
         view_modes: { cards: "Card view", timeline: "Timeline view", presentation: "Presentation view" },
         herramientas_title: "More tools", calendario_title: "Calendar", mapa_btn: "View map",
         eventos_dia_title: "Day events", estadisticas: { duracion: "Duration (days)", eventos: "Events", coste_total: "Total cost", coste_persona: "Cost/person", destinos: "Destinations" },
-        temas: { claro: "plux: Light", oscuro: "plux: Dark", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
+        temas: { claro: "plux: Light", oscuro: "plux: Dark", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "plux: Starship", ares: "plux: Ares" },
         lugar_salida: "Departure place", costo_extra_vuelta: "Extra return cost", tramo: "Segment", origen: "Origin",
         destino: "Destination", medio: "Means", precio: "Price", escala: "Stopover", agregar_tramo: "+ Add segment", agregar_escala: "+ Stopover"
       },
@@ -69,7 +69,7 @@
         view_modes: { cards: "Vue cartes", timeline: "Vue chronologique", presentation: "Vue présentation" },
         herramientas_title: "Plus d'outils", calendario_title: "Calendrier", mapa_btn: "Voir la carte",
         eventos_dia_title: "Événements du jour", estadisticas: { duracion: "Durée (jours)", eventos: "Événements", coste_total: "Coût total", coste_persona: "Coût/personne", destinos: "Destinations" },
-        temas: { claro: "plux: Clair", oscuro: "plux: Sombre", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
+        temas: { claro: "plux: Clair", oscuro: "plux: Sombre", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "plux: Starship", ares: "plux: Ares" },
         lugar_salida: "Lieu de départ", costo_extra_vuelta: "Coût supplémentaire retour", tramo: "Tronçon", origen: "Origine",
         destino: "Destination", medio: "Moyen", precio: "Prix", escala: "Escalier", agregar_tramo: "+ Ajouter tronçon", agregar_escala: "+ Escale"
       },
@@ -93,7 +93,7 @@
         view_modes: { cards: "Kartenansicht", timeline: "Zeitleistenansicht", presentation: "Präsentationsansicht" },
         herramientas_title: "Weitere Tools", calendario_title: "Kalender", mapa_btn: "Karte anzeigen",
         eventos_dia_title: "Ereignisse des Tages", estadisticas: { duracion: "Dauer (Tage)", eventos: "Ereignisse", coste_total: "Gesamtkosten", coste_persona: "Kosten/Person", destinos: "Reiseziele" },
-        temas: { claro: "plux: Hell", oscuro: "plux: Dunkel", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
+        temas: { claro: "plux: Hell", oscuro: "plux: Dunkel", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "plux: Starship", ares: "plux: Ares" },
         lugar_salida: "Abfahrtsort", costo_extra_vuelta: "Zusätzliche Rückkehrkosten", tramo: "Abschnitt", origen: "Herkunft",
         destino: "Ziel", medio: "Mittel", precio: "Preis", escala: "Zwischenstopp", agregar_tramo: "+ Abschnitt hinzufügen", agregar_escala: "+ Zwischenstopp"
       },
@@ -117,7 +117,7 @@
         view_modes: { cards: "Vista schede", timeline: "Vista cronologica", presentation: "Vista presentazione" },
         herramientas_title: "Altri strumenti", calendario_title: "Calendario", mapa_btn: "Visualizza mappa",
         eventos_dia_title: "Eventi del giorno", estadisticas: { duracion: "Durata (giorni)", eventi: "Eventi", coste_total: "Costo totale", coste_persona: "Costo/persona", destinos: "Destinazioni" },
-        temas: { claro: "plux: Chiaro", oscuro: "plux: Scuro", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
+        temas: { claro: "plux: Chiaro", oscuro: "plux: Scuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "plux: Starship", ares: "plux: Ares" },
         lugar_salida: "Luogo di partenza", costo_extra_vuelta: "Costo aggiuntivo ritorno", tramo: "Tratta", origen: "Origine",
         destino: "Destinazione", medio: "Mezzo", precio: "Prezzo", escala: "Scala", agregar_tramo: "+ Aggiungi tratta", agregar_escala: "+ Scala"
       }
@@ -125,6 +125,7 @@
 
     // ================== ACCOUNT / NICKNAME SYSTEM ==================
     let currentNickname = null;
+    let loadedTripIndex = null;
 
     function inicializarCuenta() {
       const storedNick = localStorage.getItem('Plux_Nickname');
@@ -134,6 +135,137 @@
         if(btn) btn.classList.add('logged-in');
         cargarPerfilUsuario(storedNick);
       }
+    }
+
+    function switchCuentaTab(tab) {
+      const tabLogin = document.getElementById('tab-login-btn');
+      const tabRegister = document.getElementById('tab-register-btn');
+      const formLogin = document.getElementById('form-login');
+      const formRegister = document.getElementById('form-register');
+
+      if (tab === 'login') {
+        tabLogin.classList.add('active');
+        tabLogin.style.borderBottom = '2px solid var(--verde)';
+        tabLogin.style.color = 'white';
+        tabLogin.style.fontWeight = 'bold';
+        
+        tabRegister.classList.remove('active');
+        tabRegister.style.borderBottom = 'none';
+        tabRegister.style.color = 'var(--gris)';
+        tabRegister.style.fontWeight = 'normal';
+        
+        formLogin.style.display = 'flex';
+        formRegister.style.display = 'none';
+      } else {
+        tabRegister.classList.add('active');
+        tabRegister.style.borderBottom = '2px solid var(--rosa)';
+        tabRegister.style.color = 'white';
+        tabRegister.style.fontWeight = 'bold';
+        
+        tabLogin.classList.remove('active');
+        tabLogin.style.borderBottom = 'none';
+        tabLogin.style.color = 'var(--gris)';
+        tabLogin.style.fontWeight = 'normal';
+        
+        formRegister.style.display = 'flex';
+        formLogin.style.display = 'none';
+      }
+    }
+
+    function toggleRegisterPassword() {
+      const checked = document.getElementById('register-has-password').checked;
+      const container = document.getElementById('register-password-container');
+      container.style.display = checked ? 'flex' : 'none';
+      if (checked) {
+        document.getElementById('register-password').focus();
+      } else {
+        document.getElementById('register-password').value = '';
+      }
+    }
+
+    function crearCuentaPlux() {
+      const nick = document.getElementById('register-nickname').value.trim();
+      if (!nick) { showToast('Ingresá un nickname válido', 'error'); return; }
+      if (nick.includes(' ') || nick.includes('@')) { showToast('El nickname no puede contener espacios ni el signo @', 'error'); return; }
+      
+      const hasPassword = document.getElementById('register-has-password').checked;
+      const password = document.getElementById('register-password').value;
+      if (hasPassword && !password) { showToast('Escribí una contraseña para proteger tu cuenta', 'error'); return; }
+
+      if (!db) { showToast('Base de datos no disponible', 'error'); return; }
+
+      db.collection('plux_usuarios').doc(nick).get().then(doc => {
+        if (doc.exists) {
+          showToast('El nickname @' + nick + ' ya está registrado. Elegí otro o iniciá sesión.', 'error');
+        } else {
+          // Register account
+          const userData = {
+            idioma: currentLang,
+            tema: currentTheme,
+            viajes_guardados: getStoredTrips(),
+            plantillas: getStoredTemplates(),
+            preferencias: userPreferences,
+            ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          if (hasPassword) {
+            userData.password = password;
+          }
+          
+          db.collection('plux_usuarios').doc(nick).set(userData).then(() => {
+            currentNickname = nick;
+            localStorage.setItem('Plux_Nickname', nick);
+            document.getElementById('cuentaButton').classList.add('logged-in');
+            showToast('¡Cuenta @' + nick + ' creada con éxito!', 'success');
+            abrirCuenta();
+          }).catch(e => {
+            console.error("Error al registrar cuenta:", e);
+            showToast('Error al registrar la cuenta', 'error');
+          });
+        }
+      });
+    }
+
+    function iniciarSesionPlux() {
+      const nick = document.getElementById('login-nickname').value.trim();
+      if (!nick) { showToast('Ingresá tu nickname', 'error'); return; }
+
+      if (!db) { showToast('Base de datos no disponible', 'error'); return; }
+
+      db.collection('plux_usuarios').doc(nick).get().then(doc => {
+        if (!doc.exists) {
+          showToast('El nickname @' + nick + ' no está registrado', 'error');
+        } else {
+          const userData = doc.data();
+          const passContainer = document.getElementById('login-password-container');
+          
+          if (userData.password) {
+            // Account is password protected
+            if (passContainer.style.display === 'none') {
+              passContainer.style.display = 'flex';
+              document.getElementById('login-password').focus();
+              showToast('Esta cuenta requiere contraseña. Por favor, ingresala.', 'info');
+              return;
+            }
+            
+            const userPass = document.getElementById('login-password').value;
+            if (userPass !== userData.password) {
+              showToast('Contraseña incorrecta', 'error');
+              return;
+            }
+          }
+          
+          // Login successful
+          currentNickname = nick;
+          localStorage.setItem('Plux_Nickname', nick);
+          document.getElementById('cuentaButton').classList.add('logged-in');
+          cargarPerfilUsuario(nick);
+          showToast('Sesión iniciada: @' + nick, 'success');
+          abrirCuenta();
+        }
+      }).catch(e => {
+        console.error("Error de login:", e);
+        showToast('Error al iniciar sesión', 'error');
+      });
     }
 
     function abrirCuenta() {
@@ -150,6 +282,15 @@
         document.getElementById('cuentaForm').style.display = 'flex';
         document.getElementById('cuentaNicknameDisplay').style.display = 'none';
         document.getElementById('cuentaInfo').style.display = 'none';
+        // Reset forms
+        document.getElementById('login-nickname').value = '';
+        document.getElementById('login-password').value = '';
+        document.getElementById('login-password-container').style.display = 'none';
+        document.getElementById('register-nickname').value = '';
+        document.getElementById('register-password').value = '';
+        document.getElementById('register-password-container').style.display = 'none';
+        document.getElementById('register-has-password').checked = false;
+        switchCuentaTab('login');
       }
     }
 
@@ -157,24 +298,16 @@
       document.getElementById('modal-cuenta').style.display = 'none';
     }
 
-    function guardarNickname() {
-      const nick = document.getElementById('nickname-input').value.trim();
-      if (!nick) { showToast('Ingresa un nickname válido', 'error'); return; }
-      
-      currentNickname = nick;
-      localStorage.setItem('Plux_Nickname', nick);
-      document.getElementById('cuentaButton').classList.add('logged-in');
-      showToast('Nickname guardado: @' + nick, 'success');
-      sincronizarPerfil();
-      abrirCuenta();
-    }
-
     function cerrarSesion() {
       currentNickname = null;
       localStorage.removeItem('Plux_Nickname');
       document.getElementById('cuentaButton').classList.remove('logged-in');
-      document.getElementById('nickname-input').value = '';
       showToast('Sesión cerrada', 'info');
+      
+      // Hide shared trips section since they logged out
+      const colabSection = document.getElementById('colab-trips-section');
+      if (colabSection) colabSection.style.display = 'none';
+      
       abrirCuenta();
     }
 
@@ -182,7 +315,7 @@
       if (!db || !currentNickname) return;
       const trips = getStoredTrips();
       const templates = getStoredTemplates();
-      db.collection('usuarios').doc(currentNickname).set({
+      db.collection('plux_usuarios').doc(currentNickname).set({
         idioma: currentLang,
         tema: currentTheme,
         viajes_guardados: trips,
@@ -194,7 +327,7 @@
 
     function cargarPerfilUsuario(nick) {
       if (!db) return;
-      db.collection('usuarios').doc(nick).get().then(doc => {
+      db.collection('plux_usuarios').doc(nick).get().then(doc => {
         if (doc.exists) {
           const data = doc.data();
           if (data.idioma && data.idioma !== currentLang) setLanguage(data.idioma, false);
@@ -277,10 +410,27 @@
       localStorage.setItem(STORAGE_KEY, json);
       
       if (db && syncCode) {
-        db.collection("viajes_compartidos").doc(syncCode).set({
+        db.collection("plux_viajes_compartidos").doc(syncCode).set({
           data: json,
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        }, { merge: true });
+      }
+
+      // If editing a saved trip, auto-update the trip in the list
+      if (loadedTripIndex !== null) {
+        const trips = getStoredTrips();
+        if (trips[loadedTripIndex]) {
+          trips[loadedTripIndex].lugarSalida = lugarSalida;
+          trips[loadedTripIndex].numPersonas = numPersonas;
+          trips[loadedTripIndex].fechaInicio = document.getElementById('fechaInicio')?.value || '';
+          trips[loadedTripIndex].destinos = destinos;
+          trips[loadedTripIndex].vueltaGlobal = vueltaGlobal;
+          trips[loadedTripIndex].vueltaPrecioGlobal = vueltaPrecioGlobal;
+          trips[loadedTripIndex].vueltaCostosAdicionales = vueltaCostosAdicionales;
+          trips[loadedTripIndex].fecha = new Date().toISOString();
+          
+          saveTrips(trips, true); // Save to local storage and sync to profile
+        }
       }
     }
 
@@ -318,7 +468,7 @@
           unsubSnapshot(); // Desuscribirse del viaje anterior para no mezclar ediciones
           console.log("Desuscrito del viaje anterior.");
         }
-        unsubSnapshot = db.collection("viajes_compartidos").doc(syncCode).onSnapshot(doc => {
+        unsubSnapshot = db.collection("plux_viajes_compartidos").doc(syncCode).onSnapshot(doc => {
           if (doc.exists && !isSyncing) {
             isSyncing = true;
             importarViajeString(doc.data().data, false);
@@ -414,7 +564,7 @@
       
       if (db) {
         showToast('Buscando viaje en la nube...', 'info');
-        db.collection("viajes_compartidos").doc(code).get().then(docSnap => {
+        db.collection("plux_viajes_compartidos").doc(code).get().then(docSnap => {
           if (docSnap.exists) {
             const data = docSnap.data();
             syncCode = code;
@@ -425,7 +575,7 @@
               const colaboradores = data.colaboradores || [];
               if (!colaboradores.includes(currentNickname)) {
                 colaboradores.push(currentNickname);
-                db.collection("viajes_compartidos").doc(code).update({ colaboradores: colaboradores });
+                db.collection("plux_viajes_compartidos").doc(code).update({ colaboradores: colaboradores });
               }
             }
 
@@ -554,7 +704,20 @@
 
     // ================== CHAT IA AGENTE ==================
     let chatHistory = [];
-    const CHAT_SYSTEM = `Sos PluxIA, un asistente de viajes inteligente y amigable. Tenés acceso al itinerario del usuario. Podés ayudar a planear viajes, sugerir destinos, y ejecutar comandos como crear checklists o generar itinerarios. Respondé en español rioplatense, de forma concisa y útil. Si el usuario pide crear una checklist, terminá tu respuesta con [ACCION:CHECKLIST]. Si pide generar un itinerario para un destino específico, terminá con [ACCION:ITINERARIO:NombreDestino]. Si pide agregar un destino, terminá con [ACCION:DESTINO:NombreDestino].`;
+    const CHAT_SYSTEM = `Sos PluxIA, un asistente de viajes inteligente y amigable con capacidades AGENTES REALES. Tenés acceso completo al itinerario del usuario y podés modificarlo directamente.
+
+Al final de tu respuesta podés incluir UNO de estos comandos especiales para ejecutar acciones:
+- [ACCION:CHECKLIST] → Abre y genera checklist personalizada
+- [ACCION:ITINERARIO:NombreDestino] → Genera itinerario IA para ese destino
+- [ACCION:DESTINO:NombreDestino] → Agrega un nuevo destino al viaje
+- [ACCION:LIMPIAR_DESTINO:NombreDestino] → Borra todos los días de ese destino
+- [ACCION:AGREGAR_EVENTO:DestinoNombre|DiaNumero|Hora|Titulo|Notas] → Agrega evento específico (ej: Roma|1|10:00|Visitar Coliseo|Entrada 18€)
+- [ACCION:SET_PERSONAS:Numero] → Cambia el número de personas
+- [ACCION:SET_ORIGEN:Ciudad] → Cambia el lugar de salida
+- [ACCION:ABRIR_MAPA] → Abre el mapa del viaje
+- [ACCION:ABRIR_RESUMEN] → Muestra el resumen del viaje
+
+Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hacer algo, HACELO con el comando correspondiente además de explicar brevemente. Sos un agente que actúa, no solo habla.`;
 
     function abrirChatIA() {
       document.getElementById('modal-chat-ia').style.display = 'flex';
@@ -599,35 +762,99 @@
 
         // Check for autonomous actions
         let displayRespuesta = respuesta;
-        if (respuesta.includes('[ACCION:CHECKLIST]')) {
-          displayRespuesta = respuesta.replace('[ACCION:CHECKLIST]', '');
+        
+        const accionChecklist = respuesta.match(/\[ACCION:CHECKLIST\]/);
+        const accionItinerario = respuesta.match(/\[ACCION:ITINERARIO:(.+?)\]/);
+        const accionDestino = respuesta.match(/\[ACCION:DESTINO:(.+?)\]/);
+        const accionLimpiar = respuesta.match(/\[ACCION:LIMPIAR_DESTINO:(.+?)\]/);
+        const accionEvento = respuesta.match(/\[ACCION:AGREGAR_EVENTO:(.+?)\]/);
+        const accionPersonas = respuesta.match(/\[ACCION:SET_PERSONAS:(\d+)\]/);
+        const accionOrigen = respuesta.match(/\[ACCION:SET_ORIGEN:(.+?)\]/);
+        const accionMapa = respuesta.match(/\[ACCION:ABRIR_MAPA\]/);
+        const accionResumen = respuesta.match(/\[ACCION:ABRIR_RESUMEN\]/);
+
+        // Clean display text
+        displayRespuesta = respuesta
+          .replace(/\[ACCION:[^\]]+\]/g, '')
+          .trim();
+
+        if (accionChecklist) {
           setTimeout(() => { abrirChecklist(); }, 800);
-        } else if (respuesta.includes('[ACCION:ITINERARIO:')) {
-          const match = respuesta.match(/\[ACCION:ITINERARIO:(.+?)\]/);
-          if (match) {
-            const destNombre = match[1];
-            displayRespuesta = respuesta.replace(match[0], '');
-            const destExistente = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
-            if (destExistente) {
-              setTimeout(() => generarItinerarioAuto(destExistente.id), 800);
-            } else {
-              // Auto add destination and generate
-              const newId = Date.now();
-              destinos.push({ id: newId, nombre: destNombre, dias: [], tramos: [] });
-              renderDestinos();
-              setTimeout(() => generarItinerarioAuto(newId), 800);
-              empezar();
+        }
+        if (accionItinerario) {
+          const destNombre = accionItinerario[1];
+          const destExistente = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+          if (destExistente) {
+            setTimeout(() => generarItinerarioAuto(destExistente.id), 800);
+          } else {
+            const newId = Date.now();
+            destinos.push({ id: newId, nombre: destNombre, dias: [], tramos: [] });
+            renderDestinos();
+            setTimeout(() => generarItinerarioAuto(newId), 800);
+            empezar();
+          }
+        }
+        if (accionDestino) {
+          const newId = Date.now();
+          const nombre = accionDestino[1].trim();
+          destinos.push({ id: newId, nombre, dias: [], tramos: [] });
+          renderDestinos();
+          showToast(`✅ Destino "${nombre}" añadido`, 'success');
+          if (document.getElementById('welcome').style.display !== 'none') empezar();
+        }
+        if (accionLimpiar) {
+          const nombre = accionLimpiar[1].trim();
+          const dest = destinos.find(d => d.nombre.toLowerCase().includes(nombre.toLowerCase()));
+          if (dest) {
+            dest.dias = [];
+            renderDias(dest.id);
+            showToast(`🗑️ Días de "${dest.nombre}" eliminados`, 'info');
+          }
+        }
+        if (accionEvento) {
+          const partes = accionEvento[1].split('|');
+          if (partes.length >= 4) {
+            const [destNombre, diaNum, hora, titulo, notas] = partes;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+            if (dest) {
+              const diaIdx = (parseInt(diaNum) || 1) - 1;
+              while (dest.dias.length <= diaIdx) {
+                dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+              }
+              dest.dias[diaIdx].eventos.push({
+                id: Date.now(),
+                hora: hora.trim(),
+                titulo: titulo.trim(),
+                notas: (notas || '').trim(),
+                costo: 0,
+                duracion: 60
+              });
+              renderDias(dest.id);
+              showToast(`✅ Evento "${titulo.trim()}" añadido al Día ${diaIdx + 1}`, 'success');
             }
           }
-        } else if (respuesta.includes('[ACCION:DESTINO:')) {
-          const match = respuesta.match(/\[ACCION:DESTINO:(.+?)\]/);
-          if (match) {
-            displayRespuesta = respuesta.replace(match[0], '');
-            const newId = Date.now();
-            destinos.push({ id: newId, nombre: match[1], dias: [], tramos: [] });
-            renderDestinos();
-            showToast(`Destino "${match[1]}" añadido`, 'success');
-          }
+        }
+        if (accionPersonas) {
+          numPersonas = parseInt(accionPersonas[1]) || 1;
+          const el = document.getElementById('numPersonas');
+          if (el) el.value = numPersonas;
+          showToast(`👥 Personas: ${numPersonas}`, 'success');
+        }
+        if (accionOrigen) {
+          lugarSalida = accionOrigen[1].trim();
+          const el = document.getElementById('lugarSalida');
+          if (el) el.value = lugarSalida;
+          showToast(`📍 Origen: ${lugarSalida}`, 'success');
+        }
+        if (accionMapa) {
+          setTimeout(() => abrirMapa(), 600);
+        }
+        if (accionResumen) {
+          setTimeout(() => mostrarResumen(), 600);
+        }
+        // Autosave if any action was taken
+        if (accionDestino || accionEvento || accionPersonas || accionOrigen || accionLimpiar || accionItinerario) {
+          autoSave();
         }
 
         agregarMensajeChat('ai', displayRespuesta.trim());
@@ -661,7 +888,7 @@
     }
     function setLanguage(lang, sync = true) {
       currentLang = lang;
-      pluxUser.setLanguage(lang);
+      localStorage.setItem('pluxUserLanguage', lang);
       document.body.className = document.body.className.replace(/lang-\w+/, `lang-${lang}`);
       if (!document.body.className.includes(`lang-${lang}`)) document.body.classList.add(`lang-${lang}`);
       document.getElementById('langButton').textContent = lang.toUpperCase();
@@ -699,9 +926,9 @@
       themeDropdown.innerHTML = `
         <div class="theme-option" data-theme="theme-claro">${t('temas.claro') || 'plux: Claro'}</div>
         <div class="theme-option active" data-theme="theme-oscuro">${t('temas.oscuro') || 'plux: Oscuro'}</div>
-        <div class="theme-option" data-theme="theme-tokyo">${t('temas.tokyo') || 'plux: Tokyo Night'}</div>
-        <div class="theme-option" data-theme="theme-grid">${t('temas.grid') || 'plux: The Grid'}</div>
-        <div class="theme-option" data-theme="theme-terminal">${t('temas.terminal') || 'plux: Terminal'}</div>
+        <div class="theme-option" data-theme="theme-tokyo">${t('temas.tokyo') || 'Tokyo Night'}</div>
+        <div class="theme-option" data-theme="theme-grid">${t('temas.grid') || 'The Grid'}</div>
+        <div class="theme-option" data-theme="theme-terminal">${t('temas.terminal') || 'Terminal'}</div>
         <div class="theme-option" data-theme="theme-starship">${t('temas.starship') || 'plux: Starship'}</div>
         <div class="theme-option" data-theme="theme-ares">${t('temas.ares') || 'plux: Ares'}</div>
       `;
@@ -734,7 +961,6 @@
 
     function setTheme(t, sync = true) {
         document.body.className = `lang-${currentLang} ${t}`;
-        pluxUser.setTheme(t);
         localStorage.setItem('PluxTheme', t);
         document.querySelectorAll('.theme-option').forEach(opt => {
             opt.classList.toggle('active', opt.dataset.theme === t);
@@ -800,51 +1026,15 @@
 
     // ================== FUNCIONES DE PERFIL DE USUARIO ==================
     function updateUserButtonDisplay() {
-      const userBtn = document.getElementById('userButton');
-      if (!userBtn) return;
-      
-      const nickname = pluxUser.currentUser.nickname;
-      if (nickname) {
-        userBtn.textContent = `👤 ${nickname}`;
-        userBtn.style.background = 'rgba(99, 102, 241, 0.3)';
+      const btn = document.getElementById('cuentaButton');
+      if (!btn) return;
+      if (currentNickname) {
+        btn.classList.add('logged-in');
+        btn.title = `@${currentNickname}`;
       } else {
-        userBtn.textContent = '👤 Perfil';
-        userBtn.style.background = 'rgba(99, 102, 241, 0.2)';
+        btn.classList.remove('logged-in');
+        btn.title = 'Tu cuenta';
       }
-    }
-
-    function confirmarPerfilUsuario() {
-      const nicknameInput = document.getElementById('userNicknameInput');
-      const nickname = nicknameInput.value.trim();
-      
-      if (nickname) {
-        pluxUser.createUserProfile(nickname).then(() => {
-          updateUserButtonDisplay();
-          showToast(`¡Bienvenido, ${nickname}!`, 'success');
-          document.getElementById('modal-user-profile').style.display = 'none';
-          // Update the app title with the username
-          document.getElementById('appTitle').textContent = `${t('app_title')} - ${nickname}`;
-        }).catch(e => {
-          showToast('Error al crear perfil: ' + e.message, 'error');
-        });
-      } else {
-        showToast('Por favor ingresa un nickname', 'info');
-      }
-    }
-
-    function saltarPerfilUsuario() {
-      document.getElementById('modal-user-profile').style.display = 'none';
-      showToast('Puedes crear tu perfil luego desde las preferencias', 'info');
-    }
-
-    // Agregar colaborador a un viaje (función global)
-    async function abrirColaboradores() {
-      if (!pluxUser.isUserConfigured()) {
-        showToast('Debes crear un perfil primero', 'error');
-        document.getElementById('modal-user-profile').style.display = 'flex';
-        return;
-      }
-      document.getElementById('modal-colaboradores').style.display = 'flex';
     }
 
     // Cerrar panel de herramientas
@@ -880,29 +1070,24 @@
       document.getElementById('modal-descubrir').style.display = 'none';
     }
 
-    // ================== INICIALIZACI ==================
+    // ================== INICIALIZACIÓN ==================
     document.addEventListener('DOMContentLoaded', async function() {
       inicializarCuenta();
       
       await loadKeys();
       await initFirebaseAuth();
       
-      // Inicializar sistema de usuario
-      if (db) {
-        await pluxUser.initFirebase(db);
-      }
-      
-      // Mostrar modal de perfil si no existe usuario
+      // Mostrar modal de cuenta para nickname si no existe
       setTimeout(() => {
-        if (!pluxUser.isUserConfigured()) {
-          document.getElementById('modal-user-profile').style.display = 'flex';
-          document.getElementById('userNicknameInput').focus();
+        if (!currentNickname) {
+          abrirCuenta();
+          showToast('Crea un nickname para guardar tu viaje y colaborar', 'info');
         }
       }, 500);
       
       loadFromStorage();
-      const savedTheme = localStorage.getItem('PluxTheme') || pluxUser.currentUser.theme;
-      const savedLang = localStorage.getItem('pluxUserLanguage') || pluxUser.currentUser.language;
+      const savedTheme = localStorage.getItem('PluxTheme') || 'theme-oscuro';
+      const savedLang = localStorage.getItem('pluxUserLanguage') || 'es';
       
       if (savedTheme && ['theme-claro','theme-oscuro','theme-tokyo','theme-grid','theme-terminal','theme-starship','theme-ares'].includes(savedTheme)) setTheme(savedTheme);
       else setTheme('theme-oscuro');
@@ -920,15 +1105,13 @@
         document.getElementById('themeDropdown').classList.toggle('show');
       });
       // Click al botón de usuario
-      document.getElementById('userButton').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (pluxUser.isUserConfigured()) {
-          showToast(`Hola, ${pluxUser.currentUser.nickname}!`, 'info');
-        } else {
-          document.getElementById('modal-user-profile').style.display = 'flex';
-          document.getElementById('userNicknameInput').focus();
-        }
-      });
+      const cuentaBtn = document.getElementById('cuentaButton');
+      if (cuentaBtn) {
+        cuentaBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          abrirCuenta();
+        });
+      }
       document.addEventListener('click', () => {
         document.getElementById('langDropdown').classList.remove('show');
         document.getElementById('themeDropdown').classList.remove('show');
@@ -2589,14 +2772,16 @@
         trips.forEach((trip, index) => {
           const item = document.createElement('div');
           item.className = 'trip-item';
+          item.style.cursor = 'pointer';
+          const dests = (trip.destinos || []).map(d => d.nombre).join(', ') || 'Sin destinos';
           item.innerHTML = `
-            <div class="trip-info">
+            <div class="trip-info" onclick="cargarViaje(${index})" style="cursor:pointer;flex:1;">
               <h4>${trip.nombre}</h4>
-              <small>${new Date(trip.fecha).toLocaleDateString()}</small>
+              <small style="color:var(--gris);">${new Date(trip.fecha).toLocaleDateString()} · ${dests}</small>
             </div>
             <div class="trip-actions">
-              <button onclick="cargarViaje(${index})">Cargar</button>
-              <button onclick="eliminarViaje(${index})" style="background:#dc2626;">Eliminar</button>
+              <button onclick="event.stopPropagation();abrirCompartirModal()" style="background:var(--azul);" title="Compartir">🔗</button>
+              <button onclick="event.stopPropagation();eliminarViaje(${index})" style="background:#dc2626;">×</button>
             </div>
           `;
           tripList.appendChild(item);
@@ -2611,19 +2796,22 @@
         templates.forEach((tpl, index) => {
           const item = document.createElement('div');
           item.className = 'trip-item';
+          item.style.cursor = 'pointer';
           item.innerHTML = `
-            <div class="trip-info">
+            <div class="trip-info" onclick="cargarPlantilla(${index})" style="cursor:pointer;flex:1;">
               <h4>${tpl.nombre}</h4>
-              <small>Plantilla</small>
+              <small>Plantilla · Click para cargar</small>
             </div>
             <div class="trip-actions">
-              <button onclick="cargarPlantilla(${index})">Cargar</button>
-              <button onclick="eliminarPlantilla(${index})" style="background:#dc2626;">Eliminar</button>
+              <button onclick="event.stopPropagation();eliminarPlantilla(${index})" style="background:#dc2626;">×</button>
             </div>
           `;
           plantillasList.appendChild(item);
         });
       }
+
+      // Load shared trips if user is logged in
+      renderSharedTripsList();
     }
 
     function guardarViaje() {
@@ -2664,10 +2852,13 @@
       vueltaGlobal = viaje.vueltaGlobal || '';
       vueltaPrecioGlobal = viaje.vueltaPrecioGlobal || 0;
       vueltaCostosAdicionales = viaje.vueltaCostosAdicionales || [];
+      loadedTripIndex = index; // Track which trip is loaded for autosave
 
       renderDestinos();
       renderVueltaCostos();
       cerrarModalViajes();
+      empezar(); // Auto-navigate to editor
+      showToast(`Viaje "${viaje.nombre}" cargado`, 'success');
     }
 
     function eliminarViaje(index) {
@@ -2962,21 +3153,242 @@
         }
     }
 
-    function abrirColaboradores() {
+    async function abrirColaboradores() {
+        if (!currentNickname) {
+            showToast('Debes crear un nickname primero', 'error');
+            abrirCuenta();
+            return;
+        }
         document.getElementById('modal-colaboradores').style.display = 'flex';
         const lista = document.getElementById('lista-colaboradores');
-        document.getElementById('invite-code-container').style.display = 'none';
+        const inviteCodeContainer = document.getElementById('invite-code-container');
         
-        lista.innerHTML = `
+        if (syncCode) {
+            document.getElementById('display-invite-code').innerText = syncCode;
+            inviteCodeContainer.style.display = 'block';
+        } else {
+            inviteCodeContainer.style.display = 'none';
+        }
+        
+        let html = `
             <div style="display:flex; align-items:center; gap:15px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
-                <div class="colab-avatar" style="background:var(--rosa); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">Tu</div>
+                <div class="colab-avatar" style="background:var(--rosa); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">${currentNickname.substring(0,2).toUpperCase()}</div>
                 <div>
-                    <strong style="color:white;">Propietario</strong>
+                    <strong style="color:white;">@${currentNickname} (Tú)</strong>
                     <p style="font-size:0.8rem; color:var(--verde);">En línea</p>
                 </div>
             </div>
-            <p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:15px;">Solo tú tienes acceso a este viaje. Genera un código para invitar a otros.</p>
         `;
+        
+        if (db && syncCode) {
+            try {
+                const docSnap = await db.collection('plux_viajes_compartidos').doc(syncCode).get();
+                if (docSnap.exists) {
+                    const colabs = docSnap.data().colaboradores || [];
+                    let hasColabs = false;
+                    colabs.forEach(colab => {
+                        if (colab !== currentNickname) {
+                            hasColabs = true;
+                            html += `
+                                <div style="display:flex; align-items:center; gap:15px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
+                                    <div class="colab-avatar" style="background:var(--azul); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">${colab.substring(0,2).toUpperCase()}</div>
+                                    <div style="flex:1">
+                                        <strong style="color:white;">@${colab}</strong>
+                                        <p style="font-size:0.8rem; color:var(--gris);">Colaborador</p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                    if (!hasColabs) {
+                        html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:15px;">Solo vos tenés acceso a este viaje. Invitá a alguien por nickname o generá un código.</p>`;
+                    }
+                } else {
+                    html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:15px;">Solo vos tenés acceso a este viaje. Generá un código para invitar a otros.</p>`;
+                }
+            } catch (e) {
+                console.error('Error al cargar colaboradores:', e);
+                html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:15px;">Error cargando colaboradores.</p>`;
+            }
+        } else if (!syncCode) {
+            html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:15px;">Generá un código de invitación para compartir el viaje en tiempo real.</p>`;
+        }
+        
+        lista.innerHTML = html;
+    }
+
+    async function invitarColaboradorPorNickname() {
+        const nickInput = document.getElementById('invite-nickname-input');
+        const targetNick = nickInput ? nickInput.value.trim() : '';
+        if (!targetNick) { showToast('Ingresá el nickname a invitar', 'error'); return; }
+        if (!currentNickname) { showToast('Debes iniciar sesión primero', 'error'); return; }
+        if (targetNick === currentNickname) { showToast('No podés invitarte a vos mismo', 'error'); return; }
+        if (!db) { showToast('Base de datos no disponible', 'error'); return; }
+
+        // Check if target user exists
+        try {
+            const userDoc = await db.collection('plux_usuarios').doc(targetNick).get();
+            if (!userDoc.exists) {
+                showToast(`El usuario @${targetNick} no existe en Plux`, 'error');
+                return;
+            }
+        } catch (e) {
+            showToast('Error al verificar el usuario', 'error');
+            return;
+        }
+
+        // If no sync code, generate one first
+        if (!syncCode) {
+            generarCodigoInApp();
+            showToast('Código generado automáticamente para compartir', 'info');
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        // Add collaborator to the shared trip
+        try {
+            await db.collection('plux_viajes_compartidos').doc(syncCode).set({
+                colaboradores: firebase.firestore.FieldValue.arrayUnion(targetNick),
+                propietario: currentNickname,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            showToast(`@${targetNick} invitado al viaje ✅`, 'success');
+            if (nickInput) nickInput.value = '';
+            abrirColaboradores(); // Refresh list
+        } catch (e) {
+            console.error('Error al invitar colaborador:', e);
+            showToast('Error al enviar la invitación', 'error');
+        }
+    }
+
+    async function renderSharedTripsList() {
+        if (!currentNickname || !db) return;
+        const section = document.getElementById('colab-trips-section');
+        const list = document.getElementById('sharedTripList');
+        if (!section || !list) return;
+
+        try {
+            // Query trips where user is a collaborator
+            const query = await db.collection('plux_viajes_compartidos')
+                .where('colaboradores', 'array-contains', currentNickname)
+                .limit(10)
+                .get();
+
+            const ownTrips = query.docs.filter(doc => {
+                const data = doc.data();
+                return data.propietario !== currentNickname; // only show trips owned by others
+            });
+
+            if (ownTrips.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            list.innerHTML = '';
+            ownTrips.forEach(doc => {
+                const data = doc.data();
+                const code = doc.id;
+                const owner = data.propietario || 'desconocido';
+                const item = document.createElement('div');
+                item.className = 'trip-item';
+                item.style.cursor = 'pointer';
+                item.innerHTML = `
+                    <div class="trip-info" onclick="cargarViajeCompartido('${code}')" style="cursor:pointer;flex:1">
+                        <h4 style="color:var(--verde);">🔗 Código: ${code}</h4>
+                        <small>Propietario: @${owner}</small>
+                    </div>
+                    <div class="trip-actions">
+                        <button onclick="cargarViajeCompartido('${code}')" style="background:var(--verde);color:black;">Unirse</button>
+                        <button onclick="abandonarViajeCompartido('${code}')" style="background:#dc2626;">Salir</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        } catch(e) {
+            console.error('Error loading shared trips:', e);
+            section.style.display = 'none';
+        }
+    }
+
+    async function cargarViajeCompartido(code) {
+        if (!db) { showToast('Base de datos no disponible', 'error'); return; }
+        showToast('Uniéndose al viaje compartido...', 'info');
+        try {
+            const docSnap = await db.collection('plux_viajes_compartidos').doc(code).get();
+            if (docSnap.exists) {
+                syncCode = code;
+                importarViajeString(docSnap.data().data);
+                if (currentNickname) {
+                    await db.collection('plux_viajes_compartidos').doc(code).set({
+                        colaboradores: firebase.firestore.FieldValue.arrayUnion(currentNickname)
+                    }, { merge: true });
+                }
+                activarListenerNube();
+                showToast(`¡Viaje con código ${code} cargado!`, 'success');
+                cerrarModalViajes();
+                empezar();
+            } else {
+                showToast('Viaje no encontrado', 'error');
+            }
+        } catch(e) {
+            console.error(e);
+            showToast('Error al cargar el viaje compartido', 'error');
+        }
+    }
+
+    async function abandonarViajeCompartido(code) {
+        if (!db || !currentNickname) return;
+        try {
+            await db.collection('plux_viajes_compartidos').doc(code).update({
+                colaboradores: firebase.firestore.FieldValue.arrayRemove(currentNickname)
+            });
+            showToast('Saliste del viaje compartido', 'info');
+            renderTripLists();
+        } catch(e) {
+            showToast('Error al salir del viaje', 'error');
+        }
+    }
+
+    function abrirCompartirModal() {
+        // Show share options: code + nickname invite
+        const code = syncCode;
+        const nick = currentNickname;
+        let html = `<div id="modal-compartir" style="position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px;" onclick="if(event.target===this)this.remove()">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:30px;max-width:480px;width:100%;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <h2 style="color:var(--verde);margin:0;">🔗 Compartir viaje</h2>
+                    <span onclick="document.getElementById('modal-compartir').remove()" style="cursor:pointer;font-size:1.8rem;color:var(--gris);">×</span>
+                </div>`;
+
+        if (code) {
+            html += `<div style="background:rgba(255,255,255,0.05);border:1px dashed var(--verde);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px;">
+                <p style="color:var(--gris);font-size:0.8rem;margin-bottom:8px;">CÓDIGO DE ACCESO</p>
+                <h2 style="color:var(--rosa);letter-spacing:6px;font-size:2.5rem;margin:0;">${code}</h2>
+                <p style="color:var(--gris);font-size:0.75rem;margin-top:8px;">Compartí este código para que otros se unan al viaje en tiempo real</p>
+                <button onclick="navigator.clipboard?.writeText('${code}').then(()=>showToast('Código copiado','success'))" style="margin-top:12px;padding:8px 20px;background:var(--azul);border:none;color:white;border-radius:8px;cursor:pointer;">📋 Copiar código</button>
+            </div>`;
+        } else {
+            html += `<div style="background:rgba(255,255,255,0.05);border:1px dashed var(--border);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px;">
+                <p style="color:var(--gris);">Aún no generaste un código de invitación</p>
+                <button onclick="generarCodigoInApp();document.getElementById('modal-compartir').remove();abrirColaboradores();" style="margin-top:12px;padding:10px 20px;background:var(--azul);border:none;color:white;border-radius:8px;cursor:pointer;">Generar código</button>
+            </div>`;
+        }
+
+        if (nick) {
+            html += `<div style="border-top:1px solid var(--border);padding-top:20px;">
+                <p style="color:var(--gris);font-size:0.85rem;margin-bottom:10px;">O invitar directamente por nickname:</p>
+                <div style="display:flex;gap:10px;">
+                    <input type="text" id="share-modal-nick" placeholder="nickname del amigo" style="flex:1;padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:white;">
+                    <button onclick="document.getElementById('invite-nickname-input').value=document.getElementById('share-modal-nick').value;document.getElementById('modal-compartir').remove();abrirColaboradores();invitarColaboradorPorNickname();" style="padding:10px 16px;background:var(--verde);border:none;color:black;font-weight:bold;border-radius:8px;cursor:pointer;">Invitar</button>
+                </div>
+            </div>`;
+        } else {
+            html += `<p style="color:var(--gris);font-size:0.85rem;text-align:center;margin-top:10px;">Iniciá sesión con un nickname para invitar por nombre</p>`;
+        }
+
+        html += `</div></div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
     }
 
     function cerrarColaboradores() {
@@ -3093,5 +3505,13 @@
 
   window.abrirCuenta = abrirCuenta;
   window.cerrarCuenta = cerrarCuenta;
-  window.guardarNickname = guardarNickname;
   window.cerrarSesion = cerrarSesion;
+  window.switchCuentaTab = switchCuentaTab;
+  window.toggleRegisterPassword = toggleRegisterPassword;
+  window.crearCuentaPlux = crearCuentaPlux;
+  window.iniciarSesionPlux = iniciarSesionPlux;
+  window.invitarColaboradorPorNickname = invitarColaboradorPorNickname;
+  window.cargarViajeCompartido = cargarViajeCompartido;
+  window.abandonarViajeCompartido = abandonarViajeCompartido;
+  window.abrirCompartirModal = abrirCompartirModal;
+  window.renderSharedTripsList = renderSharedTripsList;

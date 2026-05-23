@@ -319,53 +319,17 @@
       top:20px; right:20px; display:flex; gap:10px; z-index:200; animation:slideRight 0.5s ease;
     }
     .lang-button, .theme-button, .user-button {
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      color: var(--texto);
-      font-weight: 600;
-      transition: all 0.2s ease-in-out;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg,var(--verde),var(--azul));
+      border:2px solid var(--texto); color:var(--texto); font-weight:bold; font-size:1.2rem; cursor:pointer;
+      box-shadow:0 4px 10px rgba(0,0,0,0.5); transition:transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.3s, background 0.3s;
+      display:flex; align-items:center; justify-content:center;
     }
     .lang-button:hover, .theme-button:hover, .user-button:hover {
-      background: rgba(255, 255, 255, 0.1);
+      transform:scale(1.15) rotate(5deg); box-shadow:0 0 25px var(--rosa);
+    }
+    .user-button.logged-in {
+      background: linear-gradient(135deg, var(--rosa), var(--azul));
       border-color: var(--verde);
-      color: var(--verde);
-    }
-    .user-button.logged-in { border-color: var(--verde); background: rgba(52,211,153,0.15); }
-    .lang-dropdown, .theme-dropdown {
-      position: absolute;
-      top: 55px; /* Adjust based on button height */
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      min-width: 120px;
-      display: none;
-      flex-direction: column;
-      z-index: 1000;
-      overflow: hidden;
-    }
-    .lang-dropdown.show, .theme-dropdown.show {
-      display: flex;
-    }
-    .lang-option, .theme-option {
-      padding: 10px 15px;
-      color: var(--texto);
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    .lang-option:hover, .theme-option:hover {
-      background-color: rgba(255, 255, 255, 0.08);
-    }
-    .lang-option.active, .theme-option.active {
-      background-color: var(--azul);
-      color: white;
     }
     /* Toast Notification */
     #toast-container {

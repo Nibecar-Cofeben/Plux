@@ -18,7 +18,7 @@
   <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
   <script defer src="/__/firebase/10.9.0/firebase-firestore-compat.js"></script>
   <script defer src="/__/firebase/init.js"></script>
-  <script defer src="script.js?v=1779311446023"></script>
+  <script defer src="script.js?v=1779311446029"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -36,6 +36,7 @@
       </div>
       <div class="theme-button" id="themeButton">🎨</div>
       <div class="theme-dropdown" id="themeDropdown"></div>
+      <div class="user-button" id="cuentaButton" onclick="abrirCuenta()" title="Tu cuenta">👤</div>
     </div>
     <div class="logo-bubble">PLUX</div>
 
@@ -176,7 +177,7 @@
     <div class="presentacion-content">
       <div class="presentacion-header">
         <h2 id="presentacionTitle">Presentación del viaje</h2>
-        <button onclick="cerrarPresentacion()" id="cerrarPresentacionBtn">Cerrar</button>
+        <span class="close-panel" onclick="cerrarPresentacion()">×</span>
       </div>
       <div id="presentacion-contenido"></div>
       <div class="presentacion-nav">
@@ -460,5 +461,27 @@
           <div id="checklist-display" style="font-size:12px;"></div>
       </div>
   </div>
+
+  <!-- Modal Cuenta / Nickname -->
+  <div id="modal-cuenta">
+    <div class="cuenta-content">
+      <span class="close-panel" onclick="cerrarCuenta()">×</span>
+      <div class="cuenta-avatar" id="cuentaAvatar">👤</div>
+      <div class="cuenta-nickname-display" id="cuentaNicknameDisplay" style="display:none;"></div>
+      <h2 id="cuentaTitle">Tu Perfil</h2>
+      <div class="cuenta-form" id="cuentaForm">
+        <input type="text" id="nickname-input" placeholder="Elegí un nickname..." maxlength="20" autocomplete="off">
+        <button onclick="guardarNickname()">Guardar Nickname</button>
+      </div>
+      <div class="cuenta-info" id="cuentaInfo" style="display:none;">
+        <div class="cuenta-info-row"><span>Idioma</span><span id="cuentaIdioma">ES</span></div>
+        <div class="cuenta-info-row"><span>Tema</span><span id="cuentaTema">Oscuro</span></div>
+        <div class="cuenta-info-row"><span>Viajes guardados</span><span id="cuentaViajes">0</span></div>
+        <button class="cuenta-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
+

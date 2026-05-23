@@ -2,9 +2,9 @@
     const i18n = {
       es: {
         welcome_start: "Empieza tu viaje", trips_btn: "Tus viajes", tools_btn: "Más herramientas",
-        modal_title: "Tus viajes", save_trip_placeholder: "Nombre", save_trip_button: "Guardar viaje actual",
+        modal_title: "Tus viajes", save_trip_placeholder: "Nombre del viaje", save_trip_button: "Guardar viaje actual",
         load: "Cargar", delete: "Eliminar", no_saved_trips: "No hay viajes guardados.",
-        auto_save_name: "Resumen", app_title: "Plux Organiza tu aventura", add_dest_placeholder: "Destino",
+        auto_save_name: "Resumen", app_title: "Plux: Organiza tu aventura", add_dest_placeholder: "Destino",
         add_dest_button: "+ Añadir", add_day_button: "+ Añadir día", add_event_button: "+ Añadir Evento",
         view_summary: "Ver Resumen del Viaje", no_events_day: "Aún no hay eventos en este día",
         event_time_placeholder: "Hora", event_title_placeholder: "Título", event_notes_placeholder: "Notas",
@@ -12,40 +12,40 @@
         copy_button: "Copiar", summary_title: "Todo tu viaje", no_days_yet: "Sin días aún",
         no_events_yet: "Sin eventos aún", untitled_event: "(Evento sin título)", day_prefix: "Día",
         no_destinations: "Aún no hay destinos agregados.", transport: "Transporte", accommodation: "Alojamiento",
-        vuelta: "Vuelta", transport_price: "", accommodation_price: "", vuelta_price: "",
+        vuelta: "Vuelta", transport_price: "Precio Transporte", accommodation_price: "Precio Alojamiento", vuelta_price: "Precio Vuelta",
         conflict_warning: "¡Hay eventos que se solapan!", warning_15min: "Eventos con menos de 15 min de diferencia",
         shared_text: "Mi viaje Plux:\n", costo_total: "Costo total: {total} ", plantillas: "Plantillas",
         guardar_plantilla: "Guardar como plantilla", nombre_plantilla: "Nombre", no_plantillas: "No hay plantillas guardadas.",
-        importar: "Importar viaje (JSON)", exportar: "Exportar viaje actual", add_costo: "+", costo_desc: "Desc",
+        importar: "Importar viaje (JSON)", exportar: "Exportar viaje actual", add_costo: "+", costo_desc: "Descripción",
         calendar: { monthNames: ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"], weekDays: ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"] },
         view_modes: { cards: "Vista tarjetas", timeline: "Vista línea tiempo", presentation: "Vista presentación" },
         herramientas_title: "Más herramientas", calendario_title: "Calendario", mapa_btn: "Ver mapa",
         eventos_dia_title: "Eventos del día", estadisticas: { duracion: "Duración (días)", eventos: "Eventos", coste_total: "Coste total", coste_persona: "Coste/persona", destinos: "Destinos" },
-        temas: { claro: "Claro", oscuro: "Oscuro", tokyo: "Tokyo Night" },
+        temas: { claro: "plux: Claro", oscuro: "plux: Oscuro", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
         lugar_salida: "Lugar de salida", costo_extra_vuelta: "Costo extra vuelta", tramo: "Tramo", origen: "Origen",
         destino: "Destino", medio: "Medio", precio: "Precio", escala: "Escala", agregar_tramo: "+ Agregar tramo", agregar_escala: "+ Escala"
       },
       en: {
         welcome_start: "Start your journey", trips_btn: "Your trips", tools_btn: "More tools",
-        modal_title: "Your trips", save_trip_placeholder: "Name", save_trip_button: "Save current trip",
+        modal_title: "Your trips", save_trip_placeholder: "Trip name", save_trip_button: "Save current trip",
         load: "Load", delete: "Delete", no_saved_trips: "No saved trips.", auto_save_name: "Summary",
-        app_title: "Plux Plan your adventure", add_dest_placeholder: "Destination", add_dest_button: "+ Add",
+        app_title: "plux: Plan your adventure", add_dest_placeholder: "Destination", add_dest_button: "+ Add",
         add_day_button: "+ Add day", add_event_button: "+ Add event", view_summary: "View Trip Summary",
         no_events_day: "No events yet today", event_time_placeholder: "Time", event_title_placeholder: "Title",
         event_notes_placeholder: "Notes", event_cost_placeholder: "", event_duration_placeholder: "min",
         delete_button: "Delete", copy_button: "Copy", summary_title: "Your entire trip", no_days_yet: "No days yet",
         no_events_yet: "No events yet", untitled_event: "(Untitled event)", day_prefix: "Day",
         no_destinations: "No destinations added yet.", transport: "Transport", accommodation: "Accommodation",
-        vuelta: "Return", transport_price: "", accommodation_price: "", vuelta_price: "",
+        vuelta: "Return", transport_price: "Transport Price", accommodation_price: "Accommodation Price", vuelta_price: "Return Price",
         conflict_warning: "There are overlapping events!", warning_15min: "Events less than 15 min apart",
         shared_text: "My Plux trip:\n", costo_total: "Total cost: {total} ", plantillas: "Templates",
         guardar_plantilla: "Save as template", nombre_plantilla: "Name", no_plantillas: "No saved templates.",
-        importar: "Import trip (JSON)", exportar: "Export current trip", add_costo: "+", costo_desc: "Desc",
+        importar: "Import trip (JSON)", exportar: "Export current trip", add_costo: "+", costo_desc: "Description",
         calendar: { monthNames: ["January","February","March","April","May","June","July","August","September","October","November","December"], weekDays: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] },
         view_modes: { cards: "Card view", timeline: "Timeline view", presentation: "Presentation view" },
         herramientas_title: "More tools", calendario_title: "Calendar", mapa_btn: "View map",
-        eventos_dia_title: "Day events", estadisticas: { duracion: "Duration (days)", eventos: "Events", coste_total: "Total cost", coste_person: "Cost/person", destinos: "Destinations" },
-        temas: { claro: "Light", oscuro: "Dark", tokyo: "Tokyo Night" },
+        eventos_dia_title: "Day events", estadisticas: { duracion: "Duration (days)", eventos: "Events", coste_total: "Total cost", coste_persona: "Cost/person", destinos: "Destinations" },
+        temas: { claro: "plux: Light", oscuro: "plux: Dark", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
         lugar_salida: "Departure place", costo_extra_vuelta: "Extra return cost", tramo: "Segment", origen: "Origin",
         destino: "Destination", medio: "Means", precio: "Price", escala: "Stopover", agregar_tramo: "+ Add segment", agregar_escala: "+ Stopover"
       },
@@ -53,23 +53,23 @@
         welcome_start: "Commencez votre voyage", trips_btn: "Vos voyages", tools_btn: "Plus d'outils",
         modal_title: "Vos voyages", save_trip_placeholder: "Nom", save_trip_button: "Enregistrer le voyage actuel",
         load: "Charger", delete: "Supprimer", no_saved_trips: "Aucun voyage enregistré.", auto_save_name: "Résumé",
-        app_title: "Plux Organisez votre aventure", add_dest_placeholder: "Destination", add_dest_button: "+ Ajouter",
+        app_title: "plux Organisez votre aventure", add_dest_placeholder: "Destination", add_dest_button: "+ Ajouter",
         add_day_button: "+ Ajouter un jour", add_event_button: "+ Ajouter un événement", view_summary: "Voir le résumé du voyage",
         no_events_day: "Pas encore d'événements ce jour", event_time_placeholder: "Heure", event_title_placeholder: "Titre",
         event_notes_placeholder: "Notes", event_cost_placeholder: "", event_duration_placeholder: "min",
         delete_button: "Supprimer", copy_button: "Copier", summary_title: "Tout votre voyage", no_days_yet: "Pas encore de jours",
         no_events_yet: "Pas encore d'événements", untitled_event: "(Événement sans titre)", day_prefix: "Jour",
         no_destinations: "Aucune destination ajoutée pour l'instant.", transport: "Transport", accommodation: "Hébergement",
-        vuelta: "Retour", transport_price: "", accommodation_price: "", vuelta_price: "",
+        vuelta: "Retour", transport_price: "Prix Transport", accommodation_price: "Prix Hébergement", vuelta_price: "Prix Retour",
         conflict_warning: "Il y a des événements qui se chevauchent !", warning_15min: "Événements à moins de 15 min d'écart",
         shared_text: "Mon voyage Plux:\n", costo_total: "Coût total : {total} ", plantillas: "Modèles",
         guardar_plantilla: "Enregistrer comme modèle", nombre_plantilla: "Nom", no_plantillas: "Aucun modèle enregistré.",
-        importar: "Importer un voyage (JSON)", exportar: "Exporter le voyage actuel", add_costo: "+", costo_desc: "Desc",
+        importar: "Importer un voyage (JSON)", exportar: "Exporter le voyage actuel", add_costo: "+", costo_desc: "Description",
         calendar: { monthNames: ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"], weekDays: ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"] },
         view_modes: { cards: "Vue cartes", timeline: "Vue chronologique", presentation: "Vue présentation" },
         herramientas_title: "Plus d'outils", calendario_title: "Calendrier", mapa_btn: "Voir la carte",
         eventos_dia_title: "Événements du jour", estadisticas: { duracion: "Durée (jours)", eventos: "Événements", coste_total: "Coût total", coste_persona: "Coût/personne", destinos: "Destinations" },
-        temas: { claro: "Clair", oscuro: "Sombre", tokyo: "Tokyo Night" },
+        temas: { claro: "plux: Clair", oscuro: "plux: Sombre", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
         lugar_salida: "Lieu de départ", costo_extra_vuelta: "Coût supplémentaire retour", tramo: "Tronçon", origen: "Origine",
         destino: "Destination", medio: "Moyen", precio: "Prix", escala: "Escalier", agregar_tramo: "+ Ajouter tronçon", agregar_escala: "+ Escale"
       },
@@ -77,51 +77,138 @@
         welcome_start: "Beginnen Sie Ihre Reise", trips_btn: "Ihre Reisen", tools_btn: "Weitere Tools",
         modal_title: "Ihre Reisen", save_trip_placeholder: "Name", save_trip_button: "Aktuelle Reise speichern",
         load: "Laden", delete: "Löschen", no_saved_trips: "Keine gespeicherten Reisen.", auto_save_name: "Zusammenfassung",
-        app_title: "Plux Planen Sie Ihr Abenteuer", add_dest_placeholder: "Reiseziel", add_dest_button: "+ Hinzufügen",
+        app_title: "plux: Planen Sie Ihr Abenteuer", add_dest_placeholder: "Reiseziel", add_dest_button: "+ Hinzufügen",
         add_day_button: "+ Tag hinzufügen", add_event_button: "+ Ereignis hinzufügen", view_summary: "Reisezusammenfassung ansehen",
         no_events_day: "Noch keine Ereignisse an diesem Tag", event_time_placeholder: "Uhrzeit", event_title_placeholder: "Titel",
         event_notes_placeholder: "Notizen", event_cost_placeholder: "", event_duration_placeholder: "min",
         delete_button: "Löschen", copy_button: "Kopieren", summary_title: "Ihre gesamte Reise", no_days_yet: "Noch keine Tage",
         no_events_yet: "Noch keine Ereignisse", untitled_event: "(Ereignis ohne Titel)", day_prefix: "Tag",
         no_destinations: "Noch keine Reiseziele hinzugefügt.", transport: "Transport", accommodation: "Unterkunft",
-        vuelta: "Rückkehr", transport_price: "", accommodation_price: "", vuelta_price: "",
+        vuelta: "Rückkehr", transport_price: "Transportpreis", accommodation_price: "Unterkunftspreis", vuelta_price: "Rückfahrtspreis",
         conflict_warning: "Es gibt überlappende Ereignisse!", warning_15min: "Ereignisse mit weniger als 15 min Abstand",
         shared_text: "Meine Plux-Reise:\n", costo_total: "Gesamtkosten: {total} ", plantillas: "Vorlagen",
         guardar_plantilla: "Als Vorlage speichern", nombre_plantilla: "Name", no_plantillas: "Keine Vorlagen gespeichert.",
-        importar: "Reise importieren (JSON)", exportar: "Aktuelle Reise exportieren", add_costo: "+", costo_desc: "Desc",
+        importar: "Reise importieren (JSON)", exportar: "Aktuelle Reise exportieren", add_costo: "+", costo_desc: "Beschreibung",
         calendar: { monthNames: ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"], weekDays: ["Mo","Di","Mi","Do","Fr","Sa","So"] },
         view_modes: { cards: "Kartenansicht", timeline: "Zeitleistenansicht", presentation: "Präsentationsansicht" },
         herramientas_title: "Weitere Tools", calendario_title: "Kalender", mapa_btn: "Karte anzeigen",
         eventos_dia_title: "Ereignisse des Tages", estadisticas: { duracion: "Dauer (Tage)", eventos: "Ereignisse", coste_total: "Gesamtkosten", coste_persona: "Kosten/Person", destinos: "Reiseziele" },
-        temas: { claro: "Hell", oscuro: "Dunkel", tokyo: "Tokyo Night" },
+        temas: { claro: "plux: Hell", oscuro: "plux: Dunkel", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
         lugar_salida: "Abfahrtsort", costo_extra_vuelta: "Zusätzliche Rückkehrkosten", tramo: "Abschnitt", origen: "Herkunft",
-        destino: "Ziel", medio: "Mittel", precio: "Preis", escala: "Zwischenstopp", agregar_tramo: "+ ✈️ Abschnitt hinzufügen", agregar_escala: "+ Zwischenstopp"
+        destino: "Ziel", medio: "Mittel", precio: "Preis", escala: "Zwischenstopp", agregar_tramo: "+ Abschnitt hinzufügen", agregar_escala: "+ Zwischenstopp"
       },
       it: {
         welcome_start: "Inizia il tuo viaggio", trips_btn: "I tuoi viaggi", tools_btn: "Altri strumenti",
         modal_title: "I tuoi viaggi", save_trip_placeholder: "Nome", save_trip_button: "Salva viaggio attuale",
         load: "Carica", delete: "Elimina", no_saved_trips: "Nessun viaggio salvato.", auto_save_name: "Riepilogo",
-        app_title: "Plux Organizza la tua avventura", add_dest_placeholder: "Destinazione", add_dest_button: "+ Aggiungi",
+        app_title: "plux: Organizza la tua avventura", add_dest_placeholder: "Destinazione", add_dest_button: "+ Aggiungi",
         add_day_button: "+ Aggiungi giorno", add_event_button: "+ Aggiungi evento", view_summary: "Vedi riepilogo del viaggio",
         no_events_day: "Ancora nessun evento in questo giorno", event_time_placeholder: "Ora", event_title_placeholder: "Titolo",
         event_notes_placeholder: "Note", event_cost_placeholder: "", event_duration_placeholder: "min",
         delete_button: "Elimina", copy_button: "Copia", summary_title: "Tutto il tuo viaggio", no_days_yet: "Ancora nessun giorno",
         no_events_yet: "Ancora nessun evento", untitled_event: "(Evento senza titolo)", day_prefix: "Giorno",
         no_destinations: "Nessuna destinazione aggiunta ancora.", transport: "Trasporto", accommodation: "Alloggio",
-        vuelta: "Ritorno", transport_price: "", accommodation_price: "", vuelta_price: "",
+        vuelta: "Ritorno", transport_price: "Prezzo Trasporto", accommodation_price: "Prezzo Alloggio", vuelta_price: "Prezzo Ritorno",
         conflict_warning: "Ci sono eventi sovrapposti!", warning_15min: "Eventi con meno di 15 min di distanza",
         shared_text: "Il mio viaggio Plux:\n", costo_total: "Costo totale: {total} ", plantillas: "Modelli",
         guardar_plantilla: "Salva come modello", nombre_plantilla: "Nome", no_plantillas: "Nessun modello salvato.",
-        importar: "Importa viaggio (JSON)", exportar: "Esporta viaggio attuale", add_costo: "+", costo_desc: "Desc",
+        importar: "Importa viaggio (JSON)", exportar: "Esporta viaggio attuale", add_costo: "+", costo_desc: "Descrizione",
         calendar: { monthNames: ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"], weekDays: ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"] },
         view_modes: { cards: "Vista schede", timeline: "Vista cronologica", presentation: "Vista presentazione" },
         herramientas_title: "Altri strumenti", calendario_title: "Calendario", mapa_btn: "Visualizza mappa",
         eventos_dia_title: "Eventi del giorno", estadisticas: { duracion: "Durata (giorni)", eventi: "Eventi", coste_total: "Costo totale", coste_persona: "Costo/persona", destinos: "Destinazioni" },
-        temas: { claro: "Chiaro", oscuro: "Scuro", tokyo: "Tokyo Night" },
+        temas: { claro: "plux: Chiaro", oscuro: "plux: Scuro", tokyo: "plux: Tokyo Night", grid: "plux: The Grid", terminal: "plux: Terminal", starship: "plux: Starship", ares: "plux: Ares" },
         lugar_salida: "Luogo di partenza", costo_extra_vuelta: "Costo aggiuntivo ritorno", tramo: "Tratta", origen: "Origine",
-        destino: "Destinazione", medio: "Mezzo", precio: "Prezzo", escala: "Scala", agregar_tramo: "+ ✈️ Aggiungi tratta", agregar_escala: "+ Scala"
+        destino: "Destinazione", medio: "Mezzo", precio: "Prezzo", escala: "Scala", agregar_tramo: "+ Aggiungi tratta", agregar_escala: "+ Scala"
       }
     };
+
+    // ================== ACCOUNT / NICKNAME SYSTEM ==================
+    let currentNickname = null;
+
+    function inicializarCuenta() {
+      const storedNick = localStorage.getItem('Plux_Nickname');
+      if (storedNick) {
+        currentNickname = storedNick;
+        const btn = document.getElementById('cuentaButton');
+        if(btn) btn.classList.add('logged-in');
+        cargarPerfilUsuario(storedNick);
+      }
+    }
+
+    function abrirCuenta() {
+      document.getElementById('modal-cuenta').style.display = 'flex';
+      if (currentNickname) {
+        document.getElementById('cuentaForm').style.display = 'none';
+        document.getElementById('cuentaNicknameDisplay').style.display = 'block';
+        document.getElementById('cuentaNicknameDisplay').innerText = '@' + currentNickname;
+        document.getElementById('cuentaInfo').style.display = 'block';
+        document.getElementById('cuentaIdioma').innerText = currentLang.toUpperCase();
+        document.getElementById('cuentaTema').innerText = currentTheme.replace('theme-', '').toUpperCase();
+        document.getElementById('cuentaViajes').innerText = getStoredTrips().length;
+      } else {
+        document.getElementById('cuentaForm').style.display = 'flex';
+        document.getElementById('cuentaNicknameDisplay').style.display = 'none';
+        document.getElementById('cuentaInfo').style.display = 'none';
+      }
+    }
+
+    function cerrarCuenta() {
+      document.getElementById('modal-cuenta').style.display = 'none';
+    }
+
+    function guardarNickname() {
+      const nick = document.getElementById('nickname-input').value.trim();
+      if (!nick) { showToast('Ingresa un nickname válido', 'error'); return; }
+      
+      currentNickname = nick;
+      localStorage.setItem('Plux_Nickname', nick);
+      document.getElementById('cuentaButton').classList.add('logged-in');
+      showToast('Nickname guardado: @' + nick, 'success');
+      sincronizarPerfil();
+      abrirCuenta();
+    }
+
+    function cerrarSesion() {
+      currentNickname = null;
+      localStorage.removeItem('Plux_Nickname');
+      document.getElementById('cuentaButton').classList.remove('logged-in');
+      document.getElementById('nickname-input').value = '';
+      showToast('Sesión cerrada', 'info');
+      abrirCuenta();
+    }
+
+    function sincronizarPerfil() {
+      if (!db || !currentNickname) return;
+      const trips = getStoredTrips();
+      const templates = getStoredTemplates();
+      db.collection('usuarios').doc(currentNickname).set({
+        idioma: currentLang,
+        tema: currentTheme,
+        viajes_guardados: trips,
+        plantillas: templates,
+        preferencias: userPreferences,
+        ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(e => console.error("Error sincronizando perfil:", e));
+    }
+
+    function cargarPerfilUsuario(nick) {
+      if (!db) return;
+      db.collection('usuarios').doc(nick).get().then(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data.idioma && data.idioma !== currentLang) setLanguage(data.idioma, false);
+          if (data.tema && data.tema !== currentTheme) setTheme(data.tema, false);
+          if (data.viajes_guardados) saveTrips(data.viajes_guardados, false);
+          if (data.plantillas) saveTemplates(data.plantillas, false);
+          if (data.preferencias) userPreferences = data.preferencias;
+          showToast('Perfil sincronizado desde la nube', 'success');
+          renderTripLists();
+        } else {
+          sincronizarPerfil();
+        }
+      }).catch(e => console.error("Error cargando perfil:", e));
+    }
 
     // ================== VARIABLES GLOBALES ==================
     let currentLang = 'es';
@@ -263,8 +350,10 @@
 
     function generarCodigoInApp() {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let code = '';
-      for (let i=0; i<6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+      let part1 = '', part2 = '';
+      for (let i=0; i<4; i++) part1 += chars.charAt(Math.floor(Math.random() * chars.length));
+      for (let i=0; i<4; i++) part2 += chars.charAt(Math.floor(Math.random() * chars.length));
+      const code = `${part1}-${part2}`;
       syncCode = code;
       
       const display = document.getElementById('display-invite-code');
@@ -330,6 +419,16 @@
             const data = docSnap.data();
             syncCode = code;
             importarViajeString(data.data);
+            
+            // Register collaborator if logged in
+            if (currentNickname) {
+              const colaboradores = data.colaboradores || [];
+              if (!colaboradores.includes(currentNickname)) {
+                colaboradores.push(currentNickname);
+                db.collection("viajes_compartidos").doc(code).update({ colaboradores: colaboradores });
+              }
+            }
+
             activarListenerNube();
             showToast(`¡Te has unido al viaje con código ${code}!`, 'success');
             document.getElementById('modal-panel-herramientas').style.display = 'none';
@@ -560,8 +659,9 @@
         }
       }, 300);
     }
-    function setLanguage(lang) {
+    function setLanguage(lang, sync = true) {
       currentLang = lang;
+      pluxUser.setLanguage(lang);
       document.body.className = document.body.className.replace(/lang-\w+/, `lang-${lang}`);
       if (!document.body.className.includes(`lang-${lang}`)) document.body.classList.add(`lang-${lang}`);
       document.getElementById('langButton').textContent = lang.toUpperCase();
@@ -597,13 +697,13 @@
 
       const themeDropdown = document.getElementById('themeDropdown');
       themeDropdown.innerHTML = `
-        <div class="theme-option" data-theme="theme-claro">${t('temas.claro') || 'Claro'}</div>
-        <div class="theme-option active" data-theme="theme-oscuro">${t('temas.oscuro') || 'Oscuro'}</div>
-        <div class="theme-option" data-theme="theme-tokyo">${t('temas.tokyo') || 'Tokyo Night'}</div>
-        <div class="theme-option" data-theme="theme-grid">The Grid</div>
-        <div class="theme-option" data-theme="theme-terminal">Terminal</div>
-        <div class="theme-option" data-theme="theme-starship">Starship</div>
-        <div class="theme-option" data-theme="theme-ares">Ares</div>
+        <div class="theme-option" data-theme="theme-claro">${t('temas.claro') || 'plux: Claro'}</div>
+        <div class="theme-option active" data-theme="theme-oscuro">${t('temas.oscuro') || 'plux: Oscuro'}</div>
+        <div class="theme-option" data-theme="theme-tokyo">${t('temas.tokyo') || 'plux: Tokyo Night'}</div>
+        <div class="theme-option" data-theme="theme-grid">${t('temas.grid') || 'plux: The Grid'}</div>
+        <div class="theme-option" data-theme="theme-terminal">${t('temas.terminal') || 'plux: Terminal'}</div>
+        <div class="theme-option" data-theme="theme-starship">${t('temas.starship') || 'plux: Starship'}</div>
+        <div class="theme-option" data-theme="theme-ares">${t('temas.ares') || 'plux: Ares'}</div>
       `;
       document.querySelectorAll('.theme-option').forEach(opt => {
         opt.addEventListener('click', (e) => {
@@ -629,10 +729,12 @@
           if (banner) banner.style.display = 'none';
         }
       });
+      if(sync) sincronizarPerfil();
     }
 
-    function setTheme(t) {
+    function setTheme(t, sync = true) {
         document.body.className = `lang-${currentLang} ${t}`;
+        pluxUser.setTheme(t);
         localStorage.setItem('PluxTheme', t);
         document.querySelectorAll('.theme-option').forEach(opt => {
             opt.classList.toggle('active', opt.dataset.theme === t);
@@ -647,6 +749,7 @@
         } else if (banner) {
           banner.style.display = 'none';
         }
+        if(sync) sincronizarPerfil();
     }
 
     // ================== NOTIFICACIONES ==================
@@ -695,15 +798,118 @@
       });
     }
 
+    // ================== FUNCIONES DE PERFIL DE USUARIO ==================
+    function updateUserButtonDisplay() {
+      const userBtn = document.getElementById('userButton');
+      if (!userBtn) return;
+      
+      const nickname = pluxUser.currentUser.nickname;
+      if (nickname) {
+        userBtn.textContent = `👤 ${nickname}`;
+        userBtn.style.background = 'rgba(99, 102, 241, 0.3)';
+      } else {
+        userBtn.textContent = '👤 Perfil';
+        userBtn.style.background = 'rgba(99, 102, 241, 0.2)';
+      }
+    }
+
+    function confirmarPerfilUsuario() {
+      const nicknameInput = document.getElementById('userNicknameInput');
+      const nickname = nicknameInput.value.trim();
+      
+      if (nickname) {
+        pluxUser.createUserProfile(nickname).then(() => {
+          updateUserButtonDisplay();
+          showToast(`¡Bienvenido, ${nickname}!`, 'success');
+          document.getElementById('modal-user-profile').style.display = 'none';
+          // Update the app title with the username
+          document.getElementById('appTitle').textContent = `${t('app_title')} - ${nickname}`;
+        }).catch(e => {
+          showToast('Error al crear perfil: ' + e.message, 'error');
+        });
+      } else {
+        showToast('Por favor ingresa un nickname', 'info');
+      }
+    }
+
+    function saltarPerfilUsuario() {
+      document.getElementById('modal-user-profile').style.display = 'none';
+      showToast('Puedes crear tu perfil luego desde las preferencias', 'info');
+    }
+
+    // Agregar colaborador a un viaje (función global)
+    async function abrirColaboradores() {
+      if (!pluxUser.isUserConfigured()) {
+        showToast('Debes crear un perfil primero', 'error');
+        document.getElementById('modal-user-profile').style.display = 'flex';
+        return;
+      }
+      document.getElementById('modal-colaboradores').style.display = 'flex';
+    }
+
+    // Cerrar panel de herramientas
+    function cerrarPanelHerramientas() {
+      const panel = document.getElementById('modal-panel-herramientas');
+      if (panel) panel.style.display = 'none';
+    }
+
+    // Abrir panel de herramientas
+    function abrirPanelHerramientas() {
+      const panel = document.getElementById('modal-panel-herramientas');
+      if (panel) panel.style.display = 'flex';
+    }
+
+    // Abrir modal de viajes
+    function abrirModalViajes() {
+      document.getElementById('modal-viajes').style.display = 'flex';
+      renderTripLists();
+    }
+
+    // Cerrar modal de viajes
+    function cerrarModalViajes() {
+      document.getElementById('modal-viajes').style.display = 'none';
+    }
+
+    // Abrir descubrir
+    function abrirDescubrir() {
+      document.getElementById('modal-descubrir').style.display = 'flex';
+    }
+
+    // Cerrar descubrir
+    function cerrarDescubrir() {
+      document.getElementById('modal-descubrir').style.display = 'none';
+    }
+
     // ================== INICIALIZACI ==================
     document.addEventListener('DOMContentLoaded', async function() {
+      inicializarCuenta();
+      
       await loadKeys();
       await initFirebaseAuth();
+      
+      // Inicializar sistema de usuario
+      if (db) {
+        await pluxUser.initFirebase(db);
+      }
+      
+      // Mostrar modal de perfil si no existe usuario
+      setTimeout(() => {
+        if (!pluxUser.isUserConfigured()) {
+          document.getElementById('modal-user-profile').style.display = 'flex';
+          document.getElementById('userNicknameInput').focus();
+        }
+      }, 500);
+      
       loadFromStorage();
-      const savedTheme = localStorage.getItem('PluxTheme');
+      const savedTheme = localStorage.getItem('PluxTheme') || pluxUser.currentUser.theme;
+      const savedLang = localStorage.getItem('pluxUserLanguage') || pluxUser.currentUser.language;
+      
       if (savedTheme && ['theme-claro','theme-oscuro','theme-tokyo','theme-grid','theme-terminal','theme-starship','theme-ares'].includes(savedTheme)) setTheme(savedTheme);
       else setTheme('theme-oscuro');
-      setLanguage('es');
+      setLanguage(savedLang);
+
+      // Actualizar display del usuario
+      updateUserButtonDisplay();
 
       document.getElementById('langButton').addEventListener('click', (e) => {
         e.stopPropagation();
@@ -712,6 +918,16 @@
       document.getElementById('themeButton').addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('themeDropdown').classList.toggle('show');
+      });
+      // Click al botón de usuario
+      document.getElementById('userButton').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (pluxUser.isUserConfigured()) {
+          showToast(`Hola, ${pluxUser.currentUser.nickname}!`, 'info');
+        } else {
+          document.getElementById('modal-user-profile').style.display = 'flex';
+          document.getElementById('userNicknameInput').focus();
+        }
       });
       document.addEventListener('click', () => {
         document.getElementById('langDropdown').classList.remove('show');
@@ -1244,6 +1460,7 @@
             role: msg.role === 'assistant' || msg.role === 'system' ? 'model' : 'user',
             parts: [{ text: msg.content }]
           }));
+
           const resp = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2350,12 +2567,14 @@
       return JSON.parse(localStorage.getItem(TEMPLATE_KEY) || '[]');
     }
 
-    function saveTrips(trips) {
+    function saveTrips(trips, sync = true) {
       localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
+      if (sync) sincronizarPerfil();
     }
 
-    function saveTemplates(templates) {
+    function saveTemplates(templates, sync = true) {
       localStorage.setItem(TEMPLATE_KEY, JSON.stringify(templates));
+      if (sync) sincronizarPerfil();
     }
 
     function renderTripLists() {
@@ -2554,10 +2773,6 @@
       reader.readAsText(file);
     });
 
-    function abrirPanelHerramientas() { document.getElementById('modal-panel-herramientas').style.display = 'flex'; }
-    function cerrarPanelHerramientas() { document.getElementById('modal-panel-herramientas').style.display = 'none'; }
-    function abrirModalViajes() { renderTripLists(); document.getElementById('modal-viajes').style.display='flex'; }
-    function cerrarModalViajes() { document.getElementById('modal-viajes').style.display='none'; }
 
     // Pestañas del modal de viajes
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -2876,3 +3091,7 @@
   window.programarNotificacionesDelDia = programarNotificacionesDelDia;
   window.verificarViajeActivo = verificarViajeActivo;
 
+  window.abrirCuenta = abrirCuenta;
+  window.cerrarCuenta = cerrarCuenta;
+  window.guardarNickname = guardarNickname;
+  window.cerrarSesion = cerrarSesion;

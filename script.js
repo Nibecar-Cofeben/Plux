@@ -20,6 +20,8 @@
         calendar: { monthNames: ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"], weekDays: ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"] },
         view_modes: { cards: "Vista tarjetas", timeline: "Vista línea tiempo", presentation: "Vista presentación" },
         herramientas_title: "Más herramientas", calendario_title: "Calendario", mapa_btn: "Ver mapa",
+        clima_title: "Clima", clima_btn: "Clima", clima_search: "Buscar", clima_placeholder: "Escribí una ciudad para ver el pronóstico.",
+        clima_feed_title: "Clima de tu viaje", clima_feed_empty: "Agregá destinos y días para ver el pronóstico de tu viaje.", clima_beyond: "Sin pronóstico (muy lejano)",
         eventos_dia_title: "Eventos del día", estadisticas: { duracion: "Duración (días)", eventos: "Eventos", coste_total: "Coste total", coste_persona: "Coste/persona", destinos: "Destinos" },
         temas: { claro: "Claro", oscuro: "Oscuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Lugar de salida", costo_extra_vuelta: "Costo extra vuelta", tramo: "Tramo", origen: "Origen",
@@ -44,8 +46,9 @@
         calendar: { monthNames: ["January","February","March","April","May","June","July","August","September","October","November","December"], weekDays: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] },
         view_modes: { cards: "Card view", timeline: "Timeline view", presentation: "Presentation view" },
         herramientas_title: "More tools", calendario_title: "Calendar", mapa_btn: "View map",
+        clima_title: "Weather", clima_btn: "Weather", clima_search: "Search", clima_placeholder: "Enter a city to see the forecast.",
         eventos_dia_title: "Day events", estadisticas: { duracion: "Duration (days)", eventos: "Events", coste_total: "Total cost", coste_persona: "Cost/person", destinos: "Destinations" },
-        temas: { claro: "plux: Light", oscuro: "plux: Dark", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "plux: Starship", ares: "plux: Ares" },
+        temas: { claro: "Light", oscuro: "Dark", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Departure place", costo_extra_vuelta: "Extra return cost", tramo: "Segment", origen: "Origin",
         destino: "Destination", medio: "Means", precio: "Price", escala: "Stopover", agregar_tramo: "+ Add segment", agregar_escala: "+ Stopover"
       },
@@ -68,8 +71,9 @@
         calendar: { monthNames: ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"], weekDays: ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"] },
         view_modes: { cards: "Vue cartes", timeline: "Vue chronologique", presentation: "Vue présentation" },
         herramientas_title: "Plus d'outils", calendario_title: "Calendrier", mapa_btn: "Voir la carte",
+        clima_title: "Météo", clima_btn: "Météo", clima_search: "Rechercher", clima_placeholder: "Entrez une ville pour voir la météo.",
         eventos_dia_title: "Événements du jour", estadisticas: { duracion: "Durée (jours)", eventos: "Événements", coste_total: "Coût total", coste_persona: "Coût/personne", destinos: "Destinations" },
-        temas: { claro: "plux: Clair", oscuro: "plux: Sombre", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "plux: Starship", ares: "plux: Ares" },
+        temas: { claro: "Clair", oscuro: "Sombre", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Lieu de départ", costo_extra_vuelta: "Coût supplémentaire retour", tramo: "Tronçon", origen: "Origine",
         destino: "Destination", medio: "Moyen", precio: "Prix", escala: "Escalier", agregar_tramo: "+ Ajouter tronçon", agregar_escala: "+ Escale"
       },
@@ -92,8 +96,9 @@
         calendar: { monthNames: ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"], weekDays: ["Mo","Di","Mi","Do","Fr","Sa","So"] },
         view_modes: { cards: "Kartenansicht", timeline: "Zeitleistenansicht", presentation: "Präsentationsansicht" },
         herramientas_title: "Weitere Tools", calendario_title: "Kalender", mapa_btn: "Karte anzeigen",
+        clima_title: "Wetter", clima_btn: "Wetter", clima_search: "Suchen", clima_placeholder: "Stadt eingeben für die Vorhersage.",
         eventos_dia_title: "Ereignisse des Tages", estadisticas: { duracion: "Dauer (Tage)", eventos: "Ereignisse", coste_total: "Gesamtkosten", coste_persona: "Kosten/Person", destinos: "Reiseziele" },
-        temas: { claro: "plux: Hell", oscuro: "plux: Dunkel", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "plux: Starship", ares: "plux: Ares" },
+        temas: { claro: "Hell", oscuro: "Dunkel", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Abfahrtsort", costo_extra_vuelta: "Zusätzliche Rückkehrkosten", tramo: "Abschnitt", origen: "Herkunft",
         destino: "Ziel", medio: "Mittel", precio: "Preis", escala: "Zwischenstopp", agregar_tramo: "+ Abschnitt hinzufügen", agregar_escala: "+ Zwischenstopp"
       },
@@ -116,8 +121,9 @@
         calendar: { monthNames: ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"], weekDays: ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"] },
         view_modes: { cards: "Vista schede", timeline: "Vista cronologica", presentation: "Vista presentazione" },
         herramientas_title: "Altri strumenti", calendario_title: "Calendario", mapa_btn: "Visualizza mappa",
+        clima_title: "Meteo", clima_btn: "Meteo", clima_search: "Cerca", clima_placeholder: "Inserisci una città per la previsione.",
         eventos_dia_title: "Eventi del giorno", estadisticas: { duracion: "Durata (giorni)", eventi: "Eventi", coste_total: "Costo totale", coste_persona: "Costo/persona", destinos: "Destinazioni" },
-        temas: { claro: "plux: Chiaro", oscuro: "plux: Scuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "plux: Starship", ares: "plux: Ares" },
+        temas: { claro: "Chiaro", oscuro: "Scuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Luogo di partenza", costo_extra_vuelta: "Costo aggiuntivo ritorno", tramo: "Tratta", origen: "Origine",
         destino: "Destinazione", medio: "Mezzo", precio: "Prezzo", escala: "Scala", agregar_tramo: "+ Aggiungi tratta", agregar_escala: "+ Scala"
       }
@@ -390,6 +396,11 @@
             else if (line.startsWith('sk-or-')) OPENROUTER_API_KEY = line;
             else if (line.startsWith('sk-mr-')) MULE_ROUTER_API_KEY = line;
             else if (line.includes('Mistral') && lines[i+1]) MISTRAL_API_KEY = lines[i+1];
+            else if (/^[a-f0-9]{32}$/i.test(line)) OPENWEATHER_API_KEY = line;
+            else if (line.toLowerCase().startsWith('openweather')) {
+              const part = line.includes('=') ? line.split('=').slice(1).join('=').trim() : lines[i + 1];
+              if (part) OPENWEATHER_API_KEY = part;
+            }
         }
         console.log('🔑 Keys loaded dynamically from .env.');
       } catch (e) {
@@ -556,42 +567,50 @@
       }, 3000);
     }
 
-    function unirseAViaje(inputId = 'join-code-input-herramientas') {
+    async function unirseAViaje(inputId = 'join-code-input-herramientas') {
       const codeInput = document.getElementById(inputId);
       if (!codeInput) return;
       const code = codeInput.value.trim().toUpperCase();
       if(!code) { showToast('Ingresa un código válido', 'error'); return; }
-      
-      if (db) {
-        showToast('Buscando viaje en la nube...', 'info');
-        db.collection("plux_viajes_compartidos").doc(code).get().then(docSnap => {
-          if (docSnap.exists) {
-            const data = docSnap.data();
-            syncCode = code;
-            importarViajeString(data.data);
-            
-            // Register collaborator if logged in
-            if (currentNickname) {
-              const colaboradores = data.colaboradores || [];
-              if (!colaboradores.includes(currentNickname)) {
-                colaboradores.push(currentNickname);
-                db.collection("plux_viajes_compartidos").doc(code).update({ colaboradores: colaboradores });
-              }
-            }
 
-            activarListenerNube();
-            showToast(`¡Te has unido al viaje con código ${code}!`, 'success');
-            document.getElementById('modal-panel-herramientas').style.display = 'none';
-            empezar();
-          } else {
-            showToast('Código no encontrado o caducado', 'error');
-          }
-        }).catch(e => {
-          console.error(e);
-          showToast('Error al buscar en la nube', 'error');
-        });
-      } else {
+      if (!db) {
+        showToast('Conectando con la nube...', 'info');
+        await initFirebaseAuth();
+      }
+      if (!db) {
         showToast('Nube inactiva. No se puede unir.', 'error');
+        return;
+      }
+
+      showToast('Buscando viaje en la nube...', 'info');
+      try {
+        const docSnap = await db.collection("plux_viajes_compartidos").doc(code).get();
+        if (docSnap.exists) {
+          const data = docSnap.data();
+          syncCode = code;
+          importarViajeString(data.data);
+
+          if (currentNickname) {
+            const colaboradores = data.colaboradores || [];
+            if (!colaboradores.includes(currentNickname)) {
+              colaboradores.push(currentNickname);
+              await db.collection("plux_viajes_compartidos").doc(code).update({ colaboradores: colaboradores });
+            }
+          }
+
+          activarListenerNube();
+          showToast(`¡Te has unido al viaje con código ${code}!`, 'success');
+          const panel = document.getElementById('modal-panel-herramientas');
+          const viajes = document.getElementById('modal-viajes');
+          if (panel) panel.style.display = 'none';
+          if (viajes) viajes.style.display = 'none';
+          empezar();
+        } else {
+          showToast('Código no encontrado o caducado', 'error');
+        }
+      } catch(e) {
+        console.error(e);
+        showToast('Error al buscar en la nube', 'error');
       }
     }
 
@@ -716,6 +735,10 @@ Al final de tu respuesta podés incluir UNO de estos comandos especiales para ej
 - [ACCION:SET_ORIGEN:Ciudad] → Cambia el lugar de salida
 - [ACCION:ABRIR_MAPA] → Abre el mapa del viaje
 - [ACCION:ABRIR_RESUMEN] → Muestra el resumen del viaje
+- [ACCION:ABRIR_CLIMA] → Abre la herramienta de clima para buscar
+- [ACCION:CLIMA:Ciudad] → Consulta y comenta el clima de esa ciudad
+
+Tenés acceso al clima actual del viaje (OpenWeather) en el contexto del mensaje. Usalo para recomendar ropa, actividades o cambios de plan.
 
 Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hacer algo, HACELO con el comando correspondiente además de explicar brevemente. Sos un agente que actúa, no solo habla.`;
 
@@ -747,8 +770,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         : 'Sin destinos aún.';
 
       chatHistory.push({ role: 'user', content: texto });
+      const weatherCtx = await getWeatherContextForTrip();
       const messages = [
-        { role: 'system', content: `${CHAT_SYSTEM} Contexto del viaje: ${destContext} Personas: ${numPersonas}. Presupuesto: no especificado.` },
+        { role: 'system', content: `${CHAT_SYSTEM} Contexto del viaje: ${destContext} Personas: ${numPersonas}. Presupuesto: no especificado.${weatherCtx}` },
         ...chatHistory.slice(-8)
       ];
 
@@ -772,6 +796,8 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         const accionOrigen = respuesta.match(/\[ACCION:SET_ORIGEN:(.+?)\]/);
         const accionMapa = respuesta.match(/\[ACCION:ABRIR_MAPA\]/);
         const accionResumen = respuesta.match(/\[ACCION:ABRIR_RESUMEN\]/);
+        const accionAbrirClima = respuesta.match(/\[ACCION:ABRIR_CLIMA\]/);
+        const accionClimaCiudad = respuesta.match(/\[ACCION:CLIMA:(.+?)\]/);
 
         // Clean display text
         displayRespuesta = respuesta
@@ -852,6 +878,18 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         if (accionResumen) {
           setTimeout(() => mostrarResumen(), 600);
         }
+        if (accionAbrirClima) {
+          setTimeout(() => abrirClima(), 500);
+        }
+        if (accionClimaCiudad) {
+          const ciudadClima = accionClimaCiudad[1].trim();
+          setTimeout(async () => {
+            abrirClima();
+            const inp = document.getElementById('clima-search-input');
+            if (inp) inp.value = ciudadClima;
+            await buscarClimaModal();
+          }, 500);
+        }
         // Autosave if any action was taken
         if (accionDestino || accionEvento || accionPersonas || accionOrigen || accionLimpiar || accionItinerario) {
           autoSave();
@@ -919,18 +957,24 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       document.getElementById('calendarioTitle').textContent = t('calendario_title');
       document.getElementById('btnCalendario').textContent = t('calendario_title');
       document.getElementById('btnMapa').textContent = t('mapa_btn');
+      const btnClima = document.getElementById('btnClima');
+      if (btnClima) btnClima.textContent = t('clima_btn') || 'Clima';
+      const climaTitle = document.getElementById('climaTitle');
+      if (climaTitle) climaTitle.textContent = t('clima_title') || 'Clima';
+      const climaSearchBtn = document.getElementById('climaSearchBtn');
+      if (climaSearchBtn) climaSearchBtn.textContent = t('clima_search') || 'Buscar';
       document.getElementById('eventosDiaTitle').textContent = t('eventos_dia_title');
       document.getElementById('lugarSalidaLabel').textContent = t('lugar_salida');
 
       const themeDropdown = document.getElementById('themeDropdown');
       themeDropdown.innerHTML = `
-        <div class="theme-option" data-theme="theme-claro">${t('temas.claro') || 'plux: Claro'}</div>
-        <div class="theme-option active" data-theme="theme-oscuro">${t('temas.oscuro') || 'plux: Oscuro'}</div>
+        <div class="theme-option" data-theme="theme-claro">${t('temas.claro') || 'Claro'}</div>
+        <div class="theme-option active" data-theme="theme-oscuro">${t('temas.oscuro') || 'Oscuro'}</div>
         <div class="theme-option" data-theme="theme-tokyo">${t('temas.tokyo') || 'Tokyo Night'}</div>
         <div class="theme-option" data-theme="theme-grid">${t('temas.grid') || 'The Grid'}</div>
         <div class="theme-option" data-theme="theme-terminal">${t('temas.terminal') || 'Terminal'}</div>
-        <div class="theme-option" data-theme="theme-starship">${t('temas.starship') || 'plux: Starship'}</div>
-        <div class="theme-option" data-theme="theme-ares">${t('temas.ares') || 'plux: Ares'}</div>
+        <div class="theme-option" data-theme="theme-starship">${t('temas.starship') || 'Starship'}</div>
+        <div class="theme-option" data-theme="theme-ares">${t('temas.ares') || 'Ares'}</div>
       `;
       document.querySelectorAll('.theme-option').forEach(opt => {
         opt.addEventListener('click', (e) => {
@@ -1076,14 +1120,6 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       
       await loadKeys();
       await initFirebaseAuth();
-      
-      // Mostrar modal de cuenta para nickname si no existe
-      setTimeout(() => {
-        if (!currentNickname) {
-          abrirCuenta();
-          showToast('Crea un nickname para guardar tu viaje y colaborar', 'info');
-        }
-      }, 500);
       
       loadFromStorage();
       const savedTheme = localStorage.getItem('PluxTheme') || 'theme-oscuro';
@@ -1891,12 +1927,19 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       if (!cont) return;
       cont.innerHTML = "";
       const dest = destinos.find(d => d.id === destId);
+      const schedule = buildTripDaySchedule();
       dest.dias.forEach(dia => {
+        const daySched = schedule.find(s => s.destId === destId && s.diaId === dia.id);
+        const dateStr = daySched?.dateStr || '';
+        const fidx = daySched?.forecastIndex ?? '';
         const diaDiv = document.createElement("div");
         diaDiv.className = "dia";
         diaDiv.innerHTML = `
           <div class="dia-header">
-            <h4>${t('day_prefix')} ${dia.id+1}</h4>
+            <h4>${t('day_prefix')} ${dia.id+1}${daySched?.dateLabel ? ` <small style="color:var(--gris);font-weight:normal">(${daySched.dateLabel})</small>` : ''}</h4>
+            <div id="weather-day-${destId}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-day-${destId}-${dia.id}')" title="Clima del día">
+              <div class="weather-chip-row"><span class="weather-chip-icon">🌤️</span><span class="weather-chip-temp">...</span></div>
+            </div>
             <div class="dia-actions">
               <span class="copy-icon" onclick="duplicarDia(${destId}, ${dia.id})" title="${t('copy_button')}">⎘</span>
               <button class="close-icon" onclick="eliminarDia(${destId}, ${dia.id})">×</button>
@@ -1915,6 +1958,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         cont.appendChild(diaDiv);
         renderEventos(destId, dia.id);
         renderCostosAdicionales(destId, dia.id);
+        loadWeatherForTripDay(`weather-day-${destId}-${dia.id}`, dest.nombre, dateStr, daySched?.forecastIndex);
       });
       autoSave();
     }
@@ -2285,6 +2329,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         cont.innerHTML += `<div class="ciudad-block ${isTimeline?'timeline':''}"><h3>${t('lugar_salida')}</h3><p>${lugarSalida}</p></div>`;
       }
 
+      const tripSchedule = buildTripDaySchedule();
       destinos.forEach(dest => {
         let html = `<div class="ciudad-block ${isTimeline?'timeline':''}"><h3>📍 ${dest.nombre}</h3>`;
         (dest.tramos || []).forEach((tramo, i) => {
@@ -2296,7 +2341,16 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           html += `</div>`;
         });
         (dest.dias || []).forEach(dia => {
-          html += `<div class="dia-resumen ${isTimeline?'timeline':''}"><h4>${t('day_prefix')} ${dia.id+1}</h4>`;
+          const daySched = tripSchedule.find(s => s.destId === dest.id && s.diaId === dia.id);
+          const dateStr = daySched?.dateStr || '';
+          const fidx = daySched?.forecastIndex ?? '';
+          html += `<div class="dia-resumen ${isTimeline?'timeline':''}">
+            <div class="dia-resumen-header">
+              <h4>${t('day_prefix')} ${dia.id+1}${daySched?.dateLabel ? ` <small style="color:var(--gris)">(${daySched.dateLabel})</small>` : ''}</h4>
+              <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="Clima del día">
+                <div class="weather-chip-row"><span class="weather-chip-icon">🌤️</span><span class="weather-chip-temp">...</span></div>
+              </div>
+            </div>`;
           (dia.eventos || []).forEach(ev => {
             html += `<div class="evento-resumen ${isTimeline?'timeline':''}">
               <span class="hora-t">${ev.hora || '--:--'}</span>
@@ -2312,6 +2366,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         });
         html += `</div>`;
         cont.innerHTML += html;
+      });
+
+      tripSchedule.filter(s => !s.isDestOnly && s.diaId != null).forEach(s => {
+        loadWeatherForTripDay(`weather-resumen-day-${s.destId}-${s.diaId}`, s.destName, s.dateStr, s.forecastIndex);
       });
 
       if (vueltaGlobal || vueltaCostosAdicionales.length) {
@@ -2436,6 +2494,553 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         console.error('Error geocoding:', e);
       }
       return null;
+    }
+
+    // ================== CLIMA (Open-Meteo + OpenWeather opcional) ==================
+    let OPENWEATHER_API_KEY = '';
+    const WEATHER_CACHE_MS = 30 * 60 * 1000;
+    const weatherCache = {};
+    const weatherPending = {};
+
+    const CITY_WEATHER_ALIASES = {
+      'roma': 'Rome', 'rome': 'Rome', 'parís': 'Paris', 'paris': 'Paris',
+      'bs as': 'Buenos Aires', 'bs. aires': 'Buenos Aires', 'buenos aires': 'Buenos Aires',
+      'caba': 'Buenos Aires', 'ciudad autónoma de buenos aires': 'Buenos Aires',
+      'ciudad autonoma de buenos aires': 'Buenos Aires', 'tokio': 'Tokyo', 'tokyo': 'Tokyo',
+      'nueva york': 'New York', 'new york': 'New York', 'ny': 'New York',
+      'londres': 'London', 'múnich': 'Munich', 'munich': 'Munich'
+    };
+
+    const WMO_DESC = {
+      es: { 0:'Despejado',1:'Mayormente despejado',2:'Parcialmente nublado',3:'Nublado',45:'Niebla',48:'Niebla',51:'Llovizna',53:'Llovizna',55:'Llovizna',61:'Lluvia',63:'Lluvia',65:'Lluvia fuerte',71:'Nieve',73:'Nieve',75:'Nieve',80:'Chubascos',81:'Chubascos',82:'Chubascos fuertes',95:'Tormenta',96:'Tormenta',99:'Tormenta' },
+      en: { 0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Drizzle',53:'Drizzle',55:'Drizzle',61:'Rain',63:'Rain',65:'Heavy rain',71:'Snow',73:'Snow',75:'Snow',80:'Showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm' }
+    };
+
+    function weatherLang() {
+      return ['es', 'en', 'fr', 'de', 'it'].includes(currentLang) ? currentLang : 'es';
+    }
+
+    function weatherCacheKey(city) {
+      return city.trim().toLowerCase();
+    }
+
+    function normalizeCityQuery(city) {
+      const q = city.trim();
+      return CITY_WEATHER_ALIASES[q.toLowerCase()] || q;
+    }
+
+    function wmoEmoji(code) {
+      if (code === 0) return '☀️';
+      if (code <= 3) return code <= 1 ? '🌤️' : '⛅';
+      if (code <= 48) return '🌫️';
+      if (code <= 55) return '🌦️';
+      if (code <= 67) return '🌧️';
+      if (code <= 77) return '❄️';
+      if (code <= 82) return '🌧️';
+      if (code >= 95) return '⛈️';
+      return '🌤️';
+    }
+
+    function wmoDesc(code) {
+      const lang = weatherLang();
+      const table = WMO_DESC[lang] || WMO_DESC.es;
+      return table[code] || table[Math.floor(code / 10) * 10] || (lang === 'es' ? 'Variable' : 'Variable');
+    }
+
+    function weatherEmojiFromOwmCode(code, iconStr = '') {
+      const isDay = !iconStr || iconStr.includes('d');
+      if (code >= 200 && code < 300) return '⛈️';
+      if (code >= 300 && code < 400) return '🌦️';
+      if (code >= 500 && code < 600) return '🌧️';
+      if (code >= 600 && code < 700) return '❄️';
+      if (code >= 700 && code < 800) return '🌫️';
+      if (code === 800) return isDay ? '☀️' : '🌙';
+      if (code > 800) return '☁️';
+      return '🌤️';
+    }
+
+    async function geocodeCityForWeather(city) {
+      const queries = [...new Set([normalizeCityQuery(city), city.trim()].filter(Boolean))];
+      for (const name of queries) {
+        try {
+          const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=8&language=${weatherLang()}&format=json`;
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (!data.results?.length) continue;
+          const lower = name.toLowerCase();
+          const match = data.results.find(r =>
+            r.name?.toLowerCase() === lower ||
+            `${r.name}, ${r.admin1}`.toLowerCase().includes(lower)
+          ) || data.results[0];
+          return {
+            latitude: match.latitude,
+            longitude: match.longitude,
+            name: match.name,
+            country: match.country_code || '',
+            admin1: match.admin1 || ''
+          };
+        } catch (e) { console.warn('Geocoding clima:', e); }
+      }
+      const coords = await geocode(normalizeCityQuery(city) || city);
+      if (coords) {
+        return { latitude: coords.lat, longitude: coords.lon, name: city.trim(), country: '', admin1: '' };
+      }
+      return null;
+    }
+
+    function parseOpenMeteoData(geo, forecast) {
+      const cur = forecast.current;
+      const code = cur.weather_code;
+      const daily = [];
+      const times = forecast.daily?.time || [];
+      for (let i = 0; i < times.length; i++) {
+        const day = times[i];
+        const wc = forecast.daily.weather_code[i];
+        daily.push({
+          date: day,
+          label: new Date(day + 'T12:00:00').toLocaleDateString(weatherLang(), { weekday: 'short', day: 'numeric' }),
+          tempMin: Math.round(forecast.daily.temperature_2m_min[i]),
+          tempMax: Math.round(forecast.daily.temperature_2m_max[i]),
+          code: wc,
+          desc: wmoDesc(wc),
+          emoji: wmoEmoji(wc)
+        });
+      }
+      return {
+        city: geo.name,
+        country: geo.country,
+        temp: Math.round(cur.temperature_2m),
+        feelsLike: Math.round(cur.apparent_temperature),
+        humidity: Math.round(cur.relative_humidity_2m),
+        wind: Math.round(cur.wind_speed_10m),
+        pressure: null,
+        desc: wmoDesc(code),
+        code,
+        emoji: wmoEmoji(code),
+        daily,
+        source: 'open-meteo'
+      };
+    }
+
+    function parseOpenWeatherData(current, forecast, geo) {
+      const w0 = current.weather[0];
+      const daily = [];
+      if (forecast?.list) {
+        const byDay = {};
+        forecast.list.forEach(item => {
+          const day = item.dt_txt.split(' ')[0];
+          if (!byDay[day]) byDay[day] = [];
+          byDay[day].push(item);
+        });
+        Object.keys(byDay).slice(0, 5).forEach(day => {
+          const items = byDay[day];
+          const temps = items.map(i => i.main.temp);
+          const mid = items[Math.floor(items.length / 2)];
+          const mw = mid.weather[0];
+          daily.push({
+            date: day,
+            label: new Date(day + 'T12:00:00').toLocaleDateString(weatherLang(), { weekday: 'short', day: 'numeric' }),
+            tempMin: Math.round(Math.min(...temps)),
+            tempMax: Math.round(Math.max(...temps)),
+            code: mw.id,
+            desc: mw.description,
+            emoji: weatherEmojiFromOwmCode(mw.id, mw.icon)
+          });
+        });
+      }
+      return {
+        city: current.name || geo.name,
+        country: current.sys?.country || geo.country,
+        temp: Math.round(current.main.temp),
+        feelsLike: Math.round(current.main.feels_like),
+        humidity: current.main.humidity,
+        wind: Math.round((current.wind?.speed || 0) * 3.6),
+        pressure: current.main.pressure,
+        desc: w0.description,
+        code: w0.id,
+        emoji: weatherEmojiFromOwmCode(w0.id, w0.icon),
+        daily,
+        source: 'openweather'
+      };
+    }
+
+    async function fetchWeatherOpenMeteo(geo, forecastDays = 16) {
+      const days = Math.min(16, Math.max(5, forecastDays));
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${geo.latitude}&longitude=${geo.longitude}` +
+        `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=${days}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Error de pronóstico');
+      const forecast = await res.json();
+      return parseOpenMeteoData(geo, forecast);
+    }
+
+    async function tryFetchOpenWeather(geo) {
+      if (!OPENWEATHER_API_KEY) return null;
+      const lang = weatherLang();
+      const base = `lat=${geo.latitude}&lon=${geo.longitude}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=${lang}`;
+      const [currentRes, forecastRes] = await Promise.all([
+        fetch(`https://api.openweathermap.org/data/2.5/weather?${base}`),
+        fetch(`https://api.openweathermap.org/data/2.5/forecast?${base}`)
+      ]);
+      if (currentRes.status === 401) {
+        console.warn('OpenWeather: API key inválida o no activada (401). Usando Open-Meteo.');
+        OPENWEATHER_API_KEY = '';
+        return null;
+      }
+      if (!currentRes.ok) return null;
+      const current = await currentRes.json();
+      const forecast = forecastRes.ok ? await forecastRes.json() : null;
+      return parseOpenWeatherData(current, forecast, geo);
+    }
+
+    async function fetchWeatherData(city) {
+      const cacheKey = weatherCacheKey(city);
+      const cached = weatherCache[cacheKey];
+      if (cached && Date.now() - cached.ts < WEATHER_CACHE_MS) return cached.data;
+
+      if (weatherPending[cacheKey]) return weatherPending[cacheKey];
+
+      weatherPending[cacheKey] = (async () => {
+        const geo = await geocodeCityForWeather(city);
+        if (!geo) throw new Error('Ciudad no encontrada');
+
+        const tripDays = buildTripDaySchedule().length || 16;
+        let data = await tryFetchOpenWeather(geo);
+        if (!data) data = await fetchWeatherOpenMeteo(geo, tripDays);
+
+        weatherCache[cacheKey] = { ts: Date.now(), data };
+        return data;
+      })();
+
+      try {
+        return await weatherPending[cacheKey];
+      } finally {
+        delete weatherPending[cacheKey];
+      }
+    }
+
+    function formatDateISO(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function getTripStartDate() {
+      const val = document.getElementById('fechaInicio')?.value;
+      if (!val) return null;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    /** Días del viaje en orden: destino 1 día 1,2… destino 2 día 1,2… con fecha calendario si hay fechaInicio */
+    function buildTripDaySchedule() {
+      const start = getTripStartDate();
+      const schedule = [];
+      let globalOffset = 0;
+      destinos.forEach(dest => {
+        const dias = dest.dias || [];
+        if (dias.length === 0) {
+          schedule.push({
+            destId: dest.id,
+            destName: dest.nombre,
+            diaId: null,
+            diaNum: 0,
+            globalDayIndex: globalOffset,
+            dateStr: null,
+            dateLabel: '',
+            forecastIndex: globalOffset,
+            isDestOnly: true
+          });
+          return;
+        }
+        dias.forEach((dia, diaIdx) => {
+          let dateStr = null;
+          let dateLabel = '';
+          if (start) {
+            const d = new Date(start);
+            d.setDate(d.getDate() + globalOffset);
+            dateStr = formatDateISO(d);
+            dateLabel = d.toLocaleDateString(weatherLang(), { weekday: 'short', day: 'numeric', month: 'short' });
+          }
+          schedule.push({
+            destId: dest.id,
+            destName: dest.nombre,
+            diaId: dia.id,
+            diaNum: diaIdx + 1,
+            globalDayIndex: globalOffset,
+            dateStr,
+            dateLabel,
+            forecastIndex: globalOffset,
+            isDestOnly: false
+          });
+          globalOffset++;
+        });
+      });
+      return schedule;
+    }
+
+    function getWeatherForTripDay(weatherData, dateStr, forecastIndex) {
+      if (!weatherData?.daily?.length) return null;
+      if (dateStr) {
+        const byDate = weatherData.daily.find(d => d.date === dateStr);
+        if (byDate) return byDate;
+      }
+      if (forecastIndex != null && weatherData.daily[forecastIndex]) {
+        return weatherData.daily[forecastIndex];
+      }
+      return weatherData.daily[0] || null;
+    }
+
+    function renderClimaDayRowHTML(scheduleEntry, dayWeather, fallbackWeather) {
+      const prefix = t('day_prefix') || 'Día';
+      let label = scheduleEntry.isDestOnly
+        ? (t('clima_feed_now') || 'Pronóstico general')
+        : `${prefix} ${scheduleEntry.diaNum}`;
+      if (scheduleEntry.dateLabel) label += ` · ${scheduleEntry.dateLabel}`;
+      if (!dayWeather && !fallbackWeather) {
+        return `<div class="clima-feed-day"><span class="cfd-label">${label}</span><span class="cfd-desc">${t('clima_beyond') || 'Sin pronóstico'}</span></div>`;
+      }
+      const d = dayWeather || fallbackWeather.daily?.[0];
+      if (!d && fallbackWeather) {
+        return `<div class="clima-feed-day"><span class="cfd-label">${label}</span><span class="cfd-icon">${fallbackWeather.emoji}</span><span class="cfd-temp">${fallbackWeather.temp}°</span><span class="cfd-desc">${fallbackWeather.desc}</span></div>`;
+      }
+      return `<div class="clima-feed-day"><span class="cfd-label">${label}</span><span class="cfd-icon">${d.emoji}</span><span class="cfd-temp">${d.tempMax}°/${d.tempMin}°</span><span class="cfd-desc">${d.desc}</span></div>`;
+    }
+
+    async function renderClimaFeedViaje() {
+      const feed = document.getElementById('clima-feed-viaje');
+      if (!feed) return;
+      if (!destinos.length) {
+        feed.innerHTML = `<p class="clima-feed-empty">${t('clima_feed_empty')}</p>`;
+        return;
+      }
+      feed.innerHTML = `<p class="clima-placeholder">${t('weather_loading') || 'Cargando clima de tu viaje...'}</p>`;
+      const schedule = buildTripDaySchedule();
+      const cities = [...new Set(destinos.map(d => d.nombre))];
+      const weatherByCity = {};
+      await Promise.all(cities.map(async city => {
+        try {
+          weatherByCity[city] = await fetchWeatherData(city);
+        } catch (e) {
+          weatherByCity[city] = null;
+        }
+      }));
+
+      let html = `<h3 class="clima-feed-title">${t('clima_feed_title')}</h3>`;
+      destinos.forEach(dest => {
+        const w = weatherByCity[dest.nombre];
+        const destDays = schedule.filter(s => s.destId === dest.id);
+        html += `<div class="clima-feed-dest"><h4>📍 ${dest.nombre}</h4>`;
+        if (!destDays.length) {
+          html += renderClimaDayRowHTML({ destName: dest.nombre, isDestOnly: true, diaNum: 0, dateLabel: '' }, null, w);
+        } else {
+          destDays.forEach(s => {
+            const dayW = w ? getWeatherForTripDay(w, s.dateStr, s.forecastIndex) : null;
+            html += renderClimaDayRowHTML(s, dayW, w);
+          });
+        }
+        html += `</div>`;
+      });
+      feed.innerHTML = html;
+    }
+
+    function buildDayWeatherChipHTML(widgetId, weatherData, dayInfo, dateStr, expanded) {
+      const d = dayInfo || { emoji: '🌤️', tempMax: '--', tempMin: '--', desc: '...' };
+      const row = `
+        <div class="weather-chip-row">
+          <span class="weather-chip-icon">${d.emoji}</span>
+          <span class="weather-chip-temp">${d.tempMax}°</span>
+          <span class="weather-chip-desc">${d.desc}</span>
+        </div>`;
+      if (!expanded || !weatherData) return row;
+      return row + `
+        <div class="weather-expanded">
+          <p><strong>${weatherData.city}${weatherData.country ? ', ' + weatherData.country : ''}</strong>${dateStr ? `<br><small style="color:var(--gris)">${dateStr}</small>` : ''}</p>
+          <p>${d.tempMax}° / ${d.tempMin}° · ${d.desc}</p>
+          <p style="font-size:0.8rem;color:var(--gris)">Sensación ${weatherData.feelsLike}° · Humedad ${weatherData.humidity}% · Viento ${weatherData.wind} km/h</p>
+        </div>`;
+    }
+
+    function buildWeatherWidgetHTML(widgetId, w, expanded) {
+      const row = `
+        <div class="weather-chip-row">
+          <span class="weather-chip-icon">${w.emoji}</span>
+          <span class="weather-chip-temp">${w.temp}°</span>
+          <span class="weather-chip-desc">${w.desc}</span>
+        </div>`;
+      if (!expanded) return row;
+      const forecastHtml = w.daily.length
+        ? `<div class="weather-forecast-mini">${w.daily.map(d => `
+            <div class="wf-day">
+              <span class="wf-icon">${d.emoji}</span>
+              <span>${d.label}</span>
+              <span>${d.tempMax}°/${d.tempMin}°</span>
+            </div>`).join('')}</div>`
+        : '';
+      return row + `
+        <div class="weather-expanded">
+          <p><strong>${w.city}${w.country ? ', ' + w.country : ''}</strong></p>
+          <p>Sensación ${w.feelsLike}° · Humedad ${w.humidity}% · Viento ${w.wind} km/h</p>
+          ${forecastHtml}
+        </div>`;
+    }
+
+    function renderClimaCardHTML(w) {
+      const forecastHtml = w.daily.length
+        ? `<div class="clima-forecast-grid">${w.daily.map(d => `
+            <div class="clima-forecast-day">
+              <span class="day-label">${d.label}</span>
+              <span class="day-icon">${d.emoji}</span>
+              <span class="day-temps">${d.tempMax}° / ${d.tempMin}°</span>
+              <span style="font-size:0.7rem;color:var(--gris);text-transform:capitalize;">${d.desc}</span>
+            </div>`).join('')}</div>`
+        : '';
+      return `
+        <div class="clima-card-full">
+          <div class="clima-current-row">
+            <span class="clima-current-icon">${w.emoji}</span>
+            <div>
+              <div class="clima-current-temp">${w.temp}°C</div>
+              <div style="text-transform:capitalize;color:var(--texto);font-size:1.1rem;">${w.desc}</div>
+              <div class="clima-current-meta">${w.city}${w.country ? ', ' + w.country : ''} · Sensación ${w.feelsLike}° · Humedad ${w.humidity}% · Viento ${w.wind} km/h</div>
+            </div>
+          </div>
+          ${forecastHtml ? `<h4 style="color:var(--gris);font-size:0.85rem;margin-bottom:10px;">Próximos días</h4>${forecastHtml}` : ''}
+        </div>`;
+    }
+
+    async function loadWeatherForTripDay(widgetId, city, dateStr, forecastIndex) {
+      const el = document.getElementById(widgetId);
+      if (!el || !city) return;
+      el.dataset.city = city;
+      el.dataset.date = dateStr || '';
+      el.dataset.fidx = forecastIndex != null ? String(forecastIndex) : '';
+      el.innerHTML = '<div class="weather-chip-row"><span class="weather-chip-icon">🌤️</span><span class="weather-chip-temp">...</span></div>';
+      try {
+        const w = await fetchWeatherData(city);
+        const dayInfo = getWeatherForTripDay(w, dateStr, forecastIndex);
+        if (!dayInfo) {
+          el.innerHTML = `<div class="weather-chip-row"><span class="weather-chip-icon">🌡️</span><span class="weather-chip-desc">${t('clima_beyond') || 'N/D'}</span></div>`;
+          el.dataset.loaded = '0';
+          return;
+        }
+        el.innerHTML = buildDayWeatherChipHTML(widgetId, w, dayInfo, dateStr, el.classList.contains('expanded'));
+        el.dataset.loaded = '1';
+      } catch (e) {
+        el.innerHTML = '<div class="weather-chip-row"><span class="weather-chip-icon" title="Clima no disponible">🌡️</span><span class="weather-chip-desc">N/D</span></div>';
+        el.dataset.loaded = '0';
+      }
+    }
+
+    function toggleWeatherWidget(widgetId) {
+      const el = document.getElementById(widgetId);
+      if (!el) return;
+      const city = el.dataset.city;
+      const dateStr = el.dataset.date || '';
+      const forecastIndex = el.dataset.fidx !== '' ? parseInt(el.dataset.fidx, 10) : null;
+      const wasExpanded = el.classList.contains('expanded');
+      document.querySelectorAll('.weather-chip.expanded').forEach(chip => {
+        if (chip.id !== widgetId) {
+          chip.classList.remove('expanded');
+          const c = chip.dataset.city;
+          const cached = weatherCache[weatherCacheKey(c)];
+          if (cached) {
+            const di = getWeatherForTripDay(cached.data, chip.dataset.date || '', chip.dataset.fidx !== '' ? parseInt(chip.dataset.fidx, 10) : null);
+            chip.innerHTML = buildDayWeatherChipHTML(chip.id, cached.data, di, chip.dataset.date || '', false);
+          }
+        }
+      });
+      el.classList.toggle('expanded');
+      const cached = weatherCache[weatherCacheKey(city)];
+      if (cached) {
+        const dayInfo = getWeatherForTripDay(cached.data, dateStr, forecastIndex);
+        el.innerHTML = buildDayWeatherChipHTML(widgetId, cached.data, dayInfo, dateStr, el.classList.contains('expanded'));
+      } else if (!wasExpanded) {
+        loadWeatherForTripDay(widgetId, city, dateStr, forecastIndex);
+      }
+    }
+
+    function refreshAllWeatherWidgets() {
+      buildTripDaySchedule().forEach(s => {
+        if (s.isDestOnly || s.diaId == null) return;
+        const wid = `weather-day-${s.destId}-${s.diaId}`;
+        if (document.getElementById(wid)) {
+          loadWeatherForTripDay(wid, s.destName, s.dateStr, s.forecastIndex);
+        }
+        const wrid = `weather-resumen-day-${s.destId}-${s.diaId}`;
+        if (document.getElementById(wrid)) {
+          loadWeatherForTripDay(wrid, s.destName, s.dateStr, s.forecastIndex);
+        }
+      });
+    }
+
+    async function getWeatherContextForTrip() {
+      const schedule = buildTripDaySchedule().filter(s => !s.isDestOnly);
+      if (!schedule.length && !destinos.length) return '';
+      const parts = [];
+      const seen = new Set();
+      for (const s of schedule.slice(0, 12)) {
+        const key = `${s.destName}|${s.dateStr || s.forecastIndex}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        try {
+          const w = await fetchWeatherData(s.destName);
+          const d = getWeatherForTripDay(w, s.dateStr, s.forecastIndex);
+          if (d) {
+            parts.push(`${s.destName} ${t('day_prefix')} ${s.diaNum}${s.dateLabel ? ' (' + s.dateLabel + ')' : ''}: ${d.emoji} ${d.tempMax}°/${d.tempMin}° ${d.desc}`);
+          }
+        } catch (e) { /* skip */ }
+      }
+      if (!parts.length && destinos.length) {
+        for (const d of destinos.slice(0, 3)) {
+          try {
+            const w = await fetchWeatherData(d.nombre);
+            parts.push(`${w.city}: ${w.temp}°C ${w.desc}`);
+          } catch (e) { /* skip */ }
+        }
+      }
+      return parts.length ? ` Clima del viaje por día: ${parts.join(' | ')}.` : '';
+    }
+
+    function abrirClima() {
+      cerrarPanelHerramientas();
+      document.getElementById('modal-clima').style.display = 'flex';
+      renderClimaFeedViaje();
+      const input = document.getElementById('clima-search-input');
+      const resultados = document.getElementById('clima-resultados');
+      if (resultados && !input?.value.trim()) {
+        resultados.innerHTML = `<p class="clima-placeholder clima-search-hint">${t('clima_search') ? 'O buscá otra ciudad abajo.' : 'O buscá otra ciudad abajo.'}</p>`;
+      }
+      if (input) {
+        const sugerencia = destinos[0]?.nombre || lugarSalida || '';
+        if (sugerencia && !input.value) input.placeholder = `Buscar ciudad (ej: ${sugerencia})...`;
+        input.focus();
+      }
+    }
+
+    function cerrarClima() {
+      document.getElementById('modal-clima').style.display = 'none';
+    }
+
+    async function buscarClimaModal() {
+      const input = document.getElementById('clima-search-input');
+      const resultados = document.getElementById('clima-resultados');
+      const city = input?.value.trim();
+      if (!city) { showToast('Escribí una ciudad', 'error'); return; }
+      resultados.innerHTML = '<p class="clima-placeholder">Cargando pronóstico...</p>';
+      try {
+        const w = await fetchWeatherData(city);
+        resultados.innerHTML = renderClimaCardHTML(w);
+      } catch (e) {
+        const msg = e.message === 'Ciudad no encontrada'
+          ? 'No encontramos esa ciudad. Probá "Buenos Aires", "Roma" o "Paris".'
+          : 'No pudimos cargar el clima. Revisá tu conexión.';
+        resultados.innerHTML = `<p class="clima-placeholder">${msg}</p>`;
+        showToast(e.message === 'Ciudad no encontrada' ? 'Ciudad no encontrada' : 'Error de clima', 'error');
+      }
     }
 
     async function dibujarMapa(containerId='map') {
@@ -3154,11 +3759,6 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     async function abrirColaboradores() {
-        if (!currentNickname) {
-            showToast('Debes crear un nickname primero', 'error');
-            abrirCuenta();
-            return;
-        }
         document.getElementById('modal-colaboradores').style.display = 'flex';
         const lista = document.getElementById('lista-colaboradores');
         const inviteCodeContainer = document.getElementById('invite-code-container');
@@ -3170,7 +3770,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             inviteCodeContainer.style.display = 'none';
         }
         
-        let html = `
+        let html = '';
+        if (currentNickname) {
+            html += `
             <div style="display:flex; align-items:center; gap:15px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
                 <div class="colab-avatar" style="background:var(--rosa); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">${currentNickname.substring(0,2).toUpperCase()}</div>
                 <div>
@@ -3179,6 +3781,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 </div>
             </div>
         `;
+        } else {
+            html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-bottom:15px;">Podés generar un código y compartirlo sin crear cuenta. Para invitar por nickname, iniciá sesión.</p>`;
+        }
         
         if (db && syncCode) {
             try {
@@ -3435,6 +4040,13 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   window.cerrarCalendario = cerrarCalendario;
   window.abrirConversor = abrirConversor;
   window.cerrarConversor = cerrarConversor;
+  window.abrirClima = abrirClima;
+  window.cerrarClima = cerrarClima;
+  window.buscarClimaModal = buscarClimaModal;
+  window.toggleWeatherWidget = toggleWeatherWidget;
+  window.loadWeatherForTripDay = loadWeatherForTripDay;
+  window.renderClimaFeedViaje = renderClimaFeedViaje;
+  window.fetchWeatherData = fetchWeatherData;
   window.abrirChecklist = abrirChecklist;
   window.cerrarChecklist = cerrarChecklist;
   window.abrirMapa = abrirMapa;

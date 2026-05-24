@@ -18,7 +18,7 @@
   <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
   <script defer src="/__/firebase/10.9.0/firebase-firestore-compat.js"></script>
   <script defer src="/__/firebase/init.js"></script>
-  <script defer src="script.js?v=1779320000000"></script>
+  <script defer src="script.js?v=1779700000000"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -102,13 +102,14 @@
         <button class="herramienta-btn" onclick="abrirConversor()" id="btnConversor">Conversor</button>
         <button class="herramienta-btn" onclick="abrirChecklist()" id="btnChecklist">Checklist</button>
         <button class="herramienta-btn" onclick="abrirMapa()" id="btnMapa">Ver mapa</button>
+        <button class="herramienta-btn" onclick="abrirClima()" id="btnClima">Clima</button>
         <button class="herramienta-btn" onclick="abrirPreferencias()" style="background:var(--azul);">Preferencias</button>
         <button class="herramienta-btn" style="background:var(--rosa); border-color:var(--rosa);" onclick="document.getElementById('modal-viaje-activo').style.display='flex'">Modo Viaje Activo</button>
       </div>
       <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
-        <p style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación?</p>
+        <p style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación? No hace falta registrarse.</p>
         <div style="display:flex; gap:10px;">
-          <input type="text" id="join-code-input-herramientas" placeholder="Ej: XJ92LK" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
+          <input type="text" id="join-code-input-herramientas" placeholder="Ej: ABCD-1234" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
           <button class="btn-add-feed" style="background:var(--verde);" onclick="unirseAViaje('join-code-input-herramientas')">Unirse</button>
         </div>
       </div>
@@ -155,9 +156,9 @@
           <input type="file" id="fileImport" accept=".json" style="display:none;">
         </div>
         <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
-          <p style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación?</p>
+          <p style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación? No hace falta registrarse.</p>
           <div style="display:flex; gap:10px;">
-            <input type="text" id="join-code-input-viajes" placeholder="Ej: XJ92LK" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
+            <input type="text" id="join-code-input-viajes" placeholder="Ej: ABCD-1234" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
             <button class="btn-add-feed" style="background:var(--verde);" onclick="unirseAViaje('join-code-input-viajes')">Unirse</button>
           </div>
         </div>
@@ -276,6 +277,7 @@
         <button class="chat-quick-btn" onclick="chatSend('Crear checklist para mi viaje')">Checklist</button>
         <button class="chat-quick-btn" onclick="chatSend('¿Cuánto me va a costar el viaje?')">Costo</button>
         <button class="chat-quick-btn" onclick="chatSend('Sugerime actividades para mis destinos')">Sugerencias</button>
+        <button class="chat-quick-btn" onclick="chatSend('¿Qué clima hace en mis destinos? ¿Qué debería llevar?')">Clima</button>
       </div>
       <div class="chat-messages" id="chat-messages">
         <div class="chat-msg ai">¡Hola! Soy tu asistente de viaje Plux. Contame qué tenés en mente; puedo ayudarte a crear tu checklist, calcular costos o sugerir actividades.</div>
@@ -408,6 +410,23 @@
     </div>
   </div>
 
+  <div id="modal-clima">
+    <div class="clima-content">
+      <div class="clima-header">
+        <h2 id="climaTitle">Clima</h2>
+        <span class="close-clima" onclick="cerrarClima()">×</span>
+      </div>
+      <div class="clima-search-row">
+        <input type="text" id="clima-search-input" placeholder="Buscar ciudad (ej: Roma, Buenos Aires)..." onkeydown="if(event.key==='Enter')buscarClimaModal()">
+        <button onclick="buscarClimaModal()" id="climaSearchBtn">Buscar</button>
+      </div>
+      <div id="clima-feed-viaje" class="clima-feed-viaje"></div>
+      <div id="clima-resultados" class="clima-resultados">
+        <p class="clima-placeholder clima-search-hint">O buscá otra ciudad abajo.</p>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-conversor">
     <div class="conversor-content">
       <div class="conversor-header">
@@ -476,7 +495,7 @@
       </div>
   </div>
 
-  <!-- Modal Cuenta / Nickname -->
+  <!-- Modal Cuenta (Firebase Auth → /login) -->
   <div id="modal-cuenta">
     <div class="cuenta-content">
       <span class="close-panel" onclick="cerrarCuenta()">×</span>
@@ -484,39 +503,18 @@
       <div class="cuenta-nickname-display" id="cuentaNicknameDisplay" style="display:none;"></div>
       <h2 id="cuentaTitle" style="text-align:center;">Tu Perfil</h2>
       
-      <div class="cuenta-form" id="cuentaForm">
-        <div class="cuenta-tabs" style="display:flex; justify-content:center; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px; width:100%;">
-          <button class="cuenta-tab active" id="tab-login-btn" onclick="switchCuentaTab('login')" style="background:transparent; border:none; color:white; border-bottom:2px solid var(--verde); font-weight:bold; cursor:pointer; padding:5px 15px;">Iniciar Sesión</button>
-          <button class="cuenta-tab" id="tab-register-btn" onclick="switchCuentaTab('register')" style="background:transparent; border:none; color:var(--gris); font-weight:normal; cursor:pointer; padding:5px 15px;">Registrarse</button>
-        </div>
-        
-        <!-- Formulario Iniciar Sesión -->
-        <div id="form-login" style="display:flex; flex-direction:column; gap:12px; width:100%;">
-          <input type="text" id="login-nickname" placeholder="Escribí tu nickname..." maxlength="20" autocomplete="off" style="width:100%;">
-          <div id="login-password-container" style="display:none; flex-direction:column; gap:6px;">
-            <input type="password" id="login-password" placeholder="Escribí tu contraseña..." autocomplete="off" style="width:100%;">
-          </div>
-          <button onclick="iniciarSesionPlux()" style="background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold;">Ingresar</button>
-        </div>
-
-        <!-- Formulario Registrarse -->
-        <div id="form-register" style="display:none; flex-direction:column; gap:12px; width:100%;">
-          <input type="text" id="register-nickname" placeholder="Elegí un nickname..." maxlength="20" autocomplete="off" style="width:100%;">
-          <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--gris); cursor:pointer; user-select:none; margin: 4px 0;">
-            <input type="checkbox" id="register-has-password" onchange="toggleRegisterPassword()" style="width:16px; height:16px; accent-color:var(--verde);"> Proteger con contraseña
-          </label>
-          <div id="register-password-container" style="display:none; flex-direction:column; gap:6px;">
-            <input type="password" id="register-password" placeholder="Elegí una contraseña..." autocomplete="off" style="width:100%;">
-          </div>
-          <button onclick="crearCuentaPlux()" style="background:linear-gradient(135deg, var(--rosa), var(--violeta)); font-weight:bold;">Crear Cuenta</button>
-        </div>
+      <div class="cuenta-form" id="cuentaForm" style="display:flex; flex-direction:column; gap:12px; width:100%; text-align:center;">
+        <p id="cuentaAuthHint" style="color:var(--gris); font-size:0.9rem; margin-bottom:8px;">Iniciá sesión con correo y contraseña obligatoria, o con Google.</p>
+        <a id="cuentaLinkLogin" href="/login/?return=/plux/" class="btn-add-feed" style="display:block; text-decoration:none; padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px;">Iniciar sesión</a>
+        <a id="cuentaLinkRegister" href="/login/?tab=register&return=/plux/" style="color:var(--azul); font-size:0.9rem;">Crear cuenta</a>
       </div>
 
       <div class="cuenta-info" id="cuentaInfo" style="display:none;">
-        <div class="cuenta-info-row"><span>Idioma</span><span id="cuentaIdioma">ES</span></div>
-        <div class="cuenta-info-row"><span>Tema</span><span id="cuentaTema">Oscuro</span></div>
-        <div class="cuenta-info-row"><span>Viajes guardados</span><span id="cuentaViajes">0</span></div>
-        <button class="cuenta-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+        <div class="cuenta-info-row"><span id="cuentaLblEmail">Correo</span><span id="cuentaEmail" style="font-size:0.85rem; word-break:break-all;"></span></div>
+        <div class="cuenta-info-row"><span id="cuentaLblLang">Idioma</span><span id="cuentaIdioma">ES</span></div>
+        <div class="cuenta-info-row"><span id="cuentaLblTheme">Tema</span><span id="cuentaTema">Oscuro</span></div>
+        <div class="cuenta-info-row"><span id="cuentaLblTrips">Viajes guardados</span><span id="cuentaViajes">0</span></div>
+        <button class="cuenta-logout" id="cuentaLogoutBtn" onclick="cerrarSesion()">Cerrar sesión</button>
       </div>
     </div>
   </div>

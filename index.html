@@ -18,7 +18,7 @@
   <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
   <script defer src="/__/firebase/10.9.0/firebase-firestore-compat.js"></script>
   <script defer src="/__/firebase/init.js"></script>
-  <script defer src="script.js?v=1779700000000"></script>
+  <script defer src="script.js?v=1779800000000"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -50,7 +50,7 @@
 
     <!-- Inspiration Cards -->
     <div class="inspo-section">
-      <div class="inspo-title">Inspiración · Destinos Populares</div>
+      <div class="inspo-title" id="inspoTitle">Inspiración · Destinos Populares</div>
       <div class="inspo-scroll">
         <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=400&q=80')" onclick="explorarInspo('Roma')">
           <div class="inspo-card-flag">IT</div>
@@ -103,14 +103,14 @@
         <button class="herramienta-btn" onclick="abrirChecklist()" id="btnChecklist">Checklist</button>
         <button class="herramienta-btn" onclick="abrirMapa()" id="btnMapa">Ver mapa</button>
         <button class="herramienta-btn" onclick="abrirClima()" id="btnClima">Clima</button>
-        <button class="herramienta-btn" onclick="abrirPreferencias()" style="background:var(--azul);">Preferencias</button>
-        <button class="herramienta-btn" style="background:var(--rosa); border-color:var(--rosa);" onclick="document.getElementById('modal-viaje-activo').style.display='flex'">Modo Viaje Activo</button>
+        <button class="herramienta-btn" id="btnPreferencias" onclick="abrirPreferencias()" style="background:var(--azul);">Preferencias</button>
+        <button class="herramienta-btn" id="btnViajeActivo" style="background:var(--rosa); border-color:var(--rosa);" onclick="document.getElementById('modal-viaje-activo').style.display='flex'">Modo Viaje Activo</button>
       </div>
       <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
-        <p style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación? No hace falta registrarse.</p>
+        <p id="joinHintHerramientas" style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación? No hace falta registrarse.</p>
         <div style="display:flex; gap:10px;">
           <input type="text" id="join-code-input-herramientas" placeholder="Ej: ABCD-1234" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
-          <button class="btn-add-feed" style="background:var(--verde);" onclick="unirseAViaje('join-code-input-herramientas')">Unirse</button>
+          <button class="btn-add-feed" id="joinBtnHerramientas" style="background:var(--verde);" onclick="unirseAViaje('join-code-input-herramientas')">Unirse</button>
         </div>
       </div>
     </div>
@@ -142,8 +142,8 @@
       <span class="close-modal" onclick="cerrarModalViajes()">×</span>
       <h2 id="modalTitle">Tus viajes</h2>
       <div class="modal-tabs">
-        <button class="tab-btn active" data-tab="guardados"> Guardados</button>
-        <button class="tab-btn" data-tab="plantillas"> Plantillas</button>
+        <button class="tab-btn active" data-tab="guardados" id="tabGuardadosBtn"> Guardados</button>
+        <button class="tab-btn" data-tab="plantillas" id="tabPlantillasBtn"> Plantillas</button>
       </div>
       <div class="tab-content active" id="tab-guardados">
         <div class="save-trip">
@@ -156,15 +156,15 @@
           <input type="file" id="fileImport" accept=".json" style="display:none;">
         </div>
         <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
-          <p style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación? No hace falta registrarse.</p>
+          <p id="joinHintViajes" style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación? No hace falta registrarse.</p>
           <div style="display:flex; gap:10px;">
             <input type="text" id="join-code-input-viajes" placeholder="Ej: ABCD-1234" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
-            <button class="btn-add-feed" style="background:var(--verde);" onclick="unirseAViaje('join-code-input-viajes')">Unirse</button>
+            <button class="btn-add-feed" id="joinBtnViajes" style="background:var(--verde);" onclick="unirseAViaje('join-code-input-viajes')">Unirse</button>
           </div>
         </div>
         <div class="trip-list" id="tripList"></div>
         <div id="colab-trips-section" style="display:none; margin-top:25px; padding-top:20px; border-top:1px solid var(--border);">
-          <h3 style="color:var(--verde); margin-bottom:12px; font-size:1.1rem; text-align:left;">Viajes compartidos con vos</h3>
+          <h3 id="sharedTripsTitle" style="color:var(--verde); margin-bottom:12px; font-size:1.1rem; text-align:left;">Viajes compartidos con vos</h3>
           <div class="trip-list" id="sharedTripList"></div>
         </div>
       </div>
@@ -223,26 +223,26 @@
   <div id="modal-colaboradores">
     <div class="colaboradores-content">
       <div class="colaboradores-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="color:var(--verde); margin:0;">Colaboradores</h2>
+        <h2 id="colabTitle" style="color:var(--verde); margin:0;">Colaboradores</h2>
         <span class="close-panel" onclick="document.getElementById('modal-colaboradores').style.display='none'">×</span>
       </div>
       <div id="lista-colaboradores" style="margin-bottom:20px;"></div>
       
       <!-- Invitar por Nickname -->
       <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:15px; text-align:left;">
-        <p style="font-size:0.85rem; color:var(--gris); margin-bottom:8px;">Invitar por Nickname</p>
+        <p id="colabInviteLabel" style="font-size:0.85rem; color:var(--gris); margin-bottom:8px;">Invitar por Nickname</p>
         <div style="display:flex; gap:10px;">
           <input type="text" id="invite-nickname-input" placeholder="Ej: messi" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
-          <button class="btn-add-feed" style="background:var(--verde); color:black; font-weight:bold; padding: 0 15px; min-height: 40px;" onclick="invitarColaboradorPorNickname()">Invitar</button>
+          <button class="btn-add-feed" id="colabInviteBtn" style="background:var(--verde); color:black; font-weight:bold; padding: 0 15px; min-height: 40px;" onclick="invitarColaboradorPorNickname()">Invitar</button>
         </div>
       </div>
 
       <div id="invite-code-container" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px dashed var(--border); text-align:center; display:none; margin-top:10px;">
-        <p style="font-size:0.8rem; color:var(--gris); margin-bottom:5px;">CÓDIGO DE ACCESO:</p>
+        <p id="colabAccessLabel" style="font-size:0.8rem; color:var(--gris); margin-bottom:5px;">CÓDIGO DE ACCESO:</p>
         <h3 id="display-invite-code" style="color:var(--rosa); letter-spacing:4px; font-size:2rem; margin:0;"></h3>
       </div>
       <div class="colab-actions" style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn-add-feed" style="background:var(--azul); flex:1;" onclick="generarCodigoInApp()">Generar Código de Invitación</button>
+        <button class="btn-add-feed" id="colabGenBtn" style="background:var(--azul); flex:1;" onclick="generarCodigoInApp()">Generar Código de Invitación</button>
       </div>
     </div>
   </div>
@@ -403,7 +403,7 @@
   <div id="modal-mapa">
     <div class="mapa-content">
       <div class="mapa-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h2 style="color:var(--verde); margin:0;">Mapa del viaje</h2>
+        <h2 id="mapTitle" style="color:var(--verde); margin:0;">Mapa del viaje</h2>
         <span class="close-panel" onclick="cerrarMapa()" style="font-size:2rem; cursor:pointer;">×</span>
       </div>
       <div id="map" style="height: calc(100% - 50px); border-radius:12px;"></div>
@@ -430,7 +430,7 @@
   <div id="modal-conversor">
     <div class="conversor-content">
       <div class="conversor-header">
-        <h2>Conversor</h2>
+        <h2 id="conversorTitle">Conversor</h2>
         <span class="close-conversor" onclick="cerrarConversor()">×</span>
       </div>
       <div class="conversor-row">
@@ -464,7 +464,7 @@
         </select>
       </div>
       <div id="conversor-resultado"></div>
-      <button onclick="convertirMoneda()" style="width:100%;">Convertir</button>
+      <button id="conversorBtn" onclick="convertirMoneda()" style="width:100%;">Convertir</button>
     </div>
   </div>
 

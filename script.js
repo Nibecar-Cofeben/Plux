@@ -4,7 +4,7 @@
         welcome_start: "Empieza tu viaje", trips_btn: "Tus viajes", tools_btn: "Más herramientas",
         modal_title: "Tus viajes", save_trip_placeholder: "Nombre del viaje", save_trip_button: "Guardar viaje actual",
         load: "Cargar", delete: "Eliminar", no_saved_trips: "No hay viajes guardados.",
-        auto_save_name: "Resumen", app_title: "Plux: Organiza tu aventura", add_dest_placeholder: "Destino",
+        auto_save_name: "Resumen", app_title: "Plux · Organiza tu aventura", add_dest_placeholder: "Destino",
         add_dest_button: "+ Añadir", add_day_button: "+ Añadir día", add_event_button: "+ Añadir Evento",
         view_summary: "Ver Resumen del Viaje", no_events_day: "Aún no hay eventos en este día",
         event_time_placeholder: "Hora", event_title_placeholder: "Título", event_notes_placeholder: "Notas",
@@ -21,17 +21,33 @@
         view_modes: { cards: "Vista tarjetas", timeline: "Vista línea tiempo", presentation: "Vista presentación" },
         herramientas_title: "Más herramientas", calendario_title: "Calendario", mapa_btn: "Ver mapa",
         clima_title: "Clima", clima_btn: "Clima", clima_search: "Buscar", clima_placeholder: "Escribí una ciudad para ver el pronóstico.",
-        clima_feed_title: "Clima de tu viaje", clima_feed_empty: "Agregá destinos y días para ver el pronóstico de tu viaje.", clima_beyond: "Sin pronóstico (muy lejano)",
+        clima_feed_title: "Clima de tu viaje", clima_feed_empty: "Agregá destinos y días para ver el pronóstico de tu viaje.", clima_beyond: "Sin pronóstico (muy lejano)", clima_feed_now: "Pronóstico general",
+        discover_btn: "Descubrir Destinos", join_invite: "¿Tienes un código de invitación? No hace falta registrarse.", join_btn: "Unirse",
+        auth_hint: "Iniciá sesión con correo y contraseña obligatoria, o con Google.", auth_login: "Iniciar sesión", auth_register: "Crear cuenta", auth_logout: "Cerrar sesión",
+        cuenta_title: "Tu Perfil", cuenta_email: "Correo", cuenta_lang: "Idioma", cuenta_theme: "Tema", cuenta_trips: "Viajes guardados",
+        weather_loading: "Cargando...", personas_label: "Personas:", fecha_inicio_label: "Fecha de inicio:",
         eventos_dia_title: "Eventos del día", estadisticas: { duracion: "Duración (días)", eventos: "Eventos", coste_total: "Coste total", coste_persona: "Coste/persona", destinos: "Destinos" },
         temas: { claro: "Claro", oscuro: "Oscuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Lugar de salida", costo_extra_vuelta: "Costo extra vuelta", tramo: "Tramo", origen: "Origen",
-        destino: "Destino", medio: "Medio", precio: "Precio", escala: "Escala", agregar_tramo: "+ Agregar tramo", agregar_escala: "+ Escala"
+        destino: "Destino", medio: "Medio", precio: "Precio", escala: "Escala", agregar_tramo: "+ Agregar tramo", agregar_escala: "+ Escala",
+        inspo_title: "Inspiración · Destinos Populares", tab_saved: "Guardados", tab_templates: "Plantillas",
+        join_placeholder: "Ej: ABCD-1234", shared_trips_title: "Viajes compartidos con vos",
+        colab_title: "Colaboradores", colab_invite_nick: "Invitar por Nickname", colab_invite_btn: "Invitar", colab_nick_ph: "Ej: messi",
+        colab_access_code: "CÓDIGO DE ACCESO:", colab_gen_code: "Generar Código de Invitación",
+        map_title: "Mapa del viaje", conversor_title: "Conversor", conversor_btn: "Convertir",
+        descubrir_title: "Descubrir (Feed de Inspiración)", present_title: "Presentación del viaje",
+        present_prev: "← Anterior", present_next: "Siguiente →", cuenta_btn_title: "Tu cuenta",
+        ares_esc: "PRESIONA ESC PARA SALIR DE ARES",
+        toast_code_invalid: "Ingresa un código válido", toast_connecting: "Conectando con la nube...",
+        toast_cloud_off: "Nube inactiva. No se puede unir.", toast_searching: "Buscando viaje en la nube...",
+        toast_join_ok: "¡Te has unido al viaje con código {code}!", toast_code_not_found: "Código no encontrado o caducado",
+        toast_cloud_error: "Error al buscar en la nube", preferencias_btn: "Preferencias", viaje_activo_btn: "Modo Viaje Activo"
       },
       en: {
         welcome_start: "Start your journey", trips_btn: "Your trips", tools_btn: "More tools",
         modal_title: "Your trips", save_trip_placeholder: "Trip name", save_trip_button: "Save current trip",
         load: "Load", delete: "Delete", no_saved_trips: "No saved trips.", auto_save_name: "Summary",
-        app_title: "plux: Plan your adventure", add_dest_placeholder: "Destination", add_dest_button: "+ Add",
+        app_title: "Plux · Plan your adventure", add_dest_placeholder: "Destination", add_dest_button: "+ Add",
         add_day_button: "+ Add day", add_event_button: "+ Add event", view_summary: "View Trip Summary",
         no_events_day: "No events yet today", event_time_placeholder: "Time", event_title_placeholder: "Title",
         event_notes_placeholder: "Notes", event_cost_placeholder: "", event_duration_placeholder: "min",
@@ -47,16 +63,33 @@
         view_modes: { cards: "Card view", timeline: "Timeline view", presentation: "Presentation view" },
         herramientas_title: "More tools", calendario_title: "Calendar", mapa_btn: "View map",
         clima_title: "Weather", clima_btn: "Weather", clima_search: "Search", clima_placeholder: "Enter a city to see the forecast.",
+        clima_feed_title: "Your trip weather", clima_feed_empty: "Add destinations and days to see your trip forecast.", clima_beyond: "No forecast (too far)", clima_feed_now: "General forecast",
+        discover_btn: "Discover Destinations", join_invite: "Have an invite code? No sign-up required.", join_btn: "Join",
+        auth_hint: "Sign in with email and required password, or with Google.", auth_login: "Sign in", auth_register: "Create account", auth_logout: "Sign out",
+        cuenta_title: "Your Profile", cuenta_email: "Email", cuenta_lang: "Language", cuenta_theme: "Theme", cuenta_trips: "Saved trips",
+        weather_loading: "Loading...", personas_label: "People:", fecha_inicio_label: "Start date:",
         eventos_dia_title: "Day events", estadisticas: { duracion: "Duration (days)", eventos: "Events", coste_total: "Total cost", coste_persona: "Cost/person", destinos: "Destinations" },
         temas: { claro: "Light", oscuro: "Dark", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Departure place", costo_extra_vuelta: "Extra return cost", tramo: "Segment", origen: "Origin",
-        destino: "Destination", medio: "Means", precio: "Price", escala: "Stopover", agregar_tramo: "+ Add segment", agregar_escala: "+ Stopover"
+        destino: "Destination", medio: "Means", precio: "Price", escala: "Stopover", agregar_tramo: "+ Add segment", agregar_escala: "+ Stopover",
+        inspo_title: "Inspiration · Popular Destinations", tab_saved: "Saved", tab_templates: "Templates",
+        join_placeholder: "e.g. ABCD-1234", shared_trips_title: "Trips shared with you",
+        colab_title: "Collaborators", colab_invite_nick: "Invite by nickname", colab_invite_btn: "Invite", colab_nick_ph: "e.g. traveler",
+        colab_access_code: "ACCESS CODE:", colab_gen_code: "Generate invite code",
+        map_title: "Trip map", conversor_title: "Converter", conversor_btn: "Convert",
+        descubrir_title: "Discover (inspiration feed)", present_title: "Trip presentation",
+        present_prev: "← Previous", present_next: "Next →", cuenta_btn_title: "Your account",
+        ares_esc: "PRESS ESC TO EXIT ARES",
+        toast_code_invalid: "Enter a valid code", toast_connecting: "Connecting to cloud...",
+        toast_cloud_off: "Cloud unavailable. Cannot join.", toast_searching: "Searching trip in cloud...",
+        toast_join_ok: "You joined the trip with code {code}!", toast_code_not_found: "Code not found or expired",
+        toast_cloud_error: "Error searching cloud", preferencias_btn: "Preferences", viaje_activo_btn: "Active Trip Mode"
       },
       fr: {
         welcome_start: "Commencez votre voyage", trips_btn: "Vos voyages", tools_btn: "Plus d'outils",
         modal_title: "Vos voyages", save_trip_placeholder: "Nom", save_trip_button: "Enregistrer le voyage actuel",
         load: "Charger", delete: "Supprimer", no_saved_trips: "Aucun voyage enregistré.", auto_save_name: "Résumé",
-        app_title: "plux Organisez votre aventure", add_dest_placeholder: "Destination", add_dest_button: "+ Ajouter",
+        app_title: "Plux · Organisez votre aventure", add_dest_placeholder: "Destination", add_dest_button: "+ Ajouter",
         add_day_button: "+ Ajouter un jour", add_event_button: "+ Ajouter un événement", view_summary: "Voir le résumé du voyage",
         no_events_day: "Pas encore d'événements ce jour", event_time_placeholder: "Heure", event_title_placeholder: "Titre",
         event_notes_placeholder: "Notes", event_cost_placeholder: "", event_duration_placeholder: "min",
@@ -72,16 +105,33 @@
         view_modes: { cards: "Vue cartes", timeline: "Vue chronologique", presentation: "Vue présentation" },
         herramientas_title: "Plus d'outils", calendario_title: "Calendrier", mapa_btn: "Voir la carte",
         clima_title: "Météo", clima_btn: "Météo", clima_search: "Rechercher", clima_placeholder: "Entrez une ville pour voir la météo.",
+        clima_feed_title: "Météo de votre voyage", clima_feed_empty: "Ajoutez des destinations et des jours pour voir la météo.", clima_beyond: "Pas de prévision (trop loin)", clima_feed_now: "Prévision générale",
+        discover_btn: "Découvrir", join_invite: "Code d'invitation ? Pas besoin de compte.", join_btn: "Rejoindre",
+        auth_hint: "Connectez-vous avec e-mail et mot de passe obligatoire, ou Google.", auth_login: "Connexion", auth_register: "Créer un compte", auth_logout: "Déconnexion",
+        cuenta_title: "Votre profil", cuenta_email: "E-mail", cuenta_lang: "Langue", cuenta_theme: "Thème", cuenta_trips: "Voyages enregistrés",
+        weather_loading: "Chargement...", personas_label: "Personnes :", fecha_inicio_label: "Date de début :",
         eventos_dia_title: "Événements du jour", estadisticas: { duracion: "Durée (jours)", eventos: "Événements", coste_total: "Coût total", coste_persona: "Coût/personne", destinos: "Destinations" },
         temas: { claro: "Clair", oscuro: "Sombre", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Lieu de départ", costo_extra_vuelta: "Coût supplémentaire retour", tramo: "Tronçon", origen: "Origine",
-        destino: "Destination", medio: "Moyen", precio: "Prix", escala: "Escalier", agregar_tramo: "+ Ajouter tronçon", agregar_escala: "+ Escale"
+        destino: "Destination", medio: "Moyen", precio: "Prix", escala: "Escalier", agregar_tramo: "+ Ajouter tronçon", agregar_escala: "+ Escale",
+        inspo_title: "Inspiration · Destinations populaires", tab_saved: "Enregistrés", tab_templates: "Modèles",
+        join_placeholder: "ex. ABCD-1234", shared_trips_title: "Voyages partagés avec vous",
+        colab_title: "Collaborateurs", colab_invite_nick: "Inviter par pseudo", colab_invite_btn: "Inviter", colab_nick_ph: "ex. voyageur",
+        colab_access_code: "CODE D'ACCÈS :", colab_gen_code: "Générer un code d'invitation",
+        map_title: "Carte du voyage", conversor_title: "Convertisseur", conversor_btn: "Convertir",
+        descubrir_title: "Découvrir (fil d'inspiration)", present_title: "Présentation du voyage",
+        present_prev: "← Précédent", present_next: "Suivant →", cuenta_btn_title: "Votre compte",
+        ares_esc: "APPUYEZ SUR ÉCHAP POUR QUITTER ARES",
+        toast_code_invalid: "Entrez un code valide", toast_connecting: "Connexion au cloud...",
+        toast_cloud_off: "Cloud indisponible.", toast_searching: "Recherche du voyage...",
+        toast_join_ok: "Vous avez rejoint le voyage {code} !", toast_code_not_found: "Code introuvable ou expiré",
+        toast_cloud_error: "Erreur cloud", preferencias_btn: "Préférences", viaje_activo_btn: "Mode voyage actif"
       },
       de: {
         welcome_start: "Beginnen Sie Ihre Reise", trips_btn: "Ihre Reisen", tools_btn: "Weitere Tools",
         modal_title: "Ihre Reisen", save_trip_placeholder: "Name", save_trip_button: "Aktuelle Reise speichern",
         load: "Laden", delete: "Löschen", no_saved_trips: "Keine gespeicherten Reisen.", auto_save_name: "Zusammenfassung",
-        app_title: "plux: Planen Sie Ihr Abenteuer", add_dest_placeholder: "Reiseziel", add_dest_button: "+ Hinzufügen",
+        app_title: "Plux · Planen Sie Ihr Abenteuer", add_dest_placeholder: "Reiseziel", add_dest_button: "+ Hinzufügen",
         add_day_button: "+ Tag hinzufügen", add_event_button: "+ Ereignis hinzufügen", view_summary: "Reisezusammenfassung ansehen",
         no_events_day: "Noch keine Ereignisse an diesem Tag", event_time_placeholder: "Uhrzeit", event_title_placeholder: "Titel",
         event_notes_placeholder: "Notizen", event_cost_placeholder: "", event_duration_placeholder: "min",
@@ -97,16 +147,33 @@
         view_modes: { cards: "Kartenansicht", timeline: "Zeitleistenansicht", presentation: "Präsentationsansicht" },
         herramientas_title: "Weitere Tools", calendario_title: "Kalender", mapa_btn: "Karte anzeigen",
         clima_title: "Wetter", clima_btn: "Wetter", clima_search: "Suchen", clima_placeholder: "Stadt eingeben für die Vorhersage.",
+        clima_feed_title: "Wetter Ihrer Reise", clima_feed_empty: "Ziele und Tage hinzufügen für die Vorhersage.", clima_beyond: "Keine Vorhersage (zu weit)", clima_feed_now: "Allgemeine Vorhersage",
+        discover_btn: "Entdecken", join_invite: "Einladungscode? Keine Anmeldung nötig.", join_btn: "Beitreten",
+        auth_hint: "Mit E-Mail und Passwort (Pflicht) oder Google anmelden.", auth_login: "Anmelden", auth_register: "Konto erstellen", auth_logout: "Abmelden",
+        cuenta_title: "Ihr Profil", cuenta_email: "E-Mail", cuenta_lang: "Sprache", cuenta_theme: "Thema", cuenta_trips: "Gespeicherte Reisen",
+        weather_loading: "Laden...", personas_label: "Personen:", fecha_inicio_label: "Startdatum:",
         eventos_dia_title: "Ereignisse des Tages", estadisticas: { duracion: "Dauer (Tage)", eventos: "Ereignisse", coste_total: "Gesamtkosten", coste_persona: "Kosten/Person", destinos: "Reiseziele" },
         temas: { claro: "Hell", oscuro: "Dunkel", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Abfahrtsort", costo_extra_vuelta: "Zusätzliche Rückkehrkosten", tramo: "Abschnitt", origen: "Herkunft",
-        destino: "Ziel", medio: "Mittel", precio: "Preis", escala: "Zwischenstopp", agregar_tramo: "+ Abschnitt hinzufügen", agregar_escala: "+ Zwischenstopp"
+        destino: "Ziel", medio: "Mittel", precio: "Preis", escala: "Zwischenstopp", agregar_tramo: "+ Abschnitt hinzufügen", agregar_escala: "+ Zwischenstopp",
+        inspo_title: "Inspiration · Beliebte Reiseziele", tab_saved: "Gespeichert", tab_templates: "Vorlagen",
+        join_placeholder: "z.B. ABCD-1234", shared_trips_title: "Mit dir geteilte Reisen",
+        colab_title: "Mitarbeiter", colab_invite_nick: "Per Nickname einladen", colab_invite_btn: "Einladen", colab_nick_ph: "z.B. reisender",
+        colab_access_code: "ZUGANGSCODE:", colab_gen_code: "Einladungscode erzeugen",
+        map_title: "Reisekarte", conversor_title: "Umrechner", conversor_btn: "Umrechnen",
+        descubrir_title: "Entdecken (Inspirations-Feed)", present_title: "Reisepräsentation",
+        present_prev: "← Zurück", present_next: "Weiter →", cuenta_btn_title: "Ihr Konto",
+        ares_esc: "ESC DRÜCKEN UM ARES ZU VERLASSEN",
+        toast_code_invalid: "Gültigen Code eingeben", toast_connecting: "Verbinde mit Cloud...",
+        toast_cloud_off: "Cloud nicht verfügbar.", toast_searching: "Suche Reise in der Cloud...",
+        toast_join_ok: "Reise mit Code {code} beigetreten!", toast_code_not_found: "Code nicht gefunden",
+        toast_cloud_error: "Cloud-Fehler", preferencias_btn: "Einstellungen", viaje_activo_btn: "Aktiver Reisemodus"
       },
       it: {
         welcome_start: "Inizia il tuo viaggio", trips_btn: "I tuoi viaggi", tools_btn: "Altri strumenti",
         modal_title: "I tuoi viaggi", save_trip_placeholder: "Nome", save_trip_button: "Salva viaggio attuale",
         load: "Carica", delete: "Elimina", no_saved_trips: "Nessun viaggio salvato.", auto_save_name: "Riepilogo",
-        app_title: "plux: Organizza la tua avventura", add_dest_placeholder: "Destinazione", add_dest_button: "+ Aggiungi",
+        app_title: "Plux · Organizza la tua avventura", add_dest_placeholder: "Destinazione", add_dest_button: "+ Aggiungi",
         add_day_button: "+ Aggiungi giorno", add_event_button: "+ Aggiungi evento", view_summary: "Vedi riepilogo del viaggio",
         no_events_day: "Ancora nessun evento in questo giorno", event_time_placeholder: "Ora", event_title_placeholder: "Titolo",
         event_notes_placeholder: "Note", event_cost_placeholder: "", event_duration_placeholder: "min",
@@ -122,181 +189,100 @@
         view_modes: { cards: "Vista schede", timeline: "Vista cronologica", presentation: "Vista presentazione" },
         herramientas_title: "Altri strumenti", calendario_title: "Calendario", mapa_btn: "Visualizza mappa",
         clima_title: "Meteo", clima_btn: "Meteo", clima_search: "Cerca", clima_placeholder: "Inserisci una città per la previsione.",
+        clima_feed_title: "Meteo del viaggio", clima_feed_empty: "Aggiungi destinazioni e giorni per la previsione.", clima_beyond: "Nessuna previsione (lontano)", clima_feed_now: "Previsione generale",
+        discover_btn: "Scopri destinazioni", join_invite: "Codice invito? Non serve registrarsi.", join_btn: "Unisciti",
+        auth_hint: "Accedi con email e password obbligatoria, o Google.", auth_login: "Accedi", auth_register: "Crea account", auth_logout: "Esci",
+        cuenta_title: "Il tuo profilo", cuenta_email: "Email", cuenta_lang: "Lingua", cuenta_theme: "Tema", cuenta_trips: "Viaggi salvati",
+        weather_loading: "Caricamento...", personas_label: "Persone:", fecha_inicio_label: "Data di inizio:",
         eventos_dia_title: "Eventi del giorno", estadisticas: { duracion: "Durata (giorni)", eventi: "Eventi", coste_total: "Costo totale", coste_persona: "Costo/persona", destinos: "Destinazioni" },
         temas: { claro: "Chiaro", oscuro: "Scuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
         lugar_salida: "Luogo di partenza", costo_extra_vuelta: "Costo aggiuntivo ritorno", tramo: "Tratta", origen: "Origine",
-        destino: "Destinazione", medio: "Mezzo", precio: "Prezzo", escala: "Scala", agregar_tramo: "+ Aggiungi tratta", agregar_escala: "+ Scala"
+        destino: "Destinazione", medio: "Mezzo", precio: "Prezzo", escala: "Scala", agregar_tramo: "+ Aggiungi tratta", agregar_escala: "+ Scala",
+        inspo_title: "Ispirazione · Destinazioni popolari", tab_saved: "Salvati", tab_templates: "Modelli",
+        join_placeholder: "es. ABCD-1234", shared_trips_title: "Viaggi condivisi con te",
+        colab_title: "Collaboratori", colab_invite_nick: "Invita per nickname", colab_invite_btn: "Invita", colab_nick_ph: "es. viaggiatore",
+        colab_access_code: "CODICE DI ACCESSO:", colab_gen_code: "Genera codice invito",
+        map_title: "Mappa del viaggio", conversor_title: "Convertitore", conversor_btn: "Converti",
+        descubrir_title: "Scopri (feed ispirazione)", present_title: "Presentazione del viaggio",
+        present_prev: "← Precedente", present_next: "Successivo →", cuenta_btn_title: "Il tuo account",
+        ares_esc: "PREMI ESC PER USCIRE DA ARES",
+        toast_code_invalid: "Inserisci un codice valido", toast_connecting: "Connessione al cloud...",
+        toast_cloud_off: "Cloud non disponibile.", toast_searching: "Ricerca viaggio nel cloud...",
+        toast_join_ok: "Ti sei unito al viaggio {code}!", toast_code_not_found: "Codice non trovato",
+        toast_cloud_error: "Errore cloud", preferencias_btn: "Preferenze", viaje_activo_btn: "Modalità viaggio attivo"
       }
     };
 
-    // ================== ACCOUNT / NICKNAME SYSTEM ==================
+    // ================== ACCOUNT (Firebase Auth → /login) ==================
+    let firebaseUser = null;
+    let currentUserUid = null;
     let currentNickname = null;
     let loadedTripIndex = null;
 
+    function getPluxProfileRef() {
+      if (!db || !currentUserUid) return null;
+      return db.collection('plux_usuarios').doc(currentUserUid);
+    }
+
+    function themeDisplayName() {
+      const key = (currentTheme || 'theme-oscuro').replace('theme-', '');
+      return t('temas.' + key) || key;
+    }
+
+    function applyCuentaModalI18n() {
+      const el = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = t(key); };
+      el('cuentaTitle', 'cuenta_title');
+      el('cuentaAuthHint', 'auth_hint');
+      el('cuentaLinkLogin', 'auth_login');
+      el('cuentaLinkRegister', 'auth_register');
+      el('cuentaLogoutBtn', 'auth_logout');
+      el('cuentaLblEmail', 'cuenta_email');
+      el('cuentaLblLang', 'cuenta_lang');
+      el('cuentaLblTheme', 'cuenta_theme');
+      el('cuentaLblTrips', 'cuenta_trips');
+    }
+
+    function onFirebaseUserSignedIn(user) {
+      firebaseUser = user;
+      currentUserUid = user.uid;
+      const btn = document.getElementById('cuentaButton');
+      if (btn) btn.classList.add('logged-in');
+      cargarPerfilUsuario();
+    }
+
+    function onFirebaseUserSignedOut() {
+      firebaseUser = null;
+      currentUserUid = null;
+      currentNickname = null;
+      localStorage.removeItem('Plux_Nickname');
+      localStorage.removeItem('Plux_Uid');
+      const btn = document.getElementById('cuentaButton');
+      if (btn) btn.classList.remove('logged-in');
+      const colabSection = document.getElementById('colab-trips-section');
+      if (colabSection) colabSection.style.display = 'none';
+    }
+
     function inicializarCuenta() {
-      const storedNick = localStorage.getItem('Plux_Nickname');
-      if (storedNick) {
-        currentNickname = storedNick;
-        const btn = document.getElementById('cuentaButton');
-        if(btn) btn.classList.add('logged-in');
-        cargarPerfilUsuario(storedNick);
-      }
-    }
-
-    function switchCuentaTab(tab) {
-      const tabLogin = document.getElementById('tab-login-btn');
-      const tabRegister = document.getElementById('tab-register-btn');
-      const formLogin = document.getElementById('form-login');
-      const formRegister = document.getElementById('form-register');
-
-      if (tab === 'login') {
-        tabLogin.classList.add('active');
-        tabLogin.style.borderBottom = '2px solid var(--verde)';
-        tabLogin.style.color = 'white';
-        tabLogin.style.fontWeight = 'bold';
-        
-        tabRegister.classList.remove('active');
-        tabRegister.style.borderBottom = 'none';
-        tabRegister.style.color = 'var(--gris)';
-        tabRegister.style.fontWeight = 'normal';
-        
-        formLogin.style.display = 'flex';
-        formRegister.style.display = 'none';
-      } else {
-        tabRegister.classList.add('active');
-        tabRegister.style.borderBottom = '2px solid var(--rosa)';
-        tabRegister.style.color = 'white';
-        tabRegister.style.fontWeight = 'bold';
-        
-        tabLogin.classList.remove('active');
-        tabLogin.style.borderBottom = 'none';
-        tabLogin.style.color = 'var(--gris)';
-        tabLogin.style.fontWeight = 'normal';
-        
-        formRegister.style.display = 'flex';
-        formLogin.style.display = 'none';
-      }
-    }
-
-    function toggleRegisterPassword() {
-      const checked = document.getElementById('register-has-password').checked;
-      const container = document.getElementById('register-password-container');
-      container.style.display = checked ? 'flex' : 'none';
-      if (checked) {
-        document.getElementById('register-password').focus();
-      } else {
-        document.getElementById('register-password').value = '';
-      }
-    }
-
-    function crearCuentaPlux() {
-      const nick = document.getElementById('register-nickname').value.trim();
-      if (!nick) { showToast('Ingresá un nickname válido', 'error'); return; }
-      if (nick.includes(' ') || nick.includes('@')) { showToast('El nickname no puede contener espacios ni el signo @', 'error'); return; }
-      
-      const hasPassword = document.getElementById('register-has-password').checked;
-      const password = document.getElementById('register-password').value;
-      if (hasPassword && !password) { showToast('Escribí una contraseña para proteger tu cuenta', 'error'); return; }
-
-      if (!db) { showToast('Base de datos no disponible', 'error'); return; }
-
-      db.collection('plux_usuarios').doc(nick).get().then(doc => {
-        if (doc.exists) {
-          showToast('El nickname @' + nick + ' ya está registrado. Elegí otro o iniciá sesión.', 'error');
-        } else {
-          // Register account
-          const userData = {
-            idioma: currentLang,
-            tema: currentTheme,
-            viajes_guardados: getStoredTrips(),
-            plantillas: getStoredTemplates(),
-            preferencias: userPreferences,
-            ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
-          };
-          if (hasPassword) {
-            userData.password = password;
-          }
-          
-          db.collection('plux_usuarios').doc(nick).set(userData).then(() => {
-            currentNickname = nick;
-            localStorage.setItem('Plux_Nickname', nick);
-            document.getElementById('cuentaButton').classList.add('logged-in');
-            showToast('¡Cuenta @' + nick + ' creada con éxito!', 'success');
-            abrirCuenta();
-          }).catch(e => {
-            console.error("Error al registrar cuenta:", e);
-            showToast('Error al registrar la cuenta', 'error');
-          });
-        }
-      });
-    }
-
-    function iniciarSesionPlux() {
-      const nick = document.getElementById('login-nickname').value.trim();
-      if (!nick) { showToast('Ingresá tu nickname', 'error'); return; }
-
-      if (!db) { showToast('Base de datos no disponible', 'error'); return; }
-
-      db.collection('plux_usuarios').doc(nick).get().then(doc => {
-        if (!doc.exists) {
-          showToast('El nickname @' + nick + ' no está registrado', 'error');
-        } else {
-          const userData = doc.data();
-          const passContainer = document.getElementById('login-password-container');
-          
-          if (userData.password) {
-            // Account is password protected
-            if (passContainer.style.display === 'none') {
-              passContainer.style.display = 'flex';
-              document.getElementById('login-password').focus();
-              showToast('Esta cuenta requiere contraseña. Por favor, ingresala.', 'info');
-              return;
-            }
-            
-            const userPass = document.getElementById('login-password').value;
-            if (userPass !== userData.password) {
-              showToast('Contraseña incorrecta', 'error');
-              return;
-            }
-          }
-          
-          // Login successful
-          currentNickname = nick;
-          localStorage.setItem('Plux_Nickname', nick);
-          document.getElementById('cuentaButton').classList.add('logged-in');
-          cargarPerfilUsuario(nick);
-          showToast('Sesión iniciada: @' + nick, 'success');
-          abrirCuenta();
-        }
-      }).catch(e => {
-        console.error("Error de login:", e);
-        showToast('Error al iniciar sesión', 'error');
-      });
+      applyCuentaModalI18n();
     }
 
     function abrirCuenta() {
+      applyCuentaModalI18n();
       document.getElementById('modal-cuenta').style.display = 'flex';
-      if (currentNickname) {
+      if (firebaseUser && firebaseUser.email) {
         document.getElementById('cuentaForm').style.display = 'none';
         document.getElementById('cuentaNicknameDisplay').style.display = 'block';
-        document.getElementById('cuentaNicknameDisplay').innerText = '@' + currentNickname;
+        const nick = currentNickname || firebaseUser.displayName || firebaseUser.email.split('@')[0];
+        document.getElementById('cuentaNicknameDisplay').innerText = nick;
         document.getElementById('cuentaInfo').style.display = 'block';
+        document.getElementById('cuentaEmail').innerText = firebaseUser.email;
         document.getElementById('cuentaIdioma').innerText = currentLang.toUpperCase();
-        document.getElementById('cuentaTema').innerText = currentTheme.replace('theme-', '').toUpperCase();
+        document.getElementById('cuentaTema').innerText = themeDisplayName();
         document.getElementById('cuentaViajes').innerText = getStoredTrips().length;
       } else {
         document.getElementById('cuentaForm').style.display = 'flex';
         document.getElementById('cuentaNicknameDisplay').style.display = 'none';
         document.getElementById('cuentaInfo').style.display = 'none';
-        // Reset forms
-        document.getElementById('login-nickname').value = '';
-        document.getElementById('login-password').value = '';
-        document.getElementById('login-password-container').style.display = 'none';
-        document.getElementById('register-nickname').value = '';
-        document.getElementById('register-password').value = '';
-        document.getElementById('register-password-container').style.display = 'none';
-        document.getElementById('register-has-password').checked = false;
-        switchCuentaTab('login');
       }
     }
 
@@ -304,24 +290,28 @@
       document.getElementById('modal-cuenta').style.display = 'none';
     }
 
-    function cerrarSesion() {
-      currentNickname = null;
-      localStorage.removeItem('Plux_Nickname');
-      document.getElementById('cuentaButton').classList.remove('logged-in');
-      showToast('Sesión cerrada', 'info');
-      
-      // Hide shared trips section since they logged out
-      const colabSection = document.getElementById('colab-trips-section');
-      if (colabSection) colabSection.style.display = 'none';
-      
-      abrirCuenta();
+    async function cerrarSesion() {
+      try {
+        await firebase.auth().signOut();
+        onFirebaseUserSignedOut();
+        showToast(t('auth_logout'), 'info');
+        try { await firebase.auth().signInAnonymously(); } catch (e) { /* cloud sync */ }
+        abrirCuenta();
+      } catch (e) {
+        console.error(e);
+        showToast('Error al cerrar sesión', 'error');
+      }
     }
 
     function sincronizarPerfil() {
-      if (!db || !currentNickname) return;
+      const ref = getPluxProfileRef();
+      if (!ref) return;
       const trips = getStoredTrips();
       const templates = getStoredTemplates();
-      db.collection('plux_usuarios').doc(currentNickname).set({
+      ref.set({
+        uid: currentUserUid,
+        email: firebaseUser?.email || null,
+        nickname: currentNickname,
         idioma: currentLang,
         tema: currentTheme,
         viajes_guardados: trips,
@@ -331,19 +321,24 @@
       }, { merge: true }).catch(e => console.error("Error sincronizando perfil:", e));
     }
 
-    function cargarPerfilUsuario(nick) {
-      if (!db) return;
-      db.collection('plux_usuarios').doc(nick).get().then(doc => {
+    function cargarPerfilUsuario() {
+      const ref = getPluxProfileRef();
+      if (!ref) return;
+      ref.get().then(doc => {
         if (doc.exists) {
           const data = doc.data();
+          currentNickname = data.nickname || firebaseUser.displayName || firebaseUser.email.split('@')[0];
+          localStorage.setItem('Plux_Nickname', currentNickname);
+          localStorage.setItem('Plux_Uid', currentUserUid);
           if (data.idioma && data.idioma !== currentLang) setLanguage(data.idioma, false);
           if (data.tema && data.tema !== currentTheme) setTheme(data.tema, false);
           if (data.viajes_guardados) saveTrips(data.viajes_guardados, false);
           if (data.plantillas) saveTemplates(data.plantillas, false);
           if (data.preferencias) userPreferences = data.preferencias;
-          showToast('Perfil sincronizado desde la nube', 'success');
+          updateUserButtonDisplay();
           renderTripLists();
         } else {
+          currentNickname = (firebaseUser.displayName || firebaseUser.email.split('@')[0]).replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20) || 'viajero';
           sincronizarPerfil();
         }
       }).catch(e => console.error("Error cargando perfil:", e));
@@ -463,14 +458,25 @@
     }
 
     async function initFirebaseAuth() {
-      try {
-        await firebase.auth().signInAnonymously();
-        console.log("🔥 Autenticación anónima conectada.");
-        db = firebase.firestore();
-        console.log("🔥 Firestore db inicializada.");
-      } catch (error) {
-        console.error("🔥 Error en autenticación anónima:", error);
-      }
+      db = firebase.firestore();
+      return new Promise((resolve) => {
+        firebase.auth().onAuthStateChanged(async (user) => {
+          if (user && user.email && !user.isAnonymous) {
+            onFirebaseUserSignedIn(user);
+          } else {
+            onFirebaseUserSignedOut();
+            try {
+              if (!firebase.auth().currentUser) {
+                await firebase.auth().signInAnonymously();
+                console.log("🔥 Sesión anónima (sincronización nube).");
+              }
+            } catch (error) {
+              console.error("🔥 Error en autenticación anónima:", error);
+            }
+          }
+          resolve();
+        });
+      });
     }
 
     function activarListenerNube() {
@@ -571,18 +577,18 @@
       const codeInput = document.getElementById(inputId);
       if (!codeInput) return;
       const code = codeInput.value.trim().toUpperCase();
-      if(!code) { showToast('Ingresa un código válido', 'error'); return; }
+      if(!code) { showToast(t('toast_code_invalid'), 'error'); return; }
 
       if (!db) {
-        showToast('Conectando con la nube...', 'info');
+        showToast(t('toast_connecting'), 'info');
         await initFirebaseAuth();
       }
       if (!db) {
-        showToast('Nube inactiva. No se puede unir.', 'error');
+        showToast(t('toast_cloud_off'), 'error');
         return;
       }
 
-      showToast('Buscando viaje en la nube...', 'info');
+      showToast(t('toast_searching'), 'info');
       try {
         const docSnap = await db.collection("plux_viajes_compartidos").doc(code).get();
         if (docSnap.exists) {
@@ -599,18 +605,18 @@
           }
 
           activarListenerNube();
-          showToast(`¡Te has unido al viaje con código ${code}!`, 'success');
+          showToast(t('toast_join_ok', { code }), 'success');
           const panel = document.getElementById('modal-panel-herramientas');
           const viajes = document.getElementById('modal-viajes');
           if (panel) panel.style.display = 'none';
           if (viajes) viajes.style.display = 'none';
           empezar();
         } else {
-          showToast('Código no encontrado o caducado', 'error');
+          showToast(t('toast_code_not_found'), 'error');
         }
       } catch(e) {
         console.error(e);
-        showToast('Error al buscar en la nube', 'error');
+        showToast(t('toast_cloud_error'), 'error');
       }
     }
 
@@ -937,7 +943,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       document.getElementById('startBtn').textContent = t('welcome_start');
       document.getElementById('tripsBtn').textContent = t('trips_btn');
       document.getElementById('toolsBtn').textContent = t('tools_btn');
-      document.getElementById('discoverBtn').textContent = "Descubrir Destinos"; // Standard label
+      document.getElementById('discoverBtn').textContent = t('discover_btn');
       document.getElementById('modalTitle').textContent = t('modal_title');
       document.getElementById('nombreViaje').placeholder = t('save_trip_placeholder');
       const saveBtn = document.querySelector('#tab-guardados .save-trip button');
@@ -963,8 +969,69 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       if (climaTitle) climaTitle.textContent = t('clima_title') || 'Clima';
       const climaSearchBtn = document.getElementById('climaSearchBtn');
       if (climaSearchBtn) climaSearchBtn.textContent = t('clima_search') || 'Buscar';
+      const climaInp = document.getElementById('clima-search-input');
+      if (climaInp) climaInp.placeholder = t('clima_placeholder');
       document.getElementById('eventosDiaTitle').textContent = t('eventos_dia_title');
       document.getElementById('lugarSalidaLabel').textContent = t('lugar_salida');
+      const personasLbl = document.getElementById('personasLabel');
+      if (personasLbl) personasLbl.textContent = t('personas_label');
+      const fechaLbl = document.getElementById('fechaInicioLabel');
+      if (fechaLbl) fechaLbl.textContent = t('fecha_inicio_label');
+      applyCuentaModalI18n();
+      const jh = document.getElementById('joinHintHerramientas');
+      const jv = document.getElementById('joinHintViajes');
+      if (jh) jh.textContent = t('join_invite');
+      if (jv) jv.textContent = t('join_invite');
+      const jb1 = document.getElementById('joinBtnHerramientas');
+      const jb2 = document.getElementById('joinBtnViajes');
+      if (jb1) jb1.textContent = t('join_btn');
+      if (jb2) jb2.textContent = t('join_btn');
+      const jph = document.getElementById('join-code-input-herramientas');
+      const jpv = document.getElementById('join-code-input-viajes');
+      if (jph) jph.placeholder = t('join_placeholder');
+      if (jpv) jpv.placeholder = t('join_placeholder');
+      const inspo = document.getElementById('inspoTitle');
+      if (inspo) inspo.textContent = t('inspo_title');
+      const tabS = document.getElementById('tabGuardadosBtn');
+      const tabT = document.getElementById('tabPlantillasBtn');
+      if (tabS) tabS.textContent = t('tab_saved');
+      if (tabT) tabT.textContent = t('tab_templates');
+      const sharedTitle = document.getElementById('sharedTripsTitle');
+      if (sharedTitle) sharedTitle.textContent = t('shared_trips_title');
+      const colabT = document.getElementById('colabTitle');
+      if (colabT) colabT.textContent = t('colab_title');
+      const colabNickLbl = document.getElementById('colabInviteLabel');
+      if (colabNickLbl) colabNickLbl.textContent = t('colab_invite_nick');
+      const colabNickBtn = document.getElementById('colabInviteBtn');
+      if (colabNickBtn) colabNickBtn.textContent = t('colab_invite_btn');
+      const colabNickIn = document.getElementById('invite-nickname-input');
+      if (colabNickIn) colabNickIn.placeholder = t('colab_nick_ph');
+      const colabCodeLbl = document.getElementById('colabAccessLabel');
+      if (colabCodeLbl) colabCodeLbl.textContent = t('colab_access_code');
+      const colabGen = document.getElementById('colabGenBtn');
+      if (colabGen) colabGen.textContent = t('colab_gen_code');
+      const mapT = document.getElementById('mapTitle');
+      if (mapT) mapT.textContent = t('map_title');
+      const convT = document.getElementById('conversorTitle');
+      if (convT) convT.textContent = t('conversor_title');
+      const convB = document.getElementById('conversorBtn');
+      if (convB) convB.textContent = t('conversor_btn');
+      const descT = document.getElementById('descubrirTitle');
+      if (descT) descT.textContent = t('descubrir_title');
+      const presT = document.getElementById('presentacionTitle');
+      if (presT) presT.textContent = t('present_title');
+      const presP = document.getElementById('anteriorBtn');
+      const presN = document.getElementById('siguienteBtn');
+      if (presP) presP.textContent = t('present_prev');
+      if (presN) presN.textContent = t('present_next');
+      const aresB = document.getElementById('ares-esc-banner');
+      if (aresB) aresB.textContent = t('ares_esc');
+      const btnPref = document.getElementById('btnPreferencias');
+      if (btnPref) btnPref.textContent = t('preferencias_btn');
+      const btnViajeAct = document.getElementById('btnViajeActivo');
+      if (btnViajeAct) btnViajeAct.textContent = t('viaje_activo_btn');
+      const cuentaBtn = document.getElementById('cuentaButton');
+      if (cuentaBtn && !currentNickname) cuentaBtn.title = t('cuenta_btn_title');
 
       const themeDropdown = document.getElementById('themeDropdown');
       themeDropdown.innerHTML = `
@@ -977,6 +1044,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         <div class="theme-option" data-theme="theme-ares">${t('temas.ares') || 'Ares'}</div>
       `;
       document.querySelectorAll('.theme-option').forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.theme === currentTheme);
         opt.addEventListener('click', (e) => {
           e.stopPropagation();
           setTheme(e.target.dataset.theme);
@@ -1004,6 +1072,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     function setTheme(t, sync = true) {
+        currentTheme = t;
         document.body.className = `lang-${currentLang} ${t}`;
         localStorage.setItem('PluxTheme', t);
         document.querySelectorAll('.theme-option').forEach(opt => {
@@ -1077,7 +1146,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         btn.title = `@${currentNickname}`;
       } else {
         btn.classList.remove('logged-in');
-        btn.title = 'Tu cuenta';
+        btn.title = t('cuenta_btn_title');
       }
     }
 
@@ -2817,7 +2886,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         feed.innerHTML = `<p class="clima-feed-empty">${t('clima_feed_empty')}</p>`;
         return;
       }
-      feed.innerHTML = `<p class="clima-placeholder">${t('weather_loading') || 'Cargando clima de tu viaje...'}</p>`;
+      feed.innerHTML = `<p class="clima-placeholder">${t('weather_loading')}</p>`;
       const schedule = buildTripDaySchedule();
       const cities = [...new Set(destinos.map(d => d.nombre))];
       const weatherByCity = {};
@@ -3372,7 +3441,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const tripList = document.getElementById('tripList');
       tripList.innerHTML = '';
       if (trips.length === 0) {
-        tripList.innerHTML = '<p style="color:var(--gris);">No hay viajes guardados.</p>';
+        tripList.innerHTML = `<p style="color:var(--gris);">${t('no_saved_trips')}</p>`;
       } else {
         trips.forEach((trip, index) => {
           const item = document.createElement('div');
@@ -3396,7 +3465,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const plantillasList = document.getElementById('plantillasList');
       plantillasList.innerHTML = '';
       if (templates.length === 0) {
-        plantillasList.innerHTML = '<p style="color:var(--gris);">No hay plantillas guardadas.</p>';
+        plantillasList.innerHTML = `<p style="color:var(--gris);">${t('no_plantillas')}</p>`;
       } else {
         templates.forEach((tpl, index) => {
           const item = document.createElement('div');
@@ -3759,6 +3828,11 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     async function abrirColaboradores() {
+        if (!firebaseUser || !currentUserUid) {
+            showToast(t('auth_login') + ' → /login/', 'info');
+            window.location.href = '/login/?return=' + encodeURIComponent('/plux/');
+            return;
+        }
         document.getElementById('modal-colaboradores').style.display = 'flex';
         const lista = document.getElementById('lista-colaboradores');
         const inviteCodeContainer = document.getElementById('invite-code-container');
@@ -3826,7 +3900,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         const nickInput = document.getElementById('invite-nickname-input');
         const targetNick = nickInput ? nickInput.value.trim() : '';
         if (!targetNick) { showToast('Ingresá el nickname a invitar', 'error'); return; }
-        if (!currentNickname) { showToast('Debes iniciar sesión primero', 'error'); return; }
+        if (!firebaseUser || !currentUserUid) { showToast(t('auth_login'), 'error'); window.location.href = '/login/?return=' + encodeURIComponent('/plux/'); return; }
         if (targetNick === currentNickname) { showToast('No podés invitarte a vos mismo', 'error'); return; }
         if (!db) { showToast('Base de datos no disponible', 'error'); return; }
 
@@ -4118,10 +4192,6 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   window.abrirCuenta = abrirCuenta;
   window.cerrarCuenta = cerrarCuenta;
   window.cerrarSesion = cerrarSesion;
-  window.switchCuentaTab = switchCuentaTab;
-  window.toggleRegisterPassword = toggleRegisterPassword;
-  window.crearCuentaPlux = crearCuentaPlux;
-  window.iniciarSesionPlux = iniciarSesionPlux;
   window.invitarColaboradorPorNickname = invitarColaboradorPorNickname;
   window.cargarViajeCompartido = cargarViajeCompartido;
   window.abandonarViajeCompartido = abandonarViajeCompartido;

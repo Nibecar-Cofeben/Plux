@@ -25,6 +25,15 @@
         discover_btn: "Descubrir Destinos", join_invite: "¿Tienes un código de invitación? No hace falta registrarse.", join_btn: "Unirse",
         auth_hint: "Iniciá sesión con correo y contraseña obligatoria, o con Google.", auth_login: "Iniciar sesión", auth_register: "Crear cuenta", auth_logout: "Cerrar sesión",
         cuenta_title: "Tu Perfil", cuenta_email: "Correo", cuenta_lang: "Idioma", cuenta_theme: "Tema", cuenta_trips: "Viajes guardados",
+        cuenta_nibecar_section: "Cuenta de Nibecar Cofeben", cuenta_nickname_section: "Nickname",
+        cuenta_nickname_placeholder: "Nickname", cuenta_password_placeholder: "Contraseña (si requiere)", cuenta_password_optional: "Quiero contraseña (opcional)",
+        cuenta_password_optional_placeholder: "Contraseña (opcional)",
+        descubrir_title: "¿A dónde vamos?", descubrir_placeholder: "Busca una ciudad (ej: Roma)...", descubrir_search_btn: "+ Buscar",
+        descubrir_ai_hint: "Buscamos con IA para recomendaciones personalizadas.",
+        exportar_btn: "Exportar viaje actual", importar_btn: "Importar viaje (JSON)",
+        pdf_btn: "PDF", calendar_btn: "Google Calendar", compartir_btn: "Compartir", mapa_btn: "Ver mapa",
+        pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Tu asistente de viaje",
+        pluxy_hint: "Preguntame cualquier cosa sobre tu viaje",
         weather_loading: "Cargando...", personas_label: "Personas:", fecha_inicio_label: "Fecha de inicio:",
         eventos_dia_title: "Eventos del día", estadisticas: { duracion: "Duración (días)", eventos: "Eventos", coste_total: "Coste total", coste_persona: "Coste/persona", destinos: "Destinos" },
         temas: { claro: "Claro", oscuro: "Oscuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
@@ -41,7 +50,13 @@
         toast_code_invalid: "Ingresa un código válido", toast_connecting: "Conectando con la nube...",
         toast_cloud_off: "Nube inactiva. No se puede unir.", toast_searching: "Buscando viaje en la nube...",
         toast_join_ok: "¡Te has unido al viaje con código {code}!", toast_code_not_found: "Código no encontrado o caducado",
-        toast_cloud_error: "Error al buscar en la nube", preferencias_btn: "Preferencias", viaje_activo_btn: "Modo Viaje Activo"
+        toast_cloud_error: "Error al buscar en la nube", preferencias_btn: "Preferencias", viaje_activo_btn: "Modo Viaje Activo",
+        support_btn: "Soporte", support_title: "Soporte y Sugerencias", support_suggestion: "Sugerir una función",
+        support_error: "Informar un error", support_help: "Necesito ayuda", support_other: "Otros",
+        support_description: "Descripción o mensaje", support_name: "Tu nombre", support_email: "Tu email",
+        support_send: "Enviar", support_sent: "¡Mensaje enviado con éxito! Nos contactaremos pronto.",
+        support_error_send: "Error al enviar el mensaje", support_required: "Este campo es requerido",
+        support_select_type: "Selecciona un tipo de consulta"
       },
       en: {
         welcome_start: "Start your journey", trips_btn: "Your trips", tools_btn: "More tools",
@@ -67,6 +82,15 @@
         discover_btn: "Discover Destinations", join_invite: "Have an invite code? No sign-up required.", join_btn: "Join",
         auth_hint: "Sign in with email and required password, or with Google.", auth_login: "Sign in", auth_register: "Create account", auth_logout: "Sign out",
         cuenta_title: "Your Profile", cuenta_email: "Email", cuenta_lang: "Language", cuenta_theme: "Theme", cuenta_trips: "Saved trips",
+        cuenta_nibecar_section: "Nibecar Cofeben Account", cuenta_nickname_section: "Nickname",
+        cuenta_nickname_placeholder: "Nickname", cuenta_password_placeholder: "Password (if required)", cuenta_password_optional: "I want a password (optional)",
+        cuenta_password_optional_placeholder: "Password (optional)",
+        descubrir_title: "Where are we going?", descubrir_placeholder: "Search a city (e.g. Rome)...", descubrir_search_btn: "+ Search",
+        descubrir_ai_hint: "We use AI for personalized recommendations.",
+        exportar_btn: "Export current trip", importar_btn: "Import trip (JSON)",
+        pdf_btn: "PDF", calendar_btn: "Google Calendar", compartir_btn: "Share", mapa_btn: "View map",
+        pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Your travel assistant",
+        pluxy_hint: "Ask me anything about your trip",
         weather_loading: "Loading...", personas_label: "People:", fecha_inicio_label: "Start date:",
         eventos_dia_title: "Day events", estadisticas: { duracion: "Duration (days)", eventos: "Events", coste_total: "Total cost", coste_persona: "Cost/person", destinos: "Destinations" },
         temas: { claro: "Light", oscuro: "Dark", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
@@ -83,7 +107,13 @@
         toast_code_invalid: "Enter a valid code", toast_connecting: "Connecting to cloud...",
         toast_cloud_off: "Cloud unavailable. Cannot join.", toast_searching: "Searching trip in cloud...",
         toast_join_ok: "You joined the trip with code {code}!", toast_code_not_found: "Code not found or expired",
-        toast_cloud_error: "Error searching cloud", preferencias_btn: "Preferences", viaje_activo_btn: "Active Trip Mode"
+        toast_cloud_error: "Error searching cloud", preferencias_btn: "Preferences", viaje_activo_btn: "Active Trip Mode",
+        support_btn: "Support", support_title: "Support and Suggestions", support_suggestion: "Suggest a feature",
+        support_error: "Report an error", support_help: "I need help", support_other: "Other",
+        support_description: "Description or message", support_name: "Your name", support_email: "Your email",
+        support_send: "Send", support_sent: "Message sent successfully! We will contact you soon.",
+        support_error_send: "Error sending message", support_required: "This field is required",
+        support_select_type: "Select a query type", support_cancel: "Cancel"
       },
       fr: {
         welcome_start: "Commencez votre voyage", trips_btn: "Vos voyages", tools_btn: "Plus d'outils",
@@ -109,6 +139,15 @@
         discover_btn: "Découvrir", join_invite: "Code d'invitation ? Pas besoin de compte.", join_btn: "Rejoindre",
         auth_hint: "Connectez-vous avec e-mail et mot de passe obligatoire, ou Google.", auth_login: "Connexion", auth_register: "Créer un compte", auth_logout: "Déconnexion",
         cuenta_title: "Votre profil", cuenta_email: "E-mail", cuenta_lang: "Langue", cuenta_theme: "Thème", cuenta_trips: "Voyages enregistrés",
+        cuenta_nibecar_section: "Compte Nibecar Cofeben", cuenta_nickname_section: "Pseudo",
+        cuenta_nickname_placeholder: "Pseudo", cuenta_password_placeholder: "Mot de passe (si requis)", cuenta_password_optional: "Je veux un mot de passe (optionnel)",
+        cuenta_password_optional_placeholder: "Mot de passe (optionnel)",
+        descubrir_title: "Où allons-nous ?", descubrir_placeholder: "Cherchez une ville (ex: Rome)...", descubrir_search_btn: "+ Chercher",
+        descubrir_ai_hint: "Nous utilisons l'IA pour des recommandations personnalisées.",
+        exportar_btn: "Exporter le voyage actuel", importar_btn: "Importer un voyage (JSON)",
+        pdf_btn: "PDF", calendar_btn: "Google Calendar", compartir_btn: "Partager", mapa_btn: "Voir la carte",
+        pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Votre assistant de voyage",
+        pluxy_hint: "Demandez-moi n'importe quoi sur votre voyage",
         weather_loading: "Chargement...", personas_label: "Personnes :", fecha_inicio_label: "Date de début :",
         eventos_dia_title: "Événements du jour", estadisticas: { duracion: "Durée (jours)", eventos: "Événements", coste_total: "Coût total", coste_persona: "Coût/personne", destinos: "Destinations" },
         temas: { claro: "Clair", oscuro: "Sombre", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
@@ -125,7 +164,8 @@
         toast_code_invalid: "Entrez un code valide", toast_connecting: "Connexion au cloud...",
         toast_cloud_off: "Cloud indisponible.", toast_searching: "Recherche du voyage...",
         toast_join_ok: "Vous avez rejoint le voyage {code} !", toast_code_not_found: "Code introuvable ou expiré",
-        toast_cloud_error: "Erreur cloud", preferencias_btn: "Préférences", viaje_activo_btn: "Mode voyage actif"
+        toast_cloud_error: "Erreur cloud", preferencias_btn: "Préférences", viaje_activo_btn: "Mode voyage actif",
+        support_btn: "Support", support_title: "Support et suggestions", support_suggestion: "Suggérer une fonction", support_error: "Signaler une erreur", support_help: "J'ai besoin d'aide", support_other: "Autre", support_description: "Description ou message", support_name: "Votre nom", support_email: "Votre email", support_send: "Envoyer", support_sent: "Message envoyé avec succès! Nous vous contacterons bientôt.", support_error_send: "Erreur lors de l'envoi", support_required: "Ce champ est obligatoire", support_select_type: "Sélectionnez un type de requête", support_cancel: "Annuler"
       },
       de: {
         welcome_start: "Beginnen Sie Ihre Reise", trips_btn: "Ihre Reisen", tools_btn: "Weitere Tools",
@@ -151,6 +191,15 @@
         discover_btn: "Entdecken", join_invite: "Einladungscode? Keine Anmeldung nötig.", join_btn: "Beitreten",
         auth_hint: "Mit E-Mail und Passwort (Pflicht) oder Google anmelden.", auth_login: "Anmelden", auth_register: "Konto erstellen", auth_logout: "Abmelden",
         cuenta_title: "Ihr Profil", cuenta_email: "E-Mail", cuenta_lang: "Sprache", cuenta_theme: "Thema", cuenta_trips: "Gespeicherte Reisen",
+        cuenta_nibecar_section: "Nibecar Cofeben Konto", cuenta_nickname_section: "Spitzname",
+        cuenta_nickname_placeholder: "Spitzname", cuenta_password_placeholder: "Passwort (falls erforderlich)", cuenta_password_optional: "Ich möchte ein Passwort (optional)",
+        cuenta_password_optional_placeholder: "Passwort (optional)",
+        descubrir_title: "Wohin gehen wir?", descubrir_placeholder: "Suche eine Stadt (z.B. Rom)...", descubrir_search_btn: "+ Suchen",
+        descubrir_ai_hint: "Wir nutzen KI für personalisierte Empfehlungen.",
+        exportar_btn: "Aktuelle Reise exportieren", importar_btn: "Reise importieren (JSON)",
+        pdf_btn: "PDF", calendar_btn: "Google Kalender", compartir_btn: "Teilen", mapa_btn: "Karte anzeigen",
+        pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Dein Reiseassistent",
+        pluxy_hint: "Frag mich alles über deine Reise",
         weather_loading: "Laden...", personas_label: "Personen:", fecha_inicio_label: "Startdatum:",
         eventos_dia_title: "Ereignisse des Tages", estadisticas: { duracion: "Dauer (Tage)", eventos: "Ereignisse", coste_total: "Gesamtkosten", coste_persona: "Kosten/Person", destinos: "Reiseziele" },
         temas: { claro: "Hell", oscuro: "Dunkel", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
@@ -167,7 +216,8 @@
         toast_code_invalid: "Gültigen Code eingeben", toast_connecting: "Verbinde mit Cloud...",
         toast_cloud_off: "Cloud nicht verfügbar.", toast_searching: "Suche Reise in der Cloud...",
         toast_join_ok: "Reise mit Code {code} beigetreten!", toast_code_not_found: "Code nicht gefunden",
-        toast_cloud_error: "Cloud-Fehler", preferencias_btn: "Einstellungen", viaje_activo_btn: "Aktiver Reisemodus"
+        toast_cloud_error: "Cloud-Fehler", preferencias_btn: "Einstellungen", viaje_activo_btn: "Aktiver Reisemodus",
+        support_btn: "Support", support_title: "Support und Vorschläge", support_suggestion: "Funktion vorschlagen", support_error: "Fehler melden", support_help: "Ich brauche Hilfe", support_other: "Sonstiges", support_description: "Beschreibung oder Nachricht", support_name: "Ihr Name", support_email: "Ihre E-Mail", support_send: "Senden", support_sent: "Nachricht erfolgreich gesendet! Wir werden Sie bald kontaktieren.", support_error_send: "Fehler beim Senden", support_required: "Dieses Feld ist erforderlich", support_select_type: "Wählen Sie einen Anfragetyp", support_cancel: "Abbrechen"
       },
       it: {
         welcome_start: "Inizia il tuo viaggio", trips_btn: "I tuoi viaggi", tools_btn: "Altri strumenti",
@@ -193,6 +243,15 @@
         discover_btn: "Scopri destinazioni", join_invite: "Codice invito? Non serve registrarsi.", join_btn: "Unisciti",
         auth_hint: "Accedi con email e password obbligatoria, o Google.", auth_login: "Accedi", auth_register: "Crea account", auth_logout: "Esci",
         cuenta_title: "Il tuo profilo", cuenta_email: "Email", cuenta_lang: "Lingua", cuenta_theme: "Tema", cuenta_trips: "Viaggi salvati",
+        cuenta_nibecar_section: "Account Nibecar Cofeben", cuenta_nickname_section: "Nickname",
+        cuenta_nickname_placeholder: "Nickname", cuenta_password_placeholder: "Password (se richiesta)", cuenta_password_optional: "Voglio una password (opzionale)",
+        cuenta_password_optional_placeholder: "Password (opzionale)",
+        descubrir_title: "Dove andiamo?", descubrir_placeholder: "Cerca una città (es. Roma)...", descubrir_search_btn: "+ Cerca",
+        descubrir_ai_hint: "Usiamo l'IA per raccomandazioni personalizzate.",
+        exportar_btn: "Esporta viaggio attuale", importar_btn: "Importa viaggio (JSON)",
+        pdf_btn: "PDF", calendar_btn: "Google Calendar", compartir_btn: "Condividi", mapa_btn: "Vedi mappa",
+        pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Il tuo assistente di viaggio",
+        pluxy_hint: "Chiedimi qualsiasi cosa sul tuo viaggio",
         weather_loading: "Caricamento...", personas_label: "Persone:", fecha_inicio_label: "Data di inizio:",
         eventos_dia_title: "Eventi del giorno", estadisticas: { duracion: "Durata (giorni)", eventi: "Eventi", coste_total: "Costo totale", coste_persona: "Costo/persona", destinos: "Destinazioni" },
         temas: { claro: "Chiaro", oscuro: "Scuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
@@ -209,7 +268,8 @@
         toast_code_invalid: "Inserisci un codice valido", toast_connecting: "Connessione al cloud...",
         toast_cloud_off: "Cloud non disponibile.", toast_searching: "Ricerca viaggio nel cloud...",
         toast_join_ok: "Ti sei unito al viaggio {code}!", toast_code_not_found: "Codice non trovato",
-        toast_cloud_error: "Errore cloud", preferencias_btn: "Preferenze", viaje_activo_btn: "Modalità viaggio attivo"
+        toast_cloud_error: "Errore cloud", preferencias_btn: "Preferenze", viaje_activo_btn: "Modalità viaggio attivo",
+        support_btn: "Supporto", support_title: "Supporto e suggerimenti", support_suggestion: "Suggerisci una funzione", support_error: "Segnala un errore", support_help: "Ho bisogno di aiuto", support_other: "Altro", support_description: "Descrizione o messaggio", support_name: "Il tuo nome", support_email: "La tua email", support_send: "Invia", support_sent: "Messaggio inviato con successo! Ti contatteremo presto.", support_error_send: "Errore nell'invio", support_required: "Questo campo è obbligatorio", support_select_type: "Seleziona un tipo di consulta", support_cancel: "Annulla"
       }
     };
 
@@ -232,14 +292,45 @@
     function applyCuentaModalI18n() {
       const el = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = t(key); };
       el('cuentaTitle', 'cuenta_title');
-      el('cuentaAuthHint', 'auth_hint');
+      el('cuentaNibecarSection', 'cuenta_nibecar_section');
+      el('cuentaNicknameSection', 'cuenta_nickname_section');
       el('cuentaLinkLogin', 'auth_login');
       el('cuentaLinkRegister', 'auth_register');
+      el('cuentaPasswordOptional', 'cuenta_password_optional');
+      
+      // Update placeholders
+      const ph = (id, key) => { const n = document.getElementById(id); if (n) n.placeholder = t(key); };
+      ph('login-nickname', 'cuenta_nickname_placeholder');
+      ph('login-password', 'cuenta_password_placeholder');
+      ph('register-password', 'cuenta_password_optional_placeholder');
+      
+      // Update tab buttons
+      el('tab-login-btn', 'auth_login');
+      el('tab-register-btn', 'auth_register');
       el('cuentaLogoutBtn', 'auth_logout');
       el('cuentaLblEmail', 'cuenta_email');
       el('cuentaLblLang', 'cuenta_lang');
       el('cuentaLblTheme', 'cuenta_theme');
       el('cuentaLblTrips', 'cuenta_trips');
+    }
+
+    function applyGlobalI18n() {
+      const el = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = t(key); };
+      
+      // PLUXY elements
+      el('pluxyBtnText', 'pluxy_name');
+      el('pluxyAssistant', 'pluxy_assistant');
+      el('pluxyHint', 'pluxy_hint');
+      
+      // Export/Import buttons
+      el('importarBtn', 'importar_btn');
+      el('exportarBtn', 'exportar_btn');
+      
+      // Action buttons
+      el('pdfBtn', 'pdf_btn');
+      el('calendarBtn', 'calendar_btn');
+      el('compartirBtn', 'compartir_btn');
+      el('mapaResumenBtn', 'mapa_btn');
     }
 
     function onFirebaseUserSignedIn(user) {
@@ -300,6 +391,178 @@
       } catch (e) {
         console.error(e);
         showToast('Error al cerrar sesión', 'error');
+      }
+    }
+
+    function switchCuentaTab(tab) {
+      const isLogin = tab !== 'register';
+      const tabLogin = document.getElementById('tab-login-btn');
+      const tabRegister = document.getElementById('tab-register-btn');
+      const formLogin = document.getElementById('form-login');
+      const formRegister = document.getElementById('form-register');
+      if (tabLogin) {
+        tabLogin.classList.toggle('active', isLogin);
+        tabLogin.style.background = isLogin ? 'var(--azul)' : 'rgba(255,255,255,0.1)';
+        tabLogin.style.color = isLogin ? 'white' : 'var(--gris)';
+      }
+      if (tabRegister) {
+        tabRegister.classList.toggle('active', !isLogin);
+        tabRegister.style.background = !isLogin ? 'var(--azul)' : 'rgba(255,255,255,0.1)';
+        tabRegister.style.color = !isLogin ? 'white' : 'var(--gris)';
+      }
+      if (formLogin) formLogin.style.display = isLogin ? 'flex' : 'none';
+      if (formRegister) formRegister.style.display = isLogin ? 'none' : 'flex';
+    }
+
+    function toggleRegisterPassword() {
+      const el = document.getElementById('register-has-password');
+      const checked = !!(el && el.checked);
+      const container = document.getElementById('register-password-container');
+      const pass = document.getElementById('register-password');
+      if (container) container.style.display = checked ? 'flex' : 'none';
+      if (checked && pass) pass.focus();
+      else if (pass) pass.value = '';
+    }
+
+    async function loginNickname() {
+      const loginNickEl = document.getElementById('login-nickname');
+      const nick = loginNickEl ? loginNickEl.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+      
+      if (!nick) {
+        showToast('Ingresá un nickname', 'error');
+        return;
+      }
+      
+      if (nick.length < 3) {
+        showToast('El nickname debe tener al menos 3 caracteres', 'error');
+        return;
+      }
+      
+      if (!db) { showToast('Base de datos no disponible', 'error'); return; }
+
+      try {
+        const doc = await db.collection('plux_usuarios').doc(nick).get();
+        if (!doc.exists) {
+          showToast('El nickname @' + nick + ' no está registrado', 'error');
+          return;
+        }
+
+        const data = doc.data() || {};
+        if (data.email) {
+          showToast('Ese nickname pertenece a una cuenta. Entrá desde /login/.', 'error');
+          return;
+        }
+
+        const passContainer = document.getElementById('login-password-container');
+        if (data.password) {
+          const passEl = document.getElementById('login-password');
+          const userPass = passEl ? passEl.value : '';
+          if (!userPass) {
+            if (passContainer) passContainer.style.display = 'flex';
+            if (passEl) passEl.focus();
+            showToast('Este nickname requiere contraseña', 'info');
+            return;
+          }
+          if (userPass !== data.password) {
+            showToast('Contraseña incorrecta', 'error');
+            return;
+          }
+        }
+
+        const localTrips = getStoredTrips();
+        const cloudTrips = Array.isArray(data.viajes_guardados) ? data.viajes_guardados : [];
+        const hasLocalTrips = localTrips.length > 0;
+        const hasCloudTrips = cloudTrips.length > 0;
+
+        if (hasCloudTrips && !hasLocalTrips) {
+          localStorage.setItem('Plux_Trips', JSON.stringify(cloudTrips));
+          renderTripList();
+        } else if (hasLocalTrips && !hasCloudTrips) {
+          await db.collection('plux_usuarios').doc(nick).update({
+            viajes_guardados: localTrips,
+            ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        currentNickname = nick;
+        currentUserUid = nick;
+        localStorage.setItem('Plux_Nickname', nick);
+        localStorage.setItem('Plux_Uid', nick);
+        updateUserButtonDisplay();
+        await db.collection('plux_usuarios').doc(nick).update({
+          ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('¡Bienvenido, @' + nick + '!', 'success');
+        cerrarCuenta();
+      } catch (e) {
+        console.error('Error en login nickname:', e);
+        showToast('Error al iniciar sesión', 'error');
+      }
+    }
+
+    async function crearCuentaNickname() {
+      const loginNickEl = document.getElementById('login-nickname');
+      const nick = loginNickEl ? loginNickEl.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+      
+      if (!nick) {
+        showToast('Ingresá un nickname', 'error');
+        return;
+      }
+      
+      if (nick.length < 3) {
+        showToast('El nickname debe tener al menos 3 caracteres', 'error');
+        return;
+      }
+      
+      const hasPasswordEl = document.getElementById('register-has-password');
+      const passEl = document.getElementById('register-password');
+      const hasPassword = hasPasswordEl ? hasPasswordEl.checked : false;
+      const password = passEl ? passEl.value : '';
+      
+      if (hasPassword && !password) {
+        showToast('Ingresá una contraseña', 'error');
+        return;
+      }
+      
+      if (password && password.length < 6) {
+        showToast('La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+      }
+      
+      if (!db) { showToast('Base de datos no disponible', 'error'); return; }
+
+      try {
+        const doc = await db.collection('plux_usuarios').doc(nick).get();
+        if (doc.exists) {
+          showToast('El nickname @' + nick + ' ya está en uso', 'error');
+          return;
+        }
+
+        const localTrips = getStoredTrips();
+        await db.collection('plux_usuarios').doc(nick).set({
+          uid: nick,
+          nickname: nick,
+          email: null,
+          password: hasPassword ? password : null,
+          idioma: currentLang,
+          tema: currentTheme,
+          viajes_guardados: localTrips,
+          plantillas: [],
+          preferencias: {},
+          creado: firebase.firestore.FieldValue.serverTimestamp(),
+          ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        currentNickname = nick;
+        currentUserUid = nick;
+        localStorage.setItem('Plux_Nickname', nick);
+        localStorage.setItem('Plux_Uid', nick);
+        updateUserButtonDisplay();
+        showToast('¡Cuenta creada para @' + nick + '!', 'success');
+        cerrarCuenta();
+      } catch (e) {
+        console.error('Error creando cuenta nickname:', e);
+        showToast('Error al crear cuenta', 'error');
       }
     }
 
@@ -731,22 +994,43 @@
     let chatHistory = [];
     const CHAT_SYSTEM = `Sos PluxIA, un asistente de viajes inteligente y amigable con capacidades AGENTES REALES. Tenés acceso completo al itinerario del usuario y podés modificarlo directamente.
 
-Al final de tu respuesta podés incluir UNO de estos comandos especiales para ejecutar acciones:
-- [ACCION:CHECKLIST] → Abre y genera checklist personalizada
-- [ACCION:ITINERARIO:NombreDestino] → Genera itinerario IA para ese destino
+Al final de tu respuesta podés incluir MÚLTIPLES comandos especiales para ejecutar acciones simultáneamente:
+
+DESTINOS Y ESTRUCTURA:
 - [ACCION:DESTINO:NombreDestino] → Agrega un nuevo destino al viaje
 - [ACCION:LIMPIAR_DESTINO:NombreDestino] → Borra todos los días de ese destino
-- [ACCION:AGREGAR_EVENTO:DestinoNombre|DiaNumero|Hora|Titulo|Notas] → Agrega evento específico (ej: Roma|1|10:00|Visitar Coliseo|Entrada 18€)
+- [ACCION:AGREGAR_DIA:DestinoNombre|DiaNumero] → Agrega un día específico (ej: Roma|5)
+- [ACCION:ELIMINAR_DIA:DestinoNombre|DiaNumero] → Elimina un día
+- [ACCION:DUPLICAR_DIA:DestinoNombre|DiaNumero] → Duplica un día
+
+EVENTOS:
+- [ACCION:AGREGAR_EVENTO:DestinoNombre|DiaNumero|Hora|Titulo|Notas] → Agrega evento (ej: Roma|1|10:00|Coliseo|Entrada 18€)
+- [ACCION:EDITAR_EVENTO:DestinoNombre|DiaNumero|NumeroEvento|Campo|Valor] → Edita evento (campo: hora/titulo/notas/costo/duracion)
+- [ACCION:ELIMINAR_EVENTO:DestinoNombre|DiaNumero|NumeroEvento] → Elimina evento específico
+- [ACCION:DUPLICAR_EVENTO:DestinoNombre|DiaNumero|NumeroEvento] → Duplica evento
+- [ACCION:ORGANIZAR_ITINERARIO:DestinoNombre|DiaNumero] → Ordena eventos por hora
+
+TRANSPORTE Y ALOJAMIENTO:
+- [ACCION:TRANSPORTE:DestinoOrigen|DestinoDestino|Medio|Precio|Descripcion] → Agrega transporte
+- [ACCION:ALOJAMIENTO:DestinoNombre|DiaInicio|DiaFin|Precio|Nombre] → Agrega alojamiento
+- [ACCION:AGREGAR_COSTO:DestinoNombre|DiaNumero|Descripcion|Precio] → Costo adicional en un día
+
+CONFIGURACIÓN:
 - [ACCION:SET_PERSONAS:Numero] → Cambia el número de personas
 - [ACCION:SET_ORIGEN:Ciudad] → Cambia el lugar de salida
+- [ACCION:ITINERARIO:NombreDestino] → Genera itinerario IA completo para ese destino
+
+VISTAS Y HERRAMIENTAS:
 - [ACCION:ABRIR_MAPA] → Abre el mapa del viaje
 - [ACCION:ABRIR_RESUMEN] → Muestra el resumen del viaje
 - [ACCION:ABRIR_CLIMA] → Abre la herramienta de clima para buscar
 - [ACCION:CLIMA:Ciudad] → Consulta y comenta el clima de esa ciudad
+- [ACCION:ABRIR_CHECKLIST] → Genera checklist personalizada
+- [ACCION:VIAJE_ACTIVO] → Activa modo viaje activo (muestra itinerario del día actual)
 
 Tenés acceso al clima actual del viaje (OpenWeather) en el contexto del mensaje. Usalo para recomendar ropa, actividades o cambios de plan.
 
-Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hacer algo, HACELO con el comando correspondiente además de explicar brevemente. Sos un agente que actúa, no solo habla.`;
+Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes además de explicar brevemente. Sos un agente que actúa, no solo habla. PODES USAR MÚLTIPLES ACCIONES DE UNA VEZ.`;
 
     function abrirChatIA() {
       document.getElementById('modal-chat-ia').style.display = 'flex';
@@ -756,6 +1040,110 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     function cerrarChatIA() {
       document.getElementById('modal-chat-ia').style.display = 'none';
     }
+
+    // ========== SUPPORT FUNCTIONS ==========
+    function abrirSupport() {
+      const modal = document.getElementById('modal-support');
+      modal.style.display = 'flex';
+      mostrarOpcionesSupport();
+      actualizarIdiomaSupport();
+    }
+
+    function cerrarSupport() {
+      document.getElementById('modal-support').style.display = 'none';
+    }
+
+    function mostrarOpcionesSupport() {
+      document.getElementById('support-content').style.display = 'block';
+      document.getElementById('support-form').style.display = 'none';
+      // Limpiar formulario
+      document.getElementById('support-name').value = '';
+      document.getElementById('support-email').value = '';
+      document.getElementById('support-message').value = '';
+    }
+
+    function mostrarFormuarioSupport(tipo) {
+      window.supportType = tipo;
+      document.getElementById('support-content').style.display = 'none';
+      document.getElementById('support-form').style.display = 'block';
+      document.getElementById('support-message').focus();
+    }
+
+    async function enviarSupport() {
+      const nombre = document.getElementById('support-name').value.trim();
+      const email = document.getElementById('support-email').value.trim();
+      const mensaje = document.getElementById('support-message').value.trim();
+      const tipo = window.supportType || 'other';
+
+      // Validar campos
+      if (!nombre || !email || !mensaje) {
+        alert(i18n.current.support_required);
+        return;
+      }
+
+      // Validar email
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('Email inválido');
+        return;
+      }
+
+      // Mapear tipo a etiqueta
+      const tipoMap = {
+        suggestion: i18n.current.support_suggestion,
+        error: i18n.current.support_error,
+        help: i18n.current.support_help,
+        other: i18n.current.support_other
+      };
+
+      // Preparar datos para envío a Formspree
+      const tipoLabel = tipoMap[tipo] || 'Consulta';
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('name', nombre);
+      formData.append('_subject', `Plux - ${tipoLabel}`);
+      formData.append('message', `Tipo: ${tipoLabel}\nIdioma: ${i18n.idioma}\n\n${mensaje}`);
+      formData.append('_captcha', 'false'); // Desactivar CAPTCHA
+      formData.append('_next', window.location.href); // Redireccionar al mismo sitio
+
+      try {
+        const response = await fetch('https://formspree.io/f/mwvjnpzk', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          alert(i18n.current.support_sent);
+          cerrarSupport();
+          mostrarOpcionesSupport();
+        } else {
+          alert(i18n.current.support_error_send);
+        }
+      } catch (err) {
+        console.error('Error enviando soporte:', err);
+        alert(i18n.current.support_error_send);
+      }
+    }
+
+    function actualizarIdiomaSupport() {
+      document.getElementById('supportTitle').textContent = i18n.current.support_title;
+      document.getElementById('suggestionLabel').textContent = i18n.current.support_suggestion;
+      document.getElementById('suggestionDesc').textContent = i18n.current.support_description;
+      document.getElementById('errorLabel').textContent = i18n.current.support_error;
+      document.getElementById('errorDesc').textContent = i18n.current.support_description;
+      document.getElementById('helpLabel').textContent = i18n.current.support_help;
+      document.getElementById('helpDesc').textContent = i18n.current.support_description;
+      document.getElementById('otherLabel').textContent = i18n.current.support_other;
+      document.getElementById('otherDesc').textContent = i18n.current.support_description;
+
+      document.getElementById('support-name').placeholder = i18n.current.support_name;
+      document.getElementById('support-email').placeholder = i18n.current.support_email;
+      document.getElementById('support-message').placeholder = i18n.current.support_description;
+      
+      // Actualizar botones del formulario
+      document.getElementById('support-send-btn').textContent = i18n.current.support_send;
+      document.getElementById('support-cancel-btn').textContent = i18n.current.support_cancel;
+    }
+    // ========== END SUPPORT FUNCTIONS ==========
 
     async function chatSend(textoOverride) {
       const input = document.getElementById('chat-input');
@@ -793,58 +1181,67 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         // Check for autonomous actions
         let displayRespuesta = respuesta;
         
-        const accionChecklist = respuesta.match(/\[ACCION:CHECKLIST\]/);
-        const accionItinerario = respuesta.match(/\[ACCION:ITINERARIO:(.+?)\]/);
-        const accionDestino = respuesta.match(/\[ACCION:DESTINO:(.+?)\]/);
-        const accionLimpiar = respuesta.match(/\[ACCION:LIMPIAR_DESTINO:(.+?)\]/);
-        const accionEvento = respuesta.match(/\[ACCION:AGREGAR_EVENTO:(.+?)\]/);
-        const accionPersonas = respuesta.match(/\[ACCION:SET_PERSONAS:(\d+)\]/);
-        const accionOrigen = respuesta.match(/\[ACCION:SET_ORIGEN:(.+?)\]/);
-        const accionMapa = respuesta.match(/\[ACCION:ABRIR_MAPA\]/);
-        const accionResumen = respuesta.match(/\[ACCION:ABRIR_RESUMEN\]/);
-        const accionAbrirClima = respuesta.match(/\[ACCION:ABRIR_CLIMA\]/);
-        const accionClimaCiudad = respuesta.match(/\[ACCION:CLIMA:(.+?)\]/);
-
-        // Clean display text
+        // Clean display text (remove all action tags)
         displayRespuesta = respuesta
           .replace(/\[ACCION:[^\]]+\]/g, '')
           .trim();
 
-        if (accionChecklist) {
+        // Process ALL actions (multiple allowed)
+        let accionesEjecutadas = false;
+        
+        // CHECKLIST
+        if (respuesta.includes('[ACCION:CHECKLIST]')) {
           setTimeout(() => { abrirChecklist(); }, 800);
+          accionesEjecutadas = true;
         }
-        if (accionItinerario) {
-          const destNombre = accionItinerario[1];
+        
+        // ITINERARIO (multiple allowed)
+        const accionesItinerario = [...respuesta.matchAll(/\[ACCION:ITINERARIO:([^\]]+)\]/g)];
+        accionesItinerario.forEach((match, idx) => {
+          const destNombre = match[1].trim();
           const destExistente = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+          const delay = 800 + (idx * 300);
           if (destExistente) {
-            setTimeout(() => generarItinerarioAuto(destExistente.id), 800);
+            setTimeout(() => generarItinerarioAuto(destExistente.id), delay);
           } else {
-            const newId = Date.now();
+            const newId = Date.now() + idx;
             destinos.push({ id: newId, nombre: destNombre, dias: [], tramos: [] });
             renderDestinos();
-            setTimeout(() => generarItinerarioAuto(newId), 800);
-            empezar();
+            setTimeout(() => generarItinerarioAuto(newId), delay);
+            if (document.getElementById('welcome').style.display !== 'none') empezar();
           }
-        }
-        if (accionDestino) {
-          const newId = Date.now();
-          const nombre = accionDestino[1].trim();
+          accionesEjecutadas = true;
+        });
+        
+        // DESTINO (multiple allowed)
+        const accionesDestino = [...respuesta.matchAll(/\[ACCION:DESTINO:([^\]]+)\]/g)];
+        accionesDestino.forEach((match, idx) => {
+          const newId = Date.now() + idx;
+          const nombre = match[1].trim();
           destinos.push({ id: newId, nombre, dias: [], tramos: [] });
           renderDestinos();
           showToast(`✅ Destino "${nombre}" añadido`, 'success');
-          if (document.getElementById('welcome').style.display !== 'none') empezar();
-        }
-        if (accionLimpiar) {
-          const nombre = accionLimpiar[1].trim();
+          if (document.getElementById('welcome').style.display !== 'none' && idx === 0) empezar();
+          accionesEjecutadas = true;
+        });
+        
+        // LIMPIAR_DESTINO (multiple allowed)
+        const accionesLimpiar = [...respuesta.matchAll(/\[ACCION:LIMPIAR_DESTINO:([^\]]+)\]/g)];
+        accionesLimpiar.forEach((match) => {
+          const nombre = match[1].trim();
           const dest = destinos.find(d => d.nombre.toLowerCase().includes(nombre.toLowerCase()));
           if (dest) {
             dest.dias = [];
             renderDias(dest.id);
             showToast(`🗑️ Días de "${dest.nombre}" eliminados`, 'info');
           }
-        }
-        if (accionEvento) {
-          const partes = accionEvento[1].split('|');
+          accionesEjecutadas = true;
+        });
+        
+        // AGREGAR_EVENTO (multiple allowed)
+        const accionesEvento = [...respuesta.matchAll(/\[ACCION:AGREGAR_EVENTO:([^\]]+)\]/g)];
+        accionesEvento.forEach((match) => {
+          const partes = match[1].split('|');
           if (partes.length >= 4) {
             const [destNombre, diaNum, hora, titulo, notas] = partes;
             const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
@@ -865,28 +1262,98 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
               showToast(`✅ Evento "${titulo.trim()}" añadido al Día ${diaIdx + 1}`, 'success');
             }
           }
-        }
+          accionesEjecutadas = true;
+        });
+        
+        // TRANSPORTE (NEW - multiple allowed)
+        const accionesTransporte = [...respuesta.matchAll(/\[ACCION:TRANSPORTE:([^\]]+)\]/g)];
+        accionesTransporte.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 3) {
+            const [origen, destino, medio, precio, desc] = partes;
+            const destExist = destinos.find(d => d.nombre.toLowerCase().includes(destino.trim().toLowerCase()));
+            if (destExist) {
+              if (!destExist.tramos) destExist.tramos = [];
+              destExist.tramos.push({
+                id: Date.now(),
+                origen: origen.trim(),
+                destino: destino.trim(),
+                medio: medio.trim(),
+                precio: parseFloat(precio) || 0,
+                desc: (desc || '').trim()
+              });
+              renderDestinos();
+              showToast(`🚗 Transporte añadido: ${origen.trim()} → ${destino.trim()}`, 'success');
+            }
+          }
+          accionesEjecutadas = true;
+        });
+        
+        // ALOJAMIENTO (NEW - multiple allowed)
+        const accionesAlojamiento = [...respuesta.matchAll(/\[ACCION:ALOJAMIENTO:([^\]]+)\]/g)];
+        accionesAlojamiento.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 4) {
+            const [destNombre, diaIni, diaFin, precio, nombre] = partes;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+            if (dest) {
+              const diaIdxIni = (parseInt(diaIni) || 1) - 1;
+              while (dest.dias.length <= diaIdxIni) {
+                dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+              }
+              dest.dias[diaIdxIni].alojamiento = {
+                id: Date.now(),
+                nombre: nombre.trim(),
+                precioTotal: parseFloat(precio) || 0,
+                diasFin: parseInt(diaFin) || (diaIdxIni + 1)
+              };
+              renderDias(dest.id);
+              showToast(`🏨 Alojamiento "${nombre.trim()}" añadido`, 'success');
+            }
+          }
+          accionesEjecutadas = true;
+        });
+        
+        // SET_PERSONAS
+        const accionPersonas = respuesta.match(/\[ACCION:SET_PERSONAS:(\d+)\]/);
         if (accionPersonas) {
           numPersonas = parseInt(accionPersonas[1]) || 1;
           const el = document.getElementById('numPersonas');
           if (el) el.value = numPersonas;
           showToast(`👥 Personas: ${numPersonas}`, 'success');
+          accionesEjecutadas = true;
         }
+        
+        // SET_ORIGEN
+        const accionOrigen = respuesta.match(/\[ACCION:SET_ORIGEN:([^\]]+)\]/);
         if (accionOrigen) {
           lugarSalida = accionOrigen[1].trim();
           const el = document.getElementById('lugarSalida');
           if (el) el.value = lugarSalida;
           showToast(`📍 Origen: ${lugarSalida}`, 'success');
+          accionesEjecutadas = true;
         }
-        if (accionMapa) {
+        
+        // ABRIR_MAPA
+        if (respuesta.includes('[ACCION:ABRIR_MAPA]')) {
           setTimeout(() => abrirMapa(), 600);
+          accionesEjecutadas = true;
         }
-        if (accionResumen) {
+        
+        // ABRIR_RESUMEN
+        if (respuesta.includes('[ACCION:ABRIR_RESUMEN]')) {
           setTimeout(() => mostrarResumen(), 600);
+          accionesEjecutadas = true;
         }
-        if (accionAbrirClima) {
+        
+        // ABRIR_CLIMA
+        if (respuesta.includes('[ACCION:ABRIR_CLIMA]')) {
           setTimeout(() => abrirClima(), 500);
+          accionesEjecutadas = true;
         }
+        
+        // CLIMA:Ciudad
+        const accionClimaCiudad = respuesta.match(/\[ACCION:CLIMA:([^\]]+)\]/);
         if (accionClimaCiudad) {
           const ciudadClima = accionClimaCiudad[1].trim();
           setTimeout(async () => {
@@ -895,9 +1362,196 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             if (inp) inp.value = ciudadClima;
             await buscarClimaModal();
           }, 500);
+          accionesEjecutadas = true;
         }
+
+        // AGREGAR_DIA (multiple allowed)
+        const accionesAgregarDia = [...respuesta.matchAll(/\[ACCION:AGREGAR_DIA:([^\]]+)\]/g)];
+        accionesAgregarDia.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 1) {
+            const destNombre = partes[0].trim();
+            const diaNum = partes.length > 1 ? parseInt(partes[1]) : undefined;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+            if (dest) {
+              if (diaNum !== undefined) {
+                const idx = diaNum - 1;
+                while (dest.dias.length <= idx) {
+                  dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+                }
+              } else {
+                dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+              }
+              renderDias(dest.id);
+              showToast(`📅 Día agregado a "${destNombre}"`, 'success');
+            }
+          }
+          accionesEjecutadas = true;
+        });
+
+        // ELIMINAR_DIA (multiple allowed)
+        const accionesEliminarDia = [...respuesta.matchAll(/\[ACCION:ELIMINAR_DIA:([^\]]+)\]/g)];
+        accionesEliminarDia.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 2) {
+            const destNombre = partes[0].trim();
+            const diaNum = parseInt(partes[1]) || 1;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+            if (dest && dest.dias[diaNum - 1]) {
+              dest.dias.splice(diaNum - 1, 1);
+              renderDias(dest.id);
+              showToast(`🗑️ Día ${diaNum} eliminado de "${destNombre}"`, 'info');
+            }
+          }
+          accionesEjecutadas = true;
+        });
+
+        // DUPLICAR_DIA (multiple allowed)
+        const accionesDuplicarDia = [...respuesta.matchAll(/\[ACCION:DUPLICAR_DIA:([^\]]+)\]/g)];
+        accionesDuplicarDia.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 2) {
+            const destNombre = partes[0].trim();
+            const diaNum = parseInt(partes[1]) || 1;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+            if (dest && dest.dias[diaNum - 1]) {
+              const diaCopia = JSON.parse(JSON.stringify(dest.dias[diaNum - 1]));
+              diaCopia.id = dest.dias.length;
+              dest.dias.push(diaCopia);
+              renderDias(dest.id);
+              showToast(`⎘ Día ${diaNum} duplicado`, 'success');
+            }
+          }
+          accionesEjecutadas = true;
+        });
+
+        // EDITAR_EVENTO (multiple allowed)
+        const accionesEditarEvento = [...respuesta.matchAll(/\[ACCION:EDITAR_EVENTO:([^\]]+)\]/g)];
+        accionesEditarEvento.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 5) {
+            const [destNombre, diaNum, numEvento, campo, valor] = partes;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+            if (dest) {
+              const diaIdx = (parseInt(diaNum) || 1) - 1;
+              const evIdx = (parseInt(numEvento) || 1) - 1;
+              if (dest.dias[diaIdx] && dest.dias[diaIdx].eventos[evIdx]) {
+                const campoNorm = campo.trim().toLowerCase();
+                if (campoNorm === 'hora' || campoNorm === 'titulo' || campoNorm === 'notas') {
+                  dest.dias[diaIdx].eventos[evIdx][campoNorm] = valor.trim();
+                } else if (campoNorm === 'costo' || campoNorm === 'duracion') {
+                  dest.dias[diaIdx].eventos[evIdx][campoNorm] = parseInt(valor) || 0;
+                }
+                renderDias(dest.id);
+                showToast(`✏️ Evento editado`, 'success');
+              }
+            }
+          }
+          accionesEjecutadas = true;
+        });
+
+        // ELIMINAR_EVENTO (multiple allowed)
+        const accionesEliminarEvento = [...respuesta.matchAll(/\[ACCION:ELIMINAR_EVENTO:([^\]]+)\]/g)];
+        accionesEliminarEvento.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 3) {
+            const [destNombre, diaNum, numEvento] = partes;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+            if (dest) {
+              const diaIdx = (parseInt(diaNum) || 1) - 1;
+              const evIdx = (parseInt(numEvento) || 1) - 1;
+              if (dest.dias[diaIdx] && dest.dias[diaIdx].eventos[evIdx]) {
+                dest.dias[diaIdx].eventos.splice(evIdx, 1);
+                renderDias(dest.id);
+                showToast(`🗑️ Evento eliminado`, 'info');
+              }
+            }
+          }
+          accionesEjecutadas = true;
+        });
+
+        // DUPLICAR_EVENTO (multiple allowed)
+        const accionesDuplicarEvento = [...respuesta.matchAll(/\[ACCION:DUPLICAR_EVENTO:([^\]]+)\]/g)];
+        accionesDuplicarEvento.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 3) {
+            const [destNombre, diaNum, numEvento] = partes;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+            if (dest) {
+              const diaIdx = (parseInt(diaNum) || 1) - 1;
+              const evIdx = (parseInt(numEvento) || 1) - 1;
+              if (dest.dias[diaIdx] && dest.dias[diaIdx].eventos[evIdx]) {
+                const evCopia = JSON.parse(JSON.stringify(dest.dias[diaIdx].eventos[evIdx]));
+                evCopia.id = Date.now();
+                dest.dias[diaIdx].eventos.push(evCopia);
+                renderDias(dest.id);
+                showToast(`⎘ Evento duplicado`, 'success');
+              }
+            }
+          }
+          accionesEjecutadas = true;
+        });
+
+        // ORGANIZAR_ITINERARIO
+        const accionesOrganizar = [...respuesta.matchAll(/\[ACCION:ORGANIZAR_ITINERARIO:([^\]]+)\]/g)];
+        accionesOrganizar.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 2) {
+            const destNombre = partes[0].trim();
+            const diaNum = parseInt(partes[1]) || 1;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+            if (dest && dest.dias[diaNum - 1]) {
+              dest.dias[diaNum - 1].eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
+              renderDias(dest.id);
+              showToast(`⏳ Itinerario organizado por hora`, 'success');
+            }
+          }
+          accionesEjecutadas = true;
+        });
+
+        // AGREGAR_COSTO (multiple allowed)
+        const accionesAgregarCosto = [...respuesta.matchAll(/\[ACCION:AGREGAR_COSTO:([^\]]+)\]/g)];
+        accionesAgregarCosto.forEach((match) => {
+          const partes = match[1].split('|');
+          if (partes.length >= 4) {
+            const [destNombre, diaNum, desc, precio] = partes;
+            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+            if (dest) {
+              const diaIdx = (parseInt(diaNum) || 1) - 1;
+              while (dest.dias.length <= diaIdx) {
+                dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+              }
+              if (!dest.dias[diaIdx].costosAdicionales) {
+                dest.dias[diaIdx].costosAdicionales = [];
+              }
+              dest.dias[diaIdx].costosAdicionales.push({
+                id: Date.now(),
+                descripcion: desc.trim(),
+                precio: parseFloat(precio) || 0
+              });
+              renderDias(dest.id);
+              showToast(`💰 Costo agregado: ${desc.trim()}`, 'success');
+            }
+          }
+          accionesEjecutadas = true;
+        });
+
+        // VIAJE_ACTIVO
+        if (respuesta.includes('[ACCION:VIAJE_ACTIVO]')) {
+          setTimeout(() => {
+            toggleViajeActivo();
+          }, 500);
+          accionesEjecutadas = true;
+        }
+
+        // ABRIR_CHECKLIST
+        if (respuesta.includes('[ACCION:ABRIR_CHECKLIST]')) {
+          setTimeout(() => { abrirChecklist(); }, 800);
+          accionesEjecutadas = true;
+        }
+        
         // Autosave if any action was taken
-        if (accionDestino || accionEvento || accionPersonas || accionOrigen || accionLimpiar || accionItinerario) {
+        if (accionesEjecutadas) {
           autoSave();
         }
 
@@ -934,6 +1588,8 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       currentLang = lang;
       localStorage.setItem('pluxUserLanguage', lang);
       document.body.className = document.body.className.replace(/lang-\w+/, `lang-${lang}`);
+      applyGlobalI18n();
+      applyCuentaModalI18n();
       if (!document.body.className.includes(`lang-${lang}`)) document.body.classList.add(`lang-${lang}`);
       document.getElementById('langButton').textContent = lang.toUpperCase();
       document.querySelectorAll('.lang-option').forEach(opt => {
@@ -1186,6 +1842,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     // ================== INICIALIZACIÓN ==================
     document.addEventListener('DOMContentLoaded', async function() {
       inicializarCuenta();
+      applyGlobalI18n();
       
       await loadKeys();
       await initFirebaseAuth();
@@ -1339,6 +1996,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     // ================== MODO VIAJE ACTIVO ==================
+    let viajeActivoEnabled = false; // Flag para controlar si el usuario quiere modo viaje activo
+    let viajeActivoInterval = null; // Para actualización periódica
+    
     function verificarViajeActivo() {
         if(destinos.length === 0) return;
         const fechaInicioVal = document.getElementById('fechaInicio').value;
@@ -1347,16 +2007,14 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         // Use local timezone for today
         const hoy = new Date();
         const fi = new Date(fechaInicioVal);
+        fi.setHours(0, 0, 0, 0); // Set to start of day
+        hoy.setHours(hoy.getHours(), hoy.getMinutes(), hoy.getSeconds(), 0);
         
-        // Simple check: is the trip active right now or within the neat 24 hours?
-        // Let's consider it active if we are on or after the start date (simplification for "Live" mode)
-        const diffDias = Math.floor((hoy - fi) / (1000 * 60 * 60 * 24));
+        // Calculate which day of the trip we're on
+        const diffMs = hoy.getTime() - fi.getTime();
+        const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         
-        if (diffDias >= 0) {
-            // Auto start if we are in welcome screen
-            if (!document.getElementById("welcome").classList.contains("hidden")) {
-                empezar();
-            }
+        if (diffDias >= 0 && viajeActivoEnabled) {
             document.getElementById('appTitle').textContent = `¡Viaje Activo! (Día ${diffDias + 1})`;
             document.getElementById('appTitle').style.color = "var(--rosa)";
             document.getElementById('appTitle').style.animation = "pulseGlow 2s infinite";
@@ -1368,6 +2026,37 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             
             mostrarDashboardDia(diffDias);
             programarNotificacionesDelDia(diffDias);
+        } else if (viajeActivoEnabled && diffDias < 0) {
+            // El viaje aún no ha comenzado
+            document.getElementById('appTitle').textContent = `Viaje en ${Math.abs(diffDias)} días`;
+            document.getElementById('appTitle').style.color = "var(--azul)";
+            const content = document.getElementById('viajeActivoContent');
+            content.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Tu viaje aún no ha comenzado. ¡Prepárate!</p>';
+        }
+    }
+    
+    function toggleViajeActivo() {
+        viajeActivoEnabled = !viajeActivoEnabled;
+        if (!viajeActivoEnabled) {
+            // Desactivar modo viaje activo
+            document.getElementById('appTitle').textContent = t('app_title');
+            document.getElementById('appTitle').style.color = "";
+            document.getElementById('appTitle').style.animation = "";
+            document.getElementById('modal-viaje-activo').style.display = 'none';
+            if (viajeActivoInterval) {
+                clearInterval(viajeActivoInterval);
+                viajeActivoInterval = null;
+            }
+            showToast('Modo viaje activo desactivado', 'info');
+        } else {
+            // Activar modo viaje activo
+            verificarViajeActivo();
+            // Actualizar cada minuto
+            if (viajeActivoInterval) clearInterval(viajeActivoInterval);
+            viajeActivoInterval = setInterval(() => {
+                verificarViajeActivo();
+            }, 60000); // cada minuto
+            showToast('Modo viaje activo activado ✨', 'success');
         }
     }
     
@@ -1376,23 +2065,69 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         const content = document.getElementById('viajeActivoContent');
         let html = '';
         let eventosHoy = 0;
+        let tieneContenido = false;
         
         destinos.forEach(d => {
             if (d.dias && d.dias[diaIndex]) {
+                tieneContenido = true;
                 const dia = d.dias[diaIndex];
-                html += `<h3 style="color:var(--verde); margin-top:15px;">${d.nombre}</h3>`;
-                dia.eventos.forEach(ev => {
-                    eventosHoy++;
-                    html += `
-                    <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:10px; border-left:4px solid var(--rosa);">
-                        <strong style="color:white; font-size:1.1rem;">${ev.hora}</strong> - ${ev.titulo}
-                    </div>`;
-                });
+                html += `<div style="margin-bottom:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; border-left:4px solid var(--verde);">`;
+                html += `<h3 style="color:var(--verde); margin:0 0 15px 0; font-size:1.3rem;">📍 ${d.nombre}</h3>`;
+                
+                // TRANSPORTE LLEGADA
+                if (d.tramos && d.tramos.length > 0) {
+                    html += `<div style="margin-bottom:12px;">`;
+                    html += `<p style="color:var(--rosa); font-weight:bold; font-size:0.9rem; margin:0;">🚗 TRANSPORTE:</p>`;
+                    d.tramos.forEach(tramo => {
+                        html += `<p style="color:var(--gris); margin:4px 0; font-size:0.85rem;">${tramo.origen} → ${tramo.destino} | ${tramo.medio} (${tramo.precio}€)</p>`;
+                    });
+                    html += `</div>`;
+                }
+                
+                // ALOJAMIENTO
+                if (dia.alojamiento) {
+                    html += `<div style="margin-bottom:12px; padding:10px; background:rgba(16,185,129,0.1); border-radius:8px;">`;
+                    html += `<p style="color:var(--verde); font-weight:bold; font-size:0.9rem; margin:0;">🏨 ALOJAMIENTO:</p>`;
+                    html += `<p style="color:var(--gris); margin:4px 0; font-size:0.85rem;">${dia.alojamiento.nombre} - ${dia.alojamiento.precioTotal}€</p>`;
+                    html += `</div>`;
+                }
+                
+                // EVENTOS
+                if (dia.eventos.length > 0) {
+                    html += `<div style="margin-bottom:12px;">`;
+                    html += `<p style="color:var(--azul); font-weight:bold; font-size:0.9rem; margin:0;">📅 EVENTOS:</p>`;
+                    dia.eventos.forEach(ev => {
+                        eventosHoy++;
+                        const horaDisplay = ev.hora ? `<strong style="color:var(--rosa); font-size:1rem;">${ev.hora}</strong>` : '<strong style="color:var(--gris);">Sin hora</strong>';
+                        html += `
+                        <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin:8px 0; border-left:3px solid var(--rosa);">
+                            ${horaDisplay} - <strong>${ev.titulo}</strong>
+                            ${ev.notas ? `<p style="margin:4px 0 0 0; color:var(--gris); font-size:0.8rem;">📝 ${ev.notas}</p>` : ''}
+                            ${ev.costo ? `<p style="margin:2px 0 0 0; color:var(--verde); font-size:0.8rem;">💰 ${ev.costo}€</p>` : ''}
+                        </div>`;
+                    });
+                    html += `</div>`;
+                }
+                
+                // COSTOS ADICIONALES
+                if (dia.costosAdicionales && dia.costosAdicionales.length > 0) {
+                    html += `<div style="margin-bottom:12px;">`;
+                    html += `<p style="color:var(--azul); font-weight:bold; font-size:0.9rem; margin:0;">💰 OTROS COSTOS:</p>`;
+                    dia.costosAdicionales.forEach(costo => {
+                        html += `<p style="color:var(--gris); margin:4px 0; font-size:0.85rem;">${costo.descripcion}: ${costo.precio}€</p>`;
+                    });
+                    html += `</div>`;
+                }
+                
+                if (dia.eventos.length === 0) {
+                    html += `<p style="color:var(--gris); font-style:italic; font-size:0.9rem;">Sin eventos programados para este día</p>`;
+                }
+                html += `</div>`;
             }
         });
         
-        if (eventosHoy === 0) {
-            html = '<p style="color:var(--gris);">No tienes eventos programados para hoy.</p>';
+        if (!tieneContenido || eventosHoy === 0) {
+            html = '<p style="color:var(--gris); padding:20px; text-align:center; font-size:1rem;">No tienes eventos programados para hoy.</p>';
         }
         
         content.innerHTML = html;
@@ -1571,12 +2306,29 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     async function callAI(prompt, useJson = true) {
       console.log(' AI_CORE: Iniciando petición...', { useJson });
 
+      // Helper function with timeout
+      const fetchWithTimeout = async (url, options, timeout = 15000) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        try {
+          const response = await fetch(url, { ...options, signal: controller.signal });
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          if (error.name === 'AbortError') {
+            throw new Error('TIMEOUT');
+          }
+          throw error;
+        }
+      };
+
       // 1. Try OpenRouter (FREE models  cycle through until one works)
       if (OPENROUTER_API_KEY) {
         for (const model of OPENROUTER_FREE_MODELS) {
           try {
             console.log(` AI_CORE: Intentando con OpenRouter [${model}]...`);
-            const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const resp = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1593,7 +2345,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 temperature: 0.3,
                 max_tokens: 4096
               })
-            });
+            }, 15000);
             if (!resp.ok) { console.warn(` OpenRouter ${model} HTTP ${resp.status}`); continue; }
             const data = await resp.json();
             const content = data.choices?.[0]?.message?.content;
@@ -1616,7 +2368,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       try {
         console.log(' AI_CORE: Intentando con Gemini 1.5 Flash...');
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-        const resp = await fetch(url, {
+        const resp = await fetchWithTimeout(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1630,7 +2382,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
               temperature: 0.3
             }
           })
-        });
+        }, 15000);
         const data = await resp.json();
         const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (content) {
@@ -1646,7 +2398,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       // 3. Try Groq (Llama 3 70B)
       try {
         console.log(' AI_CORE: Intentando con Groq (Llama 3 70B)...');
-        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const resp = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -1662,7 +2414,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             max_tokens: 4096,
             response_format: useJson ? { type: "json_object" } : undefined
           })
-        });
+        }, 15000);
         const data = await resp.json();
         if (data.choices?.[0]?.message?.content) {
           console.log(' AI_CORE: éxito con Groq.');
@@ -1677,7 +2429,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       // 4. Try Mistral
       try {
         console.log(' AI_CORE: Intentando con Mistral...');
-        const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        const resp = await fetchWithTimeout('https://api.mistral.ai/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1692,7 +2444,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             temperature: 0.3,
             response_format: useJson ? { type: "json_object" } : undefined
           })
-        });
+        }, 15000);
         const data = await resp.json();
         if (data.choices?.[0]?.message?.content) {
           console.log(' AI_CORE: éxito con Mistral.');
@@ -3691,17 +4443,18 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       // Clear and show search as primary
       destinosDiv.innerHTML = `
         <div style="padding:40px; text-align:center; max-width:600px; margin:0 auto;">
-          <h2 style="font-size:2.5rem; margin-bottom:20px; color:var(--verde);">¿A dónde vamos?</h2>
+          <h2 style="font-size:2.5rem; margin-bottom:20px; color:var(--verde);">${t('descubrir_title')}</h2>
           <div style="display:flex;gap:15px;">
-            <input type="text" id="feedSearchInput" placeholder="Busca una ciudad (ej: Roma)..." style="flex:1;padding:18px;background:rgba(255,255,255,0.05);border:2px solid var(--border);border-radius:16px;color:white;font-size:1.2rem; outline:none; transition:border-color 0.3s;">
-            <button onclick="buscarLugaresWikiFeed(document.getElementById('feedSearchInput').value)" class="btn-add-feed" style="padding:0 30px; font-size:1.1rem; background:linear-gradient(45deg, var(--verde), var(--azul));">+ Buscar</button>
+            <input type="text" id="feedSearchInput" placeholder="${t('descubrir_placeholder')}" style="flex:1;padding:18px;background:rgba(255,255,255,0.05);border:2px solid var(--border);border-radius:16px;color:white;font-size:1.2rem; outline:none; transition:border-color 0.3s;">
+            <button onclick="buscarLugaresPorDestino(document.getElementById('feedSearchInput').value)" class="btn-add-feed" style="padding:0 30px; font-size:1.1rem; background:linear-gradient(45deg, var(--verde), var(--azul));">${t('descubrir_search_btn')}</button>
           </div>
-          <p style="color:var(--gris); margin-top:15px; font-size:0.9rem;">Buscamos imágenes y datos en Wikipedia para ahorrar datos de IA.</p>
+          <p style="color:var(--gris); margin-top:15px; font-size:0.9rem;">${t('descubrir_ai_hint')}</p>
         </div>
         <div id="feed-resultados"></div>`;
       
       if (destinos.length > 0) {
-        buscarLugaresWikiFeed(destinos[0].nombre);
+        // Load with AI first, then supplement with Wikipedia
+        buscarLugaresPorDestino(destinos[0].nombre);
       }
     }
 
@@ -3719,7 +4472,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     async function buscarLugaresPorDestino(ciudad) {
       if (!ciudad) return;
       const resultados = document.getElementById('feed-resultados');
-      resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Buscando ideas con IA...</p>';
+      resultados.innerHTML = `<p style="color:var(--gris); padding:40px; text-align:center; font-size:1.2rem; animation:pulse 1s infinite;">🤖 Analizando ${ciudad} con IA...</p>`;
       
       try {
         const prompt = `Eres un experto guía turístico. Recomienda 10 lugares imperdibles en ${ciudad}. Devuelve ESTRICTAMENTE un JSON: {"lugares":[{"titulo":"Nombre","descripcion":"Breve descripción"}]}`;
@@ -3745,18 +4498,29 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         });
         html += '</div>';
         resultados.innerHTML = html;
+        
+        // Supplement with Wikipedia results (half preloaded) - add separator
+        setTimeout(() => {
+          const separator = document.createElement('div');
+          separator.style.cssText = 'text-align:center; padding:20px; color:var(--gris); font-size:0.9rem; border-top:1px solid var(--border); margin-top:20px;';
+          separator.innerHTML = '📚 Más lugares de Wikipedia';
+          resultados.appendChild(separator);
+          buscarLugaresWikiFallback(ciudad, resultados, true);
+        }, 500);
       } catch(e) {
         console.error('AI Feed Error:', e);
-        resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Cargando desde Wikipedia...</p>';
+        resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">IA no disponible. Cargando desde Wikipedia...</p>';
         buscarLugaresWikiFallback(ciudad, resultados);
       }
     }
     
-    async function buscarLugaresWikiFallback(ciudad, resultados) {
+    async function buscarLugaresWikiFallback(ciudad, resultados, isSupplement = false) {
       try {
         const coords = await geocode(ciudad);
         if (!coords) {
-          resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">No se pudo ubicar el destino.</p>';
+          if (!isSupplement) {
+            resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">No se pudo ubicar el destino.</p>';
+          }
           return;
         }
         const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro&explaintext&exchars=100&pithumbsize=400&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=20&format=json&origin=*`;
@@ -3764,15 +4528,28 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         const data = await res.json();
         
         if (!data.query || !data.query.pages) {
-          resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Sin resultados en Wikipedia.</p>';
+          if (!isSupplement) {
+            resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Sin resultados en Wikipedia.</p>';
+          }
           return;
         }
         
         const pages = data.query.pages;
-        const places = Object.values(pages).filter(p => !p.title.match(/\d{3,4}/) && !['incendio','batalla','muerte'].some(w => p.title.toLowerCase().includes(w)));
+        const places = Object.values(pages).filter(p => 
+          !p.title.match(/\d{3,4}/) && 
+          !['incendio','batalla','muerte','evento','concierto','festival','estación','metro','subway','parada','línea de colectivo','línea de', 'reunión', 'partido de', 'conferencia'].some(w => p.title.toLowerCase().includes(w)) &&
+          p.title.length > 2
+        );
         
-        let html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px; padding:20px;">';
-        places.slice(0, 12).forEach(place => {
+        // If supplement, create new grid container instead of appending to existing HTML
+        let html = '';
+        if (!isSupplement) {
+          html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px; padding:20px;">';
+        } else {
+          html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px; padding:20px; padding-top:0;">';
+        }
+        
+        places.slice(0, isSupplement ? 6 : 12).forEach(place => {
           const imgSrc = (place.thumbnail && place.thumbnail.source) ? place.thumbnail.source : 'https://images.unsplash.com/photo-1503220317375-aaad61436b1b?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80';
           const summary = place.extract ? place.extract : 'Punto de interés histórico / cultural';
           
@@ -3791,7 +4568,15 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           </div>`;
         });
         html += '</div>';
-        resultados.innerHTML = html;
+        
+        if (isSupplement) {
+          // Append new grid container to existing results
+          const newGrid = document.createElement('div');
+          newGrid.innerHTML = html;
+          resultados.appendChild(newGrid);
+        } else {
+          resultados.innerHTML = html;
+        }
       } catch (e) {
         console.error('Wiki Fallback Error:', e);
         resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Error al cargar el feed alternativo.</p>';
@@ -4103,6 +4888,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   // Expose all functions called by onclick inline to window scope
   window.abrirDescubrir = abrirDescubrir;
   window.cerrarDescubrir = cerrarDescubrir;
+  window.buscarLugaresPorDestino = buscarLugaresPorDestino;
+  window.buscarLugaresWikiFeed = buscarLugaresWikiFeed;
+  window.añadirDesdeFeed = añadirDesdeFeed;
   window.abrirChatIA = abrirChatIA;
   window.cerrarChatIA = cerrarChatIA;
   window.abrirPanelHerramientas = abrirPanelHerramientas;
@@ -4188,6 +4976,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   window.mostrarDashboardDia = mostrarDashboardDia;
   window.programarNotificacionesDelDia = programarNotificacionesDelDia;
   window.verificarViajeActivo = verificarViajeActivo;
+  window.toggleViajeActivo = toggleViajeActivo;
 
   window.abrirCuenta = abrirCuenta;
   window.cerrarCuenta = cerrarCuenta;
@@ -4197,3 +4986,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   window.abandonarViajeCompartido = abandonarViajeCompartido;
   window.abrirCompartirModal = abrirCompartirModal;
   window.renderSharedTripsList = renderSharedTripsList;
+  window.switchCuentaTab = switchCuentaTab;
+  window.toggleRegisterPassword = toggleRegisterPassword;
+  window.loginNickname = loginNickname;
+  window.crearCuentaNickname = crearCuentaNickname;

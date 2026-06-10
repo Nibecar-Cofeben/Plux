@@ -45,7 +45,7 @@
       <button class="main-btn" id="tripsBtn" style="flex: 1 1 45%;">Tus viajes</button>
       <button class="main-btn discover-btn" id="discoverBtn" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
       <button class="main-btn tools-btn" id="toolsBtn" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
-      <button class="main-btn" onclick="abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="pet.png" style="width:24px; height:24px; border-radius:50%;"> PLUXY</button>
+      <button class="main-btn" onclick="abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="pet.png" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
     </div>
 
     <!-- Inspiration Cards -->
@@ -87,7 +87,7 @@
       </div>
     </div>
 
-    <div class="version">v.D6.00</div>
+    <div class="version">v.6.00</div>
     <div class="footer-logo">nibecar cofeben</div>
   </div>
 
@@ -104,7 +104,7 @@
         <button class="herramienta-btn" onclick="abrirMapa()" id="btnMapa">Ver mapa</button>
         <button class="herramienta-btn" onclick="abrirClima()" id="btnClima">Clima</button>
         <button class="herramienta-btn" id="btnPreferencias" onclick="abrirPreferencias()" style="background:var(--azul);">Preferencias</button>
-        <button class="herramienta-btn" id="btnViajeActivo" style="background:var(--rosa); border-color:var(--rosa);" onclick="document.getElementById('modal-viaje-activo').style.display='flex'">Modo Viaje Activo</button>
+        <button class="herramienta-btn" id="btnViajeActivo" style="background:var(--rosa); border-color:var(--rosa);" onclick="window.toggleViajeActivo()">Modo Viaje Activo</button>
       </div>
       <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
         <p id="joinHintHerramientas" style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación? No hace falta registrarse.</p>
@@ -255,6 +255,58 @@
     </div>
   </div>
 
+  <!-- FLOATING SUPPORT BUTTON (Bottom Left) -->
+  <button id="support-float-btn" onclick="abrirSupport()" title="Support" style="display:flex !important; align-items:center; justify-content:center; padding:0; overflow:hidden; position:fixed; bottom:20px; left:20px; width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg, #8b5cf6, #6366f1); border:none; cursor:pointer; box-shadow:0 4px 12px rgba(139,92,246,0.3); z-index:999; font-size:1.3rem; color:white; transition:all 0.3s;">
+    💬
+  </button>
+
+  <!-- MODAL: SUPPORT & SUGGESTIONS -->
+  <div id="modal-support" onclick="if(event.target===this)cerrarSupport()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:20px; max-width:500px; width:100%; padding:30px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 id="supportTitle" style="margin:0; color:var(--texto);">Soporte</h2>
+        <button onclick="cerrarSupport()" style="background:none; border:none; color:var(--gris); font-size:2rem; cursor:pointer; padding:0;">×</button>
+      </div>
+      
+      <div id="support-content">
+        <!-- Opción 1: Sugerencias -->
+        <button class="support-option-btn" onclick="mostrarFormuarioSupport('suggestion')" style="display:block; width:100%; padding:15px; margin-bottom:10px; background:linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05)); border:1px solid var(--border); border-radius:12px; cursor:pointer; text-align:left; transition:all 0.3s;">
+          <div style="font-weight:bold; color:var(--verde); margin-bottom:5px; font-size:1.05rem;">💡 <span id="suggestionLabel">Sugerir una función</span></div>
+          <p style="margin:0; color:var(--gris); font-size:0.9rem;" id="suggestionDesc">Ayudanos a mejorar con tu idea</p>
+        </button>
+        
+        <!-- Opción 2: Reportar error -->
+        <button class="support-option-btn" onclick="mostrarFormuarioSupport('error')" style="display:block; width:100%; padding:15px; margin-bottom:10px; background:linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05)); border:1px solid var(--border); border-radius:12px; cursor:pointer; text-align:left; transition:all 0.3s;">
+          <div style="font-weight:bold; color:#ef4444; margin-bottom:5px; font-size:1.05rem;">🐛 <span id="errorLabel">Informar un error</span></div>
+          <p style="margin:0; color:var(--gris); font-size:0.9rem;" id="errorDesc">Cuéntanos qué salió mal</p>
+        </button>
+        
+        <!-- Opción 3: Necesito ayuda -->
+        <button class="support-option-btn" onclick="mostrarFormuarioSupport('help')" style="display:block; width:100%; padding:15px; margin-bottom:10px; background:linear-gradient(135deg, rgba(59,130,246,0.1), rgba(59,130,246,0.05)); border:1px solid var(--border); border-radius:12px; cursor:pointer; text-align:left; transition:all 0.3s;">
+          <div style="font-weight:bold; color:var(--azul); margin-bottom:5px; font-size:1.05rem;">🆘 <span id="helpLabel">Necesito ayuda</span></div>
+          <p style="margin:0; color:var(--gris); font-size:0.9rem;" id="helpDesc">Problemas, contraseña olvidada, etc.</p>
+        </button>
+        
+        <!-- Opción 4: Otros -->
+        <button class="support-option-btn" onclick="mostrarFormuarioSupport('other')" style="display:block; width:100%; padding:15px; background:linear-gradient(135deg, rgba(156,163,175,0.1), rgba(156,163,175,0.05)); border:1px solid var(--border); border-radius:12px; cursor:pointer; text-align:left; transition:all 0.3s;">
+          <div style="font-weight:bold; color:var(--gris); margin-bottom:5px; font-size:1.05rem;">❔ <span id="otherLabel">Otros</span></div>
+          <p style="margin:0; color:var(--gris); font-size:0.9rem;" id="otherDesc">Algo diferente a lo anterior</p>
+        </button>
+      </div>
+
+      <!-- FORM SECTION (hidden by default) -->
+      <div id="support-form" style="display:none; margin-top:20px;">
+        <input type="text" id="support-name" placeholder="Tu nombre" style="width:100%; padding:10px; margin-bottom:10px; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--texto);">
+        <input type="email" id="support-email" placeholder="Tu email" style="width:100%; padding:10px; margin-bottom:10px; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--texto);">
+        <textarea id="support-message" placeholder="Descripción o mensaje..." style="width:100%; padding:10px; margin-bottom:10px; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--texto); height:120px; resize:none; font-family:inherit;"></textarea>
+        <div style="display:flex; gap:10px;">
+          <button id="support-send-btn" onclick="enviarSupport()" style="flex:1; padding:12px; background:linear-gradient(135deg, #8b5cf6, #6366f1); border:none; color:white; border-radius:8px; font-weight:bold; cursor:pointer; transition:opacity 0.3s;">Enviar</button>
+          <button id="support-cancel-btn" onclick="mostrarOpcionesSupport()" style="flex:1; padding:12px; background:var(--gris); border:none; color:white; border-radius:8px; font-weight:bold; cursor:pointer; transition:opacity 0.3s;">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- FLOATING CHAT BUTTON -->
   
   <button id="chat-float-btn" onclick="abrirChatIA()" title="Pluxy" style="display:flex !important; align-items:center; justify-content:center; padding:0; overflow:hidden;">
@@ -267,8 +319,8 @@
     <div class="chat-container">
       <div class="chat-header">
         <div>
-          <h3>Pluxy · Tu asistente de viaje</h3>
-          <div class="chat-header-info">Preguntame cualquier cosa sobre tu viaje</div>
+          <h3 id="pluxyAssistant">Pluxy · Tu asistente de viaje</h3>
+          <div class="chat-header-info" id="pluxyHint">Preguntame cualquier cosa sobre tu viaje</div>
         </div>
         <button onclick="cerrarChatIA()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;padding:0;display:flex;align-items:center;justify-content:center;">×</button>
       </div>
@@ -504,9 +556,48 @@
       <h2 id="cuentaTitle" style="text-align:center;">Tu Perfil</h2>
       
       <div class="cuenta-form" id="cuentaForm" style="display:flex; flex-direction:column; gap:12px; width:100%; text-align:center;">
-        <p id="cuentaAuthHint" style="color:var(--gris); font-size:0.9rem; margin-bottom:8px;">Iniciá sesión con correo y contraseña obligatoria, o con Google.</p>
-        <a id="cuentaLinkLogin" href="/login/?return=/plux/" class="btn-add-feed" style="display:block; text-decoration:none; padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px;">Iniciar sesión</a>
-        <a id="cuentaLinkRegister" href="/login/?tab=register&return=/plux/" style="color:var(--azul); font-size:0.9rem;">Crear cuenta</a>
+        
+        <!-- Nibecar Cofeben Account Section -->
+        <div style="padding-bottom:15px; border-bottom:1px solid var(--border);">
+          <p id="cuentaNibecarSection" style="color:var(--gris); font-size:0.9rem; margin-bottom:12px;">Cuenta de Nibecar Cofeben</p>
+          <div style="display:flex; gap:10px;">
+            <a href="/login/?return=/plux/" id="cuentaLinkLogin" class="btn-add-feed" style="flex:1; display:block; text-decoration:none; padding:12px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; text-align:center;">Iniciar sesión</a>
+            <a href="/login/?tab=register&return=/plux/" id="cuentaLinkRegister" class="btn-add-feed" style="flex:1; display:block; text-decoration:none; padding:12px; background:rgba(255,255,255,0.1); color:var(--azul); font-weight:bold; border-radius:12px; border:1px solid var(--border); text-align:center;">Crear cuenta</a>
+          </div>
+        </div>
+        
+        <!-- Nickname Section -->
+        <div style="padding-top:15px;">
+          <p id="cuentaNicknameSection" style="color:var(--gris); font-size:0.9rem; margin-bottom:12px;">Nickname</p>
+          
+          <input type="text" id="login-nickname" data-placeholder-key="cuenta_nickname_placeholder" placeholder="Nickname" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; margin-bottom:10px;">
+          
+          <!-- Tab buttons -->
+          <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <button id="tab-login-btn" onclick="window.switchCuentaTab('login')" style="flex:1; padding:10px; background:var(--azul); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Iniciar sesión</button>
+            <button id="tab-register-btn" onclick="window.switchCuentaTab('register')" style="flex:1; padding:10px; background:rgba(255,255,255,0.1); color:var(--gris); border:1px solid var(--border); border-radius:8px; cursor:pointer;">Crear</button>
+          </div>
+          
+          <!-- Login Form -->
+          <div id="form-login" style="display:flex; flex-direction:column; gap:10px;">
+            <div id="login-password-container" style="display:none;">
+              <input type="password" id="login-password" data-placeholder-key="cuenta_password_placeholder" placeholder="Contraseña (si requiere)" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%;">
+            </div>
+            <button onclick="window.loginNickname()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer;">Iniciar sesión</button>
+          </div>
+          
+          <!-- Register Form -->
+          <div id="form-register" style="display:none; flex-direction:column; gap:10px;">
+            <label style="font-size:0.85rem; color:var(--gris); text-align:left;">
+              <input type="checkbox" id="register-has-password" onchange="window.toggleRegisterPassword()" style="margin-right:8px;">
+              <span id="cuentaPasswordOptional">Quiero contraseña (opcional)</span>
+            </label>
+            <div id="register-password-container" style="display:none;">
+              <input type="password" id="register-password" data-placeholder-key="cuenta_password_optional_placeholder" placeholder="Contraseña (opcional)" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%;">
+            </div>
+            <button onclick="window.crearCuentaNickname()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer;">Crear</button>
+          </div>
+        </div>
       </div>
 
       <div class="cuenta-info" id="cuentaInfo" style="display:none;">

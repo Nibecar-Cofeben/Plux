@@ -1,11 +1,62 @@
 /* ===== TEMAS ===== */
     .theme-claro {
       --fondo: #ffffff;
-      --card: #f3f4f6;
-      --texto: #1f2937;
-      --border: #d1d5db;
-      --placeholder: #9ca3af;
-      --gris: #6b7280;
+      --card: #f8fafc;
+      --texto: #1e293b;
+      --border: #e2e8f0;
+      --placeholder: #94a3b8;
+      --gris: #475569;
+      --verde: #10b981;
+      --azul: #3b82f6;
+      --rosa: #ec4899;
+    }
+    /* Estilos específicos para tema claro */
+    .theme-claro .main-btn {
+      background: linear-gradient(135deg, var(--verde), var(--azul)) !important;
+      color: white !important;
+      border: none !important;
+      font-weight: 600 !important;
+    }
+    .theme-claro .main-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    .theme-claro .logo-bubble {
+      background: linear-gradient(135deg, var(--verde), var(--azul)) !important;
+      color: white !important;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    .theme-claro .btn-add-feed {
+      background: var(--verde) !important;
+      color: white !important;
+      border: none !important;
+      font-weight: 600 !important;
+    }
+    .theme-claro .btn-add-feed:hover {
+      opacity: 0.9;
+    }
+    .theme-claro .card {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .theme-claro .destino, .theme-claro .dia, .theme-claro .evento {
+      border: 1px solid var(--border) !important;
+      background: var(--card) !important;
+    }
+    .theme-claro .resumen-hero h2 {
+      color: var(--texto) !important;
+    }
+    .theme-claro .stat-card {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(59, 130, 246, 0.05)) !important;
+    }
+    /* Mejorar visibilidad de elementos grises */
+    .theme-claro .version {
+      color: var(--gris);
+    }
+    .theme-claro .footer-logo {
+      color: var(--gris);
+    }
+    .theme-claro p, .theme-claro label {
+      color: var(--texto);
     }
     /* Modificado para mayor contraste: Oscuro puro */
     .theme-oscuro {
@@ -1456,6 +1507,40 @@
   letter-spacing: 0.04em;
 }
 
+/* ===== SUPPORT MODAL STYLES ===== */
+#modal-support {
+  display: none;
+}
+
+#support-float-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(139,92,246,0.4);
+}
+
+.support-option-btn:hover {
+  background: var(--card) !important;
+  transform: translateY(-2px);
+}
+
+#support-form input,
+#support-form textarea {
+  background: var(--card) !important;
+  color: var(--texto) !important;
+  border-color: var(--border) !important;
+  font-size: 0.95rem;
+}
+
+#support-form input::placeholder,
+#support-form textarea::placeholder {
+  color: var(--placeholder) !important;
+}
+
+#support-form button {
+  font-size: 0.95rem;
+}
+
+/* ===== END SUPPORT STYLES ===== */
+
 @media (max-width: 760px) {
   #app.container {
     width: min(100% - 16px, 100%);
@@ -1527,35 +1612,48 @@
   display:none; align-items:center; justify-content:center; z-index:300; padding:10px;
 }
 .cuenta-content {
-  max-width:420px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo));
-  border-radius:24px; padding:30px; box-shadow:0 20px 80px rgba(0,0,0,0.6);
-  position:relative; animation:scaleIn 0.4s ease;
+  max-width:460px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo));
+  border-radius:28px; padding:32px; box-shadow:0 25px 100px rgba(0,0,0,0.7);
+  position:relative; animation:scaleIn 0.4s ease; border:1px solid var(--border);
 }
-.cuenta-content h2 { color:var(--verde); margin-bottom:20px; font-size:1.6rem; }
+.cuenta-content h2 { color:var(--verde); margin-bottom:24px; font-size:1.8rem; text-align:center; font-weight:700; }
 .cuenta-avatar {
-  width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,var(--verde),var(--azul));
-  display:flex; align-items:center; justify-content:center; font-size:2.5rem; color:white;
-  margin:0 auto 20px; border:3px solid var(--border); transition:transform 0.3s;
+  width:90px; height:90px; border-radius:50%; background:linear-gradient(135deg,var(--verde),var(--azul));
+  display:flex; align-items:center; justify-content:center; font-size:2.8rem; color:white;
+  margin:0 auto 24px; border:4px solid var(--border); transition:transform 0.3s, box-shadow 0.3s;
+  box-shadow:0 8px 30px rgba(52,211,153,0.3);
 }
-.cuenta-avatar:hover { transform: scale(1.1) rotate(5deg); }
+.cuenta-avatar:hover { transform: scale(1.15) rotate(8deg); box-shadow:0 12px 40px rgba(52,211,153,0.5); }
 .cuenta-nickname-display {
-  text-align:center; font-size:1.2rem; color:var(--verde); font-weight:bold; margin-bottom:15px;
+  text-align:center; font-size:1.3rem; color:var(--verde); font-weight:bold; margin-bottom:20px;
+  padding:12px; background:rgba(52,211,153,0.1); border-radius:12px; border:1px solid var(--verde);
 }
-.cuenta-form { display:flex; flex-direction:column; gap:12px; }
+.cuenta-form { display:flex; flex-direction:column; gap:16px; }
 .cuenta-form input {
-  padding:12px 16px; background:rgba(255,255,255,0.05); border:1px solid var(--border);
-  border-radius:12px; color:white; font-size:1rem;
+  padding:14px 18px; background:rgba(255,255,255,0.08); border:2px solid var(--border);
+  border-radius:14px; color:white; font-size:1rem; transition:all 0.3s;
 }
-.cuenta-form input:focus { border-color:var(--verde); outline:none; box-shadow:0 0 10px rgba(52,211,153,0.2); }
+.cuenta-form input:focus { border-color:var(--verde); outline:none; box-shadow:0 0 15px rgba(52,211,153,0.3); background:rgba(255,255,255,0.12); }
 .cuenta-form button {
-  padding:12px; background:linear-gradient(135deg,var(--verde),var(--azul)); color:white;
-  border:none; border-radius:12px; font-size:1rem; font-weight:bold; cursor:pointer;
-  transition:transform 0.2s, box-shadow 0.2s;
+  padding:14px; background:linear-gradient(135deg,var(--verde),var(--azul)); color:white;
+  border:none; border-radius:14px; font-size:1.05rem; font-weight:bold; cursor:pointer;
+  transition:transform 0.3s, box-shadow 0.3s; position:relative; overflow:hidden;
 }
-.cuenta-form button:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(52,211,153,0.3); }
-.cuenta-info { margin-top:15px; padding-top:15px; border-top:1px solid var(--border); }
-.cuenta-info-row { display:flex; justify-content:space-between; padding:6px 0; font-size:0.85rem; color:var(--gris); }
-.cuenta-info-row span:last-child { color:var(--texto); }
-.cuenta-logout { margin-top:15px; padding:10px; background:none; border:1px solid var(--rosa);
-  color:var(--rosa); border-radius:10px; width:100%; cursor:pointer; font-size:0.9rem; transition:all 0.3s; }
-.cuenta-logout:hover { background:rgba(236,72,153,0.15); }
+.cuenta-form button::after {
+  content:''; position:absolute; top:50%; left:50%; width:0; height:0; border-radius:50%;
+  background:rgba(255,255,255,0.3); transform:translate(-50%,-50%); transition:width 0.6s, height 0.6s;
+}
+.cuenta-form button:hover::after { width:300px; height:300px; }
+.cuenta-form button:hover { transform:translateY(-3px) scale(1.02); box-shadow:0 12px 35px rgba(52,211,153,0.4); }
+.cuenta-form label { color:var(--gris); font-size:0.9rem; cursor:pointer; transition:color 0.3s; }
+.cuenta-form label:hover { color:var(--verde); }
+.cuenta-form input[type="checkbox"] { width:18px; height:18px; cursor:pointer; }
+.cuenta-info { margin-top:20px; padding-top:20px; border-top:2px solid var(--border); }
+.cuenta-info-row { display:flex; justify-content:space-between; padding:10px 0; font-size:0.9rem; color:var(--gris); transition:background 0.3s; border-radius:8px; padding:10px 12px; }
+.cuenta-info-row:hover { background:rgba(255,255,255,0.05); }
+.cuenta-info-row span:last-child { color:var(--texto); font-weight:600; }
+.cuenta-logout { margin-top:20px; padding:14px; background:none; border:2px solid var(--rosa);
+  color:var(--rosa); border-radius:14px; width:100%; cursor:pointer; font-size:1rem; font-weight:600; transition:all 0.3s;
+}
+.cuenta-logout:hover { background:rgba(236,72,153,0.2); transform:translateY(-2px); box-shadow:0 8px 25px rgba(236,72,153,0.3); }
+@keyframes scaleIn { from{opacity:0;transform:scale(0.9);} to{opacity:1;transform:scale(1);} }

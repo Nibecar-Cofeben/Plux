@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Plux.D5.08 - Tu viaje</title>
-  <link rel="icon" type="image/ico" href="favico.ico">
+  <title>Plux - Tu viaje</title>
+  <link rel="icon" type="image/ico" href="/plux/favico.ico">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="styles.css?v=1779320000000">
+  <link rel="stylesheet" href="/plux/styles.css?v=1779320000000">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -17,8 +17,9 @@
   <script defer src="/__/firebase/10.9.0/firebase-app-compat.js"></script>
   <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
   <script defer src="/__/firebase/10.9.0/firebase-firestore-compat.js"></script>
+  <script defer src="/__/firebase/10.9.0/firebase-analytics-compat.js"></script>
   <script defer src="/__/firebase/init.js"></script>
-  <script defer src="script.js?v=1779800000000"></script>
+  <script defer src="/plux/script.js?v=1779800000000"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -36,7 +37,8 @@
       </div>
       <div class="theme-button" id="themeButton">🎨</div>
       <div class="theme-dropdown" id="themeDropdown"></div>
-      <div class="user-button" id="cuentaButton" title="Tu cuenta">👤</div>
+      <div class="tour-button" id="tourButton" title="Tour guiado">🎯</div>
+      <div class="user-button" id="cuentaButton" title="Tu perfil">👤</div>
     </div>
     <div class="logo-bubble">PLUX</div>
 
@@ -45,7 +47,7 @@
       <button class="main-btn" id="tripsBtn" style="flex: 1 1 45%;">Tus viajes</button>
       <button class="main-btn discover-btn" id="discoverBtn" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
       <button class="main-btn tools-btn" id="toolsBtn" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
-      <button class="main-btn" onclick="abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="pet.png" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
+      <button class="main-btn" onclick="abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/plux/pet.png" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
     </div>
 
     <!-- Inspiration Cards -->
@@ -178,6 +180,19 @@
     </div>
   </div>
 
+  <!-- Modal de decisión de viaje -->
+  <div id="modal-decision-viaje" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 1050; align-items: center; justify-content: center;">
+    <div class="modal-content" style="max-width: 450px; text-align: center; padding: 30px;">
+      <span class="close-modal" onclick="window.cerrarModalDecisionViaje()">×</span>
+      <h2 id="decisionModalTitle" style="color: var(--verde); margin-bottom: 20px;">Empieza tu viaje</h2>
+      <p id="decisionModalDesc" style="color: var(--texto); margin-bottom: 30px; font-size: 1.1rem; line-height: 1.5;">Tienes viajes guardados. ¿Qué deseas hacer?</p>
+      <div style="display: flex; flex-direction: column; gap: 15px;">
+        <button id="decisionNewBtn" class="main-btn" onclick="window.decisionViajeNuevo()" style="background: linear-gradient(135deg, #10b981, #059669); font-weight: bold; padding: 15px; border-radius: 12px; border: none; color: black; cursor: pointer; font-size: 1.1rem;">Crear un viaje nuevo</button>
+        <button id="decisionContinueBtn" class="main-btn" onclick="window.decisionViajeContinuar()" style="background: linear-gradient(135deg, #3b82f6, #2563eb); font-weight: bold; padding: 15px; border-radius: 12px; border: none; color: white; cursor: pointer; font-size: 1.1rem;">Seguir con el mismo</button>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-presentacion">
     <div class="presentacion-content">
       <div class="presentacion-header">
@@ -231,9 +246,16 @@
       <!-- Invitar por Nickname -->
       <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:15px; text-align:left;">
         <p id="colabInviteLabel" style="font-size:0.85rem; color:var(--gris); margin-bottom:8px;">Invitar por Nickname</p>
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
           <input type="text" id="invite-nickname-input" placeholder="Ej: messi" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white;">
           <button class="btn-add-feed" id="colabInviteBtn" style="background:var(--verde); color:black; font-weight:bold; padding: 0 15px; min-height: 40px;" onclick="invitarColaboradorPorNickname()">Invitar</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label for="colab-role-select" id="colabRoleLabel" style="color:var(--gris); font-size:0.85rem;">Invitar como:</label>
+          <select id="colab-role-select" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:white; padding:5px 10px; cursor:pointer;">
+            <option value="editor" id="roleEditorOpt">Editor</option>
+            <option value="viajero" id="roleTravelerOpt">Viajero</option>
+          </select>
         </div>
       </div>
 
@@ -281,10 +303,10 @@
           <p style="margin:0; color:var(--gris); font-size:0.9rem;" id="errorDesc">Cuéntanos qué salió mal</p>
         </button>
         
-        <!-- Opción 3: Necesito ayuda -->
-        <button class="support-option-btn" onclick="mostrarFormuarioSupport('help')" style="display:block; width:100%; padding:15px; margin-bottom:10px; background:linear-gradient(135deg, rgba(59,130,246,0.1), rgba(59,130,246,0.05)); border:1px solid var(--border); border-radius:12px; cursor:pointer; text-align:left; transition:all 0.3s;">
-          <div style="font-weight:bold; color:var(--azul); margin-bottom:5px; font-size:1.05rem;">🆘 <span id="helpLabel">Necesito ayuda</span></div>
-          <p style="margin:0; color:var(--gris); font-size:0.9rem;" id="helpDesc">Problemas, contraseña olvidada, etc.</p>
+        <!-- Opción 3: Necesito ayuda / Tour guiado -->
+        <button class="support-option-btn" onclick="iniciarTour()" style="display:block; width:100%; padding:15px; margin-bottom:10px; background:linear-gradient(135deg, rgba(59,130,246,0.1), rgba(59,130,246,0.05)); border:1px solid var(--border); border-radius:12px; cursor:pointer; text-align:left; transition:all 0.3s;">
+          <div style="font-weight:bold; color:var(--azul); margin-bottom:5px; font-size:1.05rem;">🎯 <span id="helpLabel">Necesito ayuda</span></div>
+          <p style="margin:0; color:var(--gris); font-size:0.9rem;" id="helpDesc">Tour guiado interactivo de la app</p>
         </button>
         
         <!-- Opción 4: Otros -->
@@ -310,7 +332,7 @@
   <!-- FLOATING CHAT BUTTON -->
   
   <button id="chat-float-btn" onclick="abrirChatIA()" title="Pluxy" style="display:flex !important; align-items:center; justify-content:center; padding:0; overflow:hidden;">
-    <img src="pet.png" alt="Pluxy" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+    <img src="/plux/pet.png" alt="Pluxy" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
     <span class="chat-badge" id="chat-badge" style="display:none;">✨</span>
   </button>
 
@@ -365,10 +387,27 @@
 
   <div class="container" id="app" style="display:none;">
 
-    <div class="back-button" onclick="volverAWelcome()">←</div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-      <h1 id="appTitle" style="margin:0;">Plux · Organiza tu aventura</h1>
-      <button onclick="document.getElementById('modal-colaboradores').style.display='flex'" style="background:var(--verde); color:black; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:8px;">Invitar</button>
+    <!-- Desktop Header -->
+    <div class="desktop-header">
+      <div class="back-button" onclick="volverAWelcome()">←</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap:10px;">
+        <h1 id="appTitle" style="margin:0;">Plux · Organiza tu aventura</h1>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button id="scratchBtnEditor" onclick="window.empezarDeCero()" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none;">Viaje desde cero 🆕</button>
+          <button onclick="document.getElementById('modal-colaboradores').style.display='flex'" style="background:var(--verde); color:black; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:8px;">Invitar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+      <button class="mobile-back-arrow" onclick="volverAWelcome()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; display:block;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </button>
+      <h1 id="appTitleMobile" class="mobile-header-title">Plan de Viaje</h1>
+      <button class="mobile-menu-trigger" onclick="window.toggleMobileTripMenu()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; display:block;"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+      </button>
     </div>
     <div class="datos-generales">
       <div class="fila-dato">
@@ -547,14 +586,12 @@
       </div>
   </div>
 
-  <!-- Modal Cuenta (Firebase Auth → /login) -->
+  <!-- Modal Cuenta (Firebase Auth → /login) - Airbnb Style Profile -->
   <div id="modal-cuenta">
     <div class="cuenta-content">
       <span class="close-panel" onclick="cerrarCuenta()">×</span>
-      <div class="cuenta-avatar" id="cuentaAvatar">👤</div>
-      <div class="cuenta-nickname-display" id="cuentaNicknameDisplay" style="display:none;"></div>
-      <h2 id="cuentaTitle" style="text-align:center;">Tu Perfil</h2>
       
+      <!-- Not logged in state -->
       <div class="cuenta-form" id="cuentaForm" style="display:flex; flex-direction:column; gap:12px; width:100%; text-align:center;">
         
         <!-- Nibecar Cofeben Account Section -->
@@ -600,12 +637,279 @@
         </div>
       </div>
 
-      <div class="cuenta-info" id="cuentaInfo" style="display:none;">
-        <div class="cuenta-info-row"><span id="cuentaLblEmail">Correo</span><span id="cuentaEmail" style="font-size:0.85rem; word-break:break-all;"></span></div>
-        <div class="cuenta-info-row"><span id="cuentaLblLang">Idioma</span><span id="cuentaIdioma">ES</span></div>
-        <div class="cuenta-info-row"><span id="cuentaLblTheme">Tema</span><span id="cuentaTema">Oscuro</span></div>
-        <div class="cuenta-info-row"><span id="cuentaLblTrips">Viajes guardados</span><span id="cuentaViajes">0</span></div>
-        <button class="cuenta-logout" id="cuentaLogoutBtn" onclick="cerrarSesion()">Cerrar sesión</button>
+      <!-- Logged in state - Airbnb Style Profile -->
+      <div class="cuenta-profile" id="cuentaProfile" style="display:none; flex-direction:column; gap:16px;">
+        
+        <!-- Airbnb-style Card Profile wrapper -->
+        <div class="airbnb-profile-card" style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:24px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.4); display:flex; flex-direction:column; gap:16px; align-items:stretch; margin-bottom:10px;">
+          
+          <!-- Avatar, Name & Email row -->
+          <div style="display:flex; align-items:center; gap:16px;">
+            <div class="profile-avatar" id="profileAvatar" style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-size:28px; box-shadow:0 4px 15px rgba(52,211,153,0.3); flex-shrink:0;">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:3px; overflow:hidden;">
+              <h2 id="profileName" style="margin:0; font-size:1.3rem; font-weight:700; color:white; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Usuario</h2>
+              <p id="profileEmail" style="margin:0; color:var(--gris); font-size:0.8rem; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">email@ejemplo.com</p>
+              <div class="profile-badge" id="profileBadge" style="display:inline-flex; align-items:center; gap:4px; margin-top:2px; padding:3px 10px; background:rgba(52,211,153,0.1); border:1px solid var(--verde); border-radius:20px; font-size:0.7rem; color:var(--verde); width:fit-content;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span id="profileMemberSince">Miembro desde 2024</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Main Stats Row -->
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:12px 0; border-top:1px solid var(--border); text-align:center;">
+            <div style="border-right:1px solid var(--border);">
+              <div class="stat-value" id="statTrips" style="font-size:1.4rem; font-weight:800; color:var(--verde);">0</div>
+              <div style="font-size:0.65rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px;">Viajes</div>
+            </div>
+            <div style="border-right:1px solid var(--border);">
+              <div class="stat-value" id="statDestinations" style="font-size:1.4rem; font-weight:800; color:var(--azul);">0</div>
+              <div style="font-size:0.65rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px;">Destinos</div>
+            </div>
+            <div>
+              <div class="stat-value" id="statDays" style="font-size:1.4rem; font-weight:800; color:var(--naranja);">0</div>
+              <div style="font-size:0.65rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px;">Días</div>
+            </div>
+          </div>
+
+          <!-- Extra Stats Row -->
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding-top:10px; border-top:1px dashed var(--border); text-align:center; font-size:0.75rem;">
+            <div>
+              <span style="color:var(--gris);">Actividades:</span> <strong id="statEvents" style="color:var(--rosa);">0</strong>
+            </div>
+            <div>
+              <span style="color:var(--gris);">Países:</span> <strong id="statCountries" style="color:var(--morado);">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unified Account Actions (SVG Icons) - EN FILA (Horizontal Scroll) -->
+        <div class="profile-actions" style="display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; margin-top:10px; padding-bottom:15px; scrollbar-width:none;">
+          <style>.profile-actions::-webkit-scrollbar { display:none; }</style>
+          
+          <!-- Familia y amigos -->
+          <button onclick="window.abrirAmigos()" style="scroll-snap-align:start; flex:0 0 110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px 10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:16px; color:var(--blanco); cursor:pointer;">
+            <div style="width:40px; height:40px; border-radius:12px; background:rgba(96,165,250,0.15); display:flex; align-items:center; justify-content:center; color:var(--azul);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <div style="text-align:center; font-weight:600; font-size:0.85rem; line-height:1.2;">Familia<br>y amigos</div>
+          </button>
+
+          <!-- Seguridad y contraseña -->
+          <button onclick="window.abrirSeguridad()" style="scroll-snap-align:start; flex:0 0 110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px 10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:16px; color:var(--blanco); cursor:pointer;">
+            <div style="width:40px; height:40px; border-radius:12px; background:rgba(167,139,250,0.15); display:flex; align-items:center; justify-content:center; color:var(--morado);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <div style="text-align:center; font-weight:600; font-size:0.85rem; line-height:1.2;">Seguridad</div>
+          </button>
+
+          <!-- Tus viajes -->
+          <button onclick="verMisViajes()" style="scroll-snap-align:start; flex:0 0 110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px 10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:16px; color:var(--blanco); cursor:pointer;">
+            <div style="width:40px; height:40px; border-radius:12px; background:rgba(52,211,153,0.15); display:flex; align-items:center; justify-content:center; color:var(--verde);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+            </div>
+            <div style="text-align:center; font-weight:600; font-size:0.85rem; line-height:1.2;">Tus viajes</div>
+          </button>
+
+          <!-- Personalizar -->
+          <button onclick="abrirPreferencias()" style="scroll-snap-align:start; flex:0 0 110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px 10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:16px; color:var(--blanco); cursor:pointer;">
+            <div style="width:40px; height:40px; border-radius:12px; background:rgba(251,146,60,0.15); display:flex; align-items:center; justify-content:center; color:var(--naranja);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            </div>
+            <div style="text-align:center; font-weight:600; font-size:0.85rem; line-height:1.2;">Personalizar</div>
+          </button>
+
+          <!-- Info -->
+          <button onclick="window.abrirInfo()" style="scroll-snap-align:start; flex:0 0 110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px 10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:16px; color:var(--blanco); cursor:pointer;">
+            <div style="width:40px; height:40px; border-radius:12px; background:rgba(156,163,175,0.15); display:flex; align-items:center; justify-content:center; color:var(--gris);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            </div>
+            <div style="text-align:center; font-weight:600; font-size:0.85rem; line-height:1.2;">Info</div>
+          </button>
+        </div>
+
+        <!-- Soporte en perfil -->
+        <button onclick="abrirSupport()" id="profileSoporteBtn" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); border-radius:16px; color:#a78bfa; font-weight:600; cursor:pointer; margin-top:0;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span>Soporte y sugerencias</span>
+        </button>
+
+        <!-- Cerrar sesión (Full width button) -->
+        <button onclick="cerrarSesion()" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:16px; color:var(--rojo); font-weight:600; cursor:pointer; transition:all 0.2s;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Amigos (Familia y Amigos) -->
+  <div id="modal-amigos" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:400; padding:10px;">
+    <div class="cuenta-content" style="max-width:460px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
+      
+      <!-- Modal Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <button class="mobile-back-btn" onclick="window.cerrarAmigos()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Volver</span>
+        </button>
+        <h2 style="margin:0; font-size:1.4rem; color:var(--verde); font-weight:700;">Familia y amigos</h2>
+        <span class="close-panel" onclick="window.cerrarAmigos()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
+      </div>
+
+      <!-- Add Friend Form -->
+      <div style="display:flex; gap:10px; width:100%;">
+        <input type="text" id="friend-nickname-input" placeholder="Nickname del amigo (ej: juan)" style="flex:1; padding:12px 16px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:12px; color:white; font-size:0.95rem;">
+        <button onclick="window.agregarAmigoPorNickname()" style="padding:12px 20px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer; font-size:0.9rem;">Agregar</button>
+      </div>
+
+      <!-- Friends List Container -->
+      <div id="friends-list-container" style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-top:10px; scrollbar-width:thin;">
+        <!-- Friends will be rendered dynamically here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Detalle Amigo -->
+  <div id="modal-detalle-amigo" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:500; padding:10px;">
+    <div class="cuenta-content" style="max-width:440px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
+      
+      <!-- Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <button class="mobile-back-btn" onclick="window.cerrarDetalleAmigo()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Volver</span>
+        </button>
+        <h2 id="detalleAmigoTitle" style="margin:0; font-size:1.3rem; color:white; font-weight:700;">Perfil de Amigo</h2>
+        <span class="close-panel" onclick="window.cerrarDetalleAmigo()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
+      </div>
+
+      <!-- Friend Profile Content -->
+      <div id="friend-detail-content" style="display:flex; flex-direction:column; gap:16px; text-align:center;">
+        <!-- Avatar & Info -->
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+          <div id="friendDetailAvatar" style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-size:28px; box-shadow:0 4px 15px rgba(52,211,153,0.3);">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <h3 id="friendDetailName" style="margin:0; font-size:1.4rem; color:white; font-weight:700;">@nickname</h3>
+          <p id="friendDetailConnection" style="margin:0; font-size:0.8rem; color:var(--gris);">Última conexión: --</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:16px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); text-align:center;">
+          <div>
+            <div id="friendStatTrips" style="font-size:1.4rem; font-weight:800; color:var(--verde);">0</div>
+            <div style="font-size:0.65rem; color:var(--gris); text-transform:uppercase;">Viajes</div>
+          </div>
+          <div>
+            <div id="friendStatDestinations" style="font-size:1.4rem; font-weight:800; color:var(--azul);">0</div>
+            <div style="font-size:0.65rem; color:var(--gris); text-transform:uppercase;">Destinos</div>
+          </div>
+          <div>
+            <div id="friendStatDays" style="font-size:1.4rem; font-weight:800; color:var(--naranja);">0</div>
+            <div style="font-size:0.65rem; color:var(--gris); text-transform:uppercase;">Días</div>
+          </div>
+        </div>
+
+        <!-- Extra Stats Row -->
+        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; text-align:center; font-size:0.8rem;">
+          <div>
+            <span style="color:var(--gris);">Actividades:</span> <strong id="friendStatEvents" style="color:var(--rosa);">0</strong>
+          </div>
+          <div>
+            <span style="color:var(--gris);">Países:</span> <strong id="friendStatCountries" style="color:var(--morado);">0</strong>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button id="friendDetailShareBtn" class="btn-add-feed" style="margin-top:10px; padding:14px; background:rgba(52,211,153,0.1); border:1px solid var(--verde); border-radius:12px; color:var(--verde); font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          <span>Compartir viaje actual</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Seguridad -->
+  <div id="modal-seguridad" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:400; padding:10px;">
+    <div class="cuenta-content" style="max-width:400px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <button class="mobile-back-btn" onclick="window.cerrarSeguridad()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Volver</span>
+        </button>
+        <h2 id="seguridadTitle" style="margin:0; font-size:1.3rem; color:var(--verde); font-weight:700;">Seguridad</h2>
+        <span class="close-panel" onclick="window.cerrarSeguridad()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; width:100%;">
+        <p style="color:var(--gris); font-size:0.9rem; margin:0;" id="seguridadNickLabel">Usuario actual: <strong style="color:white;" id="seguridad-username">@nickname</strong></p>
+        <input type="password" id="seguridad-new-password" placeholder="Nueva contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%;">
+        <input type="password" id="seguridad-confirm-password" placeholder="Confirmar contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%;">
+        <button id="seguridadSaveBtn" onclick="window.guardarNuevaContrasena()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Info -->
+  <div id="modal-info" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:400; padding:10px;">
+    <div class="cuenta-content" style="max-width:440px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <button class="mobile-back-btn" onclick="window.cerrarInfo()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Volver</span>
+        </button>
+        <h2 id="infoTitle" style="margin:0; font-size:1.3rem; color:white; font-weight:700;">Acerca de Plux</h2>
+        <span class="close-panel" onclick="window.cerrarInfo()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px; color:var(--blanco); font-size:0.95rem; line-height:1.5; text-align:left;">
+        <p id="infoDesc">Plux es tu planificador de viajes definitivo. Organiza destinos, itinerarios, presupuestos, notas y colabora con amigos en tiempo real.</p>
+        <div style="border-top:1px dashed var(--border); padding-top:12px;">
+          <p id="infoCreatedBy" style="margin:0; color:var(--gris); font-size:0.85rem;">Creado por nibecar cofeben</p>
+          <p id="infoVersion" style="margin:4px 0 0 0; color:var(--verde); font-weight:bold; font-size:0.85rem;">Versión 6.00</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu de opciones de viaje para celular (Bottom Drawer) -->
+  <div id="mobile-trip-menu" class="mobile-drawer" style="display: none;">
+    <div class="mobile-drawer-overlay" onclick="window.toggleMobileTripMenu()"></div>
+    <div class="mobile-drawer-content">
+      <div class="mobile-drawer-handle"></div>
+      <div class="mobile-drawer-header">
+        <h3 id="mobileMenuTitle">Opciones del viaje</h3>
+      </div>
+      <div class="mobile-drawer-actions">
+        <button class="mobile-drawer-item" onclick="window.mobileActionInvitar()">
+          <span class="icon">👥</span>
+          <span id="mobileMenuInvite">Invitar colaboradores</span>
+        </button>
+        <button class="mobile-drawer-item" onclick="window.mobileActionEmpezarDeCero()">
+          <span class="icon" style="color: #ef4444;">🆕</span>
+          <span id="mobileMenuScratch" style="color: #ef4444;">Empezar viaje de cero</span>
+        </button>
+        <button class="mobile-drawer-item" onclick="window.mobileActionImportar()">
+          <span class="icon">📥</span>
+          <span id="mobileMenuImport">Importar viaje (JSON)</span>
+        </button>
+        <button class="mobile-drawer-item" onclick="window.mobileActionExportar()">
+          <span class="icon">📤</span>
+          <span id="mobileMenuExport">Exportar viaje (JSON)</span>
+        </button>
+        <button class="mobile-drawer-item" onclick="window.mobileActionVerMapa()">
+          <span class="icon">🗺️</span>
+          <span id="mobileMenuMap">Ver mapa</span>
+        </button>
+        <button class="mobile-drawer-item" onclick="window.mobileActionSoporte()">
+          <span class="icon">💬</span>
+          <span id="mobileMenuSupport">Soporte y Sugerencias</span>
+        </button>
+        <button class="mobile-drawer-item cancel-item" onclick="window.toggleMobileTripMenu()">
+          <span class="icon">✕</span>
+          <span id="mobileMenuClose">Cancelar</span>
+        </button>
       </div>
     </div>
   </div>

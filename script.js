@@ -1110,6 +1110,107 @@
     let vueltaPrecioGlobal = 0;
     let vueltaCostosAdicionales = [];
     let numPersonas = 1;
+    let nombresPersonasGlobal = "";
+    let listaViajeros = [];
+
+    window.renderTravelerChips = function() {
+      const container = document.getElementById('travelers-chips-list');
+      if (!container) return;
+      container.innerHTML = '';
+      listaViajeros.forEach((item, idx) => {
+        const isUser = item.startsWith('@');
+        const chip = document.createElement('div');
+        chip.className = `traveler-chip ${isUser ? 'user-tag' : 'name-tag'}`;
+        chip.innerHTML = `
+          <span>${isUser ? '👤 ' + item : '👤 ' + item}</span>
+          <span class="traveler-chip-remove" onclick="eliminarViajeroChip(${idx})" title="Eliminar">×</span>
+        `;
+        container.appendChild(chip);
+      });
+
+      nombresPersonasGlobal = listaViajeros.join(', ');
+      const npInput = document.getElementById('nombresPersonas');
+      if (npInput) npInput.value = nombresPersonasGlobal;
+
+      if (listaViajeros.length > numPersonas) {
+        numPersonas = listaViajeros.length;
+        const numPInput = document.getElementById('numPersonas');
+        if (numPInput) numPInput.value = numPersonas;
+      }
+    };
+
+    window.autoCompartirConUsuario = async function(targetNick) {
+      if (!targetNick) return;
+      const cleanNick = targetNick.replace(/^@/, '').trim();
+      if (!cleanNick) return;
+      if (typeof currentNickname !== 'undefined' && currentNickname && cleanNick === currentNickname) return;
+
+      if (typeof db === 'undefined' || !db) {
+        return;
+      }
+
+      try {
+        const userDoc = await db.collection('plux_usuarios').doc(cleanNick).get();
+        if (!userDoc.exists) {
+          showToast(`Acompañante @${cleanNick} añadido (no registrado en Plux aún)`, 'info');
+          return;
+        }
+
+        if (typeof syncCode === 'undefined' || !syncCode) {
+          if (typeof generarCodigoInApp === 'function') {
+            generarCodigoInApp();
+          }
+          await new Promise(r => setTimeout(r, 400));
+        }
+
+        if (typeof syncCode !== 'undefined' && syncCode) {
+          const owner = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Anónimo';
+          await db.collection('plux_viajes_compartidos').doc(syncCode).set({
+            colaboradores: firebase.firestore.FieldValue.arrayUnion(cleanNick),
+            [`colaboradores_roles.${cleanNick}`]: 'editor',
+            propietario: owner,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+
+          showToast(`✨ ¡Viaje compartido automáticamente con @${cleanNick}!`, 'success');
+        }
+      } catch (e) {
+        console.error('Error al compartir automáticamente:', e);
+      }
+    };
+
+    window.agregarViajeroChip = function(val) {
+      if (!val) return;
+      let cleanVal = val.trim();
+      if (!cleanVal) return;
+      cleanVal = cleanVal.replace(/,/g, '').trim();
+      if (!cleanVal) return;
+
+      if (!listaViajeros.includes(cleanVal)) {
+        listaViajeros.push(cleanVal);
+        window.renderTravelerChips();
+        autoSave();
+        if (document.getElementById('pantalla-resumen').style.display === 'flex') {
+          renderResumen();
+        }
+
+        if (cleanVal.startsWith('@')) {
+          window.autoCompartirConUsuario(cleanVal);
+        }
+      }
+    };
+
+    window.eliminarViajeroChip = function(idx) {
+      if (idx >= 0 && idx < listaViajeros.length) {
+        listaViajeros.splice(idx, 1);
+        window.renderTravelerChips();
+        autoSave();
+        if (document.getElementById('pantalla-resumen').style.display === 'flex') {
+          renderResumen();
+        }
+      }
+    };
+
     let map = null;
     let markersLayer = null;
     const STORAGE_KEY = 'PluxUniversal_V1'; // Universal key for both apps
@@ -1969,9 +2070,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       // Add user message
       agregarMensajeChat('user', texto);
       
-      // Add typing indicator
+      // Add animated Pluxy thinking indicator
       const typingId = 'typing-' + Date.now();
-      agregarMensajeChat('ai typing', 'Pensando...', typingId);
+      const thinkingPhrase = getPluxyThinkingPhrase(texto);
+      agregarMensajeChat('ai typing', thinkingPhrase, typingId);
 
       // Build context
       const destContext = destinos.length > 0
@@ -2454,11 +2556,42 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     function agregarMensajeChat(tipo, texto, id) {
       const container = document.getElementById('chat-messages');
       const div = document.createElement('div');
-      div.className = `chat-msg ${tipo}`;
-      if (id) div.id = id;
-      div.innerHTML = texto.replace(/\n/g, '<br>');
+      if (tipo.includes('typing')) {
+        div.className = 'chat-msg ai pluxy-thinking-msg';
+        if (id) div.id = id;
+        div.innerHTML = `
+          <img src="/plux/pet.png" style="height:26px; width:auto; flex-shrink:0;">
+          <span style="flex:1; color:var(--gris); font-style:italic;">${texto}</span>
+          <span class="pluxy-thinking-dots"><span></span><span></span><span></span></span>`;
+      } else if (tipo.includes('ai')) {
+        div.className = `chat-msg ${tipo}`;
+        if (id) div.id = id;
+        div.style.display = 'flex';
+        div.style.gap = '10px';
+        div.style.alignItems = 'flex-start';
+        div.innerHTML = `
+          <img src="/plux/pet.png" style="height:26px; width:auto; flex-shrink:0; margin-top:2px;">
+          <div style="flex:1; line-height:1.5;">${texto.replace(/\n/g, '<br>')}</div>`;
+      } else {
+        div.className = `chat-msg ${tipo}`;
+        if (id) div.id = id;
+        div.innerHTML = texto.replace(/\n/g, '<br>');
+      }
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
+    }
+
+    const _pluxyThinkingPhrases = [
+      'Pensando en tu viaje...', 'Añadiendo destinos...', 'Fabricando tu itinerario...', 'Consultando los datos...', 'Calculando la mejor ruta...'
+    ];
+    function getPluxyThinkingPhrase(texto) {
+      const lower = (texto || '').toLowerCase();
+      if (lower.includes('destino') || lower.includes('ciudad') || lower.includes('agregar')) return '📍 Añadiendo destinos...';
+      if (lower.includes('itinerario') || lower.includes('planear') || lower.includes('plan')) return '🗺️ Fabricando tu itinerario...';
+      if (lower.includes('clima') || lower.includes('tiempo') || lower.includes('lluvia')) return '🌤️ Consultando el clima...';
+      if (lower.includes('costo') || lower.includes('precio') || lower.includes('cuánto')) return '💰 Calculando costos...';
+      if (lower.includes('checklist') || lower.includes('lista')) return '📋 Preparando tu checklist...';
+      return '✨ Pluxy está pensando...';
     }
 
     // ================== INSPIRATION CARDS ==================
@@ -2727,6 +2860,215 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       document.getElementById('modal-descubrir').style.display = 'none';
     }
 
+    // ================== CITY AUTOCOMPLETE ==================
+    let citySearchTimeout = null;
+    function getCountryEmoji(countryCode) {
+      if (!countryCode || countryCode.length !== 2) return '📍';
+      const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
+      return String.fromCodePoint(...codePoints);
+    }
+
+    function setupCityAutocomplete() {
+      const input = document.getElementById('nuevoDestino');
+      const dropdown = document.getElementById('city-autocomplete-dropdown');
+      if (!input || !dropdown) return;
+
+      input.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        clearTimeout(citySearchTimeout);
+        if (val.length < 2) {
+          dropdown.style.display = 'none';
+          dropdown.innerHTML = '';
+          return;
+        }
+
+        dropdown.style.display = 'block';
+        dropdown.innerHTML = `<div class="city-autocomplete-loading">🔍 Buscando "${val}"...</div>`;
+
+        citySearchTimeout = setTimeout(async () => {
+          try {
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=6&language=${currentLang || 'es'}&format=json`;
+            const res = await fetch(url);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data.results || data.results.length === 0) {
+              dropdown.innerHTML = `<div class="city-autocomplete-loading">No se encontraron ciudades</div>`;
+              return;
+            }
+
+            let html = '';
+            data.results.forEach(item => {
+              const flag = getCountryEmoji(item.country_code);
+              const countryName = item.country || item.country_code || '';
+              const stateName = item.admin1 ? `${item.admin1}, ` : '';
+              html += `
+                <div class="city-autocomplete-item" onclick="selectCityFromDropdown('${item.name.replace(/'/g, "\\'")}', '${(item.country_code || '').toUpperCase()}')">
+                  <span class="city-ac-flag">${flag}</span>
+                  <div class="city-ac-info">
+                    <div class="city-ac-name">${item.name}</div>
+                    <div class="city-ac-country">${stateName}${countryName} (${item.country_code || ''})</div>
+                  </div>
+                </div>`;
+            });
+            dropdown.innerHTML = html;
+          } catch (err) {
+            console.warn('City autocomplete error:', err);
+            dropdown.style.display = 'none';
+          }
+        }, 300);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.style.display = 'none';
+        }
+      });
+    }
+
+    function selectCityFromDropdown(cityName, countryCode) {
+      const input = document.getElementById('nuevoDestino');
+      const dropdown = document.getElementById('city-autocomplete-dropdown');
+      if (input) {
+        input.value = countryCode ? `${cityName}, ${countryCode}` : cityName;
+      }
+      if (dropdown) dropdown.style.display = 'none';
+      agregarDestino();
+    }
+
+    // ================== ENTER KEY LISTENERS ==================
+    function setupEnterKeyListeners() {
+      const attachEnter = (elementId, callback) => {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            callback();
+          }
+        });
+      };
+
+      attachEnter('nuevoDestino', () => {
+        const dropdown = document.getElementById('city-autocomplete-dropdown');
+        if (dropdown && dropdown.style.display !== 'none') {
+          dropdown.style.display = 'none';
+        }
+        agregarDestino();
+      });
+
+      attachEnter('lugarSalida', () => {
+        document.getElementById('nuevoDestino')?.focus();
+      });
+
+      attachEnter('login-nickname', () => window.loginNickname());
+      attachEnter('login-password', () => window.loginNickname());
+      attachEnter('register-password', () => window.crearCuentaNickname());
+      attachEnter('clima-search-input', () => window.buscarClimaModal());
+      attachEnter('friend-nickname-input', () => window.agregarAmigoPorNickname());
+      attachEnter('invite-nickname-input', () => window.invitarColaboradorPorNickname());
+      attachEnter('join-code-input-herramientas', () => window.unirseAViaje('join-code-input-herramientas'));
+      attachEnter('join-code-input-viajes', () => window.unirseAViaje('join-code-input-viajes'));
+    }
+
+    // ================== POPSTATE / BROWSER BACK BUTTON ==================
+    function setupPopstateNavigation() {
+      window.addEventListener('popstate', (e) => {
+        const visibleModals = document.querySelectorAll('[id^="modal-"]');
+        let closedModal = false;
+        visibleModals.forEach(m => {
+          if (m.style.display === 'flex' || m.style.display === 'block') {
+            m.style.display = 'none';
+            closedModal = true;
+          }
+        });
+        if (closedModal) return;
+
+        const resumen = document.getElementById('pantalla-resumen');
+        if (resumen && resumen.style.display === 'flex') {
+          cerrarResumen();
+          return;
+        }
+
+        const app = document.getElementById('app');
+        if (app && app.style.display !== 'none') {
+          volverAWelcome();
+        }
+      });
+    }
+
+    // ================== URL JOIN CODE SUPPORT ==================
+    function checkUrlJoinCode() {
+      const path = window.location.pathname;
+      const match = path.match(/\/plux\/([A-Z0-9]{4}-[A-Z0-9]{4}|[A-Za-z0-9]{4,10})/i);
+      const searchParams = new URLSearchParams(window.location.search);
+      const joinParam = searchParams.get('join') || searchParams.get('code');
+      const code = (match && match[1]) || joinParam;
+
+      if (code && code.toUpperCase() !== 'PLUX') {
+        setTimeout(() => {
+          showToast(`Uniéndose al viaje por enlace (${code.toUpperCase()})...`, 'info');
+          cargarViajeCompartido(code.toUpperCase());
+        }, 1000);
+      }
+    }
+
+    // ================== QUICK START GUIDE ==================
+    function mostrarGuiaComoEmpezar() {
+      cerrarSupport();
+      let modal = document.getElementById('modal-como-empezar');
+      if (!modal) {
+        const html = `
+          <div id="modal-como-empezar" class="modal-como-empezar" onclick="if(event.target===this)this.remove()">
+            <div class="como-empezar-content">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="color:var(--verde); margin:0;">🚀 Cómo empezar en Plux</h2>
+                <span onclick="document.getElementById('modal-como-empezar').remove()" style="cursor:pointer; font-size:2rem; color:var(--gris);">×</span>
+              </div>
+              
+              <div class="como-empezar-step">
+                <div class="como-empezar-step-num">1</div>
+                <div class="como-empezar-step-text">
+                  <h4>Elige tu Origen y Fecha</h4>
+                  <p>Indica desde dónde saldrás y cuántas personas viajan. La fecha sirve para calcular automáticamente el clima exacto.</p>
+                </div>
+              </div>
+
+              <div class="como-empezar-step">
+                <div class="como-empezar-step-num">2</div>
+                <div class="como-empezar-step-text">
+                  <h4>Añade tus Destinos</h4>
+                  <p>Escribe cualquier ciudad del mundo. El selector inteligente te sugerirá el país exacto (ej. Roma, IT vs Rome, US).</p>
+                </div>
+              </div>
+
+              <div class="como-empezar-step">
+                <div class="como-empezar-step-num">3</div>
+                <div class="como-empezar-step-text">
+                  <h4>Genera con IA (Pluxy)</h4>
+                  <p>Toca 🪄 Generar itinerario en cualquier destino o habla con Pluxy para armar actividades, alojamientos y transportes automáticamente.</p>
+                </div>
+              </div>
+
+              <div class="como-empezar-step">
+                <div class="como-empezar-step-num">4</div>
+                <div class="como-empezar-step-text">
+                  <h4>Invita a tus Amigos</h4>
+                  <p>Comparte el código único de tu viaje para planificar en tiempo real con tu familia o amigos sin complicaciones.</p>
+                </div>
+              </div>
+
+              <button onclick="document.getElementById('modal-como-empezar').remove(); document.getElementById('startBtn').click();" class="btn-add-feed" style="width:100%; padding:15px; margin-top:15px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; font-size:1.05rem;">¡Empezar mi viaje ahora!</button>
+            </div>
+          </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+      } else {
+        modal.style.display = 'flex';
+      }
+    }
+
     // ================== INICIALIZACIÓN ==================
     document.addEventListener('DOMContentLoaded', async function() {
       inicializarCuenta();
@@ -2734,6 +3076,11 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       
       await loadKeys();
       await initFirebaseAuth();
+
+      setupCityAutocomplete();
+      setupEnterKeyListeners();
+      setupPopstateNavigation();
+      checkUrlJoinCode();
       
       loadFromStorage();
       const savedTheme = localStorage.getItem('PluxTheme') || 'theme-oscuro';
@@ -2791,21 +3138,50 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
       document.getElementById('numPersonas').value = numPersonas;
       document.getElementById('numPersonas').addEventListener('change', (e) => { numPersonas = parseInt(e.target.value) || 1; autoSave(); });
+      const npInput = document.getElementById('nombresPersonas');
+      if (npInput) {
+        npInput.value = nombresPersonasGlobal;
+      }
+      const chipInput = document.getElementById('traveler-chip-input');
+      if (chipInput) {
+        chipInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            window.agregarViajeroChip(chipInput.value);
+            chipInput.value = '';
+          }
+        });
+        chipInput.addEventListener('blur', () => {
+          if (chipInput.value.trim()) {
+            window.agregarViajeroChip(chipInput.value);
+            chipInput.value = '';
+          }
+        });
+      }
+      window.renderTravelerChips();
       document.getElementById('lugarSalida').value = lugarSalida;
       document.getElementById('lugarSalida').addEventListener('change', (e) => { lugarSalida = e.target.value; autoSave(); });
       document.getElementById('vuelta').value = vueltaGlobal;
       document.getElementById('vueltaPrecio').value = vueltaPrecioGlobal;
       document.getElementById('vuelta').addEventListener('change', (e) => { vueltaGlobal = e.target.value; autoSave(); });
       document.getElementById('vueltaPrecio').addEventListener('change', (e) => { vueltaPrecioGlobal = parseFloat(e.target.value) || 0; autoSave(); });
-      document.getElementById('fechaInicio').addEventListener('change', () => { autoSave(); });
+      document.getElementById('fechaInicio').addEventListener('change', () => {
+        autoSave();
+        renderDestinos();
+        if (document.getElementById('pantalla-resumen').style.display === 'flex') {
+          renderResumen();
+        }
+      });
 
-      const hoy = new Date();
-      const año = hoy.getFullYear();
-      const mes = String(hoy.getMonth()+1).padStart(2,'0');
-      const dia = String(hoy.getDate()).padStart(2,'0');
-      const horas = String(hoy.getHours()).padStart(2,'0');
-      const minutos = String(hoy.getMinutes()).padStart(2,'0');
-      document.getElementById('fechaInicio').value = `${año}-${mes}-${dia}T${horas}:${minutos}`;
+      if (!document.getElementById('fechaInicio').value) {
+        const hoy = new Date();
+        const año = hoy.getFullYear();
+        const mes = String(hoy.getMonth()+1).padStart(2,'0');
+        const dia = String(hoy.getDate()).padStart(2,'0');
+        const horas = String(hoy.getHours()).padStart(2,'0');
+        const minutos = String(hoy.getMinutes()).padStart(2,'0');
+        document.getElementById('fechaInicio').value = `${año}-${mes}-${dia}T${horas}:${minutos}`;
+      }
 
       // LABS: Atajo de teclado y checklist render
       window.addEventListener('keydown', (e) => {
@@ -3205,9 +3581,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     // ============================================================
     const OPENROUTER_FREE_MODELS = [
       'meta-llama/llama-3.3-70b-instruct:free',
-      'meta-llama/llama-3.2-3b-instruct:free',
-      'qwen/qwen3-coder:free',
-      'deepseek/deepseek-v4-flash:free'
+      'google/gemini-2.0-flash-exp:free',
+      'qwen/qwen-2.5-coder-32b-instruct:free',
+      'deepseek/deepseek-r1:free',
+      'meta-llama/llama-3.1-8b-instruct:free'
     ];
     const AI_SYSTEM_PROMPT = 'You are a travel planning AI. CRITICAL: You MUST respond with ONLY valid JSON. NO greetings, NO explanations, NO markdown code blocks, NO conversational text. Just the raw JSON object.';
 
@@ -3231,7 +3608,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       };
 
-      // 1. Try OpenRouter (FREE models  cycle through until one works)
+      // 1. Try OpenRouter (FREE models cycle through until one works)
       if (OPENROUTER_API_KEY) {
         for (const model of OPENROUTER_FREE_MODELS) {
           try {
@@ -3261,7 +3638,6 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
               console.log(` AI_CORE: éxito con OpenRouter [${model}].`);
               return content;
             } else if (content) {
-              // Try to extract JSON from response
               const jsonMatch = content.match(/\{[\s\S]*\}/);
               if (jsonMatch) { console.log(' AI_CORE: JSON extraído de OpenRouter.'); return jsonMatch[0]; }
             }
@@ -3272,35 +3648,39 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       }
 
-      // 2. Try Gemini 1.5 Flash
-      try {
-        console.log(' AI_CORE: Intentando con Gemini 1.5 Flash...');
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-        const resp = await fetchWithTimeout(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `${AI_SYSTEM_PROMPT}\n\n${prompt}`
-              }]
-            }],
-            generationConfig: {
-              responseMimeType: useJson ? "application/json" : "text/plain",
-              temperature: 0.3
+      // 2. Try Gemini 2.0 & 1.5 Flash
+      if (GEMINI_API_KEY) {
+        const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+        for (const gModel of geminiModels) {
+          try {
+            console.log(` AI_CORE: Intentando con Gemini [${gModel}]...`);
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${GEMINI_API_KEY}`;
+            const resp = await fetchWithTimeout(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [{
+                    text: `${AI_SYSTEM_PROMPT}\n\n${prompt}`
+                  }]
+                }],
+                generationConfig: {
+                  responseMimeType: useJson ? "application/json" : "text/plain",
+                  temperature: 0.3
+                }
+              })
+            }, 15000);
+            if (!resp.ok) continue;
+            const data = await resp.json();
+            const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (content) {
+              console.log(` AI_CORE: éxito con Gemini [${gModel}].`);
+              return content;
             }
-          })
-        }, 15000);
-        const data = await resp.json();
-        const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (content) {
-          console.log(' AI_CORE: éxito con Gemini.');
-          return content;
-        } else {
-          console.warn(' AI_CORE: Gemini no devolvió contenido válido.', data);
+          } catch (e) {
+            console.warn(` AI_CORE: Error en Gemini [${gModel}]:`, e.message);
+          }
         }
-      } catch (e) {
-        console.warn(' AI_CORE: Error en Gemini:', e.message);
       }
 
       // 3. Try Groq (Llama 3 70B)
@@ -4000,7 +4380,11 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const fechaEl = document.getElementById('fechaInicio');
       const fecha = fechaEl?.value ? new Date(fechaEl.value).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
       const subtitleEl = document.getElementById('resumen-subtitle');
-      if (subtitleEl) subtitleEl.textContent = fecha ? `Partida: ${fecha} • ${destinos.map(d=>d.nombre).join(' → ')}` : destinos.map(d=>d.nombre).join(' → ');
+      if (subtitleEl) {
+        let sub = fecha ? `Partida: ${fecha} • ${destinos.map(d=>d.nombre).join(' → ')}` : destinos.map(d=>d.nombre).join(' → ');
+        if (nombresPersonasGlobal) sub += ` • Viajeros: ${nombresPersonasGlobal}`;
+        subtitleEl.textContent = sub;
+      }
 
       // Stat cards
       const statGrid = document.getElementById('stat-grid');
@@ -4010,7 +4394,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value">${totalEventos}</div><div class="stat-label">Actividades</div></div>
           <div class="stat-card"><div class="stat-icon">🌍</div><div class="stat-value">${destinos.length}</div><div class="stat-label">Destinos</div></div>
           <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${costoGlobal.toFixed(0)}€</div><div class="stat-label">Total</div></div>
-          <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-value">${numPersonas > 0 ? (costoGlobal/numPersonas).toFixed(0) : 0}€</div><div class="stat-label">Por persona</div></div>
+          <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-value">${numPersonas > 0 ? (costoGlobal/numPersonas).toFixed(0) : 0}€</div><div class="stat-label">Por persona</div>${nombresPersonasGlobal ? `<div style="font-size:0.72rem; color:var(--verde); margin-top:4px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${nombresPersonasGlobal}">${nombresPersonasGlobal}</div>` : ''}</div>
         `;
       }
 
@@ -4560,11 +4944,37 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       return schedule;
     }
 
+    function getSeasonalWeatherEstimate(city, dateStr) {
+      let month = new Date().getMonth();
+      if (dateStr) {
+        const d = new Date(dateStr + 'T12:00:00');
+        if (!isNaN(d.getTime())) month = d.getMonth();
+      }
+      const lowerCity = (city || '').toLowerCase();
+      const isSouthern = ['buenos aires', 'santiago', 'sydney', 'rio', 'sao paulo', 'auckland', 'montevideo', 'lima', 'melbourne'].some(c => lowerCity.includes(c));
+      let isWarm = (month >= 5 && month <= 7);
+      if (isSouthern) isWarm = !isWarm;
+
+      if (isWarm) {
+        return { emoji: '☀️', tempMax: 29, tempMin: 20, desc: '¡Caluroso! ⚠️ (Estimación climática)', isEstimate: true };
+      } else if (month >= 11 || month <= 1) {
+        return { emoji: '❄️', tempMax: 12, tempMin: 4, desc: '¡Fresco/Frío! ⚠️ (Estimación climática)', isEstimate: true };
+      } else {
+        return { emoji: '🌤️', tempMax: 22, tempMin: 13, desc: '¡Templado! ⚠️ (Estimación climática)', isEstimate: true };
+      }
+    }
+
     function getWeatherForTripDay(weatherData, dateStr, forecastIndex) {
-      if (!weatherData?.daily?.length) return null;
+      if (!weatherData?.daily?.length) return getSeasonalWeatherEstimate(weatherData?.city, dateStr);
       if (dateStr) {
         const byDate = weatherData.daily.find(d => d.date === dateStr);
         if (byDate) return byDate;
+        const targetDate = new Date(dateStr + 'T12:00:00');
+        const now = new Date();
+        const diffDays = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+        if (diffDays > 16 || diffDays < 0) {
+          return getSeasonalWeatherEstimate(weatherData.city, dateStr);
+        }
       }
       if (forecastIndex != null && weatherData.daily[forecastIndex]) {
         return weatherData.daily[forecastIndex];
@@ -4634,11 +5044,14 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           <span class="weather-chip-desc">${d.desc}</span>
         </div>`;
       if (!expanded || !weatherData) return row;
+      const metaText = d.isEstimate
+        ? `<p style="font-size:0.8rem;color:var(--naranja)">⚠️ Estimación climática estacional para la fecha elegida</p>`
+        : `<p style="font-size:0.8rem;color:var(--gris)">Sensación ${weatherData.feelsLike}° · Humedad ${weatherData.humidity}% · Viento ${weatherData.wind} km/h</p>`;
       return row + `
         <div class="weather-expanded">
           <p><strong>${weatherData.city}${weatherData.country ? ', ' + weatherData.country : ''}</strong>${dateStr ? `<br><small style="color:var(--gris)">${dateStr}</small>` : ''}</p>
           <p>${d.tempMax}° / ${d.tempMin}° · ${d.desc}</p>
-          <p style="font-size:0.8rem;color:var(--gris)">Sensación ${weatherData.feelsLike}° · Humedad ${weatherData.humidity}% · Viento ${weatherData.wind} km/h</p>
+          ${metaText}
         </div>`;
     }
 
@@ -5207,6 +5620,8 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         fecha: new Date().toISOString(),
         lugarSalida,
         numPersonas,
+        nombresPersonas: nombresPersonasGlobal,
+        listaViajeros: [...listaViajeros],
         fechaInicio: document.getElementById('fechaInicio').value,
         destinos,
         vueltaGlobal,
@@ -5236,8 +5651,17 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
       lugarSalida = viaje.lugarSalida || '';
       numPersonas = viaje.numPersonas || 1;
+      nombresPersonasGlobal = viaje.nombresPersonas || '';
+      if (viaje.listaViajeros && Array.isArray(viaje.listaViajeros)) {
+        listaViajeros = [...viaje.listaViajeros];
+      } else if (viaje.nombresPersonas) {
+        listaViajeros = viaje.nombresPersonas.split(',').map(s=>s.trim()).filter(Boolean);
+      } else {
+        listaViajeros = [];
+      }
       document.getElementById('lugarSalida').value = lugarSalida;
       document.getElementById('numPersonas').value = numPersonas;
+      window.renderTravelerChips();
       document.getElementById('fechaInicio').value = viaje.fechaInicio || '';
       destinos = viaje.destinos || [];
       vueltaGlobal = viaje.vueltaGlobal || '';
@@ -5507,13 +5931,43 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           }
           return;
         }
-        const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro&explaintext&exchars=100&pithumbsize=400&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=20&format=json&origin=*`;
-        const res = await fetch(url);
-        const data = await res.json();
+
+        let data = null;
+        const wikiUserAgent = '&Api-User-Agent=PluxTravelApp/6.0+(https://nibecar-cofeben.web.app)';
+        const wikiParams = `action=query&prop=extracts|pageimages&exintro&explaintext&exchars=120&pithumbsize=400&generator=geosearch&ggsradius=15000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=25&format=json&origin=*${wikiUserAgent}`;
+
+        try {
+          const res = await fetch(`https://es.wikipedia.org/w/api.php?${wikiParams}`);
+          if (res.ok) data = await res.json();
+        } catch (e) {
+          console.warn('Wikipedia ES error:', e);
+        }
+
+        if (!data || !data.query || !data.query.pages) {
+          try {
+            const resEn = await fetch(`https://en.wikipedia.org/w/api.php?${wikiParams}`);
+            if (resEn.ok) data = await resEn.json();
+          } catch (e) {
+            console.warn('Wikipedia EN error:', e);
+          }
+        }
         
-        if (!data.query || !data.query.pages) {
+        if (!data || !data.query || !data.query.pages) {
           if (!isSupplement) {
-            resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Sin resultados en Wikipedia.</p>';
+            resultados.innerHTML = `
+              <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px; padding:20px;">
+                <div class="feed-card" style="display:flex; flex-direction:column; min-height:360px; background:var(--card); border-radius:12px; overflow:hidden; padding:20px;">
+                  <h4 style="color:var(--verde); margin-bottom:10px;">🏛️ Centro Histórico de ${ciudad}</h4>
+                  <p style="font-size:0.85rem; color:var(--texto); opacity:0.8; flex:1;">Puntos de interés principales, plazas y paseos tradicionales en ${ciudad}.</p>
+                  <button class="btn-add-feed" onclick="añadirDesdeFeed('Centro Histórico de ${ciudad.replace(/'/g, "\\'")}')" style="padding:8px 20px; align-self:flex-end;">+ Añadir al viaje</button>
+                </div>
+                <div class="feed-card" style="display:flex; flex-direction:column; min-height:360px; background:var(--card); border-radius:12px; overflow:hidden; padding:20px;">
+                  <h4 style="color:var(--azul); margin-bottom:10px;">🎨 Atracciones Culturales y Paseos</h4>
+                  <p style="font-size:0.85rem; color:var(--texto); opacity:0.8; flex:1;">Exposiciones, patrimonio y lugares culturales emblemáticos de ${ciudad}.</p>
+                  <button class="btn-add-feed" onclick="añadirDesdeFeed('Atracciones Culturales de ${ciudad.replace(/'/g, "\\'")}')" style="padding:8px 20px; align-self:flex-end;">+ Añadir al viaje</button>
+                </div>
+              </div>
+            `;
           }
           return;
         }
@@ -5818,35 +6272,28 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
      }
 
     async function abrirColaboradores() {
-        if (!currentUserUid) {
-            showToast('Iniciá sesión (nickname o email) para ver colaboradores', 'info');
-            return;
-        }
         document.getElementById('modal-colaboradores').style.display = 'flex';
         const lista = document.getElementById('lista-colaboradores');
         const inviteCodeContainer = document.getElementById('invite-code-container');
         
         if (syncCode) {
-            document.getElementById('display-invite-code').innerText = syncCode;
-            inviteCodeContainer.style.display = 'block';
-        } else {
+            const codeEl = document.getElementById('display-invite-code');
+            if (codeEl) codeEl.innerText = syncCode;
+            if (inviteCodeContainer) inviteCodeContainer.style.display = 'block';
+        } else if (inviteCodeContainer) {
             inviteCodeContainer.style.display = 'none';
         }
         
-        let html = '';
-        if (currentNickname) {
-            html += `
+        const myName = currentNickname || 'Anónimo';
+        let html = `
             <div style="display:flex; align-items:center; gap:15px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
-                <div class="colab-avatar" style="background:var(--rosa); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">${currentNickname.substring(0,2).toUpperCase()}</div>
+                <div class="colab-avatar" style="background:var(--rosa); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">${myName.substring(0,2).toUpperCase()}</div>
                 <div>
-                    <strong style="color:white;">@${currentNickname} (Tú)</strong>
+                    <strong style="color:white;">${myName === 'Anónimo' ? '👤 Anónimo (Tú)' : '@' + myName + ' (Tú)'}</strong>
                     <p style="font-size:0.8rem; color:var(--verde);">En línea</p>
                 </div>
             </div>
         `;
-        } else {
-            html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-bottom:15px;">Podés generar un código y compartirlo sin crear cuenta. Para invitar por nickname, iniciá sesión.</p>`;
-        }
         
         if (db && syncCode) {
             try {
@@ -5854,19 +6301,19 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 if (docSnap.exists) {
                     const colabs = docSnap.data().colaboradores || [];
                     const roles = docSnap.data().colaboradores_roles || {};
-                    const owner = docSnap.data().propietario;
+                    const owner = docSnap.data().propietario || 'Anónimo';
                     let hasColabs = false;
                     colabs.forEach(colab => {
-                        if (colab !== currentNickname) {
+                        if (colab !== myName) {
                             hasColabs = true;
                             const userRole = roles[colab] || 'editor';
-                            let roleBadge = userRole === 'editor' ? t('role_editor') : t('role_traveler');
-                            if (colab === owner) roleBadge = "Propietario";
+                            let roleBadge = (colab === owner) ? "Propietario" : (userRole === 'editor' ? t('role_editor') : t('role_traveler'));
+                            const displayName = colab.startsWith('@') ? colab : (colab === 'Anónimo' ? '👤 Anónimo' : '@' + colab);
                             html += `
                                 <div style="display:flex; align-items:center; gap:15px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
                                     <div class="colab-avatar" style="background:var(--azul); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">${colab.substring(0,2).toUpperCase()}</div>
                                     <div style="flex:1">
-                                        <strong style="color:white;">@${colab}</strong>
+                                        <strong style="color:white;">${displayName}</strong>
                                         <p style="font-size:0.8rem; color:var(--gris);">${roleBadge}</p>
                                     </div>
                                 </div>
@@ -5874,10 +6321,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                         }
                     });
                     if (!hasColabs) {
-                        html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:15px;">Solo vos tenés acceso a este viaje. Invitá a alguien por nickname o generá un código.</p>`;
+                        html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:15px;">Solo vos estás en este viaje. Invitá a alguien por nickname o compartí el código.</p>`;
                     }
                 } else {
-                    html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:15px;">Solo vos tenés acceso a este viaje. Generá un código para invitar a otros.</p>`;
+                    html += `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:15px;">Solo vos estás en este viaje. Generá un código para invitar a otros.</p>`;
                 }
             } catch (e) {
                 console.error('Error al cargar colaboradores:', e);
@@ -5998,11 +6445,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 const data = docSnap.data();
                 const roles = data.colaboradores_roles || {};
                 const owner = data.propietario;
-                if (currentNickname) {
-                    await db.collection('plux_viajes_compartidos').doc(code).set({
-                        colaboradores: firebase.firestore.FieldValue.arrayUnion(currentNickname)
-                    }, { merge: true });
-                }
+                const joiningName = currentNickname || 'Anónimo';
+                await db.collection('plux_viajes_compartidos').doc(code).set({
+                    colaboradores: firebase.firestore.FieldValue.arrayUnion(joiningName)
+                }, { merge: true });
                 
                 // Determine current user's role
                 if (currentNickname === owner) {
@@ -6448,6 +6894,8 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   window.cerrarSeguridad = cerrarSeguridad;
   window.guardarNuevaContrasena = guardarNuevaContrasena;
   window.abrirInfo = abrirInfo;
+  window.mostrarGuiaComoEmpezar = mostrarGuiaComoEmpezar;
+  window.selectCityFromDropdown = selectCityFromDropdown;
   window.cerrarInfo = cerrarInfo;
   window.empezarDeCero = empezarDeCero;
   window.toggleSettingsCollapse = toggleSettingsCollapse;

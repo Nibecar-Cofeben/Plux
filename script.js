@@ -1267,6 +1267,7 @@
 
 
     function autoSave() {
+      if (isSyncing) return;
       if (window.currentTripRole === 'viajero') {
         console.log("AutoSave blocked: Read-only mode for traveler");
         return;
@@ -3002,12 +3003,25 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     // ================== URL JOIN CODE SUPPORT ==================
     function checkUrlJoinCode() {
       const path = window.location.pathname;
-      const match = path.match(/\/plux\/([A-Z0-9]{4}-[A-Z0-9]{4}|[A-Za-z0-9]{4,10})/i);
       const searchParams = new URLSearchParams(window.location.search);
       const joinParam = searchParams.get('join') || searchParams.get('code');
-      const code = (match && match[1]) || joinParam;
 
-      if (code && code.toUpperCase() !== 'PLUX') {
+      const reserved = ['join', 'destinies', 'plantillas', 'buenosaires', 'roma', 'tokio', 'nuevayork', 'paris', 'barcelona', 'plux', 'index.html'];
+
+      let code = joinParam;
+
+      if (!code && path.includes('/join/')) {
+        const parts = path.split('/join/')[1]?.split('/') || [];
+        const possibleCode = parts[0];
+        if (possibleCode && possibleCode !== 'plantillas' && !reserved.includes(possibleCode.toLowerCase())) {
+          code = possibleCode;
+        }
+      } else if (!code) {
+        const match = path.match(/\/plux\/([A-Z0-9]{4}-[A-Z0-9]{4})/i);
+        if (match) code = match[1];
+      }
+
+      if (code && !reserved.includes(code.toLowerCase())) {
         setTimeout(() => {
           showToast(`Uniéndose al viaje por enlace (${code.toUpperCase()})...`, 'info');
           cargarViajeCompartido(code.toUpperCase());
@@ -3496,7 +3510,6 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         renderDias(d.id);
         cargarSugerenciasWiki(d.id);
       });
-      autoSave();
     }
 
     // Tourist place keywords (at least one must appear in title OR it's a short proper noun)
@@ -3608,43 +3621,36 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       };
 
-      // 1. Try OpenRouter (FREE models cycle through until one works)
-      if (OPENROUTER_API_KEY) {
-        for (const model of OPENROUTER_FREE_MODELS) {
-          try {
-            console.log(` AI_CORE: Intentando con OpenRouter [${model}]...`);
-            const resp = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                'HTTP-Referer': window.location.origin,
-                'X-Title': 'PluxTravel Planner'
-              },
-              body: JSON.stringify({
-                model,
-                messages: [
-                  { role: 'system', content: AI_SYSTEM_PROMPT },
-                  { role: 'user', content: prompt }
-                ],
-                temperature: 0.3,
-                max_tokens: 4096
-              })
-            }, 15000);
-            if (!resp.ok) { console.warn(` OpenRouter ${model} HTTP ${resp.status}`); continue; }
+      // 1. Try Groq (Llama 3 70B) - Ultra fast & reliable
+      if (GROQ_API_KEY) {
+        try {
+          console.log(' AI_CORE: Intentando con Groq (Llama 3 70B)...');
+          const resp = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: "llama-3.3-70b-versatile",
+              messages: [
+                { role: "system", content: AI_SYSTEM_PROMPT },
+                { role: "user", content: prompt }
+              ],
+              temperature: 0.3,
+              max_tokens: 4096,
+              response_format: useJson ? { type: "json_object" } : undefined
+            })
+          }, 15000);
+          if (resp.ok) {
             const data = await resp.json();
-            const content = data.choices?.[0]?.message?.content;
-            if (content && content.trim().startsWith('{')) {
-              console.log(` AI_CORE: éxito con OpenRouter [${model}].`);
-              return content;
-            } else if (content) {
-              const jsonMatch = content.match(/\{[\s\S]*\}/);
-              if (jsonMatch) { console.log(' AI_CORE: JSON extraído de OpenRouter.'); return jsonMatch[0]; }
+            if (data.choices?.[0]?.message?.content) {
+              console.log(' AI_CORE: éxito con Groq.');
+              return data.choices[0].message.content;
             }
-            console.warn(` OpenRouter ${model} no devolvió JSON válido.`);
-          } catch (e) {
-            console.warn(` OpenRouter ${model}:`, e.message);
           }
+        } catch (e) {
+          console.warn(' AI_CORE: Error en Groq:', e.message);
         }
       }
 
@@ -3683,35 +3689,43 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       }
 
-      // 3. Try Groq (Llama 3 70B)
-      try {
-        console.log(' AI_CORE: Intentando con Groq (Llama 3 70B)...');
-        const resp = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${GROQ_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: [
-              { role: "system", content: AI_SYSTEM_PROMPT },
-              { role: "user", content: prompt }
-            ],
-            temperature: 0.3,
-            max_tokens: 4096,
-            response_format: useJson ? { type: "json_object" } : undefined
-          })
-        }, 15000);
-        const data = await resp.json();
-        if (data.choices?.[0]?.message?.content) {
-          console.log(' AI_CORE: éxito con Groq.');
-          return data.choices[0].message.content;
-        } else {
-          console.warn(' AI_CORE: Groq no devolvió contenido válido.', data);
+      // 3. Try OpenRouter
+      if (OPENROUTER_API_KEY) {
+        for (const model of OPENROUTER_FREE_MODELS) {
+          try {
+            console.log(` AI_CORE: Intentando con OpenRouter [${model}]...`);
+            const resp = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                'HTTP-Referer': window.location.origin,
+                'X-Title': 'PluxTravel Planner'
+              },
+              body: JSON.stringify({
+                model,
+                messages: [
+                  { role: 'system', content: AI_SYSTEM_PROMPT },
+                  { role: 'user', content: prompt }
+                ],
+                temperature: 0.3,
+                max_tokens: 4096
+              })
+            }, 15000);
+            if (!resp.ok) { console.warn(` OpenRouter ${model} HTTP ${resp.status}`); continue; }
+            const data = await resp.json();
+            const content = data.choices?.[0]?.message?.content;
+            if (content && content.trim().startsWith('{')) {
+              console.log(` AI_CORE: éxito con OpenRouter [${model}].`);
+              return content;
+            } else if (content) {
+              const jsonMatch = content.match(/\{[\s\S]*\}/);
+              if (jsonMatch) { console.log(' AI_CORE: JSON extraído de OpenRouter.'); return jsonMatch[0]; }
+            }
+          } catch (e) {
+            console.warn(` OpenRouter ${model}:`, e.message);
+          }
         }
-      } catch (e) {
-        console.warn(' AI_CORE: Error en Groq:', e.message);
       }
 
       // 4. Try Mistral
@@ -4045,7 +4059,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       cont.innerHTML = "";
       const dest = destinos.find(d => d.id === destId);
       const schedule = buildTripDaySchedule();
-      dest.dias.forEach(dia => {
+      dest.dias.forEach((dia, diaIdx) => {
         const daySched = schedule.find(s => s.destId === destId && s.diaId === dia.id);
         const dateStr = daySched?.dateStr || '';
         const fidx = daySched?.forecastIndex ?? '';
@@ -4053,7 +4067,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         diaDiv.className = "dia";
         diaDiv.innerHTML = `
           <div class="dia-header">
-            <h4>${t('day_prefix')} ${dia.id+1}${daySched?.dateLabel ? ` <small style="color:var(--gris);font-weight:normal">(${daySched.dateLabel})</small>` : ''}</h4>
+            <h4>${t('day_prefix')} ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris);font-weight:normal">(${daySched.dateLabel})</small>` : ''}</h4>
             <div id="weather-day-${destId}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-day-${destId}-${dia.id}')" title="Clima del día">
               <div class="weather-chip-row"><span class="weather-chip-icon">🌤️</span><span class="weather-chip-temp">...</span></div>
             </div>
@@ -4077,7 +4091,6 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         renderCostosAdicionales(destId, dia.id);
         loadWeatherForTripDay(`weather-day-${destId}-${dia.id}`, dest.nombre, dateStr, daySched?.forecastIndex);
       });
-      autoSave();
     }
 
     function organizarItinerario(destId, diaId) {
@@ -4640,19 +4653,41 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         document.getElementById('lab-conv-res').innerText = "Resultado: " + res.toFixed(2);
     }
 
-    // ================== MAPA CORREGIDO ==================
+    // ================== MAPA CORREGIDO (Open-Meteo + Nominatim Fallback) ==================
     async function geocode(lugar) {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(lugar)}`;
+      if (!lugar) return null;
+      const cleanLugar = lugar.trim();
+
+      // 1. Open-Meteo Geocoding API (100% CORS-friendly)
       try {
-        const resp = await fetch(url, {
-          headers: { 'User-Agent': 'Plux-App' }
-        });
-        const data = await resp.json();
-        if (data && data.length > 0) {
-          return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        const omUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanLugar)}&count=1&language=es&format=json`;
+        const omRes = await fetch(omUrl);
+        if (omRes.ok) {
+          const omData = await omRes.json();
+          if (omData.results && omData.results.length > 0) {
+            return {
+              lat: omData.results[0].latitude,
+              lon: omData.results[0].longitude,
+              display_name: omData.results[0].name
+            };
+          }
+        }
+      } catch (e) {
+        console.warn('Open-Meteo geocode error:', e);
+      }
+
+      // 2. Nominatim Fallback
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanLugar)}`;
+        const resp = await fetch(url);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.length > 0) {
+            return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+          }
         }
       } catch(e) {
-        console.error('Error geocoding:', e);
+        console.warn('Nominatim geocode fallback error:', e);
       }
       return null;
     }
@@ -5993,7 +6028,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           
           html += `
           <div class="feed-card" style="display:flex; flex-direction:column; min-height:420px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); background:var(--card); border-radius:12px; overflow:hidden;">
-            <img src="${imgSrc}" class="feed-img" alt="${place.title}" style="height:220px; width:100%; object-fit:cover;">
+            <img src="${imgSrc}" class="feed-img" alt="${place.title}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1503220317375-aaad61436b1b?auto=format&fit=crop&w=400&q=80'" style="height:220px; width:100%; object-fit:cover;">
             <div class="feed-body" style="padding:15px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
               <div>
                 <h4 style="color:var(--rosa); margin-bottom:10px; line-height:1.2; font-size:1.1rem;">${place.title}</h4>
@@ -6934,6 +6969,293 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   window.mobileActionInvitar = mobileActionInvitar;
   window.mobileActionEmpezarDeCero = mobileActionEmpezarDeCero;
   window.mobileActionImportar = mobileActionImportar;
-  window.mobileActionExportar = mobileActionExportar;
-  window.mobileActionVerMapa = mobileActionVerMapa;
-  window.mobileActionSoporte = mobileActionSoporte;
+  function explorarInspo(ciudad) {
+    if (!ciudad) return;
+    const ciudadLower = ciudad.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const cityMap = {
+      'buenos aires': '/plux/destinies/buenosaires/',
+      'bs. aires': '/plux/destinies/buenosaires/',
+      'roma': '/plux/destinies/roma/',
+      'tokio': '/plux/destinies/tokio/',
+      'nueva york': '/plux/destinies/nuevayork/',
+      'paris': '/plux/destinies/paris/',
+      'barcelona': '/plux/destinies/barcelona/'
+    };
+
+    const targetUrl = cityMap[ciudadLower];
+    if (targetUrl) {
+      window.location.href = targetUrl;
+      return;
+    }
+
+    abrirDescubrir();
+    const input = document.getElementById('feedSearchInput');
+    if (input) input.value = ciudad;
+    buscarLugaresPorDestino(ciudad);
+  }
+  window.explorarInspo = explorarInspo;
+  window.abrirSupport = abrirSupport;
+
+  function cargarPlantillaCiudad(ciudadRaw) {
+    if (!ciudadRaw) return;
+    const cClean = ciudadRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "").trim();
+
+    const cityDataMap = {
+      'buenosaires': {
+        nombre: 'Buenos Aires',
+        dias: [
+          {
+            eventos: [
+              { hora: '10:00', titulo: 'Obelisco & Recorrido por Av. Corrientes', notas: 'Caminata por el centro y teatros tradicionales', costo: '0', duracion: 90 },
+              { hora: '13:00', titulo: 'Almuerzo Pizzería Guerrin', notas: 'Pizza tradicional al molde porteña', costo: '15', duracion: 60 },
+              { hora: '16:00', titulo: 'Teatro Colón & Plaza de Mayo', notas: 'Visita guiada por el teatro neoclásico', costo: '12', duracion: 120 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '10:30', titulo: 'Caminito & Paseo por La Boca', notas: 'Conventillos multicolor y show de tango al aire libre', costo: '0', duracion: 120 },
+              { hora: '13:00', titulo: 'Estadio La Bombonera', notas: 'Tour por el museo del club Boca Juniors', costo: '18', duracion: 90 },
+              { hora: '20:30', titulo: 'Cena en Parrilla Don Julio', notas: 'Asado argentino y carne a la parrilla', costo: '45', duracion: 120 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '11:00', titulo: 'Cementerio de Recoleta & El Ateneo Splendid', notas: 'Librería histórica en un teatro antiguo', costo: '5', duracion: 120 },
+              { hora: '16:00', titulo: 'Puerto Madero & Puente de la Mujer', notas: 'Paseo por los diques al atardecer', costo: '0', duracion: 90 },
+              { hora: '21:00', titulo: 'Show de Tango & Cena', notas: 'Espectáculo de tango rioplatense', costo: '50', duracion: 150 }
+            ]
+          }
+        ]
+      },
+      'paris': {
+        nombre: 'París',
+        dias: [
+          {
+            eventos: [
+              { hora: '09:30', titulo: 'Torre Eiffel & Jardines del Trocadero', notas: 'Subida al mirador panorámico y fotos', costo: '30', duracion: 120 },
+              { hora: '13:00', titulo: 'Almuerzo Tradicional en Café de Flore', notas: 'Gastronomía parisina icónica', costo: '35', duracion: 90 },
+              { hora: '16:30', titulo: 'Paseo en Barco por el Río Sena', notas: 'Vistas espectaculares al atardecer', costo: '18', duracion: 75 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '10:00', titulo: 'Museo del Louvre & Pirámide de Cristal', notas: 'Ver la Gioconda y esculturas clásicas', costo: '22', duracion: 180 },
+              { hora: '14:00', titulo: 'Jardín de las Tullerías', notas: 'Paseo relajante', costo: '0', duracion: 60 },
+              { hora: '20:00', titulo: 'Cena & Paseo por Montmartre', notas: 'Vistas nocturnas desde Sacré-Cœur', costo: '40', duracion: 120 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '10:00', titulo: 'Basílica del Sacré-Cœur', notas: 'Visita a la basílica blanca y barrio de artistas', costo: '0', duracion: 90 },
+              { hora: '15:00', titulo: 'Arco del Triunfo y Campos Elíseos', notas: 'Subir al mirador y recorrer la gran avenida', costo: '16', duracion: 120 }
+            ]
+          }
+        ]
+      },
+      'roma': {
+        nombre: 'Roma',
+        dias: [
+          {
+            eventos: [
+              { hora: '09:00', titulo: 'Coliseo Romano & Foro Romano', notas: 'Visita arqueológica imperial', costo: '18', duracion: 180 },
+              { hora: '13:30', titulo: 'Almuerzo Pasta en Trastevere', notas: 'Trattoria tradicional romana', costo: '25', duracion: 90 },
+              { hora: '16:30', titulo: 'Panteón de Agripa', notas: 'El monumento antiguo mejor conservado', costo: '5', duracion: 60 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '08:30', titulo: 'Basílica de San Pedro & Museos Vaticanos', notas: 'Cúpula y arte sacro', costo: '25', duracion: 210 },
+              { hora: '12:30', titulo: 'Capilla Sixtina', notas: 'Frescos de Miguel Ángel', costo: '0', duracion: 60 },
+              { hora: '18:00', titulo: 'Fontana di Trevi al atardecer', notas: 'Lanzar moneda a la fuente barroca', costo: '0', duracion: 60 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '10:00', titulo: 'Plaza de España & Villa Borghese', notas: 'Jardines históricos', costo: '0', duracion: 120 },
+              { hora: '15:00', titulo: 'Castillo de Sant\'Angelo', notas: 'Vistas al río Tíber', costo: '15', duracion: 90 }
+            ]
+          }
+        ]
+      },
+      'tokio': {
+        nombre: 'Tokio',
+        dias: [
+          {
+            eventos: [
+              { hora: '09:30', titulo: 'Cruce de Shibuya & Estatua de Hachiko', notas: 'El cruce más concurrido del mundo', costo: '0', duracion: 90 },
+              { hora: '13:00', titulo: 'Almuerzo Ramen en Ichiran', notas: 'Ramen tonkotsu auténtico', costo: '12', duracion: 60 },
+              { hora: '17:00', titulo: 'Mirador Shibuya Sky', notas: 'Vistas futuristas 360°', costo: '20', duracion: 90 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '09:00', titulo: 'Templo Senso-ji en Asakusa & Nakamise', notas: 'El templo más antiguo de Tokio', costo: '0', duracion: 120 },
+              { hora: '13:00', titulo: 'Paseo por Parque Ueno', notas: 'Naturaleza y museos', costo: '0', duracion: 90 },
+              { hora: '16:00', titulo: 'Akihabara Electric Town', notas: 'Cultura anime, manga y videojuegos retro', costo: '0', duracion: 180 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '10:00', titulo: 'Santuario Meiji Jingu en Harajuku', notas: 'Bosque sagrado en la ciudad', costo: '0', duracion: 90 },
+              { hora: '12:30', titulo: 'Calle Takeshita', notas: 'Moda independiente y crepes kawaii', costo: '10', duracion: 90 },
+              { hora: '19:30', titulo: 'Cena & Vistas en Shinjuku', notas: 'Neones y callejones Omoide Yokocho', costo: '30', duracion: 150 }
+            ]
+          }
+        ]
+      },
+      'nuevayork': {
+        nombre: 'Nueva York',
+        dias: [
+          {
+            eventos: [
+              { hora: '10:00', titulo: 'Times Square & Paseo por Midtown', notas: 'Luces de neón y energía de Manhattan', costo: '0', duracion: 90 },
+              { hora: '14:00', titulo: 'Central Park & Bethesda Terrace', notas: 'Caminata y fotos de película', costo: '0', duracion: 120 },
+              { hora: '19:30', titulo: 'Musical de Broadway', notas: 'Teatro en directo', costo: '95', duracion: 150 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '09:00', titulo: 'Estatua de la Libertad & Ellis Island', notas: 'Ferry y monumento icónico', costo: '25', duracion: 210 },
+              { hora: '14:00', titulo: 'Wall Street & 9/11 Memorial', notas: 'Distrito financiero y monumento', costo: '0', duracion: 120 },
+              { hora: '17:30', titulo: 'Mirador One World Observatory', notas: 'Vista desde el edificio más alto', costo: '44', duracion: 90 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '10:30', titulo: 'Puente de Brooklyn & DUMBO', notas: 'Fotos famosas del skyline', costo: '0', duracion: 120 },
+              { hora: '13:30', titulo: 'Almuerzo en Time Out Market', notas: 'Gastronomía variada en Brooklyn', costo: '25', duracion: 90 },
+              { hora: '16:30', titulo: 'High Line & Hudson Yards', notas: 'Parque elevado y arquitectura Vessel', costo: '0', duracion: 90 }
+            ]
+          }
+        ]
+      },
+      'barcelona': {
+        nombre: 'Barcelona',
+        dias: [
+          {
+            eventos: [
+              { hora: '09:30', titulo: 'Basílica de la Sagrada Familia', notas: 'Obra maestra inacabada de Gaudí', costo: '26', duracion: 150 },
+              { hora: '13:00', titulo: 'Passeig de Gràcia & Casa Batlló', notas: 'Arquitectura modernista', costo: '30', duracion: 90 },
+              { hora: '20:00', titulo: 'Tapas en El Born', notas: 'Cena en taberna tradicional', costo: '25', duracion: 120 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '10:00', titulo: 'Park Güell & Banco de Mosaico', notas: 'Vistas al Mediterráneo', costo: '10', duracion: 120 },
+              { hora: '14:30', titulo: 'Barrio Gótico & Catedral de Barcelona', notas: 'Calles medievales', costo: '0', duracion: 120 },
+              { hora: '17:00', titulo: 'Mercado de la Boquería', notas: 'Frutas frescas y mariscos', costo: '10', duracion: 60 }
+            ]
+          },
+          {
+            eventos: [
+              { hora: '11:00', titulo: 'Playa de la Barceloneta', notas: 'Paseo por el paseo marítimo', costo: '0', duracion: 120 },
+              { hora: '16:30', titulo: 'Montjuïc & Fuente Mágica', notas: 'Mirador y palacio', costo: '0', duracion: 120 }
+            ]
+          }
+        ]
+      }
+    };
+
+    let matchedData = null;
+    for (const k in cityDataMap) {
+      if (cClean.includes(k) || k.includes(cClean)) {
+        matchedData = cityDataMap[k];
+        break;
+      }
+    }
+
+    const id = Date.now();
+    if (matchedData) {
+      const buildDays = matchedData.dias.map((d, dIdx) => ({
+        id: dIdx,
+        eventos: d.eventos.map((ev, evIdx) => ({
+          id: id + (dIdx+1)*100 + evIdx + 1,
+          hora: ev.hora,
+          titulo: ev.titulo,
+          notas: ev.notas,
+          costo: ev.costo,
+          duracion: ev.duracion
+        })),
+        costosAdicionales: []
+      }));
+
+      destinos.push({
+        id,
+        nombre: matchedData.nombre,
+        tramos: [],
+        dias: buildDays
+      });
+      showToast(`¡Plantilla de ${matchedData.nombre} cargada con ${buildDays.length} días completos!`, 'success');
+    } else {
+      destinos.push({
+        id,
+        nombre: ciudadRaw,
+        tramos: [],
+        dias: [
+          {
+            id: 0,
+            eventos: [
+              { id: id + 101, hora: '10:00', titulo: `Llegada a ${ciudadRaw}`, notas: 'Check-in en el alojamiento y primeros paseos', costo: '0', duracion: 120 }
+            ],
+            costosAdicionales: []
+          }
+        ]
+      });
+      showToast(`Destino ${ciudadRaw} agregado`, 'success');
+    }
+
+    renderDestinos();
+    if (typeof generarSelloPasaporte === 'function') generarSelloPasaporte(matchedData ? matchedData.nombre : ciudadRaw);
+    autoSave();
+  }
+  window.cargarPlantillaCiudad = cargarPlantillaCiudad;
+
+  // Handle incoming routes (/plux/join/plantillas/..., /plux/join/CODE) and ?destino=... query parameters
+  document.addEventListener('DOMContentLoaded', () => {
+    let cityToLoad = null;
+    let codeToLoad = null;
+
+    const path = window.location.pathname;
+    if (path.includes('/join/')) {
+      const parts = path.split('/join/')[1]?.split('/') || [];
+      if (parts[0] === 'plantillas' && parts[1]) {
+        const rawCity = parts[1].replace(/-/g, ' ');
+        cityToLoad = rawCity.charAt(0).toUpperCase() + rawCity.slice(1);
+      } else if (parts[0] && parts[0].length >= 4) {
+        codeToLoad = parts[0];
+      }
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramDestino = urlParams.get('destino');
+    const paramActividad = urlParams.get('actividad');
+    if (paramDestino) {
+      cityToLoad = paramDestino;
+    }
+
+    if (cityToLoad) {
+      setTimeout(() => {
+        if (typeof window.cerrarModalDecisionViaje === 'function') {
+          window.cerrarModalDecisionViaje();
+        }
+        if (typeof window.empezarDeCeroSinPrompt === 'function') {
+          window.empezarDeCeroSinPrompt();
+        }
+        if (typeof window.empezar === 'function') {
+          window.empezar();
+        }
+        cargarPlantillaCiudad(cityToLoad);
+        if (paramActividad && typeof window.añadirDesdeFeed === 'function') {
+          setTimeout(() => {
+            window.añadirDesdeFeed(paramActividad);
+          }, 400);
+        }
+      }, 300);
+    } else if (codeToLoad) {
+      setTimeout(() => {
+        if (typeof window.cargarViajeCompartido === 'function') {
+          window.cargarViajeCompartido(codeToLoad);
+        }
+      }, 500);
+    }
+  });

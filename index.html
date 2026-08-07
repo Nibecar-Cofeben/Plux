@@ -43,11 +43,11 @@
     <div class="logo-bubble">PLUX</div>
 
     <div class="main-buttons">
-      <button class="main-btn" id="startBtn" style="flex: 1 1 45%;">Empieza tu viaje</button>
-      <button class="main-btn" id="tripsBtn" style="flex: 1 1 45%;">Tus viajes</button>
-      <button class="main-btn discover-btn" id="discoverBtn" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
-      <button class="main-btn tools-btn" id="toolsBtn" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
-      <button class="main-btn" onclick="abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/plux/pet.png" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
+      <button class="main-btn" id="startBtn" onclick="window.onStartBtnClick()" style="flex: 1 1 45%;">Empieza tu viaje</button>
+      <button class="main-btn" id="tripsBtn" onclick="window.abrirModalViajes()" style="flex: 1 1 45%;">Tus viajes</button>
+      <button class="main-btn discover-btn" id="discoverBtn" onclick="window.abrirDescubrir()" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
+      <button class="main-btn tools-btn" id="toolsBtn" onclick="window.abrirPanelHerramientas()" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
+      <button class="main-btn" onclick="window.abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/plux/pet.png" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
     </div>
 
     <!-- Inspiration Cards -->
@@ -62,6 +62,10 @@
           <div class="inspo-card-flag">JP</div>
           <div class="inspo-card-label">Tokio</div>
         </div>
+        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=400&q=80')" onclick="explorarInspo('Buenos Aires')">
+          <div class="inspo-card-flag">AR</div>
+          <div class="inspo-card-label">Bs. Aires</div>
+        </div>
         <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?w=400&q=80')" onclick="explorarInspo('Nueva York')">
           <div class="inspo-card-flag">US</div>
           <div class="inspo-card-label">Nueva York</div>
@@ -69,10 +73,6 @@
         <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80')" onclick="explorarInspo('París')">
           <div class="inspo-card-flag">FR</div>
           <div class="inspo-card-label">París</div>
-        </div>
-        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=400&q=80')" onclick="explorarInspo('Buenos Aires')">
-          <div class="inspo-card-flag">AR</div>
-          <div class="inspo-card-label">Bs. Aires</div>
         </div>
         <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=400&q=80')" onclick="explorarInspo('Bangkok')">
           <div class="inspo-card-flag">TH</div>

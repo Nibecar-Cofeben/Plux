@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roma · Plux Destinies</title>
+  <link rel="icon" type="image/ico" href="/plux/favico.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/plux/styles.css?v=1779320000000">
+  <style>
+    .destiny-hero {
+      position: relative; height: 55vh; min-height: 380px; max-height: 550px;
+      display: flex; align-items: flex-end; padding: 40px 24px;
+      background: linear-gradient(180deg, rgba(11,15,25,0.3) 0%, rgba(11,15,25,0.98) 100%),
+                  url('https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=1600&q=80') center/cover no-repeat;
+    }
+    .destiny-hero-content { max-width: 1100px; margin: 0 auto; width: 100%; }
+    .badge-pill-container { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .badge-pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px;
+      border-radius: 20px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .badge-it { background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; }
+    .badge-pop { background: rgba(52, 211, 153, 0.15); border: 1px solid var(--verde); color: var(--verde); }
+    .hero-title { font-size: 3.4rem; font-weight: 800; color: white; line-height: 1.1; margin-bottom: 10px; }
+    .hero-subtitle { font-size: 1.15rem; color: rgba(255, 255, 255, 0.85); max-width: 680px; line-height: 1.5; }
+
+    .quick-stats-row { max-width: 1100px; margin: -28px auto 40px; padding: 0 24px; position: relative; z-index: 10; }
+    .stats-card-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 22px 28px;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.4); backdrop-filter: blur(12px);
+    }
+    .stat-item { display: flex; align-items: center; gap: 14px; }
+    .stat-icon-wrapper {
+      width: 44px; height: 44px; border-radius: 14px; background: rgba(255, 255, 255, 0.05);
+      display: flex; align-items: center; justify-content: center; color: var(--verde); flex-shrink: 0;
+    }
+    .stat-meta label { font-size: 0.72rem; color: var(--gris); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .stat-meta p { font-size: 1rem; font-weight: 700; color: white; margin-top: 1px; }
+
+    .destiny-container { max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+    .section-head { margin-bottom: 24px; margin-top: 45px; }
+    .section-head h2 { font-size: 1.75rem; font-weight: 800; color: white; display: flex; align-items: center; gap: 10px; }
+    .section-head h2 span { color: var(--verde); }
+    .section-head p { color: var(--gris); font-size: 0.92rem; margin-top: 4px; }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+    .destiny-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+      display: flex; flex-direction: column; transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .destiny-card:hover { transform: translateY(-4px); border-color: var(--verde); box-shadow: 0 15px 40px rgba(52, 211, 153, 0.15); }
+    .destiny-card-img { height: 210px; width: 100%; object-fit: cover; }
+    .destiny-card-body { padding: 22px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-tag { font-size: 0.72rem; font-weight: 700; color: var(--rosa); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .card-name { font-size: 1.25rem; font-weight: 700; color: white; margin-bottom: 8px; }
+    .card-desc { font-size: 0.88rem; color: var(--gris); margin-bottom: 20px; flex: 1; line-height: 1.55; }
+    
+    .btn-card-action {
+      padding: 12px 18px; background: rgba(52, 211, 153, 0.1); border: 1px solid var(--verde);
+      color: var(--verde); border-radius: 14px; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;
+    }
+    .btn-card-action:hover { background: var(--verde); color: #000; }
+
+    .cta-plux-banner {
+      background: linear-gradient(135deg, rgba(52,211,153,0.12), rgba(96,165,250,0.12));
+      border: 1px solid var(--verde); border-radius: 28px; padding: 45px 30px; text-align: center;
+      margin-top: 60px; box-shadow: 0 20px 50px rgba(52,211,153,0.1); position: relative; overflow: hidden;
+    }
+    .cta-plux-banner h2 { font-size: 2.2rem; font-weight: 800; color: white; margin-bottom: 10px; }
+    .cta-plux-banner p { font-size: 1.02rem; color: var(--gris); max-width: 600px; margin: 0 auto 28px; }
+    .btn-plux-primary {
+      padding: 16px 36px; background: linear-gradient(135deg, var(--verde), var(--azul));
+      color: #000; font-weight: 800; font-size: 1.05rem; border-radius: 30px; border: none; cursor: pointer;
+      box-shadow: 0 8px 25px rgba(52, 211, 153, 0.35); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 10px;
+    }
+    .btn-plux-primary:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 30px rgba(52, 211, 153, 0.45); }
+  </style>
+</head>
+<body class="theme-oscuro lang-es">
+  <div style="position:sticky; top:0; z-index:100; background:rgba(11,15,25,0.9); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; align-items:center; justify-content:space-between;">
+    <button onclick="window.location.href='/plux/'" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:20px; color:var(--texto); padding:8px 16px; font-weight:600; font-size:0.88rem; cursor:pointer; display:flex; align-items:center; gap:6px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      <span id="navBackText">Volver a Plux</span>
+    </button>
+
+    <div style="font-family:'Orbitron', sans-serif; font-weight:800; font-size:1.2rem; color:white; letter-spacing:1px;">
+      PLUX <span style="color:var(--verde); font-size:0.8rem; padding:2px 8px; background:rgba(52,211,153,0.15); border-radius:12px; border:1px solid var(--verde); font-family:inherit;">DESTINIES</span>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="position:relative;">
+        <div class="lang-button" id="langButton" style="width:38px; height:38px; font-size:0.85rem;" title="Idioma">ES</div>
+        <div class="lang-dropdown" id="langDropdown" style="top:48px; right:0;">
+          <div class="lang-option active" data-lang="es">ES</div>
+          <div class="lang-option" data-lang="en">EN</div>
+          <div class="lang-option" data-lang="fr">FR</div>
+          <div class="lang-option" data-lang="de">DE</div>
+          <div class="lang-option" data-lang="it">IT</div>
+          <div class="lang-option" data-lang="pt">PT</div>
+        </div>
+      </div>
+
+      <div style="position:relative;">
+        <div class="theme-button" id="themeButton" style="width:38px; height:38px; font-size:1rem;" title="Tema">🎨</div>
+        <div class="theme-dropdown" id="themeDropdown" style="top:48px; right:0;">
+          <div class="theme-option" data-theme="theme-claro">Claro</div>
+          <div class="theme-option active" data-theme="theme-oscuro">Oscuro</div>
+          <div class="theme-option" data-theme="theme-tokyo">Tokyo Night</div>
+          <div class="theme-option" data-theme="theme-grid">The Grid</div>
+          <div class="theme-option" data-theme="theme-terminal">Terminal</div>
+          <div class="theme-option" data-theme="theme-starship">Starship</div>
+          <div class="theme-option" data-theme="theme-ares">Ares</div>
+        </div>
+      </div>
+
+      <button onclick="planearRoma()" class="btn-plux-primary" style="padding:10px 20px; font-size:0.9rem;">
+        <span id="navPlanText">🚀 Planear Viaje</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="destiny-hero">
+    <div class="destiny-hero-content">
+      <div class="badge-pill-container">
+        <span class="badge-pill badge-it">🇮🇹 Italia</span>
+        <span class="badge-pill badge-pop">Destino #1 Histórico</span>
+      </div>
+      <h1 class="hero-title">Roma</h1>
+      <p class="hero-subtitle">La Ciudad Eterna: milenios de historia imperial, el Vaticano, la Fontana di Trevi y la auténtica gastronomía italiana.</p>
+    </div>
+  </div>
+
+  <div class="quick-stats-row">
+    <div class="stats-card-grid">
+      <div class="stat-item">
+        <div class="stat-icon-wrapper">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div class="stat-meta">
+          <label>Estadía Sugerida</label>
+          <p>3 - 5 Días</p>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon-wrapper" style="color:var(--azul);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        </div>
+        <div class="stat-meta">
+          <label>Mejor Época</label>
+          <p>Abril - Junio / Sep - Oct</p>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon-wrapper" style="color:var(--rosa);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        </div>
+        <div class="stat-meta">
+          <label>Moneda Local</label>
+          <p>Euro (€ EUR)</p>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon-wrapper" style="color:var(--naranja);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <div class="stat-meta">
+          <label>Idioma</label>
+          <p>Italiano</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="destiny-container">
+    <div class="section-head">
+      <h2>Puntos <span>Imperdibles</span></h2>
+      <p>Monumentos antiguos y museos al aire libre.</p>
+    </div>
+
+    <div class="cards-grid">
+      <div class="destiny-card">
+        <img src="https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&q=80" class="destiny-card-img" alt="Coliseo">
+        <div class="destiny-card-body">
+          <div>
+            <div class="card-tag">Centro Histórico</div>
+            <h3 class="card-name">Coliseo Romano & Foro Romano</h3>
+            <p class="card-desc">El anfiteatro más famoso de la historia clásica y las ruinas del antiguo corazón político del Imperio Romano.</p>
+          </div>
+          <button onclick="planearLugar('Coliseo y Foro Romano')" class="btn-card-action">+ Añadir a mi viaje</button>
+        </div>
+      </div>
+
+      <div class="destiny-card">
+        <img src="https://images.unsplash.com/photo-1543429776-2782fc8e1acd?w=600&q=80" class="destiny-card-img" alt="Vaticano">
+        <div class="destiny-card-body">
+          <div>
+            <div class="card-tag">Ciudad del Vaticano</div>
+            <h3 class="card-name">Basílica de San Pedro & Capilla Sixtina</h3>
+            <p class="card-desc">Contempla la cúpula de San Pedro y los frescos inmortales de Miguel Ángel en los Museos Vaticanos.</p>
+          </div>
+          <button onclick="planearLugar('Basílica de San Pedro y Capilla Sixtina')" class="btn-card-action">+ Añadir a mi viaje</button>
+        </div>
+      </div>
+
+      <div class="destiny-card">
+        <img src="https://images.unsplash.com/photo-1529154036614-a60975f5c760?w=600&q=80" class="destiny-card-img" alt="Fontana di Trevi">
+        <div class="destiny-card-body">
+          <div>
+            <div class="card-tag">Trevi</div>
+            <h3 class="card-name">Fontana di Trevi & Plaza de España</h3>
+            <p class="card-desc">Lanza una moneda a la fuente barroca más icónica del mundo para asegurar tu regreso a Roma.</p>
+          </div>
+          <button onclick="planearLugar('Fontana di Trevi y Plaza de España')" class="btn-card-action">+ Añadir a mi viaje</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-plux-banner">
+      <h2 id="readyTitleCity" data-city-name="Roma">¿Listo para planear tu viaje a Roma?</h2>
+      <p id="readyDescText">Organiza tus actividades con Pluxy, la IA inteligente de Plux.</p>
+      <button onclick="planearRoma()" class="btn-plux-primary">
+        <span id="startPlannerText">✨ Comenzar itinerario en Plux</span>
+      </button>
+    </div>
+  </main>
+
+  <footer style="text-align:center; padding:35px 24px; border-top:1px solid var(--border); color:var(--gris); font-size:0.85rem;">
+    <p>© 2026 Plux Travel · Nibecar Cofeben. Todos los derechos reservados.</p>
+  </footer>
+
+  <!-- Modal Chat Pluxy en la subpágina -->
+  <div id="pluxy-destiny-modal" style="display:none; position:fixed; bottom:90px; right:20px; z-index:1000; width:380px; max-width:90vw; height:500px; max-height:80vh; background:var(--card); border:1px solid var(--verde); border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,0.6); flex-direction:column; overflow:hidden; backdrop-filter:blur(16px);">
+    <div style="background:linear-gradient(135deg, rgba(52,211,153,0.2), rgba(96,165,250,0.2)); padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img src="/plux/pet.png" style="width:32px; height:32px; border-radius:50%;">
+        <div>
+          <strong style="color:white; font-size:0.95rem; display:block;">Pluxy Assistant</strong>
+          <span style="color:var(--verde); font-size:0.75rem;">online · Roma</span>
+        </div>
+      </div>
+      <button onclick="togglePluxyModal()" style="background:none; border:none; color:var(--gris); font-size:1.2rem; cursor:pointer;">✕</button>
+    </div>
+    <div id="pluxy-chat-body" style="flex:1; padding:16px; overflow-y:auto; font-size:0.88rem; display:flex; flex-direction:column; gap:12px;"></div>
+    <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px; background:rgba(11,15,25,0.5);">
+      <input type="text" id="pluxy-input" placeholder="Pregúntale a Pluxy..." style="flex:1; background:rgba(255,255,255,0.08); border:1px solid var(--border); border-radius:16px; padding:8px 14px; color:white; font-size:0.85rem; outline:none;" onkeypress="if(event.key==='Enter') enviarMensajePluxy()">
+      <button onclick="enviarMensajePluxy()" style="background:linear-gradient(135deg, var(--verde), var(--azul)); border:none; border-radius:16px; color:#000; padding:8px 14px; font-weight:700; cursor:pointer;">➤</button>
+    </div>
+  </div>
+
+  <button id="chat-float-btn" onclick="togglePluxyModal()" title="Hablar con Pluxy" style="display:flex !important; align-items:center; justify-content:center; padding:0; background:transparent !important; border:none !important; position:fixed; bottom:20px; right:20px; z-index:999; cursor:pointer;">
+    <img src="/plux/pet.png" alt="Pluxy" style="width:60px; height:auto; filter:drop-shadow(0 4px 12px rgba(99,102,241,0.5)); transition:transform 0.2s;">
+  </button>
+
+  <script src="/plux/destinies/destiny_pluxy.js"></script>
+  <script>
+    function planearRoma() { window.location.href = '/plux/join/plantillas/roma'; }
+    function planearLugar(lugar) { window.location.href = '/plux/join/plantillas/roma?actividad=' + encodeURIComponent(lugar); }
+    document.addEventListener('DOMContentLoaded', () => {
+      initDestinyPage('Roma', 'roma');
+    });
+  </script>
+</body>
+</html>

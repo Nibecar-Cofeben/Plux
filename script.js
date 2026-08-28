@@ -7271,3 +7271,55 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       }, 500);
     }
   });
+
+  // ================== SOPORTE & ERROR REPORTING AUTOMÁTICO (FIRESTORE 'soporte') ==================
+  window.enviarReporteSoporte = async function(tipo, detalle, contacto, usuario) {
+    try {
+      if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return false;
+      const db = firebase.firestore();
+      const currentUser = firebase.auth().currentUser;
+      const nick = usuario || (typeof currentNickname !== 'undefined' ? currentNickname : localStorage.getItem('plux_current_nickname')) || (currentUser ? currentUser.email : 'Anónimo');
+      
+      const payload = {
+        tipo: tipo || 'Informar un error',
+        app: 'Plux Travel',
+        error: detalle || 'Sin descripción',
+        usuario: nick || 'Anónimo',
+        contacto: contacto || (currentUser ? currentUser.email : ''),
+        fecha: new Date().toLocaleString('es-AR'),
+        estado: 'Pendiente',
+        prioridad: 'Normal',
+        dispositivo: navigator.userAgent || 'Web Browser',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      await db.collection('soporte').add(payload);
+      console.log('✅ Reporte enviado a Firestore soporte:', payload);
+      return true;
+    } catch(err) {
+      console.warn('⚠️ No se pudo enviar el reporte a soporte:', err);
+      return false;
+    }
+  };
+
+  // Captura automática de errores de JavaScript en Plux
+  window.addEventListener('error', function(event) {
+    try {
+      if (event && event.message && !event.message.includes('ResizeObserver') && !event.message.includes('Script error')) {
+        window.enviarReporteSoporte(
+          'Informar un error',
+          `Error JS: ${event.message} en ${event.filename || 'script'}:${event.lineno || 0}:${event.colno || 0}`
+        );
+      }
+    } catch(e) {}
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    try {
+      if (event && event.reason) {
+        const msg = event.reason.message || String(event.reason);
+        window.enviarReporteSoporte('Informar un error', `Unhandled Promise Rejection: ${msg}`);
+      }
+    } catch(e) {}
+  });
+

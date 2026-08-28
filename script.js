@@ -2135,14 +2135,26 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         
         // DESTINO (multiple allowed)
         const accionesDestino = [...respuesta.matchAll(/\[ACCION:DESTINO:([^\]]+)\]/g)];
+
+        // Evitar duplicados procesando nombres unicos
+        const destinosAgregadosSet = new Set();
+
         accionesDestino.forEach((match, idx) => {
-          const newId = Date.now() + idx;
           const nombre = match[1].trim();
-          destinos.push({ id: newId, nombre, dias: [], tramos: [] });
-          renderDestinos();
-          showToast(`✅ Destino "${nombre}" añadido`, 'success');
-          if (document.getElementById('welcome').style.display !== 'none' && idx === 0) empezar();
-          accionesEjecutadas = true;
+
+          // Verificación de duplicación 1: Comprobar si ya existe en los destinos del usuario
+          const existeDestino = destinos.find(d => d.nombre.toLowerCase() === nombre.toLowerCase());
+
+          // Verificación de duplicación 2: Comprobar si ya lo agregamos en esta misma respuesta
+          if (!existeDestino && !destinosAgregadosSet.has(nombre.toLowerCase())) {
+            destinosAgregadosSet.add(nombre.toLowerCase());
+            const newId = Date.now() + idx;
+            destinos.push({ id: newId, nombre, dias: [], tramos: [] });
+            renderDestinos();
+            showToast(`✅ Destino "${nombre}" añadido`, 'success');
+            if (document.getElementById('welcome').style.display !== 'none' && destinosAgregadosSet.size === 1) empezar();
+            accionesEjecutadas = true;
+          }
         });
         
         // LIMPIAR_DESTINO (multiple allowed)
@@ -7259,3 +7271,55 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       }, 500);
     }
   });
+
+  // ================== SOPORTE & ERROR REPORTING AUTOMÁTICO (FIRESTORE 'soporte') ==================
+  window.enviarReporteSoporte = async function(tipo, detalle, contacto, usuario) {
+    try {
+      if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return false;
+      const db = firebase.firestore();
+      const currentUser = firebase.auth().currentUser;
+      const nick = usuario || (typeof currentNickname !== 'undefined' ? currentNickname : localStorage.getItem('plux_current_nickname')) || (currentUser ? currentUser.email : 'Anónimo');
+      
+      const payload = {
+        tipo: tipo || 'Informar un error',
+        app: 'Plux Travel',
+        error: detalle || 'Sin descripción',
+        usuario: nick || 'Anónimo',
+        contacto: contacto || (currentUser ? currentUser.email : ''),
+        fecha: new Date().toLocaleString('es-AR'),
+        estado: 'Pendiente',
+        prioridad: 'Normal',
+        dispositivo: navigator.userAgent || 'Web Browser',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      await db.collection('soporte').add(payload);
+      console.log('✅ Reporte enviado a Firestore soporte:', payload);
+      return true;
+    } catch(err) {
+      console.warn('⚠️ No se pudo enviar el reporte a soporte:', err);
+      return false;
+    }
+  };
+
+  // Captura automática de errores de JavaScript en Plux
+  window.addEventListener('error', function(event) {
+    try {
+      if (event && event.message && !event.message.includes('ResizeObserver') && !event.message.includes('Script error')) {
+        window.enviarReporteSoporte(
+          'Informar un error',
+          `Error JS: ${event.message} en ${event.filename || 'script'}:${event.lineno || 0}:${event.colno || 0}`
+        );
+      }
+    } catch(e) {}
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    try {
+      if (event && event.reason) {
+        const msg = event.reason.message || String(event.reason);
+        window.enviarReporteSoporte('Informar un error', `Unhandled Promise Rejection: ${msg}`);
+      }
+    } catch(e) {}
+  });
+

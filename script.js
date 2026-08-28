@@ -2135,14 +2135,26 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         
         // DESTINO (multiple allowed)
         const accionesDestino = [...respuesta.matchAll(/\[ACCION:DESTINO:([^\]]+)\]/g)];
+
+        // Evitar duplicados procesando nombres unicos
+        const destinosAgregadosSet = new Set();
+
         accionesDestino.forEach((match, idx) => {
-          const newId = Date.now() + idx;
           const nombre = match[1].trim();
-          destinos.push({ id: newId, nombre, dias: [], tramos: [] });
-          renderDestinos();
-          showToast(`✅ Destino "${nombre}" añadido`, 'success');
-          if (document.getElementById('welcome').style.display !== 'none' && idx === 0) empezar();
-          accionesEjecutadas = true;
+
+          // Verificación de duplicación 1: Comprobar si ya existe en los destinos del usuario
+          const existeDestino = destinos.find(d => d.nombre.toLowerCase() === nombre.toLowerCase());
+
+          // Verificación de duplicación 2: Comprobar si ya lo agregamos en esta misma respuesta
+          if (!existeDestino && !destinosAgregadosSet.has(nombre.toLowerCase())) {
+            destinosAgregadosSet.add(nombre.toLowerCase());
+            const newId = Date.now() + idx;
+            destinos.push({ id: newId, nombre, dias: [], tramos: [] });
+            renderDestinos();
+            showToast(`✅ Destino "${nombre}" añadido`, 'success');
+            if (document.getElementById('welcome').style.display !== 'none' && destinosAgregadosSet.size === 1) empezar();
+            accionesEjecutadas = true;
+          }
         });
         
         // LIMPIAR_DESTINO (multiple allowed)

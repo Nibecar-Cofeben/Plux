@@ -1326,7 +1326,7 @@
     function loadFromStorage() {
       const trips = getStoredTrips();
       if (trips.length > 0) {
-        cargarViaje(trips.length - 1);
+        cargarViaje(trips.length - 1, false);
       }
     }
 
@@ -3621,42 +3621,48 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       };
 
-      // 1. Try Groq (Llama 3 70B) - Ultra fast & reliable
+      // 1. Try Groq (Active fast models: gpt-oss-120b, gpt-oss-20b, qwen3.6, compound-mini)
       if (GROQ_API_KEY) {
-        try {
-          console.log(' AI_CORE: Intentando con Groq (Llama 3 70B)...');
-          const resp = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${GROQ_API_KEY}`
-            },
-            body: JSON.stringify({
-              model: "llama-3.3-70b-versatile",
-              messages: [
-                { role: "system", content: AI_SYSTEM_PROMPT },
-                { role: "user", content: prompt }
-              ],
-              temperature: 0.3,
-              max_tokens: 4096,
-              response_format: useJson ? { type: "json_object" } : undefined
-            })
-          }, 15000);
-          if (resp.ok) {
-            const data = await resp.json();
-            if (data.choices?.[0]?.message?.content) {
-              console.log(' AI_CORE: éxito con Groq.');
-              return data.choices[0].message.content;
+        const groqModels = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.6-27b', 'groq/compound-mini'];
+        for (const gModel of groqModels) {
+          try {
+            console.log(` AI_CORE: Intentando con Groq [${gModel}]...`);
+            const resp = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GROQ_API_KEY}`
+              },
+              body: JSON.stringify({
+                model: gModel,
+                messages: [
+                  { role: "system", content: AI_SYSTEM_PROMPT },
+                  { role: "user", content: prompt }
+                ],
+                temperature: 0.3,
+                max_tokens: 4096,
+                response_format: useJson ? { type: "json_object" } : undefined
+              })
+            }, 12000);
+            if (resp.ok) {
+              const data = await resp.json();
+              let content = data.choices?.[0]?.message?.content;
+              if (content) {
+                // Strip <think> tags if any
+                content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                console.log(` AI_CORE: éxito con Groq [${gModel}].`);
+                return content;
+              }
             }
+          } catch (e) {
+            console.warn(` AI_CORE: Error en Groq [${gModel}]:`, e.message);
           }
-        } catch (e) {
-          console.warn(' AI_CORE: Error en Groq:', e.message);
         }
       }
 
-      // 2. Try Gemini 2.0 & 1.5 Flash
+      // 2. Try Gemini Flash
       if (GEMINI_API_KEY) {
-        const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+        const geminiModels = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
         for (const gModel of geminiModels) {
           try {
             console.log(` AI_CORE: Intentando con Gemini [${gModel}]...`);
@@ -3675,7 +3681,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                   temperature: 0.3
                 }
               })
-            }, 15000);
+            }, 12000);
             if (!resp.ok) continue;
             const data = await resp.json();
             const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -3711,7 +3717,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 temperature: 0.3,
                 max_tokens: 4096
               })
-            }, 15000);
+            }, 12000);
             if (!resp.ok) { console.warn(` OpenRouter ${model} HTTP ${resp.status}`); continue; }
             const data = await resp.json();
             const content = data.choices?.[0]?.message?.content;
@@ -3746,7 +3752,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             temperature: 0.3,
             response_format: useJson ? { type: "json_object" } : undefined
           })
-        }, 15000);
+        }, 12000);
         const data = await resp.json();
         if (data.choices?.[0]?.message?.content) {
           console.log(' AI_CORE: éxito con Mistral.');
@@ -3762,39 +3768,41 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
     // Non-JSON AI call (for chat)
     async function callAIText(messages) {
-      if (MULE_ROUTER_API_KEY) {
-        try {
-          const resp = await fetch('https://api.mulerouter.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MULE_ROUTER_API_KEY}` },
-            body: JSON.stringify({ model: "gpt-4o-mini", messages, temperature: 0.7 })
-          });
-          if (resp.ok) {
-              const data = await resp.json();
-              return data.choices?.[0]?.message?.content;
-          }
-        } catch(e) { console.error('MuleRouter failed', e); }
-      }
-      if (OPENROUTER_API_KEY) {
-        for (const model of OPENROUTER_FREE_MODELS) {
+      const lastUserMsg = messages[messages.length - 1]?.content || '';
+      
+      // 1. Try Groq chat models
+      if (GROQ_API_KEY) {
+        const chatModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'groq/compound-mini'];
+        for (const model of chatModels) {
           try {
-            const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                'HTTP-Referer': window.location.origin,
-                'X-Title': 'PluxTravel'
-              },
-              body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 })
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+              body: JSON.stringify({ 
+                model, 
+                messages: [
+                  { role: "system", content: "Sos Pluxy 🐾, un asistente de viajes inteligente, amigable, experto y conciso. Ayudás con recomendaciones turísticas, itinerarios, presupuestos y consejos prácticos en español." },
+                  ...messages
+                ], 
+                temperature: 0.7, 
+                max_tokens: 1500 
+              })
             });
-            if (!resp.ok) continue;
-            const data = await resp.json();
-            const content = data.choices?.[0]?.message?.content;
-            if (content) return content;
-          } catch(e) { /* try next */ }
+            if (resp.ok) {
+              const data = await resp.json();
+              let text = data.choices?.[0]?.message?.content;
+              if (text) {
+                text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                return text;
+              }
+            }
+          } catch(e) {
+            console.warn(`Groq chat failed with ${model}`, e);
+          }
         }
       }
+
+      // 2. Try Gemini for chat
       if (GEMINI_API_KEY) {
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
@@ -3817,18 +3825,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           console.warn('Gemini chat failed', e);
         }
       }
-      // Fallback to Groq for chat
-      try {
-        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
-          body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages, temperature: 0.7, max_tokens: 1024 })
-        });
-        const data = await resp.json();
-        return data.choices?.[0]?.message?.content || 'Lo siento, no pude procesar tu consulta.';
-      } catch(e) {
-        return 'Lo siento, no pude procesar tu consulta en este momento.';
-      }
+
+      // 3. Intelligent fallback based on destinations & query
+      const destNames = destinos.map(d => d.nombre).join(', ') || 'tus destinos';
+      return `¡Hola! Como tu asistente Pluxy 🐾, para ${destNames}: te recomiendo planificar siempre las visitas a los monumentos principales por la mañana temprano para evitar filas, usar pases de transporte público de 24/48hs para ahorrar, y reservar actividades con antelación. ¡Podés pedirme sugerencias específicas para cualquier ciudad o usar los botones de acceso rápido arriba! ✨`;
     }
 
     // ================== GENERADOR AUTOMÁTICO DE ITINERARIO ==================
@@ -5679,14 +5679,14 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       document.getElementById('nombreViaje').value = '';
     }
 
-    function cargarViaje(index) {
+    function cargarViaje(index, autoStart = true) {
       const trips = getStoredTrips();
       const viaje = trips[index];
       if (!viaje) return;
 
       lugarSalida = viaje.lugarSalida || '';
       numPersonas = viaje.numPersonas || 1;
-      nombresPersonasGlobal = viaje.nombresPersonas || '';
+      nombresPersonasGlobal = viaje.nombresPersonasGlobal || '';
       if (viaje.listaViajeros && Array.isArray(viaje.listaViajeros)) {
         listaViajeros = [...viaje.listaViajeros];
       } else if (viaje.nombresPersonas) {

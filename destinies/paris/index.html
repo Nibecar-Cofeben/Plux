@@ -3,12 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>París · Plux Destinies</title>
+  <title>Itinerario París en 3-5 días · Guía de Viaje y Rutas | Plux</title>
+  
+  <!-- SEO Básico -->
+  <meta name="description" content="Qué ver en París: Torre Eiffel, Museo del Louvre, Montmartre, paseos por el Sena y tips de viaje. Crea y personaliza tu itinerario de París gratis en Plux." />
+  <meta name="keywords" content="itinerario paris, que ver en paris, viaje a paris, torre eiffel, louvre, montmartre, presupuesto paris, guia paris, plux" />
+  <meta name="author" content="Plux / Nibecar Cofeben" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="canonical" href="https://nibecar-cofeben.web.app/plux/destinies/paris/" />
   <link rel="icon" type="image/ico" href="/plux/favico.ico">
+
+  <!-- Open Graph / Redes Sociales -->
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://nibecar-cofeben.web.app/plux/destinies/paris/" />
+  <meta property="og:title" content="Itinerario París en 3-5 días · Guía de Viaje y Rutas | Plux" />
+  <meta property="og:description" content="Planifica tu escapada a París: Torre Eiffel, Louvre, Montmartre, gastronomía francesa y presupuesto diario." />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80" />
+  <meta property="og:site_name" content="Plux" />
+  <meta property="og:locale" content="es_ES" />
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://nibecar-cofeben.web.app/plux/destinies/paris/" />
+  <meta name="twitter:title" content="Itinerario París en 3-5 días · Guía y Rutas | Plux" />
+  <meta name="twitter:description" content="Descubre París paso a paso: monumentos icónicos, museos y organizador interactivo con Plux." />
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80" />
+
+  <!-- Datos Estructurados JSON-LD (Schema.org) - TouristDestination -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TouristDestination",
+    "name": "París, Francia",
+    "description": "La Ciudad de la Luz, referente global del arte, la moda, la gastronomía y la arquitectura clásica.",
+    "url": "https://nibecar-cofeben.web.app/plux/destinies/paris/",
+    "image": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80",
+    "touristType": ["Arte", "Cultura", "Romance", "Gastronomía"],
+    "containedInPlace": {
+      "@type": "Country",
+      "name": "Francia"
+    }
+  }
+  </script>
+
+  <!-- Google Analytics 4 (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PLUXTRAVEL4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    window.GA_MEASUREMENT_ID = window.GA_MEASUREMENT_ID || 'G-PLUXTRAVEL4';
+    gtag('config', window.GA_MEASUREMENT_ID, {
+      send_page_view: true,
+      app_name: 'Plux Web - Destino París'
+    });
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/plux/styles.css?v=1779320000000">
+  <link rel="stylesheet" href="/plux/styles.css?v=1779999999999">
   <style>
     .destiny-hero {
       position: relative; height: 55vh; min-height: 380px; max-height: 550px;
@@ -94,27 +148,27 @@
 
     <div style="display:flex; align-items:center; gap:12px;">
       <div style="position:relative;">
-        <div class="lang-button" id="langButton" style="width:38px; height:38px; font-size:0.85rem;" title="Idioma">ES</div>
+        <div class="lang-button" id="langButton" onclick="window.toggleLangDropdown(event)" style="width:38px; height:38px; font-size:0.85rem;" title="Idioma">ES</div>
         <div class="lang-dropdown" id="langDropdown" style="top:48px; right:0;">
-          <div class="lang-option active" data-lang="es">ES</div>
-          <div class="lang-option" data-lang="en">EN</div>
-          <div class="lang-option" data-lang="fr">FR</div>
-          <div class="lang-option" data-lang="de">DE</div>
-          <div class="lang-option" data-lang="it">IT</div>
-          <div class="lang-option" data-lang="pt">PT</div>
+          <div class="lang-option active" data-lang="es" onclick="window.setLanguage('es')">ES</div>
+          <div class="lang-option" data-lang="en" onclick="window.setLanguage('en')">EN</div>
+          <div class="lang-option" data-lang="fr" onclick="window.setLanguage('fr')">FR</div>
+          <div class="lang-option" data-lang="de" onclick="window.setLanguage('de')">DE</div>
+          <div class="lang-option" data-lang="it" onclick="window.setLanguage('it')">IT</div>
+          <div class="lang-option" data-lang="pt" onclick="window.setLanguage('pt')">PT</div>
         </div>
       </div>
 
       <div style="position:relative;">
-        <div class="theme-button" id="themeButton" style="width:38px; height:38px; font-size:1rem;" title="Tema">🎨</div>
+        <div class="theme-button" id="themeButton" onclick="window.toggleThemeDropdown(event)" style="width:38px; height:38px; font-size:1rem;" title="Tema">🎨</div>
         <div class="theme-dropdown" id="themeDropdown" style="top:48px; right:0;">
-          <div class="theme-option" data-theme="theme-claro">Claro</div>
-          <div class="theme-option active" data-theme="theme-oscuro">Oscuro</div>
-          <div class="theme-option" data-theme="theme-tokyo">Tokyo Night</div>
-          <div class="theme-option" data-theme="theme-grid">The Grid</div>
-          <div class="theme-option" data-theme="theme-terminal">Terminal</div>
-          <div class="theme-option" data-theme="theme-starship">Starship</div>
-          <div class="theme-option" data-theme="theme-ares">Ares</div>
+          <div class="theme-option" data-theme="theme-claro" onclick="window.setTheme('theme-claro')">Claro</div>
+          <div class="theme-option active" data-theme="theme-oscuro" onclick="window.setTheme('theme-oscuro')">Oscuro</div>
+          <div class="theme-option" data-theme="theme-tokyo" onclick="window.setTheme('theme-tokyo')">Tokyo Night</div>
+          <div class="theme-option" data-theme="theme-grid" onclick="window.setTheme('theme-grid')">The Grid</div>
+          <div class="theme-option" data-theme="theme-terminal" onclick="window.setTheme('theme-terminal')">Terminal</div>
+          <div class="theme-option" data-theme="theme-starship" onclick="window.setTheme('theme-starship')">Starship</div>
+          <div class="theme-option" data-theme="theme-ares" onclick="window.setTheme('theme-ares')">Ares</div>
         </div>
       </div>
 
@@ -237,7 +291,7 @@
   <div id="pluxy-destiny-modal" style="display:none; position:fixed; bottom:90px; right:20px; z-index:1000; width:380px; max-width:90vw; height:500px; max-height:80vh; background:var(--card); border:1px solid var(--verde); border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,0.6); flex-direction:column; overflow:hidden; backdrop-filter:blur(16px);">
     <div style="background:linear-gradient(135deg, rgba(52,211,153,0.2), rgba(96,165,250,0.2)); padding:16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
       <div style="display:flex; align-items:center; gap:10px;">
-        <img src="/plux/pet.png" style="width:32px; height:32px; border-radius:50%;">
+        <img src="/plux/pet.png" alt="Pluxy" style="width:32px; height:32px; border-radius:50%;">
         <div>
           <strong style="color:white; font-size:0.95rem; display:block;">Pluxy Assistant</strong>
           <span style="color:var(--verde); font-size:0.75rem;">online · París</span>
@@ -256,7 +310,7 @@
     <img src="/plux/pet.png" alt="Pluxy" style="width:60px; height:auto; filter:drop-shadow(0 4px 12px rgba(99,102,241,0.5)); transition:transform 0.2s;">
   </button>
 
-  <script src="/plux/destinies/destiny_pluxy.js"></script>
+  <script src="/plux/destinies/destiny_pluxy.js?v=1779999999999"></script>
   <script>
     function planearParis() { window.location.href = '/plux/join/plantillas/paris'; }
     function planearLugar(lugar) { window.location.href = '/plux/join/plantillas/paris?actividad=' + encodeURIComponent(lugar); }

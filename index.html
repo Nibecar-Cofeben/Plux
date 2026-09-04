@@ -3,23 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Plux - Tu viaje</title>
-  <link rel="icon" type="image/ico" href="/plux/favico.ico">
+  <title>Plux · Planificador Inteligente de Viajes e Itinerarios</title>
+  
+  <!-- SEO Básico -->
+  <meta name="description" content="Plux es la aplicación inteligente para organizar viajes e itinerarios colaborativos día a día, calcular presupuestos en múltiples divisas y explorar guías turísticas interactivas." />
+  <meta name="keywords" content="planificador de viajes, organizar itinerario, viajes colaborativos, presupuesto de viaje, mapa de ruta, turismo, guías de viaje, plux" />
+  <meta name="author" content="Nibecar Cofeben" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="canonical" href="https://nibecar-cofeben.web.app/plux/" />
+  <link rel="icon" type="image/ico" href="/plux/favico.ico" />
+
+  <!-- Open Graph / Redes Sociales (Facebook, WhatsApp, Telegram, LinkedIn) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://nibecar-cofeben.web.app/plux/" />
+  <meta property="og:title" content="Plux · Planificador Inteligente de Viajes e Itinerarios" />
+  <meta property="og:description" content="Organiza tus viajes día por día, calcula presupuestos automáticos, colabora en tiempo real con amigos y exporta a PDF o calendario." />
+  <meta property="og:image" content="https://nibecar-cofeben.web.app/plux/og-banner.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Plux - Planificador Inteligente de Viajes e Itinerarios" />
+  <meta property="og:site_name" content="Plux" />
+  <meta property="og:locale" content="es_ES" />
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://nibecar-cofeben.web.app/plux/" />
+  <meta name="twitter:title" content="Plux · Planificador Inteligente de Viajes e Itinerarios" />
+  <meta name="twitter:description" content="Organiza tus viajes día por día, calcula presupuestos automáticos y colabora en tiempo real con amigos." />
+  <meta name="twitter:image" content="https://nibecar-cofeben.web.app/plux/og-banner.png" />
+
+  <!-- Datos Estructurados JSON-LD (Schema.org) - SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Plux",
+    "applicationCategory": "TravelApplication",
+    "operatingSystem": "Web, Android, iOS, Windows, macOS",
+    "url": "https://nibecar-cofeben.web.app/plux/",
+    "image": "https://nibecar-cofeben.web.app/plux/og-banner.png",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "Herramienta inteligente de planificación de viajes, itinerarios día por día, cálculo automático de presupuestos multidivisa, colaboración en vivo y exportación a PDF o calendario.",
+    "author": {
+      "@type": "Organization",
+      "name": "Nibecar Cofeben",
+      "url": "https://nibecar-cofeben.web.app"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "142"
+    }
+  }
+  </script>
+
+  <!-- Google Analytics 4 (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PLUXTRAVEL4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    window.GA_MEASUREMENT_ID = window.GA_MEASUREMENT_ID || 'G-PLUXTRAVEL4';
+    gtag('config', window.GA_MEASUREMENT_ID, {
+      send_page_view: true,
+      app_name: 'Plux Web'
+    });
+    window.trackEvent = window.trackEvent || function(eventName, params) {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', eventName, params || {});
+      }
+      console.log('📊 [GA4 Event]', eventName, params);
+    };
+  </script>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/plux/styles.css?v=1779320000000">
+  <link rel="stylesheet" href="/plux/styles.css?v=1779999999999">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
   
-  <!-- Firebase (compat) -->
-  <script defer src="/__/firebase/10.9.0/firebase-app-compat.js"></script>
-  <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
-  <script defer src="/__/firebase/10.9.0/firebase-firestore-compat.js"></script>
-  <script defer src="/__/firebase/10.9.0/firebase-analytics-compat.js"></script>
-  <script defer src="/__/firebase/init.js"></script>
-  <script defer src="/plux/script.js?v=1779800000000"></script>
+  <!-- Firebase (compat) Local Offline SDK -->
+  <script src="/plux/firebase/firebase-app-compat.js"></script>
+  <script src="/plux/firebase/firebase-auth-compat.js"></script>
+  <script src="/plux/firebase/firebase-firestore-compat.js"></script>
+  <script src="/plux/firebase/firebase-analytics-compat.js"></script>
+  <script defer src="/plux/script.js?v=1779999999999"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -27,18 +101,28 @@
   <div id="bg-parallax"></div>
   <div class="welcome" id="welcome">
     <div class="top-selectors">
-      <div class="lang-button" id="langButton">ES</div>
-      <div class="lang-dropdown" id="langDropdown">
-        <div class="lang-option active" data-lang="es">ES</div>
-        <div class="lang-option" data-lang="en">EN</div>
-        <div class="lang-option" data-lang="fr">FR</div>
-        <div class="lang-option" data-lang="de">DE</div>
-        <div class="lang-option" data-lang="it">IT</div>
+      <div class="selector-wrapper" style="position:relative;">
+        <div class="lang-button" id="langButton" onclick="window.toggleLangDropdown(event)" title="Idioma">ES</div>
+        <div class="lang-dropdown" id="langDropdown">
+          <div class="lang-option active" data-lang="es" onclick="window.setLanguage('es')">ES</div>
+          <div class="lang-option" data-lang="en" onclick="window.setLanguage('en')">EN</div>
+          <div class="lang-option" data-lang="fr" onclick="window.setLanguage('fr')">FR</div>
+          <div class="lang-option" data-lang="de" onclick="window.setLanguage('de')">DE</div>
+          <div class="lang-option" data-lang="it" onclick="window.setLanguage('it')">IT</div>
+        </div>
       </div>
-      <div class="theme-button" id="themeButton">🎨</div>
-      <div class="theme-dropdown" id="themeDropdown"></div>
-      <div class="tour-button" id="tourButton" title="Tour guiado">🎯</div>
-      <div class="user-button" id="cuentaButton" title="Tu perfil">👤</div>
+      <div class="selector-wrapper" style="position:relative;">
+        <div class="theme-button" id="themeButton" onclick="window.toggleThemeDropdown(event)" title="Tema">🎨</div>
+        <div class="theme-dropdown" id="themeDropdown"></div>
+      </div>
+      <div class="tour-button" id="tourButton" title="Tour guiado" onclick="window.iniciarTour()">🎯</div>
+      <div class="user-button" id="cuentaButton" title="Tu perfil" onclick="window.abrirCuenta()">👤</div>
+      <div class="chat-social-button" id="chatSocialBtn" title="Chat del Viaje & Amigos" onclick="window.abrirChatSocial()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+        </svg>
+        <span id="chatSocialUnreadBadge" class="chat-unread-dot" style="display:none;"></span>
+      </div>
     </div>
     <div class="logo-bubble">PLUX</div>
 
@@ -47,7 +131,7 @@
       <button class="main-btn" id="tripsBtn" onclick="window.abrirModalViajes()" style="flex: 1 1 45%;">Tus viajes</button>
       <button class="main-btn discover-btn" id="discoverBtn" onclick="window.abrirDescubrir()" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
       <button class="main-btn tools-btn" id="toolsBtn" onclick="window.abrirPanelHerramientas()" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
-      <button class="main-btn" onclick="window.abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/plux/pet.png" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
+      <button class="main-btn" onclick="window.abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/plux/pet.png" alt="Pluxy" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
     </div>
 
     <!-- Inspiration Cards -->
@@ -93,13 +177,14 @@
     <div class="footer-logo">nibecar cofeben</div>
   </div>
 
-  <div id="modal-panel-herramientas">
+  <div id="modal-panel-herramientas" style="display:none;">
     <div class="panel-herramientas-content">
       <div class="panel-herramientas-header">
         <h2 id="herramientasTitle">Más herramientas</h2>
         <span class="close-panel" onclick="cerrarPanelHerramientas()">×</span>
       </div>
       <div class="herramientas-grid">
+        <button class="herramienta-btn" onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; font-weight:bold; grid-column:span 2;">💬 Chat Grupal & Amigos</button>
         <button class="herramienta-btn" onclick="abrirCalendario()" id="btnCalendario">Calendario</button>
         <button class="herramienta-btn" onclick="abrirConversor()" id="btnConversor">Conversor</button>
         <button class="herramienta-btn" onclick="abrirChecklist()" id="btnChecklist">Checklist</button>
@@ -118,7 +203,7 @@
     </div>
   </div>
 
-  <div id="modal-calendario">
+  <div id="modal-calendario" style="display:none;">
     <div class="calendario-content">
       <div class="calendario-header">
         <h2 id="calendarioTitle">Calendario</h2>
@@ -139,7 +224,7 @@
     </div>
   </div>
 
-  <div id="modal-viajes">
+  <div id="modal-viajes" style="display:none;">
     <div class="modal-content">
       <span class="close-modal" onclick="cerrarModalViajes()">×</span>
       <h2 id="modalTitle">Tus viajes</h2>
@@ -193,7 +278,7 @@
     </div>
   </div>
 
-  <div id="modal-presentacion">
+  <div id="modal-presentacion" style="display:none;">
     <div class="presentacion-content">
       <div class="presentacion-header">
         <h2 id="presentacionTitle">Presentación del viaje</h2>
@@ -208,7 +293,7 @@
   </div>
 
   <!-- Modal de descubrir -->
-  <div id="modal-descubrir">
+  <div id="modal-descubrir" style="display:none;">
     <div class="descubrir-content">
       <div class="descubrir-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <button class="mobile-back-btn" onclick="cerrarDescubrir()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
@@ -223,7 +308,7 @@
   </div>
 
   <!-- Modal Viaje Activo Dashboard -->
-  <div id="modal-viaje-activo">
+  <div id="modal-viaje-activo" style="display:none;">
     <div class="presentacion-content" style="background:var(--fondo); border:2px solid var(--rosa);">
       <div class="presentacion-header">
         <h2 style="color:var(--rosa);">¡Viaje Activo! - Tu itinerario de hoy</h2>
@@ -238,7 +323,7 @@
   </div>
 
   <!-- Modal Colaboradores / Invitar -->
-  <div id="modal-colaboradores">
+  <div id="modal-colaboradores" style="display:none;">
     <div class="colaboradores-content">
       <div class="colaboradores-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h2 id="colabTitle" style="color:var(--verde); margin:0;">Colaboradores</h2>
@@ -367,7 +452,7 @@
       </div>
       <div class="chat-messages" id="chat-messages">
         <div class="chat-msg ai" style="display:flex; gap:10px; align-items:flex-start;">
-          <img src="/plux/pet.png" style="height:28px; width:auto; flex-shrink:0; margin-top:2px;">
+          <img src="/plux/pet.png" alt="Pluxy" style="height:28px; width:auto; flex-shrink:0; margin-top:2px;">
           <div>¡Hola! Soy tu asistente de viaje Pluxy 🐾. Contame qué tenés en mente; puedo ayudarte a armar tu itinerario, crear la checklist, calcular costos o sugerir actividades.</div>
         </div>
       </div>
@@ -408,6 +493,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap:10px;">
         <h1 id="appTitle" style="margin:0;">Plux · Organiza tu aventura</h1>
         <div style="display:flex; gap:10px; align-items:center;">
+          <button onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:6px; box-shadow:0 0 12px rgba(16,185,129,0.35);">💬 Chat Grupal</button>
           <button id="scratchBtnEditor" onclick="window.empezarDeCero()" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none;">Viaje desde cero 🆕</button>
           <button onclick="document.getElementById('modal-colaboradores').style.display='flex'" style="background:var(--verde); color:black; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:8px;">Invitar</button>
         </div>
@@ -419,7 +505,7 @@
       <button class="mobile-back-arrow" onclick="volverAWelcome()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; display:block;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
       </button>
-      <h1 id="appTitleMobile" class="mobile-header-title">Plan de Viaje</h1>
+      <h2 id="appTitleMobile" class="mobile-header-title">Plan de Viaje</h2>
       <button class="mobile-menu-trigger" onclick="window.toggleMobileTripMenu()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; display:block;"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
       </button>
@@ -516,7 +602,7 @@
   </div>
 
 
-  <div id="modal-mapa">
+  <div id="modal-mapa" style="display:none;">
     <div class="mapa-content">
       <div class="mapa-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <h2 id="mapTitle" style="color:var(--verde); margin:0;">Mapa del viaje</h2>
@@ -526,7 +612,7 @@
     </div>
   </div>
 
-  <div id="modal-clima">
+  <div id="modal-clima" style="display:none;">
     <div class="clima-content">
       <div class="clima-header">
         <h2 id="climaTitle">Clima</h2>
@@ -543,7 +629,7 @@
     </div>
   </div>
 
-  <div id="modal-conversor">
+  <div id="modal-conversor" style="display:none;">
     <div class="conversor-content">
       <div class="conversor-header">
         <h2 id="conversorTitle">Conversor</h2>
@@ -612,20 +698,52 @@
   </div>
 
   <!-- Modal Cuenta (Firebase Auth → /login) - Airbnb Style Profile -->
-  <div id="modal-cuenta">
+  <div id="modal-cuenta" style="display:none;">
     <div class="cuenta-content">
       <span class="close-panel" onclick="cerrarCuenta()">×</span>
       
       <!-- Not logged in state -->
       <div class="cuenta-form" id="cuentaForm" style="display:flex; flex-direction:column; gap:12px; width:100%; text-align:center;">
         
-        <!-- Nibecar Cofeben Account Section -->
-        <div style="padding-bottom:15px; border-bottom:1px solid var(--border);">
-          <p id="cuentaNibecarSection" style="color:var(--gris); font-size:0.9rem; margin-bottom:12px;">Cuenta de Nibecar Cofeben</p>
-          <div style="display:flex; gap:10px;">
-            <a href="/login/?return=/plux/" id="cuentaLinkLogin" class="btn-add-feed" style="flex:1; display:block; text-decoration:none; padding:12px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; text-align:center;">Iniciar sesión</a>
-            <a href="/login/?tab=register&return=/plux/" id="cuentaLinkRegister" class="btn-add-feed" style="flex:1; display:block; text-decoration:none; padding:12px; background:rgba(255,255,255,0.1); color:var(--azul); font-weight:bold; border-radius:12px; border:1px solid var(--border); text-align:center;">Crear cuenta</a>
+        <!-- Nibecar Cofeben Account Section (Inline /public/login) -->
+        <div style="padding-bottom:15px; border-bottom:1px solid var(--border); text-align:left;">
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px;">
+            <img src="/static/Logo.png" alt="Nibecar Cofeben" style="width:26px; height:26px; object-fit:contain; border-radius:6px;" onerror="this.src='/plux/pet.png'">
+            <span style="color:var(--blanco, #fff); font-weight:bold; font-size:1rem;">Nibecar Cofeben</span>
           </div>
+
+          <!-- Auth Tabs: Iniciar sesión / Crear cuenta -->
+          <div style="display:flex; gap:8px; margin-bottom:12px; background:rgba(255,255,255,0.05); padding:4px; border-radius:10px;">
+            <button type="button" id="tabNCLogin" onclick="window.switchNCTab('login')" style="flex:1; padding:8px; border:none; border-radius:8px; background:var(--azul); color:white; font-weight:bold; cursor:pointer; font-size:0.85rem; transition:0.2s;">Iniciar sesión</button>
+            <button type="button" id="tabNCRegister" onclick="window.switchNCTab('register')" style="flex:1; padding:8px; border:none; border-radius:8px; background:transparent; color:var(--gris); font-weight:bold; cursor:pointer; font-size:0.85rem; transition:0.2s;">Crear cuenta</button>
+          </div>
+
+          <!-- Form Login -->
+          <form id="form-nc-login" onsubmit="window.handleNCLogin(event)" style="display:flex; flex-direction:column; gap:10px;">
+            <input type="email" id="ncLoginEmail" required placeholder="Correo electrónico" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box;">
+            <input type="password" id="ncLoginPassword" required minlength="6" placeholder="Contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box;">
+            <button type="submit" id="btnNCLoginSubmit" class="btn-add-feed" style="padding:12px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:10px; border:none; cursor:pointer; width:100%;">Ingresar</button>
+          </form>
+
+          <!-- Form Register -->
+          <form id="form-nc-register" onsubmit="window.handleNCRegister(event)" style="display:none; flex-direction:column; gap:10px;">
+            <input type="email" id="ncRegEmail" required placeholder="Correo electrónico" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box;">
+            <input type="password" id="ncRegPassword" required minlength="6" placeholder="Contraseña (mín. 6 car.)" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box;">
+            <input type="password" id="ncRegPassword2" required minlength="6" placeholder="Repetir contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box;">
+            <button type="submit" id="btnNCRegisterSubmit" class="btn-add-feed" style="padding:12px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:10px; border:none; cursor:pointer; width:100%;">Crear cuenta</button>
+          </form>
+
+          <div style="display:flex; align-items:center; margin:12px 0; color:var(--gris); font-size:0.8rem;">
+            <div style="flex:1; height:1px; background:var(--border);"></div>
+            <span style="padding:0 10px;">o</span>
+            <div style="flex:1; height:1px; background:var(--border);"></div>
+          </div>
+
+          <!-- Google Login -->
+          <button type="button" onclick="window.handleNCGoogle()" style="display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid var(--border); border-radius:10px; color:white; font-weight:bold; cursor:pointer; font-size:0.85rem;">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <span>Continuar con Google</span>
+          </button>
         </div>
         
         <!-- Nickname Section -->
@@ -668,17 +786,29 @@
         <!-- Airbnb-style Card Profile wrapper -->
         <div class="airbnb-profile-card" style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:24px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.4); display:flex; flex-direction:column; gap:16px; align-items:stretch; margin-bottom:10px;">
           
-          <!-- Avatar, Name & Email row -->
+          <!-- Avatar, Name & Email row with Cloudinary Photo Upload -->
+          <input type="file" id="profile-photo-input" accept="image/*" style="display:none;" onchange="window.handleProfilePhotoUpload(event)">
           <div style="display:flex; align-items:center; gap:16px;">
-            <div class="profile-avatar" id="profileAvatar" style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-size:28px; box-shadow:0 4px 15px rgba(52,211,153,0.3); flex-shrink:0;">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <div class="profile-avatar" id="profileAvatar" onclick="window.cambiarFotoPerfil()" title="Haz clic para cambiar tu foto de perfil con Cloudinary" style="width:74px; height:74px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-size:28px; box-shadow:0 4px 15px rgba(52,211,153,0.3); flex-shrink:0; position:relative; cursor:pointer; overflow:hidden; border:2px solid rgba(255,255,255,0.2);">
+              <div id="profileAvatarInner" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <div class="profile-avatar-overlay">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              </div>
             </div>
-            <div style="display:flex; flex-direction:column; gap:3px; overflow:hidden;">
+            <div style="display:flex; flex-direction:column; gap:4px; overflow:hidden; flex:1;">
               <h2 id="profileName" style="margin:0; font-size:1.3rem; font-weight:700; color:white; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Usuario</h2>
               <p id="profileEmail" style="margin:0; color:var(--gris); font-size:0.8rem; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">email@ejemplo.com</p>
-              <div class="profile-badge" id="profileBadge" style="display:inline-flex; align-items:center; gap:4px; margin-top:2px; padding:3px 10px; background:rgba(52,211,153,0.1); border:1px solid var(--verde); border-radius:20px; font-size:0.7rem; color:var(--verde); width:fit-content;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <span id="profileMemberSince">Miembro desde 2024</span>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px;">
+                <div class="profile-badge" id="profileBadge" style="display:inline-flex; align-items:center; gap:4px; padding:3px 10px; background:rgba(52,211,153,0.1); border:1px solid var(--verde); border-radius:20px; font-size:0.7rem; color:var(--verde);">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  <span id="profileMemberSince">Miembro desde 2024</span>
+                </div>
+                <button type="button" class="btn-change-photo-mini" onclick="window.cambiarFotoPerfil()">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                  <span>Cambiar foto</span>
+                </button>
               </div>
             </div>
           </div>
@@ -763,6 +893,28 @@
         <button onclick="cerrarSesion()" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:16px; color:var(--rojo); font-weight:600; cursor:pointer; transition:all 0.2s;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
           <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMAR CIERRE DE SESIÓN Y GESTIÓN DE CHATS -->
+  <div id="modal-confirmar-logout" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:2100; align-items:center; justify-content:center; backdrop-filter:blur(8px);" onclick="if(event.target===this) window.cancelarCerrarSesion()">
+    <div class="modal-content" style="max-width:440px; text-align:center; padding:28px; background:var(--card); border:1px solid var(--border); border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.7); position:relative;">
+      <div style="font-size:2.8rem; margin-bottom:12px;">🔒</div>
+      <h3 style="color:var(--texto); margin:0 0 10px 0; font-size:1.3rem;">¿Cerrar sesión?</h3>
+      <p style="color:var(--gris); font-size:0.92rem; line-height:1.5; margin-bottom:24px;">
+        Por tu privacidad, ¿deseas <strong>borrar los chats y mensajes</strong> guardados en este dispositivo o mantenerlos en este equipo?
+      </p>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button onclick="window.ejecutarCerrarSesion(true)" style="background:linear-gradient(135deg, #ef4444, #f43f5e); color:white; border:none; border-radius:14px; padding:13px; font-weight:700; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 15px rgba(239,68,68,0.3);">
+          🗑️ Borrar chats y cerrar sesión
+        </button>
+        <button onclick="window.ejecutarCerrarSesion(false)" style="background:rgba(255,255,255,0.08); color:var(--texto); border:1px solid var(--border); border-radius:14px; padding:12px; font-weight:600; font-size:0.9rem; cursor:pointer;">
+          💾 Mantener chats en este equipo
+        </button>
+        <button onclick="window.cancelarCerrarSesion()" style="background:transparent; color:var(--gris); border:none; padding:8px; font-size:0.85rem; cursor:pointer;">
+          Cancelar
         </button>
       </div>
     </div>
@@ -938,14 +1090,164 @@
           <span class="icon">🗺️</span>
           <span id="mobileMenuMap">Ver mapa</span>
         </button>
-        <button class="mobile-drawer-item" onclick="window.mobileActionSoporte()">
+        <button class="mobile-drawer-item" onclick="window.abrirChatSocial(); window.toggleMobileTripMenu();">
           <span class="icon">💬</span>
-          <span id="mobileMenuSupport">Soporte y Sugerencias</span>
+          <span>Chat Social del Viaje</span>
         </button>
         <button class="mobile-drawer-item cancel-item" onclick="window.toggleMobileTripMenu()">
           <span class="icon">✕</span>
           <span id="mobileMenuClose">Cancelar</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHAT SOCIAL (INDIVIDUAL & GRUPAL - ESTÉTICA NEÓN) -->
+  <div id="modal-plux-chat-social" class="modal-plux-chat-social" style="display:none;" onclick="if(event.target===this) window.cerrarChatSocial()">
+    <div class="plux-social-chat-card">
+      <!-- Header with Back <, Title & Subtitle, Search Q, Options : -->
+      <div class="plux-chat-header">
+        <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+          <button class="plux-chat-back-btn" onclick="window.cerrarChatSocial()" title="Volver">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div class="plux-chat-title-box">
+            <div class="plux-chat-title" id="pluxChatActiveTitle">Viaje Grupal ✈️</div>
+            <div class="plux-chat-subtitle" id="pluxChatActiveSubtitle">Chat del viaje · En vivo</div>
+          </div>
+        </div>
+        <div class="plux-chat-header-actions">
+          <button class="plux-chat-action-btn" id="pluxChatSearchBtn" title="Buscar en el chat" onclick="window.toggleSocialChatSearch()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+          <button class="plux-chat-action-btn" id="pluxChatChannelsBtn" title="Ver Canales y Directos" onclick="window.toggleSocialChatChannels()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Channels Drawer / Tab Selector (Grupo del Viaje vs Chats Directos 1 a 1) -->
+      <div id="plux-chat-channels-drawer" class="plux-chat-channels-drawer" style="display:none;">
+        <div class="plux-channels-header">
+          <span>Canales & Conversaciones</span>
+          <button class="plux-new-dm-btn" onclick="window.abrirModalNuevaConversacion()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Nueva Conversación</span>
+          </button>
+        </div>
+        <div class="plux-channels-list" id="pluxChannelsList">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Search Bar in Chat -->
+      <div id="plux-chat-search-bar" class="plux-chat-search-bar" style="display:none;">
+        <input type="text" id="plux-chat-search-input" placeholder="Buscar mensajes en el chat..." oninput="window.filtrarMensajesChatSocial(this.value)">
+        <span onclick="window.toggleSocialChatSearch()" style="cursor:pointer; font-size:1.2rem; color:var(--gris); padding: 0 4px;">×</span>
+      </div>
+
+      <!-- Messages Timeline with exact Campaign Glow Bubble Aesthetic -->
+      <div class="plux-chat-timeline" id="pluxChatTimeline">
+        <!-- Bubbles rendered dynamically with neon glow borders -->
+      </div>
+
+      <!-- Attachments Menu Dropup (Compartir foto, evento, destino, checklist) -->
+      <div id="plux-chat-attach-menu" class="plux-chat-attach-menu" style="display:none;">
+        <div class="plux-attach-option" onclick="window.adjuntarFotoAlChat()">📷 Enviar foto / imagen</div>
+        <div class="plux-attach-option" onclick="window.adjuntarEventoAlChat()">📅 Compartir actividad del viaje</div>
+        <div class="plux-attach-option" onclick="window.adjuntarDestinoAlChat()">🗺️ Compartir destino</div>
+        <div class="plux-attach-option" onclick="window.adjuntarChecklistAlChat()">✅ Compartir checklist</div>
+      </div>
+
+      <!-- Hidden Input for Chat Photo Upload -->
+      <input type="file" id="plux-chat-photo-input" accept="image/*" style="display:none;" onchange="window.handleChatPhotoUpload(event)">
+
+      <!-- Bottom Input Dock -->
+      <div class="plux-chat-dock">
+        <button class="plux-dock-btn" id="pluxChatAttachBtn" title="Adjuntar fotos y elementos del viaje" onclick="window.mostrarMenuAdjuntosChat()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        </button>
+        
+        <div class="plux-dock-input-wrapper">
+          <input type="text" id="plux-social-input" placeholder="Mensaje... (usa @pluxy para IA)" onkeydown="if(event.key==='Enter') window.enviarMensajeChatSocial()">
+        </div>
+
+        <button class="plux-dock-send-btn" id="pluxChatSendBtn" title="Enviar" onclick="window.enviarMensajeChatSocial()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FOTO LIGHTBOX (VER FOTO COMPARTIDA EN GRANDE) -->
+  <div id="modal-foto-lightbox" class="photo-lightbox-modal" style="display:none;" onclick="if(event.target===this) window.cerrarFotoGrande()">
+    <div class="photo-lightbox-card">
+      <div class="photo-lightbox-header">
+        <span id="photoLightboxTitle">📸 Foto del viaje</span>
+        <button class="photo-lightbox-close" onclick="window.cerrarFotoGrande()">×</button>
+      </div>
+      <div class="photo-lightbox-body">
+        <img id="photoLightboxImg" src="" alt="Foto en grande">
+      </div>
+      <div class="photo-lightbox-footer">
+        <a id="photoLightboxDownload" href="#" target="_blank" class="photo-lightbox-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Abrir original</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVA CONVERSACIÓN (IN-APP SELECTOR DE AMIGOS Y FAMILIA) -->
+  <div id="modal-nueva-conversacion" class="modal-plux-chat-social" style="display:none;" onclick="if(event.target===this) window.cerrarModalNuevaConversacion()">
+    <div class="plux-social-chat-card" style="height:auto; max-height:85vh; padding-bottom:18px;">
+      <!-- Header -->
+      <div class="plux-chat-header">
+        <div style="display:flex; align-items:center; gap:12px; flex:1;">
+          <button class="plux-chat-back-btn" onclick="window.cerrarModalNuevaConversacion()" title="Volver">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div class="plux-chat-title-box">
+            <div class="plux-chat-title">Nueva Conversación</div>
+            <div class="plux-chat-subtitle">Amigos, familia y compañeros</div>
+          </div>
+        </div>
+        <button class="plux-chat-action-btn" onclick="window.cerrarModalNuevaConversacion()" title="Cerrar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Search / Input box -->
+      <div style="padding:14px 16px 6px 16px;">
+        <div class="plux-dock-input-wrapper" style="border-radius:14px; padding:4px 12px; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="input-nueva-conversacion-nick" placeholder="Ingresá un @nickname o código..." onkeydown="if(event.key==='Enter') window.confirmarNuevaConversacion()">
+          <button onclick="window.confirmarNuevaConversacion()" style="background:linear-gradient(135deg, #10b981, #38bdf8); border:none; color:white; border-radius:10px; padding:6px 14px; font-weight:700; font-size:0.82rem; cursor:pointer; flex-shrink:0;">Iniciar</button>
+        </div>
+      </div>
+
+      <!-- Quick Contact Sections -->
+      <div style="padding:10px 16px; overflow-y:auto; max-height:50vh; display:flex; flex-direction:column; gap:14px;">
+        <!-- Pluxy Assistant -->
+        <div>
+          <div style="font-size:0.75rem; font-weight:700; color:#818cf8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">🐾 Asistente de Viaje</div>
+          <div class="plux-contact-item" onclick="window.iniciarChatConUsuario('Pluxy')">
+            <div class="plux-chat-avatar plux-avatar-pluxy" style="width:38px; height:38px;">🐾</div>
+            <div style="flex:1; min-width:0;">
+              <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">Pluxy IA</div>
+              <div style="color:#94a3b8; font-size:0.75rem;">Tu compañero inteligente y guía de viaje</div>
+            </div>
+            <button class="plux-contact-start-btn">Chatear</button>
+          </div>
+        </div>
+
+        <!-- Amigos y Familia -->
+        <div>
+          <div style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">👥 Amigos y Familia</div>
+          <div id="lista-contactos-amigos" style="display:flex; flex-direction:column; gap:6px;">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
       </div>
     </div>
   </div>

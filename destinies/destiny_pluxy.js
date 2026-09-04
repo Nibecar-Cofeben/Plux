@@ -1,5 +1,14 @@
 /* Pluxy AI & Theme/Language Manager for Plux Destinies */
 (function() {
+  window.trackEvent = function(eventName, params = {}) {
+    try {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', eventName, params);
+      }
+      console.log(`📊 [GA4 Event] ${eventName}`, params);
+    } catch (e) {}
+  };
+
   let currentLang = localStorage.getItem('pluxUserLanguage') || 'es';
   let currentTheme = localStorage.getItem('PluxTheme') || 'theme-oscuro';
   let GEMINI_KEY = '';
@@ -152,25 +161,107 @@
   loadKeys();
 
   function setTheme(t) {
+    if (!t) t = 'theme-oscuro';
+    if (!t.startsWith('theme-')) t = 'theme-' + t;
     currentTheme = t;
+    localStorage.setItem('Plux_Theme', t);
     localStorage.setItem('PluxTheme', t);
-    document.body.className = `lang-${currentLang} ${t}`;
+    
+    document.body.classList.remove(
+      'theme-claro', 'theme-oscuro', 'theme-tokyo',
+      'theme-grid', 'theme-starship', 'theme-terminal', 'theme-ares'
+    );
+    document.body.classList.add(t);
+    
     document.querySelectorAll('.theme-option').forEach(opt => {
-      opt.classList.toggle('active', opt.dataset.theme === t);
+      const optTheme = opt.getAttribute('data-theme') || opt.dataset.theme;
+      opt.classList.toggle('active', optTheme === t);
     });
+
+    const td = document.getElementById('themeDropdown');
+    if (td) {
+      td.classList.remove('show');
+      td.style.display = 'none';
+    }
   }
+  window.setTheme = setTheme;
 
   function setLanguage(lang) {
+    if (!lang || !dict[lang]) lang = 'es';
     currentLang = lang;
+    localStorage.setItem('Plux_Lang', lang);
+    localStorage.setItem('plux_lang', lang);
+    localStorage.setItem('lang', lang);
     localStorage.setItem('pluxUserLanguage', lang);
-    document.body.className = `lang-${lang} ${currentTheme}`;
+    
+    document.body.classList.remove('lang-es', 'lang-en', 'lang-fr', 'lang-de', 'lang-it', 'lang-pt');
+    document.body.classList.add(`lang-${lang}`);
+    
     document.querySelectorAll('.lang-option').forEach(opt => {
-      opt.classList.toggle('active', opt.dataset.lang === lang);
+      const optLang = opt.getAttribute('data-lang') || opt.dataset.lang;
+      opt.classList.toggle('active', optLang === lang);
     });
+    
     const langBtn = document.getElementById('langButton');
     if (langBtn) langBtn.textContent = lang.toUpperCase();
+    
+    const ld = document.getElementById('langDropdown');
+    if (ld) {
+      ld.classList.remove('show');
+      ld.style.display = 'none';
+    }
+    
     updateTextTranslations();
   }
+  window.setLanguage = setLanguage;
+
+  function toggleLangDropdown(e) {
+    if (e) {
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+    }
+    const ld = document.getElementById('langDropdown');
+    const td = document.getElementById('themeDropdown');
+    if (td) {
+      td.classList.remove('show');
+      td.style.display = 'none';
+    }
+    if (ld) {
+      const isVisible = ld.classList.contains('show') || ld.style.display === 'flex';
+      if (isVisible) {
+        ld.classList.remove('show');
+        ld.style.display = 'none';
+      } else {
+        ld.classList.add('show');
+        ld.style.display = 'flex';
+      }
+    }
+  }
+  window.toggleLangDropdown = toggleLangDropdown;
+
+  function toggleThemeDropdown(e) {
+    if (e) {
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+    }
+    const ld = document.getElementById('langDropdown');
+    const td = document.getElementById('themeDropdown');
+    if (ld) {
+      ld.classList.remove('show');
+      ld.style.display = 'none';
+    }
+    if (td) {
+      const isVisible = td.classList.contains('show') || td.style.display === 'flex';
+      if (isVisible) {
+        td.classList.remove('show');
+        td.style.display = 'none';
+      } else {
+        td.classList.add('show');
+        td.style.display = 'flex';
+      }
+    }
+  }
+  window.toggleThemeDropdown = toggleThemeDropdown;
 
   function updateTextTranslations() {
     const t = dict[currentLang] || dict.es;
@@ -203,24 +294,22 @@
 
   // Event delegation on document for theme & language selectors
   document.addEventListener('click', (e) => {
-    const langBtn = e.target.closest('#langButton, .lang-button');
-    if (langBtn) {
-      e.stopPropagation();
-      const langDrop = document.getElementById('langDropdown');
-      const themeDrop = document.getElementById('themeDropdown');
-      themeDrop?.classList.remove('show');
-      langDrop?.classList.toggle('show');
-      return;
+    const isLang = e.target.closest('#langButton, .lang-button') || e.target.closest('#langDropdown, .lang-dropdown');
+    if (!isLang) {
+      const ld = document.getElementById('langDropdown');
+      if (ld) {
+        ld.classList.remove('show');
+        ld.style.display = 'none';
+      }
     }
 
-    const themeBtn = e.target.closest('#themeButton, .theme-button');
-    if (themeBtn) {
-      e.stopPropagation();
-      const langDrop = document.getElementById('langDropdown');
-      const themeDrop = document.getElementById('themeDropdown');
-      langDrop?.classList.remove('show');
-      themeDrop?.classList.toggle('show');
-      return;
+    const isTheme = e.target.closest('#themeButton, .theme-button') || e.target.closest('#themeDropdown, .theme-dropdown');
+    if (!isTheme) {
+      const td = document.getElementById('themeDropdown');
+      if (td) {
+        td.classList.remove('show');
+        td.style.display = 'none';
+      }
     }
 
     const langOpt = e.target.closest('.lang-option');
@@ -228,7 +317,6 @@
       e.stopPropagation();
       const lang = langOpt.getAttribute('data-lang') || langOpt.dataset.lang;
       if (lang) setLanguage(lang);
-      document.getElementById('langDropdown')?.classList.remove('show');
       return;
     }
 
@@ -237,12 +325,8 @@
       e.stopPropagation();
       const theme = themeOpt.getAttribute('data-theme') || themeOpt.dataset.theme;
       if (theme) setTheme(theme);
-      document.getElementById('themeDropdown')?.classList.remove('show');
       return;
     }
-
-    document.getElementById('langDropdown')?.classList.remove('show');
-    document.getElementById('themeDropdown')?.classList.remove('show');
   });
 
   document.addEventListener('keydown', (e) => {
@@ -250,6 +334,16 @@
       if (document.body.classList.contains('theme-ares')) setTheme('theme-oscuro');
       const m = document.getElementById('pluxy-destiny-modal');
       if (m && m.style.display !== 'none') m.style.display = 'none';
+      const ld = document.getElementById('langDropdown');
+      if (ld) {
+        ld.classList.remove('show');
+        ld.style.display = 'none';
+      }
+      const td = document.getElementById('themeDropdown');
+      if (td) {
+        td.classList.remove('show');
+        td.style.display = 'none';
+      }
     }
   });
 
@@ -257,8 +351,11 @@
     window.destinyCityName = cityName;
     window.destinyCitySlug = citySlug;
 
-    setTheme(currentTheme);
-    setLanguage(currentLang);
+    const savedTheme = localStorage.getItem('Plux_Theme') || localStorage.getItem('PluxTheme') || 'theme-oscuro';
+    const savedLang = localStorage.getItem('Plux_Lang') || localStorage.getItem('plux_lang') || localStorage.getItem('lang') || localStorage.getItem('pluxUserLanguage') || 'es';
+
+    setTheme(savedTheme);
+    setLanguage(savedLang);
     renderInitialPluxyGreeting();
   };
 
@@ -267,11 +364,11 @@
     const slug = window.destinyCitySlug;
     return `
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
-        <button onclick="window.location.href='/plux/join/plantillas/${slug}'" style="background:rgba(52,211,153,0.2); border:1px solid var(--verde); color:var(--verde); border-radius:12px; padding:6px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;">${t.btnCreate}</button>
-        <button onclick="window.preguntarPluxyAI('${t.btn3Days.replace(/'/g, "\\'")}')" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--texto); border-radius:12px; padding:6px 12px; font-size:0.78rem; cursor:pointer;">${t.btn3Days}</button>
-        <button onclick="window.preguntarPluxyAI('${t.btnFood.replace(/'/g, "\\'")}')" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--texto); border-radius:12px; padding:6px 12px; font-size:0.78rem; cursor:pointer;">${t.btnFood}</button>
-        <button onclick="window.preguntarPluxyAI('${t.btnHotel.replace(/'/g, "\\'")}')" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--texto); border-radius:12px; padding:6px 12px; font-size:0.78rem; cursor:pointer;">${t.btnHotel}</button>
-        <button onclick="window.preguntarPluxyAI('${t.btnTransport.replace(/'/g, "\\'")}')" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--texto); border-radius:12px; padding:6px 12px; font-size:0.78rem; cursor:pointer;">${t.btnTransport}</button>
+        <button onclick="if(window.trackEvent)window.trackEvent('create_itinerary', { destination: '${slug}', source: 'pluxy_ai' }); window.location.href='/plux/join/plantillas/${slug}'" style="background:linear-gradient(135deg, var(--verde), var(--azul)); border:none; color:#ffffff; border-radius:12px; padding:7px 14px; font-size:0.78rem; font-weight:700; cursor:pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">${t.btnCreate}</button>
+        <button onclick="window.preguntarPluxyAI('${t.btn3Days.replace(/'/g, "\\'")}')" style="background:var(--card); border:1px solid var(--border); color:var(--texto); border-radius:12px; padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer;">${t.btn3Days}</button>
+        <button onclick="window.preguntarPluxyAI('${t.btnFood.replace(/'/g, "\\'")}')" style="background:var(--card); border:1px solid var(--border); color:var(--texto); border-radius:12px; padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer;">${t.btnFood}</button>
+        <button onclick="window.preguntarPluxyAI('${t.btnHotel.replace(/'/g, "\\'")}')" style="background:var(--card); border:1px solid var(--border); color:var(--texto); border-radius:12px; padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer;">${t.btnHotel}</button>
+        <button onclick="window.preguntarPluxyAI('${t.btnTransport.replace(/'/g, "\\'")}')" style="background:var(--card); border:1px solid var(--border); color:var(--texto); border-radius:12px; padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer;">${t.btnTransport}</button>
       </div>
     `;
   }
@@ -282,7 +379,7 @@
     const t = dict[currentLang] || dict.es;
     const city = window.destinyCityName || '';
     body.innerHTML = `
-      <div style="background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:14px; padding:12px; color:var(--texto); line-height:1.5;">
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; color:var(--texto); line-height:1.5; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         ${t.pluxyGreeting} <strong>${city}</strong>? ¡Puedo darte recomendaciones personalizadas o crear tu itinerario completo!
         ${renderButtonsHTML()}
       </div>

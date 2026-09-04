@@ -569,6 +569,32 @@
       }
     };
 
+    function t(key) {
+      if (!key) return '';
+      const langObj = i18n[currentLang] || i18n['es'] || {};
+      const parts = key.split('.');
+      let val = langObj;
+      for (const p of parts) {
+        if (val && typeof val === 'object' && p in val) {
+          val = val[p];
+        } else {
+          // Fallback a español
+          let fallback = i18n['es'];
+          for (const fp of parts) {
+            if (fallback && typeof fallback === 'object' && fp in fallback) {
+              fallback = fallback[fp];
+            } else {
+              fallback = null;
+              break;
+            }
+          }
+          return (typeof fallback === 'string') ? fallback : key;
+        }
+      }
+      return (typeof val === 'string') ? val : key;
+    }
+    window.t = t;
+
     // ================== ACCOUNT (Firebase Auth → /login) ==================
     let firebaseUser = null;
     let currentUserUid = null;
@@ -695,15 +721,34 @@
         currentNickname = null;
         localStorage.removeItem('Plux_Nickname');
         localStorage.removeItem('Plux_Uid');
+        localStorage.removeItem('Plux_UserProfile_Photo');
       }
-      const btn = document.getElementById('cuentaButton');
-      if (btn) {
-        if (currentNickname) btn.classList.add('logged-in');
-        else btn.classList.remove('logged-in');
-      }
+      updateUserButtonDisplay();
       const colabSection = document.getElementById('colab-trips-section');
       if (colabSection) colabSection.style.display = 'none';
     }
+
+    function updateUserButtonDisplay() {
+      const btn = document.getElementById('cuentaButton');
+      if (!btn) return;
+      const photo = localStorage.getItem('Plux_UserProfile_Photo');
+      if (currentNickname || (firebaseUser && firebaseUser.email)) {
+        btn.classList.add('logged-in');
+        if (photo) {
+          btn.innerHTML = `<img src="${photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+          btn.style.padding = '0';
+          btn.style.overflow = 'hidden';
+        } else {
+          btn.innerText = '👤';
+          btn.style.padding = '';
+        }
+      } else {
+        btn.classList.remove('logged-in');
+        btn.innerText = '👤';
+        btn.style.padding = '';
+      }
+    }
+    window.updateUserButtonDisplay = updateUserButtonDisplay;
 
     function inicializarCuenta() {
       applyCuentaModalI18n();
@@ -714,32 +759,50 @@
       document.getElementById('modal-cuenta').style.display = 'flex';
       if ((firebaseUser && firebaseUser.email) || currentNickname) {
         // Logged in - show Airbnb-style profile
-        document.getElementById('cuentaForm').style.display = 'none';
-        document.getElementById('cuentaProfile').style.display = 'block';
+        const cForm = document.getElementById('cuentaForm');
+        if (cForm) cForm.style.display = 'none';
+        const cProf = document.getElementById('cuentaProfile');
+        if (cProf) cProf.style.display = 'block';
         
         const nick = currentNickname || (firebaseUser && (firebaseUser.displayName || firebaseUser.email.split('@')[0]));
         const email = firebaseUser ? firebaseUser.email : 'Nickname Login';
         
+        const setEl = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
+
         // Update profile header
-        document.getElementById('profileName').innerText = nick;
-        document.getElementById('profileEmail').innerText = email;
+        setEl('profileName', nick);
+        setEl('profileEmail', email);
+        
+        // Update avatar image if user has custom photo
+        const photo = localStorage.getItem('Plux_UserProfile_Photo');
+        const avatarEl = document.getElementById('profileAvatarInner');
+        if (avatarEl) {
+          if (photo) {
+            avatarEl.innerHTML = `<img src="${photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+          } else {
+            avatarEl.innerHTML = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+          }
+        }
+        updateUserButtonDisplay();
         
         // Calculate and update stats
         actualizarEstadisticasPerfil();
         
         // Update preferences
-        document.getElementById('prefLang').innerText = currentLang.charAt(0).toUpperCase() + currentLang.slice(1);
-        document.getElementById('prefTheme').innerText = themeDisplayName();
-        document.getElementById('prefNotif').innerText = 'Activadas';
+        setEl('prefLang', currentLang.charAt(0).toUpperCase() + currentLang.slice(1));
+        setEl('prefTheme', themeDisplayName());
+        setEl('prefNotif', 'Activadas');
         
         // Set member since (could be from user creation date)
         const memberSince = localStorage.getItem('Plux_MemberSince') || new Date().getFullYear();
-        document.getElementById('profileMemberSince').innerText = `Miembro desde ${memberSince}`;
+        setEl('profileMemberSince', `Miembro desde ${memberSince}`);
         
       } else {
         // Not logged in - show login form
-        document.getElementById('cuentaForm').style.display = 'flex';
-        document.getElementById('cuentaProfile').style.display = 'none';
+        const cForm = document.getElementById('cuentaForm');
+        if (cForm) cForm.style.display = 'flex';
+        const cProf = document.getElementById('cuentaProfile');
+        if (cProf) cProf.style.display = 'none';
         // Resetear a pestaña de login y limpiar campos
         switchCuentaTab('login');
         const loginNickEl = document.getElementById('login-nickname');
@@ -790,46 +853,179 @@
           
           // Try to extract country from destination name
           if (dest.nombre) {
-            // Simple heuristic - could be improved with actual country data
             countriesSet.add(dest.nombre.split(',').pop().trim());
           }
         });
         if (trip.vueltaPrecio) totalBudget += trip.vueltaPrecio * (numPersonas || 1);
       });
       
-      // Update stat values
-      document.getElementById('statTrips').innerText = trips.length;
-      document.getElementById('statDestinations').innerText = totalDestinations;
-      document.getElementById('statDays').innerText = totalDays;
-      document.getElementById('statEvents').innerText = totalEvents;
-      document.getElementById('statCountries').innerText = countriesSet.size;
-      document.getElementById('statBudget').innerText = `${Math.round(totalBudget)}€`;
+      // Update stat values safely
+      const setEl = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
+      setEl('statTrips', trips.length);
+      setEl('statDestinations', totalDestinations);
+      setEl('statDays', totalDays);
+      setEl('statEvents', totalEvents);
+      setEl('statCountries', countriesSet.size);
+      setEl('statBudget', `${Math.round(totalBudget)}€`);
     }
 
     function cerrarCuenta() {
       document.getElementById('modal-cuenta').style.display = 'none';
     }
 
-    async function cerrarSesion() {
+    function cerrarSesion() {
+      const modal = document.getElementById('modal-confirmar-logout');
+      if (modal) {
+        modal.style.display = 'flex';
+      } else {
+        const confirmarBorrar = confirm('¿Deseas borrar los chats guardados en este dispositivo al cerrar sesión?');
+        ejecutarCerrarSesion(confirmarBorrar);
+      }
+    }
+    window.cerrarSesion = cerrarSesion;
+
+    function cancelarCerrarSesion() {
+      const modal = document.getElementById('modal-confirmar-logout');
+      if (modal) modal.style.display = 'none';
+    }
+    window.cancelarCerrarSesion = cancelarCerrarSesion;
+
+    async function ejecutarCerrarSesion(borrarChats = false) {
+      cancelarCerrarSesion();
       try {
-        await firebase.auth().signOut();
+        if (typeof pluxChatUnsubscribe === 'function' && pluxChatUnsubscribe) {
+          pluxChatUnsubscribe();
+          pluxChatUnsubscribe = null;
+        }
+
+        if (borrarChats) {
+          localStorage.removeItem('PluxSocialChats_V2');
+          if (typeof pluxSocialChats !== 'undefined') {
+            pluxSocialChats = {};
+            pluxActiveChatId = 'trip_group';
+            if (typeof ensureChatChannel === 'function') ensureChatChannel();
+            if (typeof renderChatMessages === 'function') renderChatMessages();
+            if (typeof renderChannelsList === 'function') renderChannelsList();
+          }
+        }
+
         localStorage.removeItem('Plux_Nickname');
         localStorage.removeItem('Plux_Uid');
+        localStorage.removeItem('Plux_UserProfile_Photo');
+        currentNickname = null;
+        currentUserUid = null;
+
+        await firebase.auth().signOut();
         onFirebaseUserSignedOut();
-        showToast(t('auth_logout'), 'info');
-        // Esperar a que se complete el sign-in anónimo antes de reabrir el modal
-        try { 
-          await firebase.auth().signInAnonymously(); 
+        showToast(borrarChats ? 'Sesión cerrada y chats eliminados del dispositivo' : t('auth_logout'), 'info');
+
+        try {
+          await firebase.auth().signInAnonymously();
           console.log("🔥 Sesión anónima restablecida tras logout");
-        } catch (e) { 
-          console.error("Error en signInAnonymously:", e); 
+        } catch (e) {
+          console.error("Error en signInAnonymously tras logout:", e);
         }
-        abrirCuenta();
+
+        cerrarCuenta();
+        if (typeof updateUserButtonDisplay === 'function') updateUserButtonDisplay();
       } catch (e) {
-        console.error(e);
+        console.error("Error cerrando sesión:", e);
         showToast('Error al cerrar sesión', 'error');
       }
     }
+    window.ejecutarCerrarSesion = ejecutarCerrarSesion;
+
+    function switchNCTab(tab) {
+      const isLogin = tab === 'login';
+      const tabLogin = document.getElementById('tabNCLogin');
+      const tabReg = document.getElementById('tabNCRegister');
+      const formLogin = document.getElementById('form-nc-login');
+      const formReg = document.getElementById('form-nc-register');
+
+      if (tabLogin) {
+        tabLogin.style.background = isLogin ? 'var(--azul)' : 'transparent';
+        tabLogin.style.color = isLogin ? 'white' : 'var(--gris)';
+      }
+      if (tabReg) {
+        tabReg.style.background = !isLogin ? 'var(--azul)' : 'transparent';
+        tabReg.style.color = !isLogin ? 'white' : 'var(--gris)';
+      }
+      if (formLogin) formLogin.style.display = isLogin ? 'flex' : 'none';
+      if (formReg) formReg.style.display = !isLogin ? 'flex' : 'none';
+    }
+    window.switchNCTab = switchNCTab;
+
+    async function handleNCLogin(e) {
+      if (e) e.preventDefault();
+      const email = document.getElementById('ncLoginEmail')?.value?.trim();
+      const password = document.getElementById('ncLoginPassword')?.value;
+      if (!email || !password) return showToast('Ingresá correo y contraseña', 'error');
+      
+      const submitBtn = document.getElementById('btnNCLoginSubmit');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        if (!firebase.apps || !firebase.apps.length) await initFirebaseAuth();
+        const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+        showToast('¡Bienvenido! Sesión iniciada', 'success');
+        if (typeof cerrarCuenta === 'function') cerrarCuenta();
+        if (typeof onFirebaseUserSignedIn === 'function') onFirebaseUserSignedIn(cred.user);
+      } catch (err) {
+        console.error("Login error:", err);
+        let msg = 'Error de autenticación';
+        if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') msg = 'Contraseña o usuario incorrecto';
+        else if (err.code === 'auth/user-not-found') msg = 'No existe una cuenta con este correo';
+        else if (err.code === 'auth/invalid-email') msg = 'Correo no válido';
+        showToast(msg, 'error');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+    window.handleNCLogin = handleNCLogin;
+
+    async function handleNCRegister(e) {
+      if (e) e.preventDefault();
+      const email = document.getElementById('ncRegEmail')?.value?.trim();
+      const pass = document.getElementById('ncRegPassword')?.value;
+      const pass2 = document.getElementById('ncRegPassword2')?.value;
+      if (!email || !pass) return showToast('Completá todos los campos', 'error');
+      if (pass.length < 6) return showToast('La contraseña debe tener al menos 6 caracteres', 'error');
+      if (pass !== pass2) return showToast('Las contraseñas no coinciden', 'error');
+
+      const submitBtn = document.getElementById('btnNCRegisterSubmit');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        if (!firebase.apps || !firebase.apps.length) await initFirebaseAuth();
+        const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+        showToast('¡Cuenta creada con éxito!', 'success');
+        if (typeof cerrarCuenta === 'function') cerrarCuenta();
+        if (typeof onFirebaseUserSignedIn === 'function') onFirebaseUserSignedIn(cred.user);
+      } catch (err) {
+        console.error("Register error:", err);
+        let msg = 'Error al registrar';
+        if (err.code === 'auth/email-already-in-use') msg = 'Este correo ya está registrado';
+        showToast(msg, 'error');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+    window.handleNCRegister = handleNCRegister;
+
+    async function handleNCGoogle() {
+      try {
+        if (!firebase.apps || !firebase.apps.length) await initFirebaseAuth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const res = await firebase.auth().signInWithPopup(provider);
+        showToast('¡Bienvenido!', 'success');
+        if (typeof cerrarCuenta === 'function') cerrarCuenta();
+        if (typeof onFirebaseUserSignedIn === 'function') onFirebaseUserSignedIn(res.user);
+      } catch (err) {
+        console.error("Google login error:", err);
+        showToast('Error al autenticar con Google', 'error');
+      }
+    }
+    window.handleNCGoogle = handleNCGoogle;
 
     function switchCuentaTab(tab) {
       const isLogin = tab !== 'register';
@@ -880,6 +1076,7 @@
         return;
       }
       
+      if (!db) db = getFirestoreDb();
       if (!db) {
         showToast('Base de datos no disponible', 'error');
         return;
@@ -944,6 +1141,9 @@
         currentUserUid = nick;
         localStorage.setItem('Plux_Nickname', nick);
         localStorage.setItem('Plux_Uid', nick);
+        if (userData.photoUrl) {
+          localStorage.setItem('Plux_UserProfile_Photo', userData.photoUrl);
+        }
         updateUserButtonDisplay();
         
         // Update last connection time in Firestore
@@ -1013,10 +1213,12 @@
 
         const localTrips = getStoredTrips();
         const localFriends = getStoredFriends();
+        const localPhoto = localStorage.getItem('Plux_UserProfile_Photo') || null;
         const userData = {
           uid: nick,
           nickname: nick,
           email: null,
+          photoUrl: localPhoto,
           password: hasPassword ? password : null,
           idioma: currentLang,
           tema: currentTheme,
@@ -1050,10 +1252,12 @@
       const trips = getStoredTrips();
       const templates = getStoredTemplates();
       const friends = getStoredFriends();
+      const photo = localStorage.getItem('Plux_UserProfile_Photo') || null;
       ref.set({
         uid: currentUserUid,
         email: firebaseUser?.email || null,
         nickname: currentNickname,
+        photoUrl: photo,
         idioma: currentLang,
         tema: currentTheme,
         viajes_guardados: trips,
@@ -1073,6 +1277,9 @@
           currentNickname = data.nickname || firebaseUser.displayName || firebaseUser.email.split('@')[0];
           localStorage.setItem('Plux_Nickname', currentNickname);
           localStorage.setItem('Plux_Uid', currentUserUid);
+          if (data.photoUrl) {
+            localStorage.setItem('Plux_UserProfile_Photo', data.photoUrl);
+          }
           if (data.idioma && data.idioma !== currentLang) setLanguage(data.idioma, false);
           if (data.tema && data.tema !== currentTheme) setTheme(data.tema, false);
           if (data.viajes_guardados) saveTrips(data.viajes_guardados, false);
@@ -1096,8 +1303,8 @@
     }
 
     // ================== VARIABLES GLOBALES ==================
-    let currentLang = 'es';
-    let currentTheme = 'theme-oscuro';
+    let currentLang = localStorage.getItem('Plux_Lang') || 'es';
+    let currentTheme = localStorage.getItem('Plux_Theme') || 'theme-oscuro';
     let destinos = [];
     let modoVista = 0; // 0: cards, 1: timeline, 2: presentation
     const modos = ['cards', 'timeline', 'presentacion'];
@@ -1112,6 +1319,187 @@
     let numPersonas = 1;
     let nombresPersonasGlobal = "";
     let listaViajeros = [];
+
+    // ================== SELECTORES DE TEMA E IDIOMA ==================
+    const PLUX_THEMES = [
+      { id: 'theme-claro', name: 'Claro' },
+      { id: 'theme-oscuro', name: 'Oscuro' },
+      { id: 'theme-tokyo', name: 'Tokyo Night' },
+      { id: 'theme-grid', name: 'The Grid' },
+      { id: 'theme-terminal', name: 'Terminal' },
+      { id: 'theme-starship', name: 'Starship' },
+      { id: 'theme-ares', name: 'Ares' }
+    ];
+
+    function toggleLangDropdown(e) {
+      if (e) {
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+      }
+      const ld = document.getElementById('langDropdown');
+      const td = document.getElementById('themeDropdown');
+      if (td) {
+        td.classList.remove('show');
+        td.style.display = 'none';
+      }
+      if (ld) {
+        const isVisible = ld.classList.contains('show') || ld.style.display === 'flex';
+        if (isVisible) {
+          ld.classList.remove('show');
+          ld.style.display = 'none';
+        } else {
+          ld.classList.add('show');
+          ld.style.display = 'flex';
+        }
+      }
+    }
+    window.toggleLangDropdown = toggleLangDropdown;
+
+    function toggleThemeDropdown(e) {
+      if (e) {
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+      }
+      const ld = document.getElementById('langDropdown');
+      const td = document.getElementById('themeDropdown');
+      if (ld) {
+        ld.classList.remove('show');
+        ld.style.display = 'none';
+      }
+      if (td) {
+        renderThemeDropdown();
+        const isVisible = td.classList.contains('show') || td.style.display === 'flex';
+        if (isVisible) {
+          td.classList.remove('show');
+          td.style.display = 'none';
+        } else {
+          td.classList.add('show');
+          td.style.display = 'flex';
+        }
+      }
+    }
+    window.toggleThemeDropdown = toggleThemeDropdown;
+
+    function renderThemeDropdown() {
+      const td = document.getElementById('themeDropdown');
+      if (!td) return;
+      td.innerHTML = PLUX_THEMES.map(th => {
+        const isActive = currentTheme === th.id;
+        return `
+          <div class="theme-option ${isActive ? 'active' : ''}" data-theme="${th.id}" onclick="window.setTheme('${th.id}')">${th.name}</div>
+        `;
+      }).join('');
+    }
+    window.renderThemeDropdown = renderThemeDropdown;
+
+    function setLanguage(lang, sync = true) {
+      if (!lang || !i18n[lang]) lang = 'es';
+      currentLang = lang;
+      localStorage.setItem('Plux_Lang', lang);
+
+      const btn = document.getElementById('langButton');
+      if (btn) btn.textContent = lang.toUpperCase();
+
+      // Actualizar clase de idioma en el body
+      document.body.classList.remove('lang-es', 'lang-en', 'lang-fr', 'lang-de', 'lang-it');
+      document.body.classList.add(`lang-${lang}`);
+
+      // Actualizar opción activa en dropdown
+      document.querySelectorAll('.lang-option').forEach(opt => {
+        const optLang = opt.getAttribute('data-lang');
+        if (optLang === lang) opt.classList.add('active');
+        else opt.classList.remove('active');
+      });
+
+      // Cerrar dropdown
+      const ld = document.getElementById('langDropdown');
+      if (ld) ld.classList.remove('show');
+
+      // Aplicar textos en la interfaz
+      if (typeof applyGlobalI18n === 'function') applyGlobalI18n();
+      if (typeof applyCuentaModalI18n === 'function') applyCuentaModalI18n();
+      if (typeof renderDestinos === 'function' && document.getElementById('app') && document.getElementById('app').style.display !== 'none') {
+        renderDestinos();
+      }
+      if (typeof renderTripLists === 'function') renderTripLists();
+      if (typeof renderResumen === 'function' && document.getElementById('modal-resumen') && document.getElementById('modal-resumen').style.display !== 'none') {
+        renderResumen();
+      }
+
+      // Sincronizar en Firestore si el usuario está autenticado
+      if (sync && typeof sincronizarPerfil === 'function' && (currentNickname || currentUserUid)) {
+        sincronizarPerfil();
+      }
+    }
+    window.setLanguage = setLanguage;
+
+    function setTheme(themeId, sync = true) {
+      if (!themeId) themeId = 'theme-oscuro';
+      if (!themeId.startsWith('theme-')) themeId = 'theme-' + themeId;
+
+      currentTheme = themeId;
+      localStorage.setItem('Plux_Theme', themeId);
+
+      // Eliminar clases de temas previas del body y aplicar la nueva
+      document.body.classList.remove(
+        'theme-claro', 'theme-oscuro', 'theme-tokyo',
+        'theme-grid', 'theme-starship', 'theme-terminal', 'theme-ares'
+      );
+      document.body.classList.add(themeId);
+
+      // Banner para salir de Ares
+      const aresBanner = document.getElementById('ares-esc-banner');
+      if (aresBanner) {
+        aresBanner.style.display = (themeId === 'theme-ares') ? 'block' : 'none';
+      }
+
+      // Actualizar dropdown y cerrarlo
+      const td = document.getElementById('themeDropdown');
+      if (td) {
+        renderThemeDropdown();
+        td.classList.remove('show');
+      }
+
+      // Sincronizar en Firestore si el usuario está autenticado
+      if (sync && typeof sincronizarPerfil === 'function' && (currentNickname || currentUserUid)) {
+        sincronizarPerfil();
+      }
+    }
+    window.setTheme = setTheme;
+
+    // Listeners globales para cerrar dropdowns al hacer clic fuera y tecla Escape
+    document.addEventListener('click', (e) => {
+      const isLang = e.target.closest('#langButton') || e.target.closest('#langDropdown');
+      if (!isLang) {
+        const ld = document.getElementById('langDropdown');
+        if (ld) {
+          ld.classList.remove('show');
+          ld.style.display = 'none';
+        }
+      }
+      const isTheme = e.target.closest('#themeButton') || e.target.closest('#themeDropdown');
+      if (!isTheme) {
+        const td = document.getElementById('themeDropdown');
+        if (td) {
+          td.classList.remove('show');
+          td.style.display = 'none';
+        }
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && currentTheme === 'theme-ares') {
+        setTheme('theme-oscuro');
+        if (typeof showToast === 'function') showToast('Saliste del tema Ares 🛡️', 'info');
+      }
+    });
+
+    // Auto-inicializar idioma y tema guardados
+    setTimeout(() => {
+      setLanguage(currentLang, false);
+      setTheme(currentTheme, false);
+      renderThemeDropdown();
+    }, 0);
 
     window.renderTravelerChips = function() {
       const container = document.getElementById('travelers-chips-list');
@@ -1219,9 +1607,58 @@
     let MISTRAL_API_KEY = '';
     let OPENROUTER_API_KEY = '';
     let MULE_ROUTER_API_KEY = '';
-    
     let db = null;
     let syncCode = null; // Current cloud sync code
+
+    // Inicialización inmediata e incondicional de Firebase y Cloud Firestore
+    function getFirestoreDb() {
+      if (db) return db;
+      try {
+        if (typeof firebase !== 'undefined') {
+          if (!firebase.apps || !firebase.apps.length) {
+            firebase.initializeApp({
+              projectId: "nibecar-cofeben",
+              appId: "1:88879103859:android:e129fff00f991d3a01cf06",
+              databaseURL: "https://nibecar-cofeben-default-rtdb.firebaseio.com",
+              storageBucket: "nibecar-cofeben.firebasestorage.app",
+              apiKey: "AIzaSyAI67WxeycsfvMUaDU1KdAqyHXGy7GSDLo",
+              authDomain: "nibecar-cofeben.firebaseapp.com",
+              messagingSenderId: "88879103859"
+            });
+          }
+          if (typeof firebase.firestore === 'function') {
+            db = firebase.firestore();
+            try {
+              db.enablePersistence({synchronizeTabs:true}).catch(() => {});
+            } catch(e) {}
+            console.log("🔥 Cloud Firestore conectado y disponible.");
+          }
+        }
+      } catch (e) {
+        console.warn("Inicializando Firestore fallback:", e);
+      }
+      return db;
+    }
+    // Ejecutar de inmediato
+    getFirestoreDb();
+
+    // ================== GOOGLE ANALYTICS 4 & TELEMETRÍA ==================
+    function trackEvent(eventName, params = {}) {
+      try {
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', eventName, params);
+        }
+        if (typeof firebase !== 'undefined' && typeof firebase.analytics === 'function') {
+          try {
+            firebase.analytics().logEvent(eventName, params);
+          } catch (fe) {}
+        }
+        console.log(`📊 [GA4 Event] ${eventName}`, params);
+      } catch (err) {
+        console.warn('Error enviando evento a Analytics:', err);
+      }
+    }
+    window.trackEvent = trackEvent;
 
     // User Preferences
     let userPreferences = {
@@ -1331,7 +1768,21 @@
     }
 
     async function initFirebaseAuth() {
-      if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+      if (typeof firebase === 'undefined') {
+        console.warn("Firebase SDK no está disponible (modo offline).");
+        const savedNick = localStorage.getItem('Plux_Nickname');
+        if (savedNick) {
+          currentNickname = savedNick;
+          currentUserUid = localStorage.getItem('Plux_Uid') || savedNick;
+          updateUserButtonDisplay();
+          cargarPerfilUsuario();
+        } else {
+          onFirebaseUserSignedOut();
+        }
+        return;
+      }
+
+      if (!firebase.apps || !firebase.apps.length) {
         try {
           firebase.initializeApp({
             projectId: "nibecar-cofeben",
@@ -1346,9 +1797,12 @@
           console.error("Manual Firebase init error:", e);
         }
       }
-      db = firebase.firestore();
+
+      if (typeof firebase.firestore === 'function') {
+        db = firebase.firestore();
+      }
       
-      // Inicializar Analytics (init.js ya tiene appId y measurementId correctos)
+      // Inicializar Analytics
       if (typeof firebase.analytics === 'function') {
         try {
           firebase.analytics();
@@ -1358,32 +1812,34 @@
         }
       }
       
-      return new Promise((resolve) => {
-        firebase.auth().onAuthStateChanged(async (user) => {
-          if (user && user.email && !user.isAnonymous) {
-            onFirebaseUserSignedIn(user);
-          } else {
-            const savedNick = localStorage.getItem('Plux_Nickname');
-            if (savedNick) {
-              currentNickname = savedNick;
-              currentUserUid = localStorage.getItem('Plux_Uid') || savedNick;
-              updateUserButtonDisplay();
-              cargarPerfilUsuario();
+      if (typeof firebase.auth === 'function') {
+        return new Promise((resolve) => {
+          firebase.auth().onAuthStateChanged(async (user) => {
+            if (user && user.email && !user.isAnonymous) {
+              onFirebaseUserSignedIn(user);
             } else {
-              onFirebaseUserSignedOut();
-            }
-            try {
-              if (!firebase.auth().currentUser) {
-                await firebase.auth().signInAnonymously();
-                console.log("🔥 Sesión anónima (sincronización nube).");
+              const savedNick = localStorage.getItem('Plux_Nickname');
+              if (savedNick) {
+                currentNickname = savedNick;
+                currentUserUid = localStorage.getItem('Plux_Uid') || savedNick;
+                updateUserButtonDisplay();
+                cargarPerfilUsuario();
+              } else {
+                onFirebaseUserSignedOut();
               }
-            } catch (error) {
-              console.error("🔥 Error en autenticación anónima:", error);
+              try {
+                if (!firebase.auth().currentUser) {
+                  await firebase.auth().signInAnonymously();
+                  console.log("🔥 Sesión anónima (sincronización nube).");
+                }
+              } catch (error) {
+                console.error("🔥 Error en autenticación anónima:", error);
+              }
             }
-          }
-          resolve();
+            resolve();
+          });
         });
-      });
+      }
     }
 
     function activarListenerNube() {
@@ -1657,32 +2113,32 @@
     let chatHistory = [];
     const CHAT_SYSTEM = `Sos PluxIA, un asistente de viajes inteligente y amigable con capacidades AGENTES REALES. Tenés acceso completo al itinerario del usuario y podés modificarlo directamente.
 
-Al final de tu respuesta podés incluir MÚLTIPLES comandos especiales para ejecutar acciones simultáneamente:
+Al final de tu respuesta podés incluir comandos especiales para ejecutar acciones simultáneamente:
 
 DESTINOS Y ESTRUCTURA:
-- [ACCION:DESTINO:NombreDestino] → Agrega un nuevo destino al viaje
-- [ACCION:LIMPIAR_DESTINO:NombreDestino] → Borra todos los días de ese destino
-- [ACCION:AGREGAR_DIA:DestinoNombre|DiaNumero] → Agrega un día específico (ej: Roma|5)
-- [ACCION:ELIMINAR_DIA:DestinoNombre|DiaNumero] → Elimina un día
-- [ACCION:DUPLICAR_DIA:DestinoNombre|DiaNumero] → Duplica un día
+- [ACCION:DESTINO:Ciudad] → Agrega un nuevo destino al viaje (ej: [ACCION:DESTINO:Madrid] o [ACCION:DESTINO:Tokio]). REGLA: Reemplazá "Ciudad" por el nombre exacto de la ciudad real. NUNCA escribas la palabra "NombreDestino" ni pongas múltiples ciudades separadas por comas en un solo corchete. Usá un comando por ciudad.
+- [ACCION:LIMPIAR_DESTINO:Ciudad] → Borra todos los días de ese destino (ej: [ACCION:LIMPIAR_DESTINO:Madrid])
+- [ACCION:AGREGAR_DIA:Ciudad|DiaNumero] → Agrega un día específico (ej: [ACCION:AGREGAR_DIA:Roma|5])
+- [ACCION:ELIMINAR_DIA:Ciudad|DiaNumero] → Elimina un día
+- [ACCION:DUPLICAR_DIA:Ciudad|DiaNumero] → Duplica un día
 
 EVENTOS:
-- [ACCION:AGREGAR_EVENTO:DestinoNombre|DiaNumero|Hora|Titulo|Notas] → Agrega evento (ej: Roma|1|10:00|Coliseo|Entrada 18€)
-- [ACCION:EDITAR_EVENTO:DestinoNombre|DiaNumero|NumeroEvento|Campo|Valor] → Edita evento (campo: hora/titulo/notas/costo/duracion)
-- [ACCION:ELIMINAR_EVENTO:DestinoNombre|DiaNumero|NumeroEvento] → Elimina evento específico
-- [ACCION:DUPLICAR_EVENTO:DestinoNombre|DiaNumero|NumeroEvento] → Duplica evento
-- [ACCION:ORGANIZAR_ITINERARIO:DestinoNombre|DiaNumero] → Ordena eventos por hora
+- [ACCION:AGREGAR_EVENTO:Ciudad|DiaNumero|Hora|Titulo|Notas] → Agrega evento (ej: [ACCION:AGREGAR_EVENTO:Roma|1|10:00|Coliseo|Entrada 18€])
+- [ACCION:EDITAR_EVENTO:Ciudad|DiaNumero|NumeroEvento|Campo|Valor] → Edita evento (campo: hora/titulo/notas/costo/duracion)
+- [ACCION:ELIMINAR_EVENTO:Ciudad|DiaNumero|NumeroEvento] → Elimina evento específico
+- [ACCION:DUPLICAR_EVENTO:Ciudad|DiaNumero|NumeroEvento] → Duplica evento
+- [ACCION:ORGANIZAR_ITINERARIO:Ciudad|DiaNumero] → Ordena eventos por hora
 
 TRANSPORTE Y ALOJAMIENTO:
-- [ACCION:TRANSPORTE:DestinoOrigen|DestinoDestino|Medio|Precio|Descripcion] → Agrega transporte
-- [ACCION:ESCALA:DestinoNombre|TramoIndex|CiudadEscala|Duracion|Notas] → Agrega escala a un tramo (ej: Roma|0|Madrid|2h|Conexión)
-- [ACCION:ALOJAMIENTO:DestinoNombre|DiaInicio|DiaFin|Precio|Nombre] → Agrega alojamiento (5 params: destino|diaIni|diaFin|precio|nombre)
-- [ACCION:AGREGAR_COSTO:DestinoNombre|DiaNumero|Descripcion|Precio] → Costo adicional en un día
+- [ACCION:TRANSPORTE:Origen|Destino|Medio|Precio|Descripcion] → Agrega transporte (ej: [ACCION:TRANSPORTE:Madrid|Tokio|Avión|850|Vuelo directo])
+- [ACCION:ESCALA:Ciudad|TramoIndex|CiudadEscala|Duracion|Notas] → Agrega escala a un tramo
+- [ACCION:ALOJAMIENTO:Ciudad|DiaInicio|DiaFin|Precio|Nombre] → Agrega alojamiento (ej: [ACCION:ALOJAMIENTO:Tokio|1|5|600|Hotel Shinjuku])
+- [ACCION:AGREGAR_COSTO:Ciudad|DiaNumero|Descripcion|Precio] → Costo adicional en un día
 
-CONFIGURACIÓN:
+CONFIGURACIÓN E ITINERARIOS:
 - [ACCION:SET_PERSONAS:Numero] → Cambia el número de personas
 - [ACCION:SET_ORIGEN:Ciudad] → Cambia el lugar de salida
-- [ACCION:ITINERARIO:NombreDestino|Dias] → Genera itinerario IA completo para ese destino con la cantidad de días especificada (ej: Roma|5)
+- [ACCION:ITINERARIO:Ciudad|Dias] → Genera itinerario IA completo para ese destino con los días especificados (ej: [ACCION:ITINERARIO:Madrid|3] o [ACCION:ITINERARIO:Tokio|4]). NOTA: Este comando YA crea el destino automáticamente si no existe, por lo que NO agregues también [ACCION:DESTINO:Ciudad] para la misma ciudad.
 
 VISTAS Y HERRAMIENTAS:
 - [ACCION:ABRIR_MAPA] → Abre el mapa del viaje
@@ -1695,7 +2151,7 @@ VISTAS Y HERRAMIENTAS:
 
 Tenés acceso al clima actual del viaje (OpenWeather) en el contexto del mensaje. Usalo para recomendar ropa, actividades o cambios de plan.
 
-Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes además de explicar brevemente. Sos un agente que actúa, no solo habla. PODES USAR MÚLTIPLES ACCIONES DE UNA VEZ.`;
+Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes además de explicar brevemente. Sos un agente que actúa, no solo habla.`;
 
     function abrirChatIA() {
       document.getElementById('modal-chat-ia').style.display = 'flex';
@@ -1760,26 +2216,67 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         other: t('support_other')
       };
 
-      // Preparar datos para envío a Formspree
       const tipoLabel = tipoMap[tipo] || 'Consulta';
+
+      // 1. Guardar ticket directamente en Cloud Firestore ('soporte')
+      let firestoreSaved = false;
+      try {
+        let firestoreInstance = (typeof db !== 'undefined' && db) ? db : (typeof firebase !== 'undefined' && firebase.apps.length ? firebase.firestore() : null);
+        if (!firestoreInstance && typeof firebase !== 'undefined') {
+          if (!firebase.apps.length) {
+            firebase.initializeApp({
+              projectId: "nibecar-cofeben",
+              appId: "1:88879103859:android:e129fff00f991d3a01cf06",
+              databaseURL: "https://nibecar-cofeben-default-rtdb.firebaseio.com",
+              storageBucket: "nibecar-cofeben.firebasestorage.app",
+              apiKey: "AIzaSyAI67WxeycsfvMUaDU1KdAqyHXGy7GSDLo",
+              authDomain: "nibecar-cofeben.firebaseapp.com",
+              messagingSenderId: "88879103859"
+            });
+          }
+          firestoreInstance = firebase.firestore();
+        }
+
+        if (firestoreInstance) {
+          const ticketData = {
+            userName: nombre,
+            userEmail: email,
+            message: mensaje,
+            category: tipo,
+            subject: `[${tipoLabel}] ${mensaje.slice(0, 40)}${mensaje.length > 40 ? '...' : ''}`,
+            status: 'open',
+            priority: tipo === 'error' ? 'high' : 'normal',
+            appSource: 'Plux Web',
+            lang: currentLang || 'es',
+            createdAt: (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString(),
+            fecha: new Date().toLocaleString()
+          };
+          await firestoreInstance.collection('soporte').add(ticketData);
+          firestoreSaved = true;
+          console.log("🔥 Ticket de soporte guardado exitosamente en Cloud Firestore ('soporte')");
+        }
+      } catch (firestoreErr) {
+        console.warn("⚠️ No se pudo guardar en Firestore soporte directamente:", firestoreErr);
+      }
+
+      // 2. Notificación por Formspree / Email en background
       const formData = new FormData();
       formData.append('email', email);
       formData.append('name', nombre);
       formData.append('_subject', `Plux - ${tipoLabel}`);
       formData.append('message', `Tipo: ${tipoLabel}\nIdioma: ${currentLang}\n\n${mensaje}`);
-      formData.append('_captcha', 'false'); // Desactivar CAPTCHA
-      formData.append('_next', window.location.href); // Redireccionar al mismo sitio
+      formData.append('_captcha', 'false');
+      formData.append('_next', window.location.href);
 
       try {
         const response = await fetch('https://formspree.io/f/mwvjnpzk', {
           method: 'POST',
           body: formData,
           mode: 'cors',
-          redirect: 'follow' // Seguir redirecciones
+          redirect: 'follow'
         });
 
-        // Formspree puede devolver 200, 302 (redirect) o 201 - todos son éxito
-        if (response.ok || response.status === 302 || response.status === 201) {
+        if (response.ok || response.status === 302 || response.status === 201 || firestoreSaved) {
           showToast(t('support_sent'), 'success');
           cerrarSupport();
           mostrarOpcionesSupport();
@@ -1789,13 +2286,19 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           showToast(t('support_error_send'), 'error');
         }
       } catch (err) {
-        console.error('Error enviando soporte:', err);
-        // Fallback: mailto
-        const mailtoLink = `mailto:nibecarcofeben@gmail.com?subject=${encodeURIComponent(`Plux - ${tipoLabel}`)}&body=${encodeURIComponent(`Tipo: ${tipoLabel}\nIdioma: ${currentLang}\n\n${mensaje}`)}`;
-        window.open(mailtoLink);
-        showToast(t('support_sent'), 'success');
-        cerrarSupport();
-        mostrarOpcionesSupport();
+        console.error('Error enviando soporte vía webhook:', err);
+        if (firestoreSaved) {
+          showToast(t('support_sent'), 'success');
+          cerrarSupport();
+          mostrarOpcionesSupport();
+        } else {
+          // Fallback: mailto
+          const mailtoLink = `mailto:nibecarcofeben@gmail.com?subject=${encodeURIComponent(`Plux - ${tipoLabel}`)}&body=${encodeURIComponent(`Tipo: ${tipoLabel}\nIdioma: ${currentLang}\n\n${mensaje}`)}`;
+          window.open(mailtoLink);
+          showToast(t('support_sent'), 'success');
+          cerrarSupport();
+          mostrarOpcionesSupport();
+        }
       }
     }
 
@@ -2060,7 +2563,429 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     window.tourAnterior = tourAnterior;
     window.finalizarTour = finalizarTour;
 
-    // ========== END GUIDED TOUR FUNCTIONS ==========
+    // Helper to sanitize and normalize destination names from AI
+    function sanitizeDestinoNombres(raw) {
+      if (!raw) return [];
+      let s = raw.trim();
+      s = s.replace(/^(nombredestino|destinonombre|nombre_destino|destino|ciudad)\s*[:\-\|]?\s*/gi, '');
+      s = s.replace(/[\"\'\`]/g, '');
+      const parts = s.split(/[,;\/\+]|\s+y\s+|\s+and\s+/i)
+        .map(p => p.trim())
+        .filter(p => p.length > 1 && !/^(nombredestino|destinonombre|destino|ciudad|null|undefined)$/i.test(p));
+      return parts.length > 0 ? parts : (s.length > 1 && !/^(nombredestino|destinonombre|destino|ciudad)$/i.test(s) ? [s] : []);
+    }
+
+    async function ejecutarAccionesPluxyDirectas(respuesta) {
+      if (!respuesta) return '';
+      let displayRespuesta = respuesta.replace(/\[ACCION:[^\]]+\]/g, '').trim();
+      const processedDestNames = new Set();
+      let accionesEjecutadas = false;
+
+      // CHECKLIST
+      if (respuesta.includes('[ACCION:CHECKLIST]')) {
+        setTimeout(() => { if (typeof abrirChecklist === 'function') abrirChecklist(); }, 800);
+        accionesEjecutadas = true;
+      }
+
+      // ITINERARIO (multiple allowed)
+      const accionesItinerario = [...respuesta.matchAll(/\[ACCION:ITINERARIO:([^\]]+)\]/g)];
+      accionesItinerario.forEach((match, idx) => {
+        const partes = match[1].split('|');
+        const rawNombre = partes[0].trim();
+        const cleanNames = sanitizeDestinoNombres(rawNombre);
+        const diasForzados = partes.length > 1 ? parseInt(partes[1]) : null;
+
+        cleanNames.forEach((destNombre, subIdx) => {
+          const normName = destNombre.toLowerCase().trim();
+          if (processedDestNames.has(normName)) return;
+          processedDestNames.add(normName);
+
+          const destExistente = destinos.find(d => d.nombre.toLowerCase().trim() === normName || d.nombre.toLowerCase().includes(normName));
+          const delay = 800 + ((idx + subIdx) * 300);
+          if (destExistente) {
+            setTimeout(() => { if (typeof generarItinerarioAuto === 'function') generarItinerarioAuto(destExistente.id, diasForzados); }, delay);
+          } else {
+            const newId = Date.now() + idx + subIdx + Math.floor(Math.random() * 500);
+            destinos.push({ id: newId, nombre: destNombre, dias: [], tramos: [] });
+            if (typeof renderDestinos === 'function') renderDestinos();
+            setTimeout(() => { if (typeof generarItinerarioAuto === 'function') generarItinerarioAuto(newId, diasForzados); }, delay);
+            const w = document.getElementById('welcome');
+            if (w && w.style.display !== 'none' && typeof empezar === 'function') empezar();
+          }
+          accionesEjecutadas = true;
+        });
+      });
+
+      // DESTINO (multiple allowed)
+      const accionesDestino = [...respuesta.matchAll(/\[ACCION:DESTINO:([^\]]+)\]/g)];
+      accionesDestino.forEach((match, idx) => {
+        const rawNombre = match[1].trim();
+        const cleanNames = sanitizeDestinoNombres(rawNombre);
+
+        cleanNames.forEach((nombre, subIdx) => {
+          const normName = nombre.toLowerCase().trim();
+          if (processedDestNames.has(normName)) return;
+          const alreadyExists = destinos.some(d => d.nombre.toLowerCase().trim() === normName || d.nombre.toLowerCase() === normName);
+          if (alreadyExists) return;
+
+          processedDestNames.add(normName);
+          const newId = Date.now() + idx + subIdx + 50 + Math.floor(Math.random() * 500);
+          destinos.push({ id: newId, nombre, dias: [], tramos: [] });
+          if (typeof renderDestinos === 'function') renderDestinos();
+          if (typeof showToast === 'function') showToast(`✅ Destino "${nombre}" añadido`, 'success');
+          const w = document.getElementById('welcome');
+          if (w && w.style.display !== 'none' && typeof empezar === 'function') empezar();
+          accionesEjecutadas = true;
+        });
+      });
+
+      // LIMPIAR_DESTINO
+      const accionesLimpiar = [...respuesta.matchAll(/\[ACCION:LIMPIAR_DESTINO:([^\]]+)\]/g)];
+      accionesLimpiar.forEach((match) => {
+        const rawNombre = match[1].trim();
+        const cleanNames = sanitizeDestinoNombres(rawNombre);
+        cleanNames.forEach((nombre) => {
+          const dest = destinos.find(d => d.nombre.toLowerCase().includes(nombre.toLowerCase()));
+          if (dest) {
+            dest.dias = [];
+            if (typeof renderDias === 'function') renderDias(dest.id);
+            if (typeof showToast === 'function') showToast(`🗑️ Días de "${dest.nombre}" eliminados`, 'info');
+          }
+        });
+        accionesEjecutadas = true;
+      });
+
+      // AGREGAR_EVENTO
+      const accionesEvento = [...respuesta.matchAll(/\[ACCION:AGREGAR_EVENTO:([^\]]+)\]/g)];
+      accionesEvento.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 4) {
+          const [destNombre, diaNum, hora, titulo, notas] = partes;
+          let dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+          if (!dest && destinos.length > 0) dest = destinos[0];
+          if (!dest) {
+            dest = { id: Date.now(), nombre: destNombre.trim(), dias: [], tramos: [] };
+            destinos.push(dest);
+            if (typeof renderDestinos === 'function') renderDestinos();
+          }
+          if (dest) {
+            const diaIdx = (parseInt(diaNum) || 1) - 1;
+            while (dest.dias.length <= diaIdx) {
+              dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+            }
+            dest.dias[diaIdx].eventos.push({
+              id: Date.now(),
+              hora: (hora || '10:00').trim(),
+              titulo: titulo.trim(),
+              notas: (notas || '').trim(),
+              costo: 0,
+              duracion: 60
+            });
+            if (typeof renderDias === 'function') renderDias(dest.id);
+            if (typeof showToast === 'function') showToast(`✅ Evento "${titulo.trim()}" añadido al Día ${diaIdx + 1}`, 'success');
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // TRANSPORTE
+      const accionesTransporte = [...respuesta.matchAll(/\[ACCION:TRANSPORTE:([^\]]+)\]/g)];
+      accionesTransporte.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 3) {
+          const [origen, destino, medio, precio, desc] = partes;
+          let destExist = destinos.find(d => d.nombre.toLowerCase().includes(destino.trim().toLowerCase()));
+          if (!destExist && destinos.length > 0) destExist = destinos[0];
+          if (destExist) {
+            if (!destExist.tramos) destExist.tramos = [];
+            destExist.tramos.push({
+              id: Date.now(),
+              origen: origen.trim(),
+              destino: destino.trim(),
+              medio: medio.trim(),
+              precio: parseFloat(precio) || 0,
+              desc: (desc || '').trim(),
+              escalas: []
+            });
+            if (typeof renderDestinos === 'function') renderDestinos();
+            if (typeof showToast === 'function') showToast(`🚗 Transporte añadido: ${origen.trim()} → ${destino.trim()}`, 'success');
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // ESCALA
+      const accionesEscala = [...respuesta.matchAll(/\[ACCION:ESCALA:([^\]]+)\]/g)];
+      accionesEscala.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 3) {
+          const [destNombre, tramoIdx, ciudadEscala, duracion = '', notas = ''] = partes;
+          const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+          if (dest && dest.tramos && dest.tramos[parseInt(tramoIdx)]) {
+            const tramo = dest.tramos[parseInt(tramoIdx)];
+            if (!tramo.escalas) tramo.escalas = [];
+            tramo.escalas.push({
+              id: Date.now(),
+              ciudad: ciudadEscala.trim(),
+              duracion: duracion.trim(),
+              notas: notas.trim()
+            });
+            if (typeof renderDestinos === 'function') renderDestinos();
+            if (typeof showToast === 'function') showToast(`✈️ Escala añadida: ${ciudadEscala.trim()} (${duracion.trim()})`, 'success');
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // ALOJAMIENTO
+      const accionesAlojamiento = [...respuesta.matchAll(/\[ACCION:ALOJAMIENTO:([^\]]+)\]/g)];
+      accionesAlojamiento.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 4) {
+          const [destNombre, diaIni, diaFin, precio, nombre] = partes;
+          let dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+          if (!dest && destinos.length > 0) dest = destinos[0];
+          if (dest) {
+            const diaIdxIni = (parseInt(diaIni) || 1) - 1;
+            while (dest.dias.length <= diaIdxIni) {
+              dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+            }
+            dest.dias[diaIdxIni].alojamiento = {
+              id: Date.now(),
+              nombre: nombre.trim(),
+              precioTotal: parseFloat(precio) || 0,
+              diasFin: parseInt(diaFin) || (diaIdxIni + 1)
+            };
+            if (typeof renderDias === 'function') renderDias(dest.id);
+            if (typeof showToast === 'function') showToast(`🏨 Alojamiento "${nombre.trim()}" añadido`, 'success');
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // SET_PERSONAS
+      const accionPersonas = respuesta.match(/\[ACCION:SET_PERSONAS:(\d+)\]/);
+      if (accionPersonas) {
+        numPersonas = parseInt(accionPersonas[1]) || 1;
+        const el = document.getElementById('numPersonas');
+        if (el) el.value = numPersonas;
+        if (typeof showToast === 'function') showToast(`👥 Personas: ${numPersonas}`, 'success');
+        accionesEjecutadas = true;
+      }
+
+      // SET_ORIGEN
+      const accionOrigen = respuesta.match(/\[ACCION:SET_ORIGEN:([^\]]+)\]/);
+      if (accionOrigen) {
+        lugarSalida = accionOrigen[1].trim();
+        const el = document.getElementById('lugarSalida');
+        if (el) el.value = lugarSalida;
+        if (typeof showToast === 'function') showToast(`📍 Origen: ${lugarSalida}`, 'success');
+        accionesEjecutadas = true;
+      }
+
+      // ABRIR_MAPA
+      if (respuesta.includes('[ACCION:ABRIR_MAPA]')) {
+        setTimeout(() => { if (typeof abrirMapa === 'function') abrirMapa(); }, 600);
+        accionesEjecutadas = true;
+      }
+
+      // ABRIR_RESUMEN
+      if (respuesta.includes('[ACCION:ABRIR_RESUMEN]')) {
+        setTimeout(() => { if (typeof mostrarResumen === 'function') mostrarResumen(); }, 600);
+        accionesEjecutadas = true;
+      }
+
+      // ABRIR_CLIMA / CLIMA:Ciudad
+      if (respuesta.includes('[ACCION:ABRIR_CLIMA]')) {
+        setTimeout(() => { if (typeof abrirClima === 'function') abrirClima(); }, 500);
+        accionesEjecutadas = true;
+      }
+      const accionClimaCiudad = respuesta.match(/\[ACCION:CLIMA:([^\]]+)\]/);
+      if (accionClimaCiudad) {
+        const ciudadClima = accionClimaCiudad[1].trim();
+        setTimeout(async () => {
+          if (typeof abrirClima === 'function') abrirClima();
+          const inp = document.getElementById('clima-search-input');
+          if (inp) inp.value = ciudadClima;
+          if (typeof buscarClimaModal === 'function') await buscarClimaModal();
+        }, 500);
+        accionesEjecutadas = true;
+      }
+
+      // AGREGAR_DIA
+      const accionesAgregarDia = [...respuesta.matchAll(/\[ACCION:AGREGAR_DIA:([^\]]+)\]/g)];
+      accionesAgregarDia.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 1) {
+          const destNombre = partes[0].trim();
+          const diaNum = partes.length > 1 ? parseInt(partes[1]) : undefined;
+          let dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+          if (!dest && destinos.length > 0) dest = destinos[0];
+          if (dest) {
+            if (diaNum !== undefined) {
+              const idx = diaNum - 1;
+              while (dest.dias.length <= idx) {
+                dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+              }
+            } else {
+              dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+            }
+            if (typeof renderDias === 'function') renderDias(dest.id);
+            if (typeof showToast === 'function') showToast(`📅 Día agregado a "${dest.nombre}"`, 'success');
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // ELIMINAR_DIA
+      const accionesEliminarDia = [...respuesta.matchAll(/\[ACCION:ELIMINAR_DIA:([^\]]+)\]/g)];
+      accionesEliminarDia.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 2) {
+          const destNombre = partes[0].trim();
+          const diaNum = parseInt(partes[1]) || 1;
+          const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+          if (dest && dest.dias[diaNum - 1]) {
+            dest.dias.splice(diaNum - 1, 1);
+            if (typeof reindexarDias === 'function') reindexarDias(dest);
+            if (typeof renderDias === 'function') renderDias(dest.id);
+            if (typeof showToast === 'function') showToast(`🗑️ Día ${diaNum} eliminado`, 'info');
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // DUPLICAR_DIA
+      const accionesDuplicarDia = [...respuesta.matchAll(/\[ACCION:DUPLICAR_DIA:([^\]]+)\]/g)];
+      accionesDuplicarDia.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 2) {
+          const destNombre = partes[0].trim();
+          const diaNum = parseInt(partes[1]) || 1;
+          const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+          if (dest && dest.dias[diaNum - 1]) {
+            const diaCopia = JSON.parse(JSON.stringify(dest.dias[diaNum - 1]));
+            diaCopia.id = dest.dias.length;
+            dest.dias.push(diaCopia);
+            if (typeof renderDias === 'function') renderDias(dest.id);
+            if (typeof showToast === 'function') showToast(`⎘ Día ${diaNum} duplicado`, 'success');
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // EDITAR_EVENTO
+      const accionesEditarEvento = [...respuesta.matchAll(/\[ACCION:EDITAR_EVENTO:([^\]]+)\]/g)];
+      accionesEditarEvento.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 5) {
+          const [destNombre, diaNum, numEvento, campo, valor] = partes;
+          const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+          if (dest) {
+            const diaIdx = (parseInt(diaNum) || 1) - 1;
+            const evIdx = (parseInt(numEvento) || 1) - 1;
+            if (dest.dias[diaIdx] && dest.dias[diaIdx].eventos[evIdx]) {
+              const campoNorm = campo.trim().toLowerCase();
+              if (campoNorm === 'hora' || campoNorm === 'titulo' || campoNorm === 'notas') {
+                dest.dias[diaIdx].eventos[evIdx][campoNorm] = valor.trim();
+              } else if (campoNorm === 'costo' || campoNorm === 'duracion') {
+                dest.dias[diaIdx].eventos[evIdx][campoNorm] = parseInt(valor) || 0;
+              }
+              if (typeof renderDias === 'function') renderDias(dest.id);
+              if (typeof showToast === 'function') showToast(`✏️ Evento editado`, 'success');
+            }
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // ELIMINAR_EVENTO
+      const accionesEliminarEvento = [...respuesta.matchAll(/\[ACCION:ELIMINAR_EVENTO:([^\]]+)\]/g)];
+      accionesEliminarEvento.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 3) {
+          const [destNombre, diaNum, numEvento] = partes;
+          const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+          if (dest) {
+            const diaIdx = (parseInt(diaNum) || 1) - 1;
+            const evIdx = (parseInt(numEvento) || 1) - 1;
+            if (dest.dias[diaIdx] && dest.dias[diaIdx].eventos[evIdx]) {
+              dest.dias[diaIdx].eventos.splice(evIdx, 1);
+              if (typeof renderDias === 'function') renderDias(dest.id);
+              if (typeof showToast === 'function') showToast(`🗑️ Evento eliminado`, 'info');
+            }
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // ORGANIZAR_ITINERARIO
+      const accionesOrganizar = [...respuesta.matchAll(/\[ACCION:ORGANIZAR_ITINERARIO:([^\]]+)\]/g)];
+      accionesOrganizar.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 2) {
+          const destNombre = partes[0].trim();
+          const diaNum = parseInt(partes[1]) || 1;
+          const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
+          if (dest && dest.dias[diaNum - 1]) {
+            dest.dias[diaNum - 1].eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
+            if (typeof renderDias === 'function') renderDias(dest.id);
+            if (typeof showToast === 'function') showToast(`⏳ Itinerario organizado por hora`, 'success');
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // AGREGAR_COSTO
+      const accionesAgregarCosto = [...respuesta.matchAll(/\[ACCION:AGREGAR_COSTO:([^\]]+)\]/g)];
+      accionesAgregarCosto.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 4) {
+          const [destNombre, diaNum, desc, precio] = partes;
+          let dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
+          if (!dest && destinos.length > 0) dest = destinos[0];
+          if (dest) {
+            const diaIdx = (parseInt(diaNum) || 1) - 1;
+            while (dest.dias.length <= diaIdx) {
+              dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
+            }
+            if (!dest.dias[diaIdx].costosAdicionales) dest.dias[diaIdx].costosAdicionales = [];
+            dest.dias[diaIdx].costosAdicionales.push({
+              id: Date.now(),
+              descripcion: desc.trim(),
+              precio: parseFloat(precio) || 0
+            });
+            if (typeof renderDias === 'function') renderDias(dest.id);
+            if (typeof showToast === 'function') showToast(`💰 Costo agregado: ${desc.trim()}`, 'success');
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // VIAJE_ACTIVO
+      const accionViajeActivo = respuesta.match(/\[ACCION:VIAJE_ACTIVO(?::([^\]]+))?\]/);
+      if (accionViajeActivo) {
+        const val = accionViajeActivo[1] ? accionViajeActivo[1].trim().toLowerCase() : 'true';
+        const targetState = (val === 'true' || val === '1' || val === 'activar');
+        if (viajeActivoEnabled !== targetState && typeof toggleViajeActivo === 'function') {
+          toggleViajeActivo();
+        }
+        accionesEjecutadas = true;
+      }
+
+      // ABRIR_CHECKLIST
+      if (respuesta.includes('[ACCION:ABRIR_CHECKLIST]')) {
+        setTimeout(() => { if (typeof abrirChecklist === 'function') abrirChecklist(); }, 800);
+        accionesEjecutadas = true;
+      }
+
+      if (accionesEjecutadas && typeof autoSave === 'function') {
+        autoSave();
+      }
+
+      return displayRespuesta;
+    }
+    window.ejecutarAccionesPluxyDirectas = ejecutarAccionesPluxyDirectas;
 
     async function chatSend(textoOverride) {
       const input = document.getElementById('chat-input');
@@ -2097,455 +3022,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         if (typingEl) typingEl.remove();
 
         // Check for autonomous actions
-        let displayRespuesta = respuesta;
-        
-        // Clean display text (remove all action tags)
-        displayRespuesta = respuesta
-          .replace(/\[ACCION:[^\]]+\]/g, '')
-          .trim();
-
-        // Process ALL actions (multiple allowed)
-        let accionesEjecutadas = false;
-        
-        // CHECKLIST
-        if (respuesta.includes('[ACCION:CHECKLIST]')) {
-          setTimeout(() => { abrirChecklist(); }, 800);
-          accionesEjecutadas = true;
-        }
-        
-        // ITINERARIO (multiple allowed)
-        const accionesItinerario = [...respuesta.matchAll(/\[ACCION:ITINERARIO:([^\]]+)\]/g)];
-        accionesItinerario.forEach((match, idx) => {
-          const partes = match[1].split('|');
-          const destNombre = partes[0].trim();
-          const diasForzados = partes.length > 1 ? parseInt(partes[1]) : null;
-          const destExistente = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
-          const delay = 800 + (idx * 300);
-          if (destExistente) {
-            setTimeout(() => generarItinerarioAuto(destExistente.id, diasForzados), delay);
-          } else {
-            const newId = Date.now() + idx;
-            destinos.push({ id: newId, nombre: destNombre, dias: [], tramos: [] });
-            renderDestinos();
-            setTimeout(() => generarItinerarioAuto(newId, diasForzados), delay);
-            if (document.getElementById('welcome').style.display !== 'none') empezar();
-          }
-          accionesEjecutadas = true;
-        });
-        
-        // DESTINO (multiple allowed)
-        const accionesDestino = [...respuesta.matchAll(/\[ACCION:DESTINO:([^\]]+)\]/g)];
-        accionesDestino.forEach((match, idx) => {
-          const newId = Date.now() + idx;
-          const nombre = match[1].trim();
-          destinos.push({ id: newId, nombre, dias: [], tramos: [] });
-          renderDestinos();
-          showToast(`✅ Destino "${nombre}" añadido`, 'success');
-          if (document.getElementById('welcome').style.display !== 'none' && idx === 0) empezar();
-          accionesEjecutadas = true;
-        });
-        
-        // LIMPIAR_DESTINO (multiple allowed)
-        const accionesLimpiar = [...respuesta.matchAll(/\[ACCION:LIMPIAR_DESTINO:([^\]]+)\]/g)];
-        accionesLimpiar.forEach((match) => {
-          const nombre = match[1].trim();
-          const dest = destinos.find(d => d.nombre.toLowerCase().includes(nombre.toLowerCase()));
-          if (dest) {
-            dest.dias = [];
-            renderDias(dest.id);
-            showToast(`🗑️ Días de "${dest.nombre}" eliminados`, 'info');
-          }
-          accionesEjecutadas = true;
-        });
-        
-        // AGREGAR_EVENTO (multiple allowed)
-        const accionesEvento = [...respuesta.matchAll(/\[ACCION:AGREGAR_EVENTO:([^\]]+)\]/g)];
-        accionesEvento.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 4) {
-            const [destNombre, diaNum, hora, titulo, notas] = partes;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
-            if (dest) {
-              const diaIdx = (parseInt(diaNum) || 1) - 1;
-              while (dest.dias.length <= diaIdx) {
-                dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
-              }
-              dest.dias[diaIdx].eventos.push({
-                id: Date.now(),
-                hora: hora.trim(),
-                titulo: titulo.trim(),
-                notas: (notas || '').trim(),
-                costo: 0,
-                duracion: 60
-              });
-              renderDias(dest.id);
-              showToast(`✅ Evento "${titulo.trim()}" añadido al Día ${diaIdx + 1}`, 'success');
-            }
-          }
-          accionesEjecutadas = true;
-        });
-        
-        // TRANSPORTE (NEW - multiple allowed)
-        const accionesTransporte = [...respuesta.matchAll(/\[ACCION:TRANSPORTE:([^\]]+)\]/g)];
-        accionesTransporte.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 3) {
-            const [origen, destino, medio, precio, desc] = partes;
-            const destExist = destinos.find(d => d.nombre.toLowerCase().includes(destino.trim().toLowerCase()));
-            if (destExist) {
-              if (!destExist.tramos) destExist.tramos = [];
-              destExist.tramos.push({
-                id: Date.now(),
-                origen: origen.trim(),
-                destino: destino.trim(),
-                medio: medio.trim(),
-                precio: parseFloat(precio) || 0,
-                desc: (desc || '').trim(),
-                escalas: []
-              });
-              renderDestinos();
-              showToast(`🚗 Transporte añadido: ${origen.trim()} → ${destino.trim()}`, 'success');
-            }
-          }
-          accionesEjecutadas = true;
-        });
-        
-        // ESCALA (NEW - multiple allowed)
-        const accionesEscala = [...respuesta.matchAll(/\[ACCION:ESCALA:([^\]]+)\]/g)];
-        accionesEscala.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 3) {
-            const [destNombre, tramoIdx, ciudadEscala, duracion = '', notas = ''] = partes;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
-            if (dest && dest.tramos && dest.tramos[parseInt(tramoIdx)]) {
-              const tramo = dest.tramos[parseInt(tramoIdx)];
-              if (!tramo.escalas) tramo.escalas = [];
-              tramo.escalas.push({
-                id: Date.now(),
-                ciudad: ciudadEscala.trim(),
-                duracion: duracion.trim(),
-                notas: notas.trim()
-              });
-              renderDestinos();
-              showToast(`✈️ Escala añadida: ${ciudadEscala.trim()} (${duracion.trim()})`, 'success');
-            }
-          }
-          accionesEjecutadas = true;
-        });
-        
-        // ALOJAMIENTO (NEW - multiple allowed)
-        const accionesAlojamiento = [...respuesta.matchAll(/\[ACCION:ALOJAMIENTO:([^\]]+)\]/g)];
-        accionesAlojamiento.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 4) {
-            const [destNombre, diaIni, diaFin, precio, nombre] = partes;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
-            if (dest) {
-              const diaIdxIni = (parseInt(diaIni) || 1) - 1;
-              while (dest.dias.length <= diaIdxIni) {
-                dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
-              }
-              dest.dias[diaIdxIni].alojamiento = {
-                id: Date.now(),
-                nombre: nombre.trim(),
-                precioTotal: parseFloat(precio) || 0,
-                diasFin: parseInt(diaFin) || (diaIdxIni + 1)
-              };
-              renderDias(dest.id);
-              showToast(`🏨 Alojamiento "${nombre.trim()}" añadido`, 'success');
-            }
-          }
-          accionesEjecutadas = true;
-        });
-        
-        // SET_PERSONAS
-        const accionPersonas = respuesta.match(/\[ACCION:SET_PERSONAS:(\d+)\]/);
-        if (accionPersonas) {
-          numPersonas = parseInt(accionPersonas[1]) || 1;
-          const el = document.getElementById('numPersonas');
-          if (el) el.value = numPersonas;
-          showToast(`👥 Personas: ${numPersonas}`, 'success');
-          accionesEjecutadas = true;
-        }
-        
-        // SET_ORIGEN
-        const accionOrigen = respuesta.match(/\[ACCION:SET_ORIGEN:([^\]]+)\]/);
-        if (accionOrigen) {
-          lugarSalida = accionOrigen[1].trim();
-          const el = document.getElementById('lugarSalida');
-          if (el) el.value = lugarSalida;
-          showToast(`📍 Origen: ${lugarSalida}`, 'success');
-          accionesEjecutadas = true;
-        }
-        
-        // ABRIR_MAPA
-        if (respuesta.includes('[ACCION:ABRIR_MAPA]')) {
-          setTimeout(() => abrirMapa(), 600);
-          accionesEjecutadas = true;
-        }
-        
-        // ABRIR_RESUMEN
-        if (respuesta.includes('[ACCION:ABRIR_RESUMEN]')) {
-          setTimeout(() => mostrarResumen(), 600);
-          accionesEjecutadas = true;
-        }
-        
-        // ABRIR_CLIMA
-        if (respuesta.includes('[ACCION:ABRIR_CLIMA]')) {
-          setTimeout(() => abrirClima(), 500);
-          accionesEjecutadas = true;
-        }
-        
-        // CLIMA:Ciudad
-        const accionClimaCiudad = respuesta.match(/\[ACCION:CLIMA:([^\]]+)\]/);
-        if (accionClimaCiudad) {
-          const ciudadClima = accionClimaCiudad[1].trim();
-          setTimeout(async () => {
-            abrirClima();
-            const inp = document.getElementById('clima-search-input');
-            if (inp) inp.value = ciudadClima;
-            await buscarClimaModal();
-          }, 500);
-          accionesEjecutadas = true;
-        }
-
-        // AGREGAR_DIA (multiple allowed)
-        const accionesAgregarDia = [...respuesta.matchAll(/\[ACCION:AGREGAR_DIA:([^\]]+)\]/g)];
-        accionesAgregarDia.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 1) {
-            const destNombre = partes[0].trim();
-            const diaNum = partes.length > 1 ? parseInt(partes[1]) : undefined;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
-            if (dest) {
-              if (diaNum !== undefined) {
-                const idx = diaNum - 1;
-                while (dest.dias.length <= idx) {
-                  dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
-                }
-              } else {
-                dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
-              }
-              renderDias(dest.id);
-              showToast(`📅 Día agregado a "${destNombre}"`, 'success');
-            }
-          }
-          accionesEjecutadas = true;
-        });
-
-        // ELIMINAR_DIA (multiple allowed)
-        const accionesEliminarDia = [...respuesta.matchAll(/\[ACCION:ELIMINAR_DIA:([^\]]+)\]/g)];
-        accionesEliminarDia.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 2) {
-            const destNombre = partes[0].trim();
-            const diaNum = parseInt(partes[1]) || 1;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
-            if (dest && dest.dias[diaNum - 1]) {
-              dest.dias.splice(diaNum - 1, 1);
-              reindexarDias(dest);
-              renderDias(dest.id);
-              showToast(`🗑️ Día ${diaNum} eliminado de "${destNombre}"`, 'info');
-            }
-          }
-          accionesEjecutadas = true;
-        });
-
-        // DUPLICAR_DIA (multiple allowed)
-        const accionesDuplicarDia = [...respuesta.matchAll(/\[ACCION:DUPLICAR_DIA:([^\]]+)\]/g)];
-        accionesDuplicarDia.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 2) {
-            const destNombre = partes[0].trim();
-            const diaNum = parseInt(partes[1]) || 1;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
-            if (dest && dest.dias[diaNum - 1]) {
-              const diaCopia = JSON.parse(JSON.stringify(dest.dias[diaNum - 1]));
-              diaCopia.id = dest.dias.length;
-              dest.dias.push(diaCopia);
-              renderDias(dest.id);
-              showToast(`⎘ Día ${diaNum} duplicado`, 'success');
-            }
-          }
-          accionesEjecutadas = true;
-        });
-
-        // EDITAR_EVENTO (multiple allowed)
-        const accionesEditarEvento = [...respuesta.matchAll(/\[ACCION:EDITAR_EVENTO:([^\]]+)\]/g)];
-        accionesEditarEvento.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 5) {
-            const [destNombre, diaNum, numEvento, campo, valor] = partes;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
-            if (dest) {
-              const diaIdx = (parseInt(diaNum) || 1) - 1;
-              const evIdx = (parseInt(numEvento) || 1) - 1;
-              if (dest.dias[diaIdx] && dest.dias[diaIdx].eventos[evIdx]) {
-                const campoNorm = campo.trim().toLowerCase();
-                if (campoNorm === 'hora' || campoNorm === 'titulo' || campoNorm === 'notas') {
-                  dest.dias[diaIdx].eventos[evIdx][campoNorm] = valor.trim();
-                } else if (campoNorm === 'costo' || campoNorm === 'duracion') {
-                  dest.dias[diaIdx].eventos[evIdx][campoNorm] = parseInt(valor) || 0;
-                }
-                renderDias(dest.id);
-                showToast(`✏️ Evento editado`, 'success');
-              }
-            }
-          }
-          accionesEjecutadas = true;
-        });
-
-        // ELIMINAR_EVENTO (multiple allowed)
-        const accionesEliminarEvento = [...respuesta.matchAll(/\[ACCION:ELIMINAR_EVENTO:([^\]]+)\]/g)];
-        accionesEliminarEvento.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 3) {
-            const [destNombre, diaNum, numEvento] = partes;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
-            if (dest) {
-              const diaIdx = (parseInt(diaNum) || 1) - 1;
-              const evIdx = (parseInt(numEvento) || 1) - 1;
-              if (dest.dias[diaIdx] && dest.dias[diaIdx].eventos[evIdx]) {
-                dest.dias[diaIdx].eventos.splice(evIdx, 1);
-                renderDias(dest.id);
-                showToast(`🗑️ Evento eliminado`, 'info');
-              }
-            }
-          }
-          accionesEjecutadas = true;
-        });
-
-        // DUPLICAR_EVENTO (multiple allowed)
-        const accionesDuplicarEvento = [...respuesta.matchAll(/\[ACCION:DUPLICAR_EVENTO:([^\]]+)\]/g)];
-        accionesDuplicarEvento.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 3) {
-            const [destNombre, diaNum, numEvento] = partes;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
-            if (dest) {
-              const diaIdx = (parseInt(diaNum) || 1) - 1;
-              const evIdx = (parseInt(numEvento) || 1) - 1;
-              if (dest.dias[diaIdx] && dest.dias[diaIdx].eventos[evIdx]) {
-                const evCopia = JSON.parse(JSON.stringify(dest.dias[diaIdx].eventos[evIdx]));
-                evCopia.id = Date.now();
-                dest.dias[diaIdx].eventos.push(evCopia);
-                renderDias(dest.id);
-                showToast(`⎘ Evento duplicado`, 'success');
-              }
-            }
-          }
-          accionesEjecutadas = true;
-        });
-
-        // ORGANIZAR_ITINERARIO
-        const accionesOrganizar = [...respuesta.matchAll(/\[ACCION:ORGANIZAR_ITINERARIO:([^\]]+)\]/g)];
-        accionesOrganizar.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 2) {
-            const destNombre = partes[0].trim();
-            const diaNum = parseInt(partes[1]) || 1;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.toLowerCase()));
-            if (dest && dest.dias[diaNum - 1]) {
-              dest.dias[diaNum - 1].eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
-              renderDias(dest.id);
-              showToast(`⏳ Itinerario organizado por hora`, 'success');
-            }
-          }
-          accionesEjecutadas = true;
-        });
-
-        // AGREGAR_COSTO (multiple allowed)
-        const accionesAgregarCosto = [...respuesta.matchAll(/\[ACCION:AGREGAR_COSTO:([^\]]+)\]/g)];
-        accionesAgregarCosto.forEach((match) => {
-          const partes = match[1].split('|');
-          if (partes.length >= 4) {
-            const [destNombre, diaNum, desc, precio] = partes;
-            const dest = destinos.find(d => d.nombre.toLowerCase().includes(destNombre.trim().toLowerCase()));
-            if (dest) {
-              const diaIdx = (parseInt(diaNum) || 1) - 1;
-              while (dest.dias.length <= diaIdx) {
-                dest.dias.push({ id: dest.dias.length, eventos: [], costosAdicionales: [] });
-              }
-              if (!dest.dias[diaIdx].costosAdicionales) {
-                dest.dias[diaIdx].costosAdicionales = [];
-              }
-              dest.dias[diaIdx].costosAdicionales.push({
-                id: Date.now(),
-                descripcion: desc.trim(),
-                precio: parseFloat(precio) || 0
-              });
-              renderDias(dest.id);
-              showToast(`💰 Costo agregado: ${desc.trim()}`, 'success');
-            }
-          }
-          accionesEjecutadas = true;
-        });
-
-        // VIAJE_ACTIVO
-        const accionViajeActivo = respuesta.match(/\[ACCION:VIAJE_ACTIVO(?::([^\]]+))?\]/);
-        if (accionViajeActivo) {
-          const val = accionViajeActivo[1] ? accionViajeActivo[1].trim().toLowerCase() : 'true';
-          const targetState = (val === 'true' || val === '1' || val === 'activar');
-          if (viajeActivoEnabled !== targetState) {
-            toggleViajeActivo();
-          }
-          accionesEjecutadas = true;
-        }
-
-        // ABRIR_CHECKLIST
-        if (respuesta.includes('[ACCION:ABRIR_CHECKLIST]')) {
-          setTimeout(() => { abrirChecklist(); }, 800);
-          accionesEjecutadas = true;
-        }
-        
-        // INVITAR_COLABORADOR (multiple allowed)
-        const accionesInvitar = [...respuesta.matchAll(/\[ACCION:INVITAR_COLABORADOR:([^\]]+)\]/g)];
-        accionesInvitar.forEach((match) => {
-          const targetNick = match[1].trim().replace(/^@/, '');
-          if (targetNick && currentUserUid && db) {
-            if (targetNick === currentNickname) {
-              showToast('No podés invitarte a vos mismo', 'error');
-            } else {
-              // Check if target user exists
-              db.collection('plux_usuarios').doc(targetNick).get().then(userDoc => {
-                if (userDoc.exists) {
-                  // If no sync code, generate one first
-                  if (!syncCode) {
-                    generarCodigoInApp();
-                    showToast('Código generado automáticamente para compartir', 'info');
-                  }
-                  // Add collaborator to the shared trip
-                  setTimeout(() => {
-                    db.collection('plux_viajes_compartidos').doc(syncCode).set({
-                      colaboradores: firebase.firestore.FieldValue.arrayUnion(targetNick),
-                      propietario: currentNickname,
-                      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true }).then(() => {
-                      showToast(`@${targetNick} invitado al viaje ✅`, 'success');
-                      abrirColaboradores();
-                    }).catch(e => {
-                      console.error('Error al invitar colaborador:', e);
-                      showToast('Error al enviar la invitación', 'error');
-                    });
-                  }, 500);
-                } else {
-                  showToast(`El usuario @${targetNick} no existe en Plux`, 'error');
-                }
-              }).catch(e => {
-                showToast('Error al verificar el usuario', 'error');
-              });
-            }
-          } else if (!currentUserUid) {
-            showToast('Iniciá sesión para invitar colaboradores', 'error');
-          }
-          accionesEjecutadas = true;
-        });
-        
-        // Autosave if any action was taken
-        if (accionesEjecutadas) {
-          autoSave();
-        }
-
+        const displayRespuesta = await ejecutarAccionesPluxyDirectas(respuesta);
         agregarMensajeChat('ai', displayRespuesta.trim());
       } catch(e) {
         const typingEl = document.getElementById(typingId);
@@ -2606,167 +3083,110 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       }, 300);
     }
-    function setLanguage(lang, sync = true) {
-      currentLang = lang;
+    function applyGlobalI18n() {
+      const lang = currentLang;
       localStorage.setItem('pluxUserLanguage', lang);
+      localStorage.setItem('Plux_Lang', lang);
       document.body.className = document.body.className.replace(/lang-\w+/, `lang-${lang}`);
-      applyGlobalI18n();
-      applyCuentaModalI18n();
       if (!document.body.className.includes(`lang-${lang}`)) document.body.classList.add(`lang-${lang}`);
-      document.getElementById('langButton').textContent = lang.toUpperCase();
+      
+      const langBtn = document.getElementById('langButton');
+      if (langBtn) langBtn.textContent = lang.toUpperCase();
+      
       document.querySelectorAll('.lang-option').forEach(opt => {
-        opt.classList.toggle('active', opt.dataset.lang === lang);
+        const optLang = opt.getAttribute('data-lang') || opt.dataset.lang;
+        opt.classList.toggle('active', optLang === lang);
       });
 
-      document.getElementById('startBtn').textContent = t('welcome_start');
-      document.getElementById('tripsBtn').textContent = t('trips_btn');
-      document.getElementById('toolsBtn').textContent = t('tools_btn');
-      document.getElementById('discoverBtn').textContent = t('discover_btn');
-      document.getElementById('modalTitle').textContent = t('modal_title');
-      document.getElementById('nombreViaje').placeholder = t('save_trip_placeholder');
+      const setElText = (id, txt) => {
+        const el = document.getElementById(id);
+        if (el && txt != null) el.textContent = txt;
+      };
+      const setElPlaceholder = (id, txt) => {
+        const el = document.getElementById(id);
+        if (el && txt != null) el.placeholder = txt;
+      };
+
+      setElText('startBtn', t('welcome_start'));
+      setElText('tripsBtn', t('trips_btn'));
+      setElText('toolsBtn', t('tools_btn'));
+      setElText('discoverBtn', t('discover_btn'));
+      setElText('modalTitle', t('modal_title'));
+      setElPlaceholder('nombreViaje', t('save_trip_placeholder'));
+
       const saveBtn = document.querySelector('#tab-guardados .save-trip button');
       if (saveBtn) saveBtn.textContent = t('save_trip_button');
       const importBtn = document.querySelector('#tab-guardados .import-export button:first-child');
       if (importBtn) importBtn.textContent = t('importar');
       const exportBtn = document.querySelector('#tab-guardados .import-export button:last-child');
       if (exportBtn) exportBtn.textContent = t('exportar');
-      document.getElementById('appTitle').textContent = t('app_title');
-      document.getElementById('nuevoDestino').placeholder = t('add_dest_placeholder');
-      document.getElementById('addDestBtn').textContent = t('add_dest_button');
-      document.getElementById('btn-resumen').textContent = t('view_summary');
-      document.getElementById('summaryTitle').textContent = t('summary_title');
-      document.querySelector('#tab-plantillas .save-trip button').textContent = t('guardar_plantilla');
-      document.getElementById('nombrePlantilla').placeholder = t('nombre_plantilla');
-      document.getElementById('herramientasTitle').textContent = t('herramientas_title');
-      document.getElementById('calendarioTitle').textContent = t('calendario_title');
-      document.getElementById('btnCalendario').textContent = t('calendario_title');
-      document.getElementById('btnMapa').textContent = t('mapa_btn');
-      const btnClima = document.getElementById('btnClima');
-      if (btnClima) btnClima.textContent = t('clima_btn') || 'Clima';
-      const climaTitle = document.getElementById('climaTitle');
-      if (climaTitle) climaTitle.textContent = t('clima_title') || 'Clima';
-      const climaSearchBtn = document.getElementById('climaSearchBtn');
-      if (climaSearchBtn) climaSearchBtn.textContent = t('clima_search') || 'Buscar';
-      const climaInp = document.getElementById('clima-search-input');
-      if (climaInp) climaInp.placeholder = t('clima_placeholder');
-      document.getElementById('eventosDiaTitle').textContent = t('eventos_dia_title');
-      document.getElementById('lugarSalidaLabel').textContent = t('lugar_salida');
-      const personasLbl = document.getElementById('personasLabel');
-      if (personasLbl) personasLbl.textContent = t('personas_label');
-      const fechaLbl = document.getElementById('fechaInicioLabel');
-      if (fechaLbl) fechaLbl.textContent = t('fecha_inicio_label');
-      applyCuentaModalI18n();
-      const jh = document.getElementById('joinHintHerramientas');
-      const jv = document.getElementById('joinHintViajes');
-      if (jh) jh.textContent = t('join_invite');
-      if (jv) jv.textContent = t('join_invite');
-      const jb1 = document.getElementById('joinBtnHerramientas');
-      const jb2 = document.getElementById('joinBtnViajes');
-      if (jb1) jb1.textContent = t('join_btn');
-      if (jb2) jb2.textContent = t('join_btn');
-      const jph = document.getElementById('join-code-input-herramientas');
-      const jpv = document.getElementById('join-code-input-viajes');
-      if (jph) jph.placeholder = t('join_placeholder');
-      if (jpv) jpv.placeholder = t('join_placeholder');
-      const inspo = document.getElementById('inspoTitle');
-      if (inspo) inspo.textContent = t('inspo_title');
-      const tabS = document.getElementById('tabGuardadosBtn');
-      const tabT = document.getElementById('tabPlantillasBtn');
-      if (tabS) tabS.textContent = t('tab_saved');
-      if (tabT) tabT.textContent = t('tab_templates');
-      const sharedTitle = document.getElementById('sharedTripsTitle');
-      if (sharedTitle) sharedTitle.textContent = t('shared_trips_title');
-      const colabT = document.getElementById('colabTitle');
-      if (colabT) colabT.textContent = t('colab_title');
-      const colabNickLbl = document.getElementById('colabInviteLabel');
-      if (colabNickLbl) colabNickLbl.textContent = t('colab_invite_nick');
-      const colabNickBtn = document.getElementById('colabInviteBtn');
-      if (colabNickBtn) colabNickBtn.textContent = t('colab_invite_btn');
-      const colabNickIn = document.getElementById('invite-nickname-input');
-      if (colabNickIn) colabNickIn.placeholder = t('colab_nick_ph');
-      const colabCodeLbl = document.getElementById('colabAccessLabel');
-      if (colabCodeLbl) colabCodeLbl.textContent = t('colab_access_code');
-      const colabGen = document.getElementById('colabGenBtn');
-      if (colabGen) colabGen.textContent = t('colab_gen_code');
-      const mapT = document.getElementById('mapTitle');
-      if (mapT) mapT.textContent = t('map_title');
-      const convT = document.getElementById('conversorTitle');
-      if (convT) convT.textContent = t('conversor_title');
-      const convB = document.getElementById('conversorBtn');
-      if (convB) convB.textContent = t('conversor_btn');
-      const descT = document.getElementById('descubrirTitle');
-      if (descT) descT.textContent = t('descubrir_title');
-      const presT = document.getElementById('presentacionTitle');
-      if (presT) presT.textContent = t('present_title');
-      const presP = document.getElementById('anteriorBtn');
-      const presN = document.getElementById('siguienteBtn');
-      if (presP) presP.textContent = t('present_prev');
-      if (presN) presN.textContent = t('present_next');
-      const aresB = document.getElementById('ares-esc-banner');
-      if (aresB) aresB.textContent = t('ares_esc');
-      const btnPref = document.getElementById('btnPreferencias');
-      if (btnPref) btnPref.textContent = t('preferencias_btn');
-      const btnViajeAct = document.getElementById('btnViajeActivo');
-      if (btnViajeAct) btnViajeAct.textContent = t('viaje_activo_btn');
+
+      setElText('appTitle', t('app_title'));
+      setElPlaceholder('nuevoDestino', t('add_dest_placeholder'));
+      setElText('addDestBtn', t('add_dest_button'));
+      setElText('btn-resumen', t('view_summary'));
+      setElText('summaryTitle', t('summary_title'));
+
+      const savePlantillaBtn = document.querySelector('#tab-plantillas .save-trip button');
+      if (savePlantillaBtn) savePlantillaBtn.textContent = t('guardar_plantilla');
+      setElPlaceholder('nombrePlantilla', t('nombre_plantilla'));
+      setElText('herramientasTitle', t('herramientas_title'));
+      setElText('calendarioTitle', t('calendario_title'));
+      setElText('btnCalendario', t('calendario_title'));
+      setElText('btnMapa', t('mapa_btn'));
+      setElText('btnClima', t('clima_btn') || 'Clima');
+      setElText('climaTitle', t('clima_title') || 'Clima');
+      setElText('climaSearchBtn', t('clima_search') || 'Buscar');
+      setElPlaceholder('clima-search-input', t('clima_placeholder'));
+      setElText('eventosDiaTitle', t('eventos_dia_title'));
+      setElText('lugarSalidaLabel', t('lugar_salida'));
+      setElText('personasLabel', t('personas_label'));
+      setElText('fechaInicioLabel', t('fecha_inicio_label'));
+
+      if (typeof applyCuentaModalI18n === 'function') applyCuentaModalI18n();
+
+      setElText('joinHintHerramientas', t('join_invite'));
+      setElText('joinHintViajes', t('join_invite'));
+      setElText('joinBtnHerramientas', t('join_btn'));
+      setElText('joinBtnViajes', t('join_btn'));
+      setElPlaceholder('join-code-input-herramientas', t('join_placeholder'));
+      setElPlaceholder('join-code-input-viajes', t('join_placeholder'));
+      setElText('inspoTitle', t('inspo_title'));
+      setElText('tabGuardadosBtn', t('tab_saved'));
+      setElText('tabPlantillasBtn', t('tab_templates'));
+      setElText('sharedTripsTitle', t('shared_trips_title'));
+      setElText('colabTitle', t('colab_title'));
+      setElText('colabInviteLabel', t('colab_invite_nick'));
+      setElText('colabInviteBtn', t('colab_invite_btn'));
+      setElPlaceholder('invite-nickname-input', t('colab_nick_ph'));
+      setElText('colabAccessLabel', t('colab_access_code'));
+      setElText('colabGenBtn', t('colab_gen_code'));
+      setElText('mapTitle', t('map_title'));
+      setElText('conversorTitle', t('conversor_title'));
+      setElText('conversorBtn', t('conversor_btn'));
+      setElText('descubrirTitle', t('descubrir_title'));
+      setElText('presentacionTitle', t('present_title'));
+      setElText('anteriorBtn', t('present_prev'));
+      setElText('siguienteBtn', t('present_next'));
+      setElText('ares-esc-banner', t('ares_esc'));
+      setElText('btnPreferencias', t('preferencias_btn'));
+      setElText('btnViajeActivo', t('viaje_activo_btn'));
+      
       const cuentaBtn = document.getElementById('cuentaButton');
       if (cuentaBtn && !currentNickname) cuentaBtn.title = t('cuenta_btn_title');
 
-      const themeDropdown = document.getElementById('themeDropdown');
-      themeDropdown.innerHTML = `
-        <div class="theme-option" data-theme="theme-claro">${t('temas.claro') || 'Claro'}</div>
-        <div class="theme-option active" data-theme="theme-oscuro">${t('temas.oscuro') || 'Oscuro'}</div>
-        <div class="theme-option" data-theme="theme-tokyo">${t('temas.tokyo') || 'Tokyo Night'}</div>
-        <div class="theme-option" data-theme="theme-grid">${t('temas.grid') || 'The Grid'}</div>
-        <div class="theme-option" data-theme="theme-terminal">${t('temas.terminal') || 'Terminal'}</div>
-        <div class="theme-option" data-theme="theme-starship">${t('temas.starship') || 'Starship'}</div>
-        <div class="theme-option" data-theme="theme-ares">${t('temas.ares') || 'Ares'}</div>
-      `;
-      document.querySelectorAll('.theme-option').forEach(opt => {
-        opt.classList.toggle('active', opt.dataset.theme === currentTheme);
-        opt.addEventListener('click', (e) => {
-          e.stopPropagation();
-          setTheme(e.target.dataset.theme);
-        });
-      });
+      if (typeof renderThemeDropdown === 'function') renderThemeDropdown();
 
-      if (document.getElementById('pantalla-resumen').style.display === 'flex') {
+      const pantallaResumen = document.getElementById('pantalla-resumen');
+      if (pantallaResumen && pantallaResumen.style.display === 'flex') {
         const btnView = document.querySelector('.view-toggle');
-        if (btnView) btnView.textContent = t('view_modes')[modos[(modoVista + 1) % 3]];
-        renderResumen();
+        if (btnView && t('view_modes')) btnView.textContent = t('view_modes')[modos[(modoVista + 1) % 3]];
+        if (typeof renderResumen === 'function') renderResumen();
       }
-      renderTripLists();
-      if (document.getElementById('modal-calendario').style.display === 'flex') renderCalendario();
-      renderDestinos();
-      
-      // ESC Key Listener for Ares
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && document.body.classList.contains('theme-ares')) {
-          setTheme('theme-oscuro');
-          const banner = document.getElementById('ares-esc-banner');
-          if (banner) banner.style.display = 'none';
-        }
-      });
-      if(sync) sincronizarPerfil();
-    }
-
-    function setTheme(t, sync = true) {
-        currentTheme = t;
-        document.body.className = `lang-${currentLang} ${t}`;
-        localStorage.setItem('PluxTheme', t);
-        document.querySelectorAll('.theme-option').forEach(opt => {
-            opt.classList.toggle('active', opt.dataset.theme === t);
-        });
-        
-        const banner = document.getElementById('ares-esc-banner');
-        if (t === 'theme-ares') {
-          if (banner) {
-            banner.style.display = 'block';
-            setTimeout(() => { banner.style.display = 'none'; }, 4000);
-          }
-        } else if (banner) {
-          banner.style.display = 'none';
-        }
-        if(sync) sincronizarPerfil();
+      if (typeof renderTripLists === 'function') renderTripLists();
+      const modalCal = document.getElementById('modal-calendario');
+      if (modalCal && modalCal.style.display === 'flex' && typeof renderCalendario === 'function') renderCalendario();
+      if (typeof renderDestinos === 'function') renderDestinos();
     }
 
     // ================== NOTIFICACIONES ==================
@@ -3267,67 +3687,68 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const savedViajeActivo = localStorage.getItem('PluxViajeActivoEnabled') === 'true';
       if (savedViajeActivo) {
         viajeActivoEnabled = true;
-        verificarViajeActivo();
-        viajeActivoInterval = setInterval(() => {
-          verificarViajeActivo();
-        }, 60000);
-      } else {
-        verificarViajeActivo();
+        verificarViajeActivo(false);
       }
     });
 
     function empezar() {
-      document.getElementById("welcome").classList.add("hidden");
+      const welcome = document.getElementById("welcome");
+      if (welcome) welcome.classList.add("hidden");
       setTimeout(() => {
-        document.getElementById("welcome").style.display = "none";
-        document.getElementById("app").style.display = "block";
-      programarTodasLasNotificaciones();
-      }, 800);
+        if (welcome) welcome.style.display = "none";
+        const app = document.getElementById("app");
+        if (app) app.style.display = "block";
+      }, 400);
     }
 
     function volverAWelcome() {
-      document.getElementById("app").style.display = "none";
-      document.getElementById("welcome").style.display = "flex";
-      document.getElementById("welcome").classList.remove("hidden");
+      const app = document.getElementById("app");
+      if (app) app.style.display = "none";
+      const welcome = document.getElementById("welcome");
+      if (welcome) {
+        welcome.style.display = "flex";
+        welcome.classList.remove("hidden");
+      }
     }
 
     // ================== MODO VIAJE ACTIVO ==================
-    let viajeActivoEnabled = false; // Flag para controlar si el usuario quiere modo viaje activo
-    let viajeActivoInterval = null; // Para actualización periódica
+    let viajeActivoEnabled = false;
+    let viajeActivoInterval = null;
+    let activeNotificationTimeouts = [];
     
-    function verificarViajeActivo() {
-        if(destinos.length === 0) return;
-        const fechaInicioVal = document.getElementById('fechaInicio').value;
-        if(!fechaInicioVal) return;
+    function verificarViajeActivo(abrirModal = false) {
+        if (!destinos || destinos.length === 0) return;
+        const fechaInicioEl = document.getElementById('fechaInicio');
+        const fechaInicioVal = fechaInicioEl ? fechaInicioEl.value : '';
+        if (!fechaInicioVal) return;
         
-        // Use local timezone for today
         const hoy = new Date();
         const fi = new Date(fechaInicioVal);
-        fi.setHours(0, 0, 0, 0); // Set to start of day
+        fi.setHours(0, 0, 0, 0);
         hoy.setHours(hoy.getHours(), hoy.getMinutes(), hoy.getSeconds(), 0);
         
-        // Calculate which day of the trip we're on
         const diffMs = hoy.getTime() - fi.getTime();
         const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         
+        const appTitle = document.getElementById('appTitle');
         if (diffDias >= 0 && viajeActivoEnabled) {
-            document.getElementById('appTitle').textContent = `¡Viaje Activo! (Día ${diffDias + 1})`;
-            document.getElementById('appTitle').style.color = "var(--rosa)";
-            document.getElementById('appTitle').style.animation = "pulseGlow 2s infinite";
-            
-            // Ask for Notification permission
-            if ("Notification" in window && Notification.permission !== "granted") {
-                Notification.requestPermission();
+            if (appTitle) {
+              appTitle.textContent = `¡Viaje Activo! (Día ${diffDias + 1})`;
+              appTitle.style.color = "var(--rosa)";
+              appTitle.style.animation = "pulseGlow 2s infinite";
             }
             
-            mostrarDashboardDia(diffDias);
+            if (abrirModal) {
+              mostrarDashboardDia(diffDias);
+            }
             programarNotificacionesDelDia(diffDias);
         } else if (viajeActivoEnabled && diffDias < 0) {
-            // El viaje aún no ha comenzado
-            document.getElementById('appTitle').textContent = `Viaje en ${Math.abs(diffDias)} días`;
-            document.getElementById('appTitle').style.color = "var(--azul)";
+            if (appTitle) {
+              appTitle.textContent = `Viaje en ${Math.abs(diffDias)} días`;
+              appTitle.style.color = "var(--azul)";
+            }
             const content = document.getElementById('viajeActivoContent');
-            content.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Tu viaje aún no ha comenzado. ¡Prepárate!</p>';
+            if (content) content.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Tu viaje aún no ha comenzado. ¡Prepárate!</p>';
         }
     }
     
@@ -3335,31 +3756,32 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         viajeActivoEnabled = !viajeActivoEnabled;
         localStorage.setItem('PluxViajeActivoEnabled', viajeActivoEnabled ? 'true' : 'false');
         if (!viajeActivoEnabled) {
-            // Desactivar modo viaje activo
-            document.getElementById('appTitle').textContent = t('app_title');
-            document.getElementById('appTitle').style.color = "";
-            document.getElementById('appTitle').style.animation = "";
-            document.getElementById('modal-viaje-activo').style.display = 'none';
+            const appTitle = document.getElementById('appTitle');
+            if (appTitle) {
+              appTitle.textContent = t('app_title') || 'Plux';
+              appTitle.style.color = "";
+              appTitle.style.animation = "";
+            }
+            const modal = document.getElementById('modal-viaje-activo');
+            if (modal) modal.style.display = 'none';
             if (viajeActivoInterval) {
                 clearInterval(viajeActivoInterval);
                 viajeActivoInterval = null;
             }
+            activeNotificationTimeouts.forEach(t => clearTimeout(t));
+            activeNotificationTimeouts = [];
             showToast('Modo viaje activo desactivado', 'info');
         } else {
-            // Activar modo viaje activo
-            verificarViajeActivo();
-            // Actualizar cada minuto
-            if (viajeActivoInterval) clearInterval(viajeActivoInterval);
-            viajeActivoInterval = setInterval(() => {
-                verificarViajeActivo();
-            }, 60000); // cada minuto
+            verificarViajeActivo(true);
             showToast('Modo viaje activo activado ✨', 'success');
         }
     }
     
     function mostrarDashboardDia(diaIndex) {
-        document.getElementById('modal-viaje-activo').style.display = 'flex';
+        const modal = document.getElementById('modal-viaje-activo');
+        if (modal) modal.style.display = 'flex';
         const content = document.getElementById('viajeActivoContent');
+        if (!content) return;
         let html = '';
         let eventosHoy = 0;
         let tieneContenido = false;
@@ -3390,7 +3812,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 }
                 
                 // EVENTOS
-                if (dia.eventos.length > 0) {
+                if (dia.eventos && dia.eventos.length > 0) {
                     html += `<div style="margin-bottom:12px;">`;
                     html += `<p style="color:var(--azul); font-weight:bold; font-size:0.9rem; margin:0;">📅 EVENTOS:</p>`;
                     dia.eventos.forEach(ev => {
@@ -3416,7 +3838,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                     html += `</div>`;
                 }
                 
-                if (dia.eventos.length === 0) {
+                if (!dia.eventos || dia.eventos.length === 0) {
                     html += `<p style="color:var(--gris); font-style:italic; font-size:0.9rem;">Sin eventos programados para este día</p>`;
                 }
                 html += `</div>`;
@@ -3433,23 +3855,27 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     function programarNotificacionesDelDia(diaIndex) {
         if (!("Notification" in window) || Notification.permission !== "granted") return;
         
+        // Clear previous timeouts to avoid duplicate notifications
+        activeNotificationTimeouts.forEach(t => clearTimeout(t));
+        activeNotificationTimeouts = [];
+        
         const hoy = new Date();
         destinos.forEach(d => {
             if (d.dias && d.dias[diaIndex]) {
-                d.dias[diaIndex].eventos.forEach(ev => {
+                (d.dias[diaIndex].eventos || []).forEach(ev => {
                     if (ev.hora) {
                         const [horas, minutos] = ev.hora.split(':');
-                        const fechaEvento = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), horas, minutos, 0);
-                        // Notify 15 minutes before
+                        const fechaEvento = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), parseInt(horas), parseInt(minutos), 0);
                         const tiempoHastaAviso = fechaEvento.getTime() - hoy.getTime() - (15 * 60000);
                         
                         if (tiempoHastaAviso > 0) {
-                            setTimeout(() => {
+                            const timerId = setTimeout(() => {
                                 new Notification(`¡Es hora de tu evento en ${d.nombre}!`, {
                                     body: ev.titulo,
                                     icon: 'https://cdn-icons-png.flaticon.com/512/3180/3180209.png'
                                 });
                             }, tiempoHastaAviso);
+                            activeNotificationTimeouts.push(timerId);
                         }
                     }
                 });
@@ -3470,6 +3896,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       input.value = "";
       renderDestinos();
       generarSelloPasaporte(nombre);
+      trackEvent('create_itinerary', {
+        action: 'add_destination',
+        destination_name: nombre
+      });
     }
 
     function generarSelloPasaporte(ciudad) {
@@ -5438,6 +5868,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       link.download = "viaje_plux.ics";
       link.click();
       showToast('Archivo .ics generado para tu calendario', 'success');
+      trackEvent('export_plan', {
+        format: 'calendar',
+        destinations_count: destinos.length
+      });
     }
 
     // ================== COMPARTIR ==================
@@ -5472,15 +5906,28 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         });
       }
       navigator.clipboard?.writeText(texto).then(()=>showToast('Enlace copiado', 'success')).catch(()=>fallbackCompartir(texto));
+      trackEvent('share_trip', {
+        method: 'clipboard_summary',
+        destinations_count: destinos.length
+      });
     }
     function fallbackCompartir(texto) {
       const ta = document.createElement('textarea');
       ta.value = texto; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
       showToast('Enlace copiado', 'success');
+      trackEvent('share_trip', {
+        method: 'fallback_copy',
+        destinations_count: destinos.length
+      });
     }
 
     // ================== PDF ==================
     function exportarPDF() {
+      trackEvent('export_plan', {
+        format: 'pdf',
+        destinations_count: destinos.length,
+        trip_name: document.getElementById('nombreViaje')?.value || 'Mi aventura'
+      });
       const doc = new jspdf.jsPDF();
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
@@ -5675,6 +6122,11 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         saveTrips(trips);
         showToast('Viaje guardado correctamente', 'success');
       }
+      trackEvent('create_itinerary', {
+        action: 'save_itinerary',
+        trip_name: nombre,
+        is_new: loadedTripIndex === null
+      });
       renderTripLists();
       document.getElementById('nombreViaje').value = '';
     }
@@ -5752,6 +6204,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       renderDestinos();
       renderVueltaCostos();
       cerrarModalViajes();
+      trackEvent('clone_template', {
+        template_name: plantilla.nombre || `Plantilla ${index}`,
+        template_index: index
+      });
     }
 
     function eliminarPlantilla(index) {
@@ -6531,6 +6987,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         // Show share options: code + nickname invite
         const code = syncCode;
         const nick = currentNickname;
+        trackEvent('share_trip', {
+            action: 'open_share_modal',
+            has_code: !!code
+        });
         let html = `<div id="modal-compartir" style="position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px;" onclick="if(event.target===this)this.remove()">
             <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:30px;max-width:480px;width:100%;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -7207,6 +7667,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     renderDestinos();
     if (typeof generarSelloPasaporte === 'function') generarSelloPasaporte(matchedData ? matchedData.nombre : ciudadRaw);
     autoSave();
+    trackEvent('clone_template', {
+      template_name: matchedData ? matchedData.nombre : ciudadRaw,
+      source: 'preset_destination'
+    });
   }
   window.cargarPlantillaCiudad = cargarPlantillaCiudad;
 
@@ -7259,3 +7723,995 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       }, 500);
     }
   });
+
+  // ==========================================================================
+  // PLUX SOCIAL CHAT (INDIVIDUAL & GRUPAL - REALTIME FIRESTORE & LOCAL ENGINE)
+  // ==========================================================================
+  
+  let pluxActiveChatId = 'trip_group';
+  let pluxSocialChats = JSON.parse(localStorage.getItem('PluxSocialChats_V2') || '{}');
+  let pluxChatUnsubscribe = null;
+
+  // Neon color palette
+  const PLUX_NEON_COLORS = ['emerald', 'cyan', 'purple', 'pink', 'amber'];
+  function getParticipantColor(name) {
+    if (!name) return 'cyan';
+    if (name.toLowerCase().includes('pluxy')) return 'pluxy';
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    const index = Math.abs(hash) % PLUX_NEON_COLORS.length;
+    return PLUX_NEON_COLORS[index];
+  }
+
+  function getParticipantInitial(name) {
+    if (!name) return '👤';
+    if (name.toLowerCase().includes('pluxy')) return '🐾';
+    return name.trim().charAt(0).toUpperCase();
+  }
+
+  function getActiveChatRoomKey() {
+    if (pluxActiveChatId === 'trip_group') {
+      const code = (typeof syncCode !== 'undefined' && syncCode) ? syncCode : (localStorage.getItem('PluxSyncCode') || 'trip_general');
+      return `trip_${code}`;
+    }
+    if (pluxActiveChatId && pluxActiveChatId.startsWith('dm_')) {
+      const myNick = (currentNickname || 'yo').toLowerCase().trim();
+      const otherNick = pluxActiveChatId.replace('dm_', '').toLowerCase().trim();
+      const pair = [myNick, otherNick].sort().join('_');
+      return `dm_${pair}`;
+    }
+    return pluxActiveChatId || 'trip_general';
+  }
+
+  function ensureChatChannel() {
+    if (!pluxSocialChats[pluxActiveChatId]) {
+      const isGroup = pluxActiveChatId === 'trip_group';
+      const tripNames = (typeof destinos !== 'undefined' && destinos.length > 0)
+        ? destinos.map(d => d.nombre).join(' & ')
+        : 'Mi Viaje';
+
+      pluxSocialChats[pluxActiveChatId] = {
+        id: pluxActiveChatId,
+        type: isGroup ? 'group' : 'direct',
+        name: isGroup ? `Viaje a ${tripNames} ✈️` : pluxActiveChatId.replace('dm_', '@'),
+        messages: []
+      };
+      localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+    }
+  }
+
+  function setupFirestoreRealtimeChat() {
+    if (pluxChatUnsubscribe) {
+      pluxChatUnsubscribe();
+      pluxChatUnsubscribe = null;
+    }
+
+    if (typeof db !== 'undefined' && db) {
+      const roomKey = getActiveChatRoomKey();
+      try {
+        pluxChatUnsubscribe = db.collection('plux_chat_rooms')
+          .doc(roomKey)
+          .collection('mensajes')
+          .orderBy('timestamp', 'asc')
+          .onSnapshot((snapshot) => {
+            if (!snapshot.empty) {
+              const remoteMsgs = [];
+              snapshot.forEach(doc => {
+                const data = doc.data();
+                remoteMsgs.push({ id: doc.id, ...data });
+              });
+              ensureChatChannel();
+              pluxSocialChats[pluxActiveChatId].messages = remoteMsgs;
+              localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+              renderChatMessages();
+            }
+          }, (err) => {
+            console.log('Chat Firestore fallback to local:', err.message);
+          });
+      } catch (err) {
+        console.log('Error conectando realtime chat:', err);
+      }
+    }
+  }
+
+  function abrirChatSocial(chatId) {
+    if (chatId) pluxActiveChatId = chatId;
+    ensureChatChannel();
+
+    // Dynamic trip title update
+    if (pluxActiveChatId === 'trip_group' && pluxSocialChats['trip_group']) {
+      const tripNames = (typeof destinos !== 'undefined' && destinos.length > 0)
+        ? destinos.map(d => d.nombre).join(' & ')
+        : 'Mi Viaje';
+      pluxSocialChats['trip_group'].name = `Viaje a ${tripNames} ✈️`;
+    }
+
+    const modal = document.getElementById('modal-plux-chat-social');
+    if (modal) modal.style.display = 'flex';
+    
+    renderActiveChatHeader();
+    renderChatMessages();
+    renderChannelsList();
+    setupFirestoreRealtimeChat();
+    
+    setTimeout(() => {
+      const input = document.getElementById('plux-social-input');
+      if (input) input.focus();
+    }, 120);
+  }
+  window.abrirChatSocial = abrirChatSocial;
+
+  function cerrarChatSocial() {
+    const modal = document.getElementById('modal-plux-chat-social');
+    if (modal) modal.style.display = 'none';
+    const drawer = document.getElementById('plux-chat-channels-drawer');
+    if (drawer) drawer.style.display = 'none';
+    const menu = document.getElementById('plux-chat-attach-menu');
+    if (menu) menu.style.display = 'none';
+    if (pluxChatUnsubscribe) {
+      pluxChatUnsubscribe();
+      pluxChatUnsubscribe = null;
+    }
+  }
+  window.cerrarChatSocial = cerrarChatSocial;
+
+  function renderActiveChatHeader() {
+    ensureChatChannel();
+    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    if (!chat) return;
+
+    const titleEl = document.getElementById('pluxChatActiveTitle');
+    const subtitleEl = document.getElementById('pluxChatActiveSubtitle');
+
+    if (titleEl) titleEl.textContent = chat.name;
+    if (subtitleEl) {
+      if (chat.type === 'group') {
+        const count = (typeof colaboradores !== 'undefined' && colaboradores.length > 0) ? colaboradores.length + 1 : 1;
+        subtitleEl.textContent = `Grupo del viaje · ${count} ${count === 1 ? 'viajero' : 'viajeros'}`;
+      } else {
+        subtitleEl.textContent = `Chat Directo · ${chat.targetUser ? '@' + chat.targetUser : 'En línea'}`;
+      }
+    }
+  }
+
+  function renderChatMessages(filterQuery = '') {
+    const timeline = document.getElementById('pluxChatTimeline');
+    if (!timeline) return;
+
+    ensureChatChannel();
+    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    if (!chat || !chat.messages || chat.messages.length === 0) {
+      timeline.innerHTML = `
+        <div class="plux-chat-empty-state">
+          <div style="display:flex; justify-content:center; margin-bottom:12px;">
+            <svg width="68" height="68" viewBox="0 0 24 24" fill="none">
+              <defs>
+                <linearGradient id="emptyChatGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#10b981" />
+                  <stop offset="100%" stop-color="#38bdf8" />
+                </linearGradient>
+              </defs>
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="url(#emptyChatGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="rgba(16, 185, 129, 0.08)" />
+              <circle cx="8.5" cy="12" r="1.2" fill="#34d399" />
+              <circle cx="12" cy="12" r="1.2" fill="#38bdf8" />
+              <circle cx="15.5" cy="12" r="1.2" fill="#a855f7" />
+            </svg>
+          </div>
+          <h4>Chat del Viaje</h4>
+          <p>Escribe tu primer mensaje para coordinar el viaje con tu grupo o menciona a <strong>@pluxy</strong> para recibir sugerencias de itinerario.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let msgs = chat.messages;
+    if (filterQuery && filterQuery.trim()) {
+      const q = filterQuery.toLowerCase().trim();
+      msgs = msgs.filter(m => (m.text && m.text.toLowerCase().includes(q)) || (m.sender && m.sender.toLowerCase().includes(q)));
+    }
+
+    const currentNickNorm = (currentNickname || 'Vos').toLowerCase();
+
+    timeline.innerHTML = msgs.map(m => {
+      const isSelf = m.isSelf || (m.sender && m.sender.toLowerCase() === currentNickNorm) || (m.sender && m.sender.toLowerCase() === 'vos');
+      const side = isSelf ? 'right' : 'left';
+      const color = m.color || getParticipantColor(m.sender);
+      const initial = getParticipantInitial(m.sender);
+
+      let cardHtml = '';
+      if (m.cardType === 'dest_card' && m.cardData) {
+        cardHtml = `
+          <div class="plux-msg-rich-card">
+            <div class="plux-rich-card-header">
+              <span class="plux-rich-card-badge dest">🗺️ Destino</span>
+              <span class="plux-rich-card-title">${escapeHtml(m.cardData.nombre || 'Destino')}</span>
+            </div>
+            <div class="plux-rich-card-meta">${escapeHtml(m.cardData.pais ? 'País: ' + m.cardData.pais : 'Destino del itinerario')} · ${m.cardData.dias ? m.cardData.dias.length + ' días' : ''}</div>
+            <button class="plux-rich-card-action-btn" onclick="window.cerrarChatSocial(); window.mostrarDestinos();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Ver en itinerario</span>
+            </button>
+          </div>
+        `;
+      } else if (m.cardType === 'event_card' && m.cardData) {
+        cardHtml = `
+          <div class="plux-msg-rich-card">
+            <div class="plux-rich-card-header">
+              <span class="plux-rich-card-badge event">📅 Actividad</span>
+              <span class="plux-rich-card-title">${escapeHtml(m.cardData.titulo || 'Actividad')}</span>
+            </div>
+            <div class="plux-rich-card-meta">
+              ⏰ ${escapeHtml(m.cardData.hora || 'Todo el día')} ${m.cardData.destino ? '· 📍 ' + escapeHtml(m.cardData.destino) : ''}
+              ${m.cardData.costo ? '<br>💵 ' + escapeHtml(m.cardData.costo) : ''}
+            </div>
+          </div>
+        `;
+      } else if (m.cardType === 'checklist_card' && m.cardData) {
+        const items = m.cardData.items || [];
+        cardHtml = `
+          <div class="plux-msg-rich-card">
+            <div class="plux-rich-card-header">
+              <span class="plux-rich-card-badge chk">✅ Checklist</span>
+              <span class="plux-rich-card-title">${escapeHtml(m.cardData.titulo || 'Preparativos')}</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
+              ${items.map((it, idx) => `
+                <label class="plux-chat-checklist-item" onclick="window.toggleChecklistItemInChat('${m.id}', ${idx})">
+                  <input type="checkbox" ${it.done ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleChecklistItemInChat('${m.id}', ${idx})">
+                  <span style="${it.done ? 'text-decoration:line-through; opacity:0.6;' : ''}">${escapeHtml(it.text)}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if ((m.cardType === 'photo_card' || m.imageUrl) && (m.imageUrl || m.cardData?.url)) {
+        const photoUrl = m.imageUrl || m.cardData?.url || '';
+        const caption = m.cardData?.caption || 'Foto del viaje';
+        cardHtml = `
+          <div class="plux-msg-photo-card" onclick="window.abrirFotoGrande('${escapeHtml(photoUrl).replace(/'/g, "\\'")}', '${escapeHtml(caption).replace(/'/g, "\\'")}')">
+            <img src="${photoUrl}" alt="${escapeHtml(caption)}" loading="lazy">
+            <div class="plux-msg-photo-caption">
+              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">📸 ${escapeHtml(caption)}</span>
+              <span class="plux-msg-photo-zoom-hint">🔍 Ampliar</span>
+            </div>
+          </div>
+        `;
+      }
+
+      const userPhoto = isSelf ? localStorage.getItem('Plux_UserProfile_Photo') : null;
+      const avatarInner = (m.senderPhoto || userPhoto)
+        ? `<img src="${m.senderPhoto || userPhoto}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`
+        : initial;
+
+      return `
+        <div class="plux-msg-row ${side}">
+          <div class="plux-chat-avatar plux-avatar-${color}" style="${(m.senderPhoto || userPhoto) ? 'padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.2);' : ''}">
+            ${avatarInner}
+          </div>
+          <div class="plux-chat-bubble-container">
+            <div class="plux-chat-bubble plux-bubble-${color}">
+              ${m.text ? escapeHtml(m.text) : ''}
+              ${cardHtml}
+              <span class="plux-msg-time">${m.time || ''}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    timeline.scrollTop = timeline.scrollHeight;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function renderChannelsList() {
+    const listEl = document.getElementById('pluxChannelsList');
+    if (!listEl) return;
+
+    ensureChatChannel();
+    const channels = Object.values(pluxSocialChats);
+
+    listEl.innerHTML = channels.map(c => {
+      const isActive = c.id === pluxActiveChatId;
+      const lastMsg = c.messages && c.messages.length > 0 ? (c.messages[c.messages.length - 1].text || 'Tarjeta adjunta') : 'Sin mensajes aún';
+      const icon = c.type === 'group' ? '✈️' : '👤';
+      return `
+        <div class="plux-channel-item ${isActive ? 'active' : ''}" onclick="window.cambiarCanalSocial('${c.id}')">
+          <div style="font-size:1.2rem;">${icon}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:700; font-size:0.85rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
+            <div style="font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lastMsg)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function cambiarCanalSocial(chatId) {
+    pluxActiveChatId = chatId;
+    ensureChatChannel();
+    renderActiveChatHeader();
+    renderChatMessages();
+    renderChannelsList();
+    setupFirestoreRealtimeChat();
+    const drawer = document.getElementById('plux-chat-channels-drawer');
+    if (drawer) drawer.style.display = 'none';
+  }
+  window.cambiarCanalSocial = cambiarCanalSocial;
+
+  function toggleSocialChatChannels() {
+    const drawer = document.getElementById('plux-chat-channels-drawer');
+    if (!drawer) return;
+    drawer.style.display = drawer.style.display === 'none' ? 'flex' : 'none';
+    if (drawer.style.display === 'flex') renderChannelsList();
+  }
+  window.toggleSocialChatChannels = toggleSocialChatChannels;
+
+  function toggleSocialChatSearch() {
+    const bar = document.getElementById('plux-chat-search-bar');
+    if (!bar) return;
+    bar.style.display = bar.style.display === 'none' ? 'flex' : 'none';
+    if (bar.style.display === 'flex') {
+      const input = document.getElementById('plux-chat-search-input');
+      if (input) { input.value = ''; input.focus(); }
+    } else {
+      renderChatMessages();
+    }
+  }
+  window.toggleSocialChatSearch = toggleSocialChatSearch;
+
+  function filtrarMensajesChatSocial(val) {
+    renderChatMessages(val);
+  }
+  window.filtrarMensajesChatSocial = filtrarMensajesChatSocial;
+
+  function insertarTextoChatSocial(txt) {
+    const input = document.getElementById('plux-social-input');
+    if (input) {
+      input.value = txt;
+      input.focus();
+    }
+  }
+  window.insertarTextoChatSocial = insertarTextoChatSocial;
+
+  async function enviarMensajeChatSocial() {
+    const input = document.getElementById('plux-social-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    ensureChatChannel();
+    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    if (!chat) return;
+
+    const myName = currentNickname || 'Vos';
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const newMsg = {
+      id: 'msg_' + Date.now(),
+      sender: myName,
+      text: text,
+      time: timeStr,
+      color: getParticipantColor(myName),
+      isSelf: true
+    };
+
+    chat.messages.push(newMsg);
+    localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+    renderChatMessages();
+    renderChannelsList();
+
+    // Send to Firestore in real-time if connected
+    if (typeof db !== 'undefined' && db) {
+      const roomKey = getActiveChatRoomKey();
+      try {
+        const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+          ? firebase.firestore.FieldValue.serverTimestamp()
+          : Date.now();
+
+        db.collection('plux_chat_rooms')
+          .doc(roomKey)
+          .collection('mensajes')
+          .add({
+            sender: myName,
+            text: text,
+            time: timeStr,
+            color: getParticipantColor(myName),
+            timestamp: serverTs
+          })
+          .catch(e => console.log('Firestore add message error:', e));
+      } catch (e) {
+        console.log('Error enviando mensaje a Firestore:', e);
+      }
+    }
+
+    // Trigger Pluxy AI companion if mentioned or in direct chat with Pluxy
+    const isPluxyTrigger = text.toLowerCase().includes('@pluxy') || text.toLowerCase().includes('pluxy') || pluxActiveChatId === 'dm_pluxy';
+    if (isPluxyTrigger) {
+      const thinkingMsg = {
+        id: 'msg_thinking_' + Date.now(),
+        sender: 'Pluxy',
+        text: '🐾 Pluxy está escribiendo...',
+        time: timeStr,
+        color: 'pluxy'
+      };
+      chat.messages.push(thinkingMsg);
+      renderChatMessages();
+
+      try {
+        const cleanQuery = text.replace(/@pluxy/gi, '').trim();
+        const destContext = destinos.length > 0
+          ? `Destinos actuales: ${destinos.map(d => `${d.nombre}${d.pais ? ' ('+d.pais+')' : ''} (${d.dias?.length || 0} días, ${d.dias?.reduce((s,d)=>s+(d.eventos?.length||0),0)||0} eventos)`).join(', ')}.`
+          : 'Sin destinos aún.';
+
+        const weatherCtx = (typeof getWeatherContextForTrip === 'function') ? await getWeatherContextForTrip() : '';
+
+        const systemPrompt = `${CHAT_SYSTEM}
+Estás en el chat colaborativo de Plux respondiendo a los viajeros.
+Contexto del viaje actual: ${destContext}
+Personas: ${numPersonas}. Salida: ${lugarSalida || 'No especificada'}.${weatherCtx}
+IMPORTANTE: Tienes capacidades agenticas completas para modificar el viaje si los viajeros te lo piden. Puedes agregar destinos, actividades, itinerarios, transporte, etc., usando los comandos [ACCION:...].
+Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
+
+        // Gather recent conversation history from this chat channel
+        const recentHistory = chat.messages
+          .filter(m => m.id !== thinkingMsg.id && !m.id.startsWith('msg_thinking_'))
+          .slice(-10)
+          .map(m => {
+            if (m.sender === 'Pluxy') {
+              return { role: 'assistant', content: m.text || '' };
+            }
+            return { role: 'user', content: `${m.sender}: ${m.text || ''}` };
+          });
+
+        const messages = [
+          { role: 'system', content: systemPrompt },
+          ...recentHistory
+        ];
+
+        const aiResponse = await callAIText(messages);
+
+        // Execute agentic actions
+        let displayRespuesta = aiResponse;
+        if (typeof ejecutarAccionesPluxyDirectas === 'function') {
+          displayRespuesta = await ejecutarAccionesPluxyDirectas(aiResponse);
+        } else {
+          displayRespuesta = aiResponse.replace(/\[ACCION:[^\]]+\]/g, '').trim();
+        }
+
+        chat.messages = chat.messages.filter(m => m.id !== thinkingMsg.id);
+        const replyTime = new Date();
+        const replyTimeStr = `${String(replyTime.getHours()).padStart(2, '0')}:${String(replyTime.getMinutes()).padStart(2, '0')}`;
+
+        const aiMsg = {
+          id: 'msg_ai_' + Date.now(),
+          sender: 'Pluxy',
+          text: displayRespuesta,
+          time: replyTimeStr,
+          color: 'pluxy'
+        };
+
+        chat.messages.push(aiMsg);
+        localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+        renderChatMessages();
+        renderChannelsList();
+
+        // Also push AI answer to Firestore
+        if (typeof db !== 'undefined' && db) {
+          const roomKey = getActiveChatRoomKey();
+          const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+            ? firebase.firestore.FieldValue.serverTimestamp()
+            : Date.now();
+
+          db.collection('plux_chat_rooms')
+            .doc(roomKey)
+            .collection('mensajes')
+            .add({
+              sender: 'Pluxy',
+              text: aiMsg.text,
+              time: replyTimeStr,
+              color: 'pluxy',
+              timestamp: serverTs
+            })
+            .catch(e => console.log('Firestore add AI message error:', e));
+        }
+      } catch (err) {
+        chat.messages = chat.messages.filter(m => m.id !== thinkingMsg.id);
+        chat.messages.push({
+          id: 'msg_ai_err_' + Date.now(),
+          sender: 'Pluxy',
+          text: '¡Guau! 🐾 Tuve un pequeño problema de conexión, pero estoy listo para ayudarte.',
+          time: timeStr,
+          color: 'pluxy'
+        });
+        localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+        renderChatMessages();
+      }
+    }
+  }
+  window.enviarMensajeChatSocial = enviarMensajeChatSocial;
+
+  function enviarCardChatSocial(cardPayload) {
+    ensureChatChannel();
+    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    if (!chat) return;
+
+    const myName = currentNickname || 'Vos';
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const newMsg = {
+      id: 'msg_card_' + Date.now(),
+      sender: myName,
+      text: cardPayload.introText || '',
+      cardType: cardPayload.cardType,
+      cardData: cardPayload.cardData,
+      time: timeStr,
+      color: getParticipantColor(myName),
+      isSelf: true
+    };
+
+    chat.messages.push(newMsg);
+    localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+    renderChatMessages();
+    renderChannelsList();
+
+    if (typeof db !== 'undefined' && db) {
+      const roomKey = getActiveChatRoomKey();
+      try {
+        const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+          ? firebase.firestore.FieldValue.serverTimestamp()
+          : Date.now();
+
+        db.collection('plux_chat_rooms')
+          .doc(roomKey)
+          .collection('mensajes')
+          .add({
+            sender: myName,
+            text: newMsg.text,
+            cardType: newMsg.cardType,
+            cardData: newMsg.cardData,
+            time: timeStr,
+            color: getParticipantColor(myName),
+            timestamp: serverTs
+          })
+          .catch(e => console.log('Firestore add card error:', e));
+      } catch (e) {
+        console.log('Error enviando tarjeta a Firestore:', e);
+      }
+    }
+  }
+
+  function toggleChecklistItemInChat(msgId, itemIdx) {
+    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    if (!chat || !chat.messages) return;
+    const msg = chat.messages.find(m => m.id === msgId);
+    if (msg && msg.cardData && msg.cardData.items && msg.cardData.items[itemIdx]) {
+      msg.cardData.items[itemIdx].done = !msg.cardData.items[itemIdx].done;
+      localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+      renderChatMessages();
+    }
+  }
+  window.toggleChecklistItemInChat = toggleChecklistItemInChat;
+
+  function abrirModalNuevaConversacion() {
+    const modal = document.getElementById('modal-nueva-conversacion');
+    if (modal) modal.style.display = 'flex';
+    renderContactosNuevaConversacion();
+    setTimeout(() => {
+      const input = document.getElementById('input-nueva-conversacion-nick');
+      if (input) { input.value = ''; input.focus(); }
+    }, 120);
+  }
+  window.abrirModalNuevaConversacion = abrirModalNuevaConversacion;
+
+  function cerrarModalNuevaConversacion() {
+    const modal = document.getElementById('modal-nueva-conversacion');
+    if (modal) modal.style.display = 'none';
+  }
+  window.cerrarModalNuevaConversacion = cerrarModalNuevaConversacion;
+
+  function renderContactosNuevaConversacion() {
+    const container = document.getElementById('lista-contactos-amigos');
+    if (!container) return;
+
+    const friends = (typeof getStoredFriends === 'function') ? getStoredFriends() : [];
+    const colabs = (typeof colaboradores !== 'undefined' && Array.isArray(colaboradores)) ? colaboradores : [];
+    const travelers = (typeof tripTravelers !== 'undefined' && Array.isArray(tripTravelers)) ? tripTravelers : [];
+
+    const currentNorm = (currentNickname || '').toLowerCase();
+    const contactSet = new Set();
+    
+    [...friends, ...colabs, ...travelers].forEach(c => {
+      if (typeof c === 'string' && c.trim()) {
+        const clean = c.trim().replace(/^@/, '');
+        if (clean.toLowerCase() !== currentNorm) contactSet.add(clean);
+      }
+    });
+
+    const contactList = Array.from(contactSet);
+
+    if (contactList.length === 0) {
+      container.innerHTML = `
+        <div style="background:rgba(255,255,255,0.03); border:1px dashed var(--border); border-radius:14px; padding:14px; text-align:center; color:#94a3b8; font-size:0.82rem;">
+          No tienes amigos o colaboradores agregados todavía.<br>
+          <span style="color:#38bdf8;">Escribe su @nickname arriba para chatear directamente.</span>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = contactList.map(nick => {
+      const color = getParticipantColor(nick);
+      const initial = getParticipantInitial(nick);
+      return `
+        <div class="plux-contact-item" onclick="window.iniciarChatConUsuario('${escapeHtml(nick)}')">
+          <div class="plux-chat-avatar plux-avatar-${color}" style="width:38px; height:38px;">${initial}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">@${escapeHtml(nick)}</div>
+            <div style="color:#94a3b8; font-size:0.75rem;">Amigo / Compañero de viaje</div>
+          </div>
+          <button class="plux-contact-start-btn">Chatear</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function iniciarChatConUsuario(nick) {
+    if (!nick || !nick.trim()) return;
+    const rawNick = nick.trim().replace(/^@/, '');
+    const cleanNick = rawNick.toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+    if (!cleanNick) {
+      showToast('Ingresá un nickname válido', 'info');
+      return;
+    }
+
+    // Caso especial: Asistente Pluxy
+    if (cleanNick === 'pluxy') {
+      const chatId = 'dm_pluxy';
+      if (!pluxSocialChats[chatId]) {
+        pluxSocialChats[chatId] = {
+          id: chatId,
+          type: 'direct',
+          name: '🐾 Pluxy IA',
+          targetUser: 'Pluxy',
+          messages: []
+        };
+        localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+      }
+      cerrarModalNuevaConversacion();
+      cambiarCanalSocial(chatId);
+      return;
+    }
+
+    // No permitir chat directo con uno mismo
+    const myNick = (currentNickname || '').toLowerCase().trim();
+    if (myNick && cleanNick === myNick) {
+      showToast('No podés iniciar un chat directo con vos mismo', 'info');
+      return;
+    }
+
+    // Verificar si ya es un amigo o colaborador local
+    const isKnownFriend = (typeof getStoredFriends === 'function' ? getStoredFriends() : []).some(f => (typeof f === 'string' ? f.toLowerCase().replace(/^@/, '') : '') === cleanNick);
+    const isKnownColab = (typeof colaboradores !== 'undefined' ? colaboradores : []).some(c => (typeof c === 'string' ? c.toLowerCase().replace(/^@/, '') : '') === cleanNick);
+    
+    let userExists = isKnownFriend || isKnownColab;
+    let targetDisplayName = rawNick;
+    let targetPhoto = null;
+
+    // Verificar en Firestore plux_usuarios si no es conocido localmente
+    if (!userExists && typeof db !== 'undefined' && db) {
+      try {
+        const userDoc = await db.collection('plux_usuarios').doc(cleanNick).get();
+        if (userDoc.exists) {
+          userExists = true;
+          const uData = userDoc.data() || {};
+          if (uData.nickname) targetDisplayName = uData.nickname;
+          if (uData.photoUrl) targetPhoto = uData.photoUrl;
+        } else {
+          // Búsqueda por campo nickname si no coincide con doc id
+          const qSnap = await db.collection('plux_usuarios').where('nickname', '==', targetDisplayName).limit(1).get();
+          if (!qSnap.empty) {
+            userExists = true;
+            const uData = qSnap.docs[0].data() || {};
+            if (uData.nickname) targetDisplayName = uData.nickname;
+            if (uData.photoUrl) targetPhoto = uData.photoUrl;
+          }
+        }
+      } catch (err) {
+        console.warn('Error verificando usuario en Firestore:', err);
+      }
+    }
+
+    if (!userExists) {
+      showToast(`El usuario @${targetDisplayName} no existe en Plux ❌`, 'error');
+      return;
+    }
+
+    const chatId = 'dm_' + cleanNick;
+    if (!pluxSocialChats[chatId]) {
+      pluxSocialChats[chatId] = {
+        id: chatId,
+        type: 'direct',
+        name: `@${targetDisplayName}`,
+        targetUser: targetDisplayName,
+        targetPhoto: targetPhoto,
+        messages: []
+      };
+      localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+    }
+
+    cerrarModalNuevaConversacion();
+    cambiarCanalSocial(chatId);
+    showToast(`Chat abierto con @${targetDisplayName} ✨`, 'success');
+  }
+  window.iniciarChatConUsuario = iniciarChatConUsuario;
+
+  function confirmarNuevaConversacion() {
+    const input = document.getElementById('input-nueva-conversacion-nick');
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) {
+      showToast('Por favor escribe un @nickname o código', 'info');
+      return;
+    }
+    iniciarChatConUsuario(val);
+  }
+  window.confirmarNuevaConversacion = confirmarNuevaConversacion;
+
+  function mostrarMenuAdjuntosChat() {
+    const menu = document.getElementById('plux-chat-attach-menu');
+    if (menu) {
+      menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+    }
+  }
+  window.mostrarMenuAdjuntosChat = mostrarMenuAdjuntosChat;
+
+  function adjuntarEventoAlChat() {
+    mostrarMenuAdjuntosChat();
+    if (typeof destinos === 'undefined' || destinos.length === 0) {
+      showToast('No hay eventos creados en el viaje aún', 'info');
+      return;
+    }
+    const primerDest = destinos[0];
+    const primerEvt = primerDest.dias?.[0]?.eventos?.[0];
+    if (primerEvt) {
+      enviarCardChatSocial({
+        introText: 'Propongo esta actividad para el itinerario:',
+        cardType: 'event_card',
+        cardData: {
+          titulo: primerEvt.titulo || 'Paseo / Actividad',
+          hora: primerEvt.hora || '10:00',
+          destino: primerDest.nombre,
+          costo: primerEvt.costo || 'Gratis'
+        }
+      });
+    } else {
+      enviarCardChatSocial({
+        introText: 'Destino propuesto para nuestro viaje:',
+        cardType: 'dest_card',
+        cardData: {
+          nombre: primerDest.nombre,
+          pais: primerDest.pais || ''
+        }
+      });
+    }
+  }
+  window.adjuntarEventoAlChat = adjuntarEventoAlChat;
+
+  function adjuntarDestinoAlChat() {
+    mostrarMenuAdjuntosChat();
+    if (typeof destinos !== 'undefined' && destinos.length > 0) {
+      const dest = destinos[0];
+      enviarCardChatSocial({
+        introText: '¡Miren este destino que tenemos en el viaje!',
+        cardType: 'dest_card',
+        cardData: {
+          nombre: dest.nombre,
+          pais: dest.pais || '',
+          dias: dest.dias || []
+        }
+      });
+    } else {
+      enviarCardChatSocial({
+        introText: '¿Qué ciudad les gustaría agregar al viaje?',
+        cardType: 'dest_card',
+        cardData: {
+          nombre: 'Próximo Destino',
+          pais: 'Por definir'
+        }
+      });
+    }
+  }
+  window.adjuntarDestinoAlChat = adjuntarDestinoAlChat;
+
+  function adjuntarChecklistAlChat() {
+    mostrarMenuAdjuntosChat();
+    enviarCardChatSocial({
+      introText: '📋 Checklist del viaje para el grupo:',
+      cardType: 'checklist_card',
+      cardData: {
+        titulo: 'Preparativos esenciales',
+        items: [
+          { text: 'Pasaporte / Documentación vigente', done: false },
+          { text: 'Alojamiento confirmado', done: false },
+          { text: 'Equipaje y ropa adecuada', done: false },
+          { text: 'Cargadores y adaptador de corriente', done: false }
+        ]
+      }
+    });
+  }
+  window.adjuntarChecklistAlChat = adjuntarChecklistAlChat;
+
+  // ==========================================================================
+  // CLOUDINARY API CLIENT & PHOTO UPLOADS (CHAT & PERFIL)
+  // ==========================================================================
+  const CLOUDINARY_API_KEY = '126459861924216';
+  const CLOUDINARY_API_SECRET = 'praSjnknB5sYb38MIbui8R287E4';
+
+  async function uploadToCloudinary(file) {
+    const cloudName = localStorage.getItem('Plux_Cloudinary_CloudName') || 'nibecar-cofeben';
+    
+    // 1. Intentar subida firmada oficial a la API de Cloudinary
+    try {
+      const timestamp = Math.floor(Date.now() / 1000);
+      const toSign = `timestamp=${timestamp}${CLOUDINARY_API_SECRET}`;
+      
+      const encoder = new TextEncoder();
+      const data = encoder.encode(toSign);
+      const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', CLOUDINARY_API_KEY);
+      formData.append('timestamp', timestamp.toString());
+      formData.append('signature', signature);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const resData = await res.json();
+      if (resData.secure_url) {
+        console.log('✅ Foto subida exitosamente a Cloudinary:', resData.secure_url);
+        return resData.secure_url;
+      } else {
+        console.warn('Cloudinary upload response:', resData);
+      }
+    } catch (e) {
+      console.warn('Cloudinary API upload error:', e);
+    }
+
+    // 2. Fallback de alta compresión local (Base64 DataURL) para garantizar funcionamiento offline y continuo
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+  }
+  window.uploadToCloudinary = uploadToCloudinary;
+
+  // --- Profile Photo Handlers ---
+  function cambiarFotoPerfil() {
+    const input = document.getElementById('profile-photo-input');
+    if (input) input.click();
+  }
+  window.cambiarFotoPerfil = cambiarFotoPerfil;
+
+  async function handleProfilePhotoUpload(event) {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Por favor selecciona un archivo de imagen válido', 'error');
+      return;
+    }
+
+    showToast('Subiendo foto de perfil con Cloudinary... ☁️', 'info');
+
+    try {
+      const photoUrl = await uploadToCloudinary(file);
+      if (!photoUrl) throw new Error('No se pudo procesar la imagen');
+
+      localStorage.setItem('Plux_UserProfile_Photo', photoUrl);
+
+      // Persistir en Firestore en el perfil del usuario actual
+      if (typeof db !== 'undefined' && db && currentNickname) {
+        db.collection('plux_usuarios').doc(currentNickname).set({
+          photoUrl: photoUrl,
+          ultimaConexion: new Date().toISOString()
+        }, { merge: true }).catch(e => console.log('Firestore user photo update error:', e));
+      }
+
+      // Actualizar vista previa en el modal de perfil
+      const avatarEl = document.getElementById('profileAvatarInner');
+      if (avatarEl) {
+        avatarEl.innerHTML = `<img src="${photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+      }
+
+      updateUserButtonDisplay();
+      showToast('¡Foto de perfil actualizada con éxito! ✨', 'success');
+      if (event.target) event.target.value = '';
+    } catch (err) {
+      console.error('Error subiendo foto de perfil:', err);
+      showToast('Error al actualizar la foto de perfil', 'error');
+    }
+  }
+  window.handleProfilePhotoUpload = handleProfilePhotoUpload;
+
+  // --- Chat Photo Attachment Handlers ---
+  function adjuntarFotoAlChat() {
+    mostrarMenuAdjuntosChat();
+    const input = document.getElementById('plux-chat-photo-input');
+    if (input) input.click();
+  }
+  window.adjuntarFotoAlChat = adjuntarFotoAlChat;
+
+  async function handleChatPhotoUpload(event) {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Por favor selecciona un archivo de imagen', 'error');
+      return;
+    }
+
+    showToast('Subiendo foto con Cloudinary para el chat... ☁️', 'info');
+
+    try {
+      const photoUrl = await uploadToCloudinary(file);
+      if (!photoUrl) throw new Error('Error al procesar la imagen');
+
+      const rawName = file.name ? file.name.replace(/\.[^/.]+$/, "") : 'Foto del viaje';
+      enviarCardChatSocial({
+        introText: '📸 Foto compartida:',
+        cardType: 'photo_card',
+        cardData: {
+          url: photoUrl,
+          caption: rawName
+        }
+      });
+      showToast('¡Foto enviada al chat! 📸', 'success');
+      if (event.target) event.target.value = '';
+    } catch (err) {
+      console.error('Error enviando foto al chat:', err);
+      showToast('Error al subir la foto al chat', 'error');
+    }
+  }
+  window.handleChatPhotoUpload = handleChatPhotoUpload;
+
+  // --- Photo Lightbox Fullscreen Modal Handlers ---
+  function abrirFotoGrande(url, caption = 'Foto del viaje') {
+    const modal = document.getElementById('modal-foto-lightbox');
+    const img = document.getElementById('photoLightboxImg');
+    const title = document.getElementById('photoLightboxTitle');
+    const dl = document.getElementById('photoLightboxDownload');
+    if (!modal || !img) return;
+
+    img.src = url;
+    if (title) title.innerText = caption ? `📸 ${caption}` : '📸 Foto del viaje';
+    if (dl) dl.href = url;
+    modal.style.display = 'flex';
+  }
+  window.abrirFotoGrande = abrirFotoGrande;
+
+  function cerrarFotoGrande() {
+    const modal = document.getElementById('modal-foto-lightbox');
+    if (modal) modal.style.display = 'none';
+  }
+  window.cerrarFotoGrande = cerrarFotoGrande;
+

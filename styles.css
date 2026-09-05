@@ -2789,11 +2789,19 @@
 /* PROFILE ACTIONS GRID (PC & MOBILE) */
 .profile-actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
   width: 100%;
+  box-sizing: border-box;
   margin-top: 10px;
   margin-bottom: 12px;
+}
+
+@media (max-width: 420px) {
+  .profile-actions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(62px, 1fr));
+    gap: 6px;
+  }
 }
 
 .profile-action-btn {
@@ -2801,14 +2809,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px 6px;
+  gap: 6px;
+  padding: 12px 4px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 14px;
   color: var(--blanco);
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 .profile-action-btn:hover {
   background: rgba(255, 255, 255, 0.08);
@@ -2818,13 +2829,16 @@
 .profile-action-btn span {
   text-align: center;
   font-weight: 600;
-  font-size: 0.82rem;
-  line-height: 1.2;
+  font-size: 0.78rem;
+  line-height: 1.15;
+  white-space: normal;
+  word-break: break-word;
+  max-width: 100%;
 }
 .profile-action-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;

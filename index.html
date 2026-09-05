@@ -2,6 +2,16 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    (function() {
+      var h = window.location.hostname;
+      if (h === 'nibecar-cofeben.web.app' || h === 'nibecarcofeben.web.app') {
+        window.location.replace('https://nibecarcofeben.com' + window.location.pathname + window.location.search + window.location.hash);
+      } else if (h === 'plux-nibecarcofeben.web.app') {
+        window.location.replace('https://plux.nibecarcofeben.com' + window.location.pathname + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Plux · Planificador Inteligente de Viajes e Itinerarios</title>
   
@@ -10,15 +20,15 @@
   <meta name="keywords" content="planificador de viajes, organizar itinerario, viajes colaborativos, presupuesto de viaje, mapa de ruta, turismo, guías de viaje, plux" />
   <meta name="author" content="Nibecar Cofeben" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
-  <link rel="canonical" href="https://nibecar-cofeben.web.app/plux/" />
+  <link rel="canonical" href="https://nibecarcofeben.com/plux/" />
   <link rel="icon" type="image/ico" href="/plux/favico.ico" />
 
   <!-- Open Graph / Redes Sociales (Facebook, WhatsApp, Telegram, LinkedIn) -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://nibecar-cofeben.web.app/plux/" />
+  <meta property="og:url" content="https://nibecarcofeben.com/plux/" />
   <meta property="og:title" content="Plux · Planificador Inteligente de Viajes e Itinerarios" />
   <meta property="og:description" content="Organiza tus viajes día por día, calcula presupuestos automáticos, colabora en tiempo real con amigos y exporta a PDF o calendario." />
-  <meta property="og:image" content="https://nibecar-cofeben.web.app/plux/og-banner.png" />
+  <meta property="og:image" content="https://nibecarcofeben.com/plux/og-banner.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Plux - Planificador Inteligente de Viajes e Itinerarios" />
@@ -27,10 +37,10 @@
 
   <!-- Twitter Cards -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:url" content="https://nibecar-cofeben.web.app/plux/" />
+  <meta name="twitter:url" content="https://nibecarcofeben.com/plux/" />
   <meta name="twitter:title" content="Plux · Planificador Inteligente de Viajes e Itinerarios" />
   <meta name="twitter:description" content="Organiza tus viajes día por día, calcula presupuestos automáticos y colabora en tiempo real con amigos." />
-  <meta name="twitter:image" content="https://nibecar-cofeben.web.app/plux/og-banner.png" />
+  <meta name="twitter:image" content="https://nibecarcofeben.com/plux/og-banner.png" />
 
   <!-- Datos Estructurados JSON-LD (Schema.org) - SoftwareApplication -->
   <script type="application/ld+json">
@@ -40,8 +50,8 @@
     "name": "Plux",
     "applicationCategory": "TravelApplication",
     "operatingSystem": "Web, Android, iOS, Windows, macOS",
-    "url": "https://nibecar-cofeben.web.app/plux/",
-    "image": "https://nibecar-cofeben.web.app/plux/og-banner.png",
+    "url": "https://nibecarcofeben.com/plux/",
+    "image": "https://nibecarcofeben.com/plux/og-banner.png",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -51,7 +61,7 @@
     "author": {
       "@type": "Organization",
       "name": "Nibecar Cofeben",
-      "url": "https://nibecar-cofeben.web.app"
+      "url": "https://nibecarcofeben.com"
     },
     "aggregateRating": {
       "@type": "AggregateRating",

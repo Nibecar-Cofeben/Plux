@@ -750,6 +750,46 @@
     }
     window.updateUserButtonDisplay = updateUserButtonDisplay;
 
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+    window.escapeHtml = escapeHtml;
+
+    async function hashPassword(password, salt = 'plux_salt_v1') {
+      if (!password) return null;
+      try {
+        if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+          const enc = new TextEncoder();
+          const data = enc.encode(`${salt}:${password}`);
+          const hashBuf = await window.crypto.subtle.digest('SHA-256', data);
+          const hashArr = Array.from(new Uint8Array(hashBuf));
+          return hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+      } catch (e) {
+        console.warn('Crypto subtle error, fallback hash:', e);
+      }
+      let h = 0;
+      for (let i = 0; i < password.length; i++) {
+        h = Math.imul(31, h) + password.charCodeAt(i) | 0;
+      }
+      return 'fb_' + Math.abs(h).toString(16);
+    }
+    window.hashPassword = hashPassword;
+
+    function ensureEditorActive() {
+      const w = document.getElementById('welcome');
+      if (w && w.style.display !== 'none' && typeof empezar === 'function') {
+        empezar();
+      }
+    }
+    window.ensureEditorActive = ensureEditorActive;
+
     function inicializarCuenta() {
       applyCuentaModalI18n();
     }
@@ -6424,7 +6464,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
 
         let data = null;
-        const wikiUserAgent = '&Api-User-Agent=PluxTravelApp/6.0+(https://nibecar-cofeben.web.app)';
+        const wikiUserAgent = '&Api-User-Agent=PluxTravelApp/6.0+(https://nibecarcofeben.com)';
         const wikiParams = `action=query&prop=extracts|pageimages&exintro&explaintext&exchars=120&pithumbsize=400&generator=geosearch&ggsradius=15000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=25&format=json&origin=*${wikiUserAgent}`;
 
         try {

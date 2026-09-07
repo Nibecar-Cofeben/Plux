@@ -20,7 +20,7 @@
   <meta name="keywords" content="planificador de viajes, organizar itinerario, viajes colaborativos, presupuesto de viaje, mapa de ruta, turismo, guías de viaje, plux" />
   <meta name="author" content="Nibecar Cofeben" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
-  <link rel="canonical" href="https://nibecarcofeben.com/plux/" />
+  <link rel="canonical" href="https://plux.nibecarcofeben.com/plux/" />
   <link rel="icon" type="image/ico" href="/plux/favico.ico" />
 
   <!-- Open Graph / Redes Sociales (Facebook, WhatsApp, Telegram, LinkedIn) -->
@@ -72,13 +72,13 @@
   </script>
 
   <!-- Google Analytics 4 (GA4) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PLUXTRAVEL4"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-W5GX3XSCER"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    window.GA_MEASUREMENT_ID = window.GA_MEASUREMENT_ID || 'G-PLUXTRAVEL4';
-    gtag('config', window.GA_MEASUREMENT_ID, {
+    window.GA_MEASUREMENT_ID = 'G-W5GX3XSCER';
+    gtag('config', 'G-W5GX3XSCER', {
       send_page_view: true,
       app_name: 'Plux Web'
     });
@@ -512,12 +512,12 @@
 
     <!-- Mobile Header -->
     <div class="mobile-header">
-      <button class="mobile-back-arrow" onclick="volverAWelcome()">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; display:block;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      <button class="mobile-back-arrow" onclick="volverAWelcome()" title="Volver al inicio" aria-label="Volver al inicio">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px; height:22px; display:block;"><polyline points="15 18 9 12 15 6"></polyline></svg>
       </button>
       <h2 id="appTitleMobile" class="mobile-header-title">Plan de Viaje</h2>
-      <button class="mobile-menu-trigger" onclick="window.toggleMobileTripMenu()">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; display:block;"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+      <button class="mobile-menu-trigger" onclick="window.toggleMobileTripMenu()" title="Menú de opciones" aria-label="Menú de opciones">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:20px; height:20px; display:block;"><circle cx="12" cy="12" r="2.2"></circle><circle cx="12" cy="5" r="2.2"></circle><circle cx="12" cy="19" r="2.2"></circle></svg>
       </button>
     </div>
     <details class="datos-generales-foldable" open>
@@ -719,7 +719,7 @@
         <div style="padding-bottom:15px; border-bottom:1px solid var(--border); text-align:left;">
           <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px;">
             <img src="/static/Logo.png" alt="Nibecar Cofeben" style="width:26px; height:26px; object-fit:contain; border-radius:6px;" onerror="this.src='/plux/pet.png'">
-            <span style="color:var(--blanco, #fff); font-weight:bold; font-size:1rem;">Nibecar Cofeben</span>
+            <span style="color:var(--blanco, #fff); font-weight:bold; font-size:1.05rem;">Nibecar Cofeben</span>
           </div>
 
           <!-- Auth Tabs: Iniciar sesión / Crear cuenta -->
@@ -894,13 +894,13 @@
         </div>
 
         <!-- Soporte en perfil -->
-        <button onclick="abrirSupport()" id="profileSoporteBtn" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); border-radius:16px; color:#a78bfa; font-weight:600; cursor:pointer; margin-top:0;">
+        <button onclick="abrirSupport()" id="profileSoporteBtn" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); border-radius:16px; color:#a78bfa; font-weight:600; cursor:pointer; width:100%; box-sizing:border-box; margin-top:4px;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           <span>Soporte y sugerencias</span>
         </button>
 
         <!-- Cerrar sesión (Full width button) -->
-        <button onclick="cerrarSesion()" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:16px; color:var(--rojo); font-weight:600; cursor:pointer; transition:all 0.2s;">
+        <button id="btnCerrarSesionPerfil" onclick="cerrarSesion()" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:16px; color:var(--rojo); font-weight:600; cursor:pointer; transition:all 0.2s; width:100%; box-sizing:border-box; margin-top:2px;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
           <span>Cerrar sesión</span>
         </button>
@@ -944,6 +944,16 @@
         <span class="close-panel" onclick="window.cerrarAmigos()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
       </div>
 
+      <!-- Quick Actions: Chatear y Crear Grupo -->
+      <div style="display:flex; gap:10px; width:100%;">
+        <button onclick="window.abrirModalNuevaConversacion(); window.cerrarAmigos();" style="flex:1; padding:11px 12px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.35); color:#38bdf8; border-radius:12px; font-weight:600; font-size:0.88rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:0.2s;">
+          💬 Iniciar Chat
+        </button>
+        <button onclick="window.abrirModalCrearGrupo(); window.cerrarAmigos();" style="flex:1; padding:11px 12px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.35); color:#c084fc; border-radius:12px; font-weight:600; font-size:0.88rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:0.2s;">
+          👥 Crear Grupo
+        </button>
+      </div>
+
       <!-- Add Friend Form -->
       <div style="display:flex; gap:10px; width:100%;">
         <input type="text" id="friend-nickname-input" placeholder="Nickname del amigo (ej: juan)" style="flex:1; padding:12px 16px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:12px; color:white; font-size:0.95rem;">
@@ -951,7 +961,7 @@
       </div>
 
       <!-- Friends List Container -->
-      <div id="friends-list-container" style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-top:10px; scrollbar-width:thin;">
+      <div id="friends-list-container" style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-top:6px; scrollbar-width:thin;">
         <!-- Friends will be rendered dynamically here -->
       </div>
     </div>
@@ -1008,10 +1018,47 @@
           </div>
         </div>
 
-        <!-- Action Button -->
-        <button id="friendDetailShareBtn" class="btn-add-feed" style="margin-top:10px; padding:14px; background:rgba(52,211,153,0.1); border:1px solid var(--verde); border-radius:12px; color:var(--verde); font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-          <span>Compartir viaje actual</span>
+        <!-- Action Buttons -->
+        <div style="display:flex; flex-direction:column; gap:10px; width:100%; margin-top:8px;">
+          <button id="friendDetailChatBtn" style="padding:13px; background:linear-gradient(135deg, var(--verde), var(--azul)); border:none; border-radius:12px; color:black; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.92rem;">
+            💬 Enviar mensaje directo
+          </button>
+          <button id="friendDetailShareBtn" class="btn-add-feed" style="padding:12px; background:rgba(52,211,153,0.1); border:1px solid var(--verde); border-radius:12px; color:var(--verde); font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            <span>Invitar a mi viaje</span>
+          </button>
+          <button id="friendDetailGroupBtn" style="padding:12px; background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.4); border-radius:12px; color:#c084fc; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.88rem;">
+            👥 Añadir a un grupo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Crear Grupo -->
+  <div id="modal-crear-grupo" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:500; padding:10px;">
+    <div class="cuenta-content" style="max-width:440px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <button class="mobile-back-btn" onclick="window.cerrarModalCrearGrupo()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Volver</span>
+        </button>
+        <h2 style="margin:0; font-size:1.3rem; color:white; font-weight:700;">Crear Grupo</h2>
+        <span class="close-panel" onclick="window.cerrarModalCrearGrupo()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px; width:100%;">
+        <div>
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Nombre del grupo:</label>
+          <input type="text" id="group-name-input" placeholder="Ej: Amigos de Viaje ✈️" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Seleccionar participantes:</label>
+          <div id="group-friends-checkboxes" style="max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:10px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; scrollbar-width:thin;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+        <button onclick="window.confirmarCrearGrupo()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, #a855f7, #6366f1); color:white; font-weight:bold; border-radius:12px; border:none; cursor:pointer; width:100%; margin-top:4px;">
+          🚀 Crear grupo e ir al chat
         </button>
       </div>
     </div>
@@ -1019,20 +1066,32 @@
 
   <!-- Modal Seguridad -->
   <div id="modal-seguridad" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:400; padding:10px;">
-    <div class="cuenta-content" style="max-width:400px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
+    <div class="cuenta-content" style="max-width:420px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <button class="mobile-back-btn" onclick="window.cerrarSeguridad()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
           <span>Volver</span>
         </button>
-        <h2 id="seguridadTitle" style="margin:0; font-size:1.3rem; color:var(--verde); font-weight:700;">Seguridad</h2>
+        <h2 id="seguridadTitle" style="margin:0; font-size:1.3rem; color:var(--verde); font-weight:700;">Seguridad y Cuenta</h2>
         <span class="close-panel" onclick="window.cerrarSeguridad()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
       </div>
       <div style="display:flex; flex-direction:column; gap:12px; width:100%;">
-        <p style="color:var(--gris); font-size:0.9rem; margin:0;" id="seguridadNickLabel">Usuario actual: <strong style="color:white;" id="seguridad-username">@nickname</strong></p>
-        <input type="password" id="seguridad-new-password" placeholder="Nueva contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%;">
-        <input type="password" id="seguridad-confirm-password" placeholder="Confirmar contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%;">
-        <button id="seguridadSaveBtn" onclick="window.guardarNuevaContrasena()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer;">Guardar</button>
+        <div>
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Tu Nickname:</label>
+          <input type="text" id="seguridad-new-nickname" placeholder="Tu nickname" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Correo electrónico:</label>
+          <input type="email" id="seguridad-email" placeholder="ejemplo@correo.com" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Nueva contraseña (opcional):</label>
+          <input type="password" id="seguridad-new-password" placeholder="Nueva contraseña (mín. 6 caracteres)" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
+        </div>
+        <div>
+          <input type="password" id="seguridad-confirm-password" placeholder="Confirmar nueva contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
+        </div>
+        <button id="seguridadSaveBtn" onclick="window.guardarNuevaContrasena()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer; width:100%; margin-top:4px;">Guardar cambios</button>
       </div>
     </div>
   </div>

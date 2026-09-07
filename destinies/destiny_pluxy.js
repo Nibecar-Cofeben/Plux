@@ -387,19 +387,38 @@
   }
 
   async function fetchAIResponse(userQuery) {
-    if (!GEMINI_KEY) await loadKeys();
     const city = window.destinyCityName || 'esta ciudad';
+    const systemPrompt = `Sos Pluxy, el agente inteligente y asistente de viajes de Plux. El usuario consulta sobre su viaje a ${city}. Respondé en idioma ${currentLang}. Da consejos reales, útiles, concisos y bien estructurados (con emojis y viñetas). Sé un experto en ${city}.`;
 
+    // 1. Intentar primero con el Cloudflare Worker seguro y multimodelo
+    try {
+      const workerResp = await fetch('https://pluxy.nibecar-cofeben.workers.dev/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: userQuery,
+          system: systemPrompt
+        })
+      });
+      if (workerResp.ok) {
+        const workerData = await workerResp.json();
+        if (workerData.text) return workerData.text;
+      }
+    } catch (e) {
+      console.warn('Worker fetch fallback:', e);
+    }
+
+    // 2. Fallback de contingencia a Gemini directo si el Worker no responde
+    if (!GEMINI_KEY) await loadKeys();
     if (GEMINI_KEY) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
-        const prompt = `Eres Pluxy 🐾, el perro inteligente y entusiasta asistente de viajes de la app Plux. El usuario está consultando sobre su viaje a ${city}. Responde en idioma ${currentLang}. Da consejos reales, amigables, concisos y bien formateados (con emojis y viñetas). Sé un experto en ${city}.\n\nConsulta del usuario: ${userQuery}`;
-
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
         const resp = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ parts: [{ text: userQuery }] }]
           })
         });
 
@@ -409,7 +428,7 @@
           if (text) return text;
         }
       } catch (e) {
-        console.warn('Gemini fetch error:', e);
+        console.warn('Gemini direct fallback error:', e);
       }
     }
 

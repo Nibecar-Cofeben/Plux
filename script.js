@@ -732,19 +732,22 @@
       const btn = document.getElementById('cuentaButton');
       if (!btn) return;
       const photo = localStorage.getItem('Plux_UserProfile_Photo');
-      if (currentNickname || (firebaseUser && firebaseUser.email)) {
+      const isLogged = !!(currentNickname || (firebaseUser && firebaseUser.email) || (typeof currentUserUid !== 'undefined' && currentUserUid));
+      if (isLogged) {
         btn.classList.add('logged-in');
+        btn.title = currentNickname ? `@${currentNickname}` : (firebaseUser ? (firebaseUser.displayName || firebaseUser.email) : 'Tu perfil');
         if (photo) {
-          btn.innerHTML = `<img src="${photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+          btn.innerHTML = `<img src="${photo}" alt="Perfil" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
           btn.style.padding = '0';
           btn.style.overflow = 'hidden';
         } else {
-          btn.innerText = '👤';
+          btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
           btn.style.padding = '';
         }
       } else {
         btn.classList.remove('logged-in');
-        btn.innerText = '👤';
+        btn.title = (typeof t === 'function' ? t('cuenta_btn_title') : 'Tu perfil') || 'Tu perfil';
+        btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
         btn.style.padding = '';
       }
     }
@@ -802,7 +805,11 @@
         const cForm = document.getElementById('cuentaForm');
         if (cForm) cForm.style.display = 'none';
         const cProf = document.getElementById('cuentaProfile');
-        if (cProf) cProf.style.display = 'block';
+        if (cProf) {
+          cProf.style.display = 'flex';
+          cProf.style.flexDirection = 'column';
+          cProf.style.gap = '12px';
+        }
         
         const nick = currentNickname || (firebaseUser && (firebaseUser.displayName || firebaseUser.email.split('@')[0]));
         const email = firebaseUser ? firebaseUser.email : 'Nickname Login';
@@ -1361,6 +1368,25 @@
     let listaViajeros = [];
 
     // ================== SELECTORES DE TEMA E IDIOMA ==================
+    function toggleMobileMoreMenu(e) {
+      if (e) {
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+      }
+      const menu = document.getElementById('mobileMoreMenuDropdown');
+      if (menu) {
+        const isVisible = menu.classList.contains('show') || menu.style.display === 'block';
+        if (isVisible) {
+          menu.classList.remove('show');
+          menu.style.display = 'none';
+        } else {
+          menu.classList.add('show');
+          menu.style.display = 'block';
+        }
+      }
+    }
+    window.toggleMobileMoreMenu = toggleMobileMoreMenu;
+
     const PLUX_THEMES = [
       { id: 'theme-claro', name: 'Claro' },
       { id: 'theme-oscuro', name: 'Oscuro' },
@@ -1440,6 +1466,12 @@
       const btn = document.getElementById('langButton');
       if (btn) btn.textContent = lang.toUpperCase();
 
+      // Actualizar chips en menú colapsado
+      document.querySelectorAll('.lang-chip').forEach(chip => {
+        if (chip.getAttribute('data-lang') === lang) chip.classList.add('active');
+        else chip.classList.remove('active');
+      });
+
       // Actualizar clase de idioma en el body
       document.body.classList.remove('lang-es', 'lang-en', 'lang-fr', 'lang-de', 'lang-it');
       document.body.classList.add(`lang-${lang}`);
@@ -1480,6 +1512,12 @@
       currentTheme = themeId;
       localStorage.setItem('Plux_Theme', themeId);
 
+      // Actualizar chips en menú colapsado
+      document.querySelectorAll('.theme-chip').forEach(chip => {
+        if (chip.getAttribute('data-theme') === themeId) chip.classList.add('active');
+        else chip.classList.remove('active');
+      });
+
       // Eliminar clases de temas previas del body y aplicar la nueva
       document.body.classList.remove(
         'theme-claro', 'theme-oscuro', 'theme-tokyo',
@@ -1509,6 +1547,14 @@
 
     // Listeners globales para cerrar dropdowns al hacer clic fuera y tecla Escape
     document.addEventListener('click', (e) => {
+      const isMore = e.target.closest('#mobileMenuDotsBtn') || e.target.closest('#mobileMoreMenuDropdown');
+      if (!isMore) {
+        const md = document.getElementById('mobileMoreMenuDropdown');
+        if (md) {
+          md.classList.remove('show');
+          md.style.display = 'none';
+        }
+      }
       const isLang = e.target.closest('#langButton') || e.target.closest('#langDropdown');
       if (!isLang) {
         const ld = document.getElementById('langDropdown');
@@ -1528,6 +1574,13 @@
     });
 
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const md = document.getElementById('mobileMoreMenuDropdown');
+        if (md) {
+          md.classList.remove('show');
+          md.style.display = 'none';
+        }
+      }
       if (e.key === 'Escape' && currentTheme === 'theme-ares') {
         setTheme('theme-oscuro');
         if (typeof showToast === 'function') showToast('Saliste del tema Ares 🛡️', 'info');
@@ -1614,27 +1667,41 @@
       cleanVal = cleanVal.replace(/,/g, '').trim();
       if (!cleanVal) return;
 
-      if (!listaViajeros.includes(cleanVal)) {
+      const norm = cleanVal.toLowerCase().replace(/^@/, '');
+      const exists = listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === norm);
+      if (!exists) {
         listaViajeros.push(cleanVal);
         window.renderTravelerChips();
         autoSave();
-        if (document.getElementById('pantalla-resumen').style.display === 'flex') {
+        if (document.getElementById('pantalla-resumen') && document.getElementById('pantalla-resumen').style.display === 'flex') {
           renderResumen();
         }
 
         if (cleanVal.startsWith('@')) {
           window.autoCompartirConUsuario(cleanVal);
         }
+
+        // Sumar automáticamente al chat del viaje
+        if (typeof window.sumarUsuarioAlChatDelViaje === 'function') {
+          window.sumarUsuarioAlChatDelViaje(cleanVal, 'agregado');
+        }
       }
     };
 
     window.eliminarViajeroChip = function(idx) {
       if (idx >= 0 && idx < listaViajeros.length) {
+        const removed = listaViajeros[idx];
         listaViajeros.splice(idx, 1);
         window.renderTravelerChips();
         autoSave();
-        if (document.getElementById('pantalla-resumen').style.display === 'flex') {
+        if (document.getElementById('pantalla-resumen') && document.getElementById('pantalla-resumen').style.display === 'flex') {
           renderResumen();
+        }
+        if (typeof renderActiveChatHeader === 'function') {
+          renderActiveChatHeader();
+        }
+        if (typeof renderChannelsList === 'function') {
+          renderChannelsList();
         }
       }
     };
@@ -1644,11 +1711,70 @@
     const STORAGE_KEY = 'PluxUniversal_V1'; // Universal key for both apps
     let GROQ_API_KEY = '';
     let GEMINI_API_KEY = '';
+    let OPENAI_API_KEY = '';
+    let DEEPSEEK_API_KEY = '';
     let MISTRAL_API_KEY = '';
     let OPENROUTER_API_KEY = '';
+    let NVIDIA_NIM_API_KEY = '';
     let MULE_ROUTER_API_KEY = '';
+    let OPENWEATHER_API_KEY = '';
     let db = null;
     let syncCode = null; // Current cloud sync code
+    let currentTripId = null; // Unique identifier for current trip
+
+    function getCurrentTripId() {
+      if (syncCode) return syncCode;
+      if (currentTripId) return currentTripId;
+      if (typeof loadedTripIndex !== 'undefined' && loadedTripIndex !== null) {
+        const trips = (typeof getStoredTrips === 'function') ? getStoredTrips() : [];
+        if (trips[loadedTripIndex]) {
+          if (!trips[loadedTripIndex].tripId) {
+            trips[loadedTripIndex].tripId = 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
+            if (typeof saveTrips === 'function') saveTrips(trips, false);
+          }
+          currentTripId = trips[loadedTripIndex].tripId;
+          return currentTripId;
+        }
+      }
+      currentTripId = 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
+      return currentTripId;
+    }
+    window.getCurrentTripId = getCurrentTripId;
+
+    function getTripChatChannelId() {
+      return `trip_${getCurrentTripId()}`;
+    }
+    window.getTripChatChannelId = getTripChatChannelId;
+
+    function getTripParticipants() {
+      const participants = new Set();
+      const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Vos';
+      participants.add(myNick);
+
+      if (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros)) {
+        listaViajeros.forEach(v => {
+          if (v && typeof v === 'string') {
+            const clean = v.trim().replace(/^@/, '');
+            if (clean) participants.add(clean);
+          }
+        });
+      }
+
+      if (typeof getTripChatChannelId === 'function') {
+        const tripChatId = getTripChatChannelId();
+        if (typeof pluxSocialChats !== 'undefined' && pluxSocialChats && pluxSocialChats[tripChatId] && Array.isArray(pluxSocialChats[tripChatId].participants)) {
+          pluxSocialChats[tripChatId].participants.forEach(p => {
+            if (p && typeof p === 'string') {
+              const clean = p.trim().replace(/^@/, '');
+              if (clean) participants.add(clean);
+            }
+          });
+        }
+      }
+
+      return Array.from(participants);
+    }
+    window.getTripParticipants = getTripParticipants;
 
     // Inicialización inmediata e incondicional de Firebase y Cloud Firestore
     function getFirestoreDb() {
@@ -1658,12 +1784,13 @@
           if (!firebase.apps || !firebase.apps.length) {
             firebase.initializeApp({
               projectId: "nibecar-cofeben",
-              appId: "1:88879103859:android:e129fff00f991d3a01cf06",
+              appId: "1:88879103859:web:eb45dafc1677dc3c01cf06",
               databaseURL: "https://nibecar-cofeben-default-rtdb.firebaseio.com",
               storageBucket: "nibecar-cofeben.firebasestorage.app",
               apiKey: "AIzaSyAI67WxeycsfvMUaDU1KdAqyHXGy7GSDLo",
               authDomain: "nibecar-cofeben.firebaseapp.com",
-              messagingSenderId: "88879103859"
+              messagingSenderId: "88879103859",
+              measurementId: "G-W5GX3XSCER"
             });
           }
           if (typeof firebase.firestore === 'function') {
@@ -1712,32 +1839,40 @@
         let text = '';
         try {
           const resp = await fetch('.env');
-          text = await resp.text();
-        } catch (e) {
-          console.warn('Could not load .env, trying sapi.txt...', e);
-        }
+          if (resp.ok) text = await resp.text();
+        } catch (e) {}
         if (!text || text.includes('<!DOCTYPE html>') || text.includes('<html')) {
-          const resp = await fetch('sapi.txt');
-          text = await resp.text();
+          try {
+            const resp = await fetch('sapi.txt');
+            if (resp.ok) text = await resp.text();
+          } catch (e) {}
         }
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('-'));
-        
-        for (let i = 0; i < lines.length; i++) {
+        if (text && !text.includes('<html')) {
+          const lines = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('-'));
+          for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             if (line.startsWith('AIzaSy')) GEMINI_API_KEY = line;
             else if (line.startsWith('gsk_')) GROQ_API_KEY = line;
+            else if (line.startsWith('sk-proj-')) OPENAI_API_KEY = line;
             else if (line.startsWith('sk-or-')) OPENROUTER_API_KEY = line;
             else if (line.startsWith('sk-mr-')) MULE_ROUTER_API_KEY = line;
-            else if (line.includes('Mistral') && lines[i+1]) MISTRAL_API_KEY = lines[i+1];
-            else if (/^[a-f0-9]{32}$/i.test(line)) OPENWEATHER_API_KEY = line;
-            else if (line.toLowerCase().startsWith('openweather')) {
+            else if (line.startsWith('nvapi-')) NVIDIA_NIM_API_KEY = line;
+            else if (line.startsWith('sk-1') || (line.startsWith('sk-') && line.length === 35)) DEEPSEEK_API_KEY = line;
+            else if (line.toLowerCase().includes('deepseek') && lines[i+1]) DEEPSEEK_API_KEY = lines[i+1];
+            else if (line.toLowerCase().includes('mistral') && lines[i+1]) MISTRAL_API_KEY = lines[i+1];
+            else if (line.toLowerCase().includes('nvidia') && lines[i+1]) NVIDIA_NIM_API_KEY = lines[i+1];
+            else if (/^[a-f0-9]{32}$/i.test(line) && !line.startsWith('sk-')) {
+              if (!MISTRAL_API_KEY) MISTRAL_API_KEY = line;
+              else OPENWEATHER_API_KEY = line;
+            } else if (line.toLowerCase().startsWith('openweather')) {
               const part = line.includes('=') ? line.split('=').slice(1).join('=').trim() : lines[i + 1];
               if (part) OPENWEATHER_API_KEY = part;
             }
+          }
         }
-        console.log('🔑 Keys loaded dynamically.');
+        console.log('🛡️ Plux AI Gateway: Operando en https://pluxy.nibecar-cofeben.workers.dev/');
       } catch (e) {
-        console.error('Failed to load API keys:', e);
+        console.log('🛡️ Plux AI Gateway: Operando en https://pluxy.nibecar-cofeben.workers.dev/');
       }
     }
 
@@ -1750,12 +1885,17 @@
         return;
       }
       
+      const tripId = getCurrentTripId();
+
       if (loadedTripIndex === null) {
         // Auto-create a new trip in "Tus viajes"
         const newTrip = {
           nombre: t('untitled_event'),
           fecha: new Date().toISOString(),
           lugarSalida, numPersonas,
+          nombresPersonas: nombresPersonasGlobal,
+          listaViajeros: [...listaViajeros],
+          tripId: tripId,
           fechaInicio: document.getElementById('fechaInicio')?.value || '',
           destinos, vueltaGlobal, vueltaPrecioGlobal, vueltaCostosAdicionales,
           syncCode, userPreferences
@@ -1771,6 +1911,9 @@
         if (trips[loadedTripIndex]) {
           trips[loadedTripIndex].lugarSalida = lugarSalida;
           trips[loadedTripIndex].numPersonas = numPersonas;
+          trips[loadedTripIndex].nombresPersonas = nombresPersonasGlobal;
+          trips[loadedTripIndex].listaViajeros = [...listaViajeros];
+          trips[loadedTripIndex].tripId = tripId;
           trips[loadedTripIndex].fechaInicio = document.getElementById('fechaInicio')?.value || '';
           trips[loadedTripIndex].destinos = destinos;
           trips[loadedTripIndex].vueltaGlobal = vueltaGlobal;
@@ -1787,6 +1930,9 @@
       if (db && syncCode && window.currentTripRole !== 'viajero') {
         const tripData = {
           lugarSalida, numPersonas, 
+          nombresPersonas: nombresPersonasGlobal,
+          listaViajeros: [...listaViajeros],
+          tripId: tripId,
           fechaInicio: document.getElementById('fechaInicio')?.value || '',
           destinos, vueltaGlobal, vueltaPrecioGlobal, vueltaCostosAdicionales,
           syncCode, userPreferences
@@ -1826,12 +1972,13 @@
         try {
           firebase.initializeApp({
             projectId: "nibecar-cofeben",
-            appId: "1:88879103859:android:e129fff00f991d3a01cf06",
+            appId: "1:88879103859:web:eb45dafc1677dc3c01cf06",
             databaseURL: "https://nibecar-cofeben-default-rtdb.firebaseio.com",
             storageBucket: "nibecar-cofeben.firebasestorage.app",
             apiKey: "AIzaSyAI67WxeycsfvMUaDU1KdAqyHXGy7GSDLo",
             authDomain: "nibecar-cofeben.firebaseapp.com",
-            messagingSenderId: "88879103859"
+            messagingSenderId: "88879103859",
+            measurementId: "G-W5GX3XSCER"
           });
         } catch (e) {
           console.error("Manual Firebase init error:", e);
@@ -1926,6 +2073,19 @@
           vueltaGlobal = data.vueltaGlobal || '';
           vueltaPrecioGlobal = data.vueltaPrecioGlobal || 0;
           vueltaCostosAdicionales = data.vueltaCostosAdicionales || [];
+          if (data.tripId) currentTripId = data.tripId;
+
+          if (data.listaViajeros && Array.isArray(data.listaViajeros)) {
+            listaViajeros = [...data.listaViajeros];
+          } else if (data.nombresPersonas) {
+            listaViajeros = data.nombresPersonas.split(',').map(s=>s.trim()).filter(Boolean);
+          }
+          nombresPersonasGlobal = listaViajeros.join(', ');
+          const npInput = document.getElementById('nombresPersonas');
+          if (npInput) npInput.value = nombresPersonasGlobal;
+          if (typeof window.renderTravelerChips === 'function') {
+            window.renderTravelerChips();
+          }
           
           if (document.getElementById('lugarSalida')) document.getElementById('lugarSalida').value = lugarSalida;
           if (document.getElementById('numPersonas')) document.getElementById('numPersonas').value = numPersonas;
@@ -1943,7 +2103,10 @@
       for (let i=0; i<4; i++) part1 += chars.charAt(Math.floor(Math.random() * chars.length));
       for (let i=0; i<4; i++) part2 += chars.charAt(Math.floor(Math.random() * chars.length));
       const code = `${part1}-${part2}`;
+      const oldTripId = currentTripId;
       syncCode = code;
+      currentTripId = code;
+      localStorage.setItem('PluxSyncCode', code);
       
       const display = document.getElementById('display-invite-code');
       const container = document.getElementById('invite-code-container');
@@ -1953,6 +2116,11 @@
       }
       activarListenerNube();
       autoSave();
+
+      if (typeof migrarChatALocalACodigo === 'function') {
+        migrarChatALocalACodigo(code, oldTripId);
+      }
+
       showToast(`Código generado: ${code}`, 'success');
     }
 
@@ -2266,7 +2434,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           if (!firebase.apps.length) {
             firebase.initializeApp({
               projectId: "nibecar-cofeben",
-              appId: "1:88879103859:android:e129fff00f991d3a01cf06",
+              appId: "1:88879103859:web:eb45dafc1677dc3c01cf06",
               databaseURL: "https://nibecar-cofeben-default-rtdb.firebaseio.com",
               storageBucket: "nibecar-cofeben.firebasestorage.app",
               apiKey: "AIzaSyAI67WxeycsfvMUaDU1KdAqyHXGy7GSDLo",
@@ -3276,17 +3444,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     // ================== FUNCIONES DE PERFIL DE USUARIO ==================
-    function updateUserButtonDisplay() {
-      const btn = document.getElementById('cuentaButton');
-      if (!btn) return;
-      if (currentNickname) {
-        btn.classList.add('logged-in');
-        btn.title = `@${currentNickname}`;
-      } else {
-        btn.classList.remove('logged-in');
-        btn.title = t('cuenta_btn_title');
-      }
-    }
+    // (updateUserButtonDisplay está definida al inicio con soporte para foto de perfil e icono)
 
     // Cerrar panel de herramientas
     function cerrarPanelHerramientas() {
@@ -4054,14 +4212,15 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         showToast(`${titulo} añadido al Día 1 de ${dest.nombre}`, 'success');
     };
 
-    // ================== AI CORE (FALLBACK CHAIN) ==================
-    // ============================================================
-    // AI CORE  Multi-provider fallback chain
-    // 1. OpenRouter (FREE models)    No cost, many models
-    // 2. Gemini 1.5 Flash            Fast & reliable
-    // 3. Groq Llama3 70B             Excellent JSON compliance
-    // 4. Mistral Small               Last resort
-    // ============================================================
+    // ================== AI CORE (FALLBACK CHAIN - ALL PROVIDERS) ==================
+    // 1. Groq (Ultra-fast Llama-3 / Qwen / compound)
+    // 2. Gemini 1.5 Flash / 2.0 Flash
+    // 3. DeepSeek (deepseek-chat)
+    // 4. OpenAI (gpt-4o-mini / gpt-4o)
+    // 5. Nvidia NIM (meta/llama-3.1-70b-instruct)
+    // 6. OpenRouter (Multi-model router)
+    // 7. Mistral (mistral-small-latest)
+    // 8. MuleRouter
     const OPENROUTER_FREE_MODELS = [
       'meta-llama/llama-3.3-70b-instruct:free',
       'google/gemini-2.0-flash-exp:free',
@@ -4072,9 +4231,8 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     const AI_SYSTEM_PROMPT = 'You are a travel planning AI. CRITICAL: You MUST respond with ONLY valid JSON. NO greetings, NO explanations, NO markdown code blocks, NO conversational text. Just the raw JSON object.';
 
     async function callAI(prompt, useJson = true) {
-      console.log(' AI_CORE: Iniciando petición...', { useJson });
+      console.log('🤖 AI_CORE: Iniciando petición multi-proveedor...', { useJson });
 
-      // Helper function with timeout
       const fetchWithTimeout = async (url, options, timeout = 15000) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -4084,19 +4242,44 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           return response;
         } catch (error) {
           clearTimeout(timeoutId);
-          if (error.name === 'AbortError') {
-            throw new Error('TIMEOUT');
-          }
+          if (error.name === 'AbortError') throw new Error('TIMEOUT');
           throw error;
         }
       };
 
-      // 1. Try Groq (Active fast models: gpt-oss-120b, gpt-oss-20b, qwen3.6, compound-mini)
+      // 0. Prioridad: Cloudflare Worker Seguro Multi-Proveedor
+      try {
+        const workerResp = await fetchWithTimeout('https://pluxy.nibecar-cofeben.workers.dev/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: prompt,
+            system: AI_SYSTEM_PROMPT
+          })
+        }, 12000);
+        if (workerResp.ok) {
+          const workerData = await workerResp.json();
+          let content = workerData.text;
+          if (content) {
+            content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+            if (useJson && !content.startsWith('{')) {
+              const jsonMatch = content.match(/\{[\s\S]*\}/);
+              if (jsonMatch) content = jsonMatch[0];
+            }
+            console.log(`✅ AI_CORE: Éxito con Cloudflare Worker Gateway [${workerData.provider || 'auto'}].`);
+            return content;
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Cloudflare Worker AI_CORE fallback to client keys:', e.message);
+      }
+
+      // 1. Try Groq
       if (GROQ_API_KEY) {
-        const groqModels = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.6-27b', 'groq/compound-mini'];
+        const groqModels = ['openai/gpt-oss-120b', 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile', 'groq/compound-mini'];
         for (const gModel of groqModels) {
           try {
-            console.log(` AI_CORE: Intentando con Groq [${gModel}]...`);
+            console.log(`🤖 AI_CORE: Intentando con Groq [${gModel}]...`);
             const resp = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
               method: 'POST',
               headers: { 
@@ -4113,38 +4296,35 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 max_tokens: 4096,
                 response_format: useJson ? { type: "json_object" } : undefined
               })
-            }, 12000);
+            }, 10000);
             if (resp.ok) {
               const data = await resp.json();
               let content = data.choices?.[0]?.message?.content;
               if (content) {
-                // Strip <think> tags if any
                 content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                console.log(` AI_CORE: éxito con Groq [${gModel}].`);
+                console.log(`✅ AI_CORE: éxito con Groq [${gModel}].`);
                 return content;
               }
             }
           } catch (e) {
-            console.warn(` AI_CORE: Error en Groq [${gModel}]:`, e.message);
+            console.warn(`⚠️ AI_CORE: Error en Groq [${gModel}]:`, e.message);
           }
         }
       }
 
-      // 2. Try Gemini Flash
+      // 2. Try Gemini
       if (GEMINI_API_KEY) {
-        const geminiModels = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
+        const geminiModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-8b'];
         for (const gModel of geminiModels) {
           try {
-            console.log(` AI_CORE: Intentando con Gemini [${gModel}]...`);
+            console.log(`🤖 AI_CORE: Intentando con Gemini [${gModel}]...`);
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${GEMINI_API_KEY}`;
             const resp = await fetchWithTimeout(url, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 contents: [{
-                  parts: [{
-                    text: `${AI_SYSTEM_PROMPT}\n\n${prompt}`
-                  }]
+                  parts: [{ text: `${AI_SYSTEM_PROMPT}\n\n${prompt}` }]
                 }],
                 generationConfig: {
                   responseMimeType: useJson ? "application/json" : "text/plain",
@@ -4156,27 +4336,138 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             const data = await resp.json();
             const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
             if (content) {
-              console.log(` AI_CORE: éxito con Gemini [${gModel}].`);
+              console.log(`✅ AI_CORE: éxito con Gemini [${gModel}].`);
               return content;
             }
           } catch (e) {
-            console.warn(` AI_CORE: Error en Gemini [${gModel}]:`, e.message);
+            console.warn(`⚠️ AI_CORE: Error en Gemini [${gModel}]:`, e.message);
           }
         }
       }
 
-      // 3. Try OpenRouter
+      // 3. Try DeepSeek
+      if (DEEPSEEK_API_KEY) {
+        try {
+          console.log(`🤖 AI_CORE: Intentando con DeepSeek [deepseek-chat]...`);
+          const resp = await fetchWithTimeout('https://api.deepseek.com/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: 'deepseek-chat',
+              messages: [
+                { role: 'system', content: AI_SYSTEM_PROMPT },
+                { role: 'user', content: prompt }
+              ],
+              temperature: 0.3,
+              response_format: useJson ? { type: 'json_object' } : undefined
+            })
+          }, 12000);
+          if (resp.ok) {
+            const data = await resp.json();
+            let content = data.choices?.[0]?.message?.content;
+            if (content) {
+              content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+              console.log(`✅ AI_CORE: éxito con DeepSeek.`);
+              return content;
+            }
+          }
+        } catch (e) {
+          console.warn(`⚠️ AI_CORE: Error en DeepSeek:`, e.message);
+        }
+      }
+
+      // 4. Try OpenAI
+      if (OPENAI_API_KEY) {
+        const oaiModels = ['gpt-4o-mini', 'gpt-4o'];
+        for (const oModel of oaiModels) {
+          try {
+            console.log(`🤖 AI_CORE: Intentando con OpenAI [${oModel}]...`);
+            const resp = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+              },
+              body: JSON.stringify({
+                model: oModel,
+                messages: [
+                  { role: 'system', content: AI_SYSTEM_PROMPT },
+                  { role: 'user', content: prompt }
+                ],
+                temperature: 0.3,
+                response_format: useJson ? { type: 'json_object' } : undefined
+              })
+            }, 12000);
+            if (resp.ok) {
+              const data = await resp.json();
+              const content = data.choices?.[0]?.message?.content;
+              if (content) {
+                console.log(`✅ AI_CORE: éxito con OpenAI [${oModel}].`);
+                return content;
+              }
+            }
+          } catch (e) {
+            console.warn(`⚠️ AI_CORE: Error en OpenAI [${oModel}]:`, e.message);
+          }
+        }
+      }
+
+      // 5. Try Nvidia NIM
+      if (NVIDIA_NIM_API_KEY) {
+        const nimModels = ['meta/llama-3.1-70b-instruct', 'deepseek-ai/deepseek-r1'];
+        for (const nModel of nimModels) {
+          try {
+            console.log(`🤖 AI_CORE: Intentando con Nvidia NIM [${nModel}]...`);
+            const resp = await fetchWithTimeout('https://integrate.api.nvidia.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${NVIDIA_NIM_API_KEY}`
+              },
+              body: JSON.stringify({
+                model: nModel,
+                messages: [
+                  { role: 'system', content: AI_SYSTEM_PROMPT },
+                  { role: 'user', content: prompt }
+                ],
+                temperature: 0.3,
+                max_tokens: 4096
+              })
+            }, 12000);
+            if (resp.ok) {
+              const data = await resp.json();
+              let content = data.choices?.[0]?.message?.content;
+              if (content) {
+                content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                  console.log(`✅ AI_CORE: éxito con Nvidia NIM [${nModel}].`);
+                  return jsonMatch[0];
+                }
+                return content;
+              }
+            }
+          } catch (e) {
+            console.warn(`⚠️ AI_CORE: Error en Nvidia NIM [${nModel}]:`, e.message);
+          }
+        }
+      }
+
+      // 6. Try OpenRouter
       if (OPENROUTER_API_KEY) {
         for (const model of OPENROUTER_FREE_MODELS) {
           try {
-            console.log(` AI_CORE: Intentando con OpenRouter [${model}]...`);
+            console.log(`🤖 AI_CORE: Intentando con OpenRouter [${model}]...`);
             const resp = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                 'HTTP-Referer': window.location.origin,
-                'X-Title': 'PluxTravel Planner'
+                'X-Title': 'Plux Travel Planner'
               },
               body: JSON.stringify({
                 model,
@@ -4188,61 +4479,85 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 max_tokens: 4096
               })
             }, 12000);
-            if (!resp.ok) { console.warn(` OpenRouter ${model} HTTP ${resp.status}`); continue; }
+            if (!resp.ok) continue;
             const data = await resp.json();
             const content = data.choices?.[0]?.message?.content;
             if (content && content.trim().startsWith('{')) {
-              console.log(` AI_CORE: éxito con OpenRouter [${model}].`);
+              console.log(`✅ AI_CORE: éxito con OpenRouter [${model}].`);
               return content;
             } else if (content) {
               const jsonMatch = content.match(/\{[\s\S]*\}/);
-              if (jsonMatch) { console.log(' AI_CORE: JSON extraído de OpenRouter.'); return jsonMatch[0]; }
+              if (jsonMatch) {
+                console.log(`✅ AI_CORE: JSON extraído de OpenRouter.`);
+                return jsonMatch[0];
+              }
             }
           } catch (e) {
-            console.warn(` OpenRouter ${model}:`, e.message);
+            console.warn(`⚠️ OpenRouter ${model}:`, e.message);
           }
         }
       }
 
-      // 4. Try Mistral
-      try {
-        console.log(' AI_CORE: Intentando con Mistral...');
-        const resp = await fetchWithTimeout('https://api.mistral.ai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${MISTRAL_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "mistral-small-latest",
-            messages: [
-              { role: "system", content: AI_SYSTEM_PROMPT },
-              { role: "user", content: prompt }
-            ],
-            temperature: 0.3,
-            response_format: useJson ? { type: "json_object" } : undefined
-          })
-        }, 12000);
-        const data = await resp.json();
-        if (data.choices?.[0]?.message?.content) {
-          console.log(' AI_CORE: éxito con Mistral.');
-          return data.choices[0].message.content;
+      // 7. Try Mistral
+      if (MISTRAL_API_KEY) {
+        try {
+          console.log('🤖 AI_CORE: Intentando con Mistral...');
+          const resp = await fetchWithTimeout('https://api.mistral.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${MISTRAL_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: "mistral-small-latest",
+              messages: [
+                { role: "system", content: AI_SYSTEM_PROMPT },
+                { role: "user", content: prompt }
+              ],
+              temperature: 0.3,
+              response_format: useJson ? { type: "json_object" } : undefined
+            })
+          }, 12000);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.choices?.[0]?.message?.content) {
+              console.log('✅ AI_CORE: éxito con Mistral.');
+              return data.choices[0].message.content;
+            }
+          }
+        } catch (e) {
+          console.warn('⚠️ AI_CORE: Error en Mistral:', e.message);
         }
-      } catch (e) {
-        console.warn(' AI_CORE: Error en Mistral:', e.message);
       }
 
-      console.error(' AI_CORE: Todos los modelos fallaron.');
+      console.error('❌ AI_CORE: Todos los proveedores de IA fallaron.');
       throw new Error('AI_OFFLINE');
     }
 
-    // Non-JSON AI call (for chat)
+    // Non-JSON AI call (for Pluxy Chat Agent)
     async function callAIText(messages) {
-      const lastUserMsg = messages[messages.length - 1]?.content || '';
-      
+      // 1. Prioridad: Cloudflare Worker Seguro y Multimodelo
+      try {
+        const workerResp = await fetch('https://pluxy.nibecar-cofeben.workers.dev/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages })
+        });
+        if (workerResp.ok) {
+          const workerData = await workerResp.json();
+          if (workerData.text) {
+            return workerData.text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Cloudflare Worker pluxy fallback to direct keys:', e);
+      }
+
+      const chatPromptSystem = "Sos Pluxy, el agente inteligente y asistente de viajes experto de Plux con capacidades agénticas reales. Ayudás con recomendaciones turísticas, itinerarios, presupuestos y consejos prácticos en español rioplatense.";
+
       // 1. Try Groq chat models
       if (GROQ_API_KEY) {
-        const chatModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'groq/compound-mini'];
+        const chatModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'groq/compound-mini'];
         for (const model of chatModels) {
           try {
             const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -4251,7 +4566,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
               body: JSON.stringify({ 
                 model, 
                 messages: [
-                  { role: "system", content: "Sos Pluxy 🐾, un asistente de viajes inteligente, amigable, experto y conciso. Ayudás con recomendaciones turísticas, itinerarios, presupuestos y consejos prácticos en español." },
+                  { role: "system", content: chatPromptSystem },
                   ...messages
                 ], 
                 temperature: 0.7, 
@@ -4262,8 +4577,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
               const data = await resp.json();
               let text = data.choices?.[0]?.message?.content;
               if (text) {
-                text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                return text;
+                return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
               }
             }
           } catch(e) {
@@ -4272,7 +4586,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       }
 
-      // 2. Try Gemini for chat
+      // 2. Try Gemini
       if (GEMINI_API_KEY) {
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
@@ -4296,7 +4610,59 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       }
 
-      // 3. Intelligent fallback based on destinations & query
+      // 3. Try DeepSeek Chat
+      if (DEEPSEEK_API_KEY) {
+        try {
+          const resp = await fetch('https://api.deepseek.com/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_API_KEY}` },
+            body: JSON.stringify({
+              model: 'deepseek-chat',
+              messages: [
+                { role: 'system', content: chatPromptSystem },
+                ...messages
+              ],
+              temperature: 0.7,
+              max_tokens: 1500
+            })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const text = data.choices?.[0]?.message?.content;
+            if (text) return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+          }
+        } catch (e) {
+          console.warn('DeepSeek chat failed', e);
+        }
+      }
+
+      // 4. Try OpenAI Chat
+      if (OPENAI_API_KEY) {
+        try {
+          const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                { role: 'system', content: chatPromptSystem },
+                ...messages
+              ],
+              temperature: 0.7,
+              max_tokens: 1500
+            })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const text = data.choices?.[0]?.message?.content;
+            if (text) return text;
+          }
+        } catch (e) {
+          console.warn('OpenAI chat failed', e);
+        }
+      }
+
+      // 5. Intelligent Fallback
       const destNames = destinos.map(d => d.nombre).join(', ') || 'tus destinos';
       return `¡Hola! Como tu asistente Pluxy 🐾, para ${destNames}: te recomiendo planificar siempre las visitas a los monumentos principales por la mañana temprano para evitar filas, usar pases de transporte público de 24/48hs para ahorrar, y reservar actividades con antelación. ¡Podés pedirme sugerencias específicas para cualquier ciudad o usar los botones de acceso rápido arriba! ✨`;
     }
@@ -5163,7 +5529,6 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     // ================== CLIMA (Open-Meteo + OpenWeather opcional) ==================
-    let OPENWEATHER_API_KEY = '';
     const WEATHER_CACHE_MS = 30 * 60 * 1000;
     const weatherCache = {};
     const weatherPending = {};
@@ -6137,6 +6502,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const nombre = document.getElementById('nombreViaje').value.trim();
       if (!nombre) { showToast('Escribe un nombre para el viaje', 'error'); return; }
 
+      const tripId = getCurrentTripId();
       const viaje = {
         nombre,
         fecha: new Date().toISOString(),
@@ -6144,6 +6510,8 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         numPersonas,
         nombresPersonas: nombresPersonasGlobal,
         listaViajeros: [...listaViajeros],
+        tripId: tripId,
+        syncCode: syncCode || null,
         fechaInicio: document.getElementById('fechaInicio').value,
         destinos,
         vueltaGlobal,
@@ -6154,6 +6522,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const trips = getStoredTrips();
       if (loadedTripIndex !== null && trips[loadedTripIndex]) {
         trips[loadedTripIndex].nombre = nombre;
+        trips[loadedTripIndex].tripId = tripId;
+        trips[loadedTripIndex].syncCode = syncCode || null;
+        trips[loadedTripIndex].listaViajeros = [...listaViajeros];
+        trips[loadedTripIndex].nombresPersonas = nombresPersonasGlobal;
         saveTrips(trips);
         showToast('Viaje actualizado correctamente', 'success');
       } else {
@@ -6196,6 +6568,26 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       vueltaCostosAdicionales = viaje.vueltaCostosAdicionales || [];
       loadedTripIndex = index; // Track which trip is loaded for autosave
 
+      syncCode = viaje.syncCode || null;
+      if (syncCode) {
+        localStorage.setItem('PluxSyncCode', syncCode);
+        currentTripId = syncCode;
+      } else {
+        localStorage.removeItem('PluxSyncCode');
+        viaje.tripId = viaje.tripId || ('trip_' + (viaje.fecha ? new Date(viaje.fecha).getTime().toString(36) : Date.now().toString(36)) + '_' + index);
+        currentTripId = viaje.tripId;
+        saveTrips(trips, false);
+      }
+
+      if (typeof pluxChatUnsubscribe === 'function' && pluxChatUnsubscribe) {
+        pluxChatUnsubscribe();
+        pluxChatUnsubscribe = null;
+      }
+      if (typeof getTripChatChannelId === 'function') {
+        pluxActiveChatId = getTripChatChannelId();
+        if (typeof ensureChatChannel === 'function') ensureChatChannel();
+      }
+
       renderDestinos();
       renderVueltaCostos();
       cerrarModalViajes();
@@ -6205,6 +6597,11 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
     function eliminarViaje(index) {
       const trips = getStoredTrips();
+      const delTrip = trips[index];
+      if (delTrip && delTrip.tripId && typeof pluxSocialChats !== 'undefined' && pluxSocialChats) {
+        delete pluxSocialChats['trip_' + delTrip.tripId];
+        localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+      }
       trips.splice(index, 1);
       saveTrips(trips);
       renderTripLists();
@@ -6321,40 +6718,134 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       });
     });
 
-    // ================== PREFERENCIAS ==================
+    // ================== PREFERENCIAS & PERSONALIZACIÓN ==================
+    function quitarFotoPerfil() {
+      localStorage.removeItem('Plux_UserProfile_Photo');
+      if (typeof db !== 'undefined' && db && currentNickname) {
+        db.collection('plux_usuarios').doc(currentNickname).set({
+          photoUrl: null,
+          ultimaConexion: new Date().toISOString()
+        }, { merge: true }).catch(console.error);
+      }
+      const avatarEl = document.getElementById('profileAvatarInner');
+      if (avatarEl) {
+        avatarEl.innerHTML = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+      }
+      const prefAvatar = document.getElementById('prefAvatarPreview');
+      if (prefAvatar) {
+        prefAvatar.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+      }
+      const removeBtn = document.getElementById('prefRemovePhotoBtn');
+      if (removeBtn) removeBtn.style.display = 'none';
+      updateUserButtonDisplay();
+      showToast('Foto de perfil eliminada', 'info');
+    }
+    window.quitarFotoPerfil = quitarFotoPerfil;
+
     function abrirPreferencias() {
         cerrarPanelHerramientas();
-        let html = `<div id="modal-preferencias" style="position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:400;padding:20px;">
-            <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:30px;max-width:500px;width:100%;">
-                <h2 style="color:var(--verde);margin-bottom:20px;"> Preferencias Preferencias</h2>
-                <div style="margin-bottom:20px;">
-                    <label style="display:block;margin-bottom:8px;color:var(--gris);">Eventos por día (IA):</label>
-                    <input type="number" id="pref-events" value="${userPreferences.eventsPerDay}" min="1" max="10" style="width:100%;padding:10px;background:var(--fondo);border:1px solid var(--border);border-radius:8px;color:white;">
+        const existing = document.getElementById('modal-preferencias');
+        if (existing) existing.remove();
+
+        const photo = localStorage.getItem('Plux_UserProfile_Photo');
+        const curTheme = localStorage.getItem('Plux_Theme') || 'theme-oscuro';
+        const curLang = localStorage.getItem('Plux_Lang') || 'es';
+
+        let html = `<div id="modal-preferencias" style="position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:900;padding:15px;" onclick="if(event.target===this) this.remove()">
+            <div class="cuenta-content" style="background:linear-gradient(135deg,var(--card),var(--fondo));border:1px solid var(--border);border-radius:26px;padding:26px;max-width:480px;width:100%;max-height:88vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 25px 80px rgba(0,0,0,0.8);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+                    <h2 style="color:var(--verde);margin:0;font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:8px;">🎨 Personalizar</h2>
+                    <span onclick="document.getElementById('modal-preferencias').remove()" style="cursor:pointer;font-size:1.6rem;color:var(--gris);line-height:1;">×</span>
                 </div>
-                <div style="margin-bottom:20px;">
-                    <label style="display:block;margin-bottom:8px;color:var(--gris);">Ritmo del viaje:</label>
-                    <select id="pref-pace" style="width:100%;padding:10px;background:var(--fondo);border:1px solid var(--border);border-radius:8px;color:white;">
-                        <option value="relaxed" ${userPreferences.pace==='relaxed'?'selected':''}>Relajado</option>
-                        <option value="moderate" ${userPreferences.pace==='moderate'?'selected':''}>Moderado</option>
-                        <option value="intense" ${userPreferences.pace==='intense'?'selected':''}>Intenso</option>
+
+                <!-- 1. FOTO DE PERFIL -->
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
+                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Foto de perfil</label>
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <div id="prefAvatarPreview" style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:2px solid var(--verde);flex-shrink:0;background:linear-gradient(135deg,var(--verde),var(--azul));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(52,211,153,0.3);">
+                            ${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;display:block;">` : `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`}
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
+                            <button type="button" onclick="window.cambiarFotoPerfil()" style="padding:10px 14px;background:linear-gradient(135deg,var(--verde),var(--azul));color:black;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:0.86rem;display:flex;align-items:center;justify-content:center;gap:6px;">
+                                📷 Cambiar foto
+                            </button>
+                            <button type="button" id="prefRemovePhotoBtn" onclick="window.quitarFotoPerfil()" style="display:${photo ? 'block' : 'none'};padding:6px 10px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;cursor:pointer;font-size:0.78rem;">
+                                Quitar foto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. IDIOMA -->
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
+                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Idioma</label>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(75px,1fr));gap:8px;">
+                        ${[
+                          { id: 'es', label: '🇪🇸 ES' },
+                          { id: 'en', label: '🇬🇧 EN' },
+                          { id: 'fr', label: '🇫🇷 FR' },
+                          { id: 'de', label: '🇩🇪 DE' },
+                          { id: 'it', label: '🇮🇹 IT' }
+                        ].map(l => `
+                          <button type="button" onclick="window.setLanguage('${l.id}'); document.querySelectorAll('.pref-lang-btn').forEach(b => { b.style.background = (b.dataset.lang==='${l.id}' ? 'rgba(52,211,153,0.18)' : 'rgba(255,255,255,0.04)'); b.style.borderColor = (b.dataset.lang==='${l.id}' ? 'var(--verde)' : 'var(--border)'); });" data-lang="${l.id}" class="pref-lang-btn" style="padding:10px 6px;border-radius:10px;border:1px solid ${curLang === l.id ? 'var(--verde)' : 'var(--border)'};background:${curLang === l.id ? 'rgba(52,211,153,0.18)' : 'rgba(255,255,255,0.04)'};color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">
+                            ${l.label}
+                          </button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- 3. TEMA VISUAL -->
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
+                    <label style="display:block;margin-bottom:8px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Tema visual</label>
+                    <select id="pref-theme-select" onchange="window.setTheme(this.value)" style="width:100%;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;color:white;font-size:0.92rem;outline:none;box-sizing:border-box;">
+                        <option value="theme-oscuro" ${curTheme==='theme-oscuro'?'selected':''}>🌙 Oscuro (Predeterminado)</option>
+                        <option value="theme-claro" ${curTheme==='theme-claro'?'selected':''}>☀️ Claro</option>
+                        <option value="theme-tokyo" ${curTheme==='theme-tokyo'?'selected':''}>🌸 Tokyo Night</option>
+                        <option value="theme-grid" ${curTheme==='theme-grid'?'selected':''}>⚡ Cyber Grid</option>
+                        <option value="theme-starship" ${curTheme==='theme-starship'?'selected':''}>🚀 Starship</option>
+                        <option value="theme-terminal" ${curTheme==='theme-terminal'?'selected':''}>💻 Terminal Hacker</option>
+                        <option value="theme-ares" ${curTheme==='theme-ares'?'selected':''}>🔥 Ares OS</option>
                     </select>
                 </div>
-                <div style="display:flex;gap:10px;margin-top:30px;">
-                    <button onclick="guardarPreferencias()" style="flex:1;padding:15px;background:var(--verde);color:black;border:none;border-radius:12px;font-weight:bold;cursor:pointer;">Guardar</button>
-                    <button onclick="document.getElementById('modal-preferencias').remove()" style="flex:1;padding:15px;background:var(--gris);color:white;border:none;border-radius:12px;cursor:pointer;">Cancelar</button>
+
+                <!-- 4. RITMO Y EVENTOS IA -->
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px;">
+                    <label style="display:block;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Preferencias de viaje (IA)</label>
+                    <div>
+                        <label style="display:block;margin-bottom:6px;font-size:0.84rem;color:var(--gris);">Ritmo del itinerario:</label>
+                        <select id="pref-pace" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:white;font-size:0.9rem;box-sizing:border-box;">
+                            <option value="relaxed" ${userPreferences.pace==='relaxed'?'selected':''}>Relajado</option>
+                            <option value="moderate" ${userPreferences.pace==='moderate'?'selected':''}>Moderado</option>
+                            <option value="intense" ${userPreferences.pace==='intense'?'selected':''}>Intenso</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:6px;font-size:0.84rem;color:var(--gris);">Actividades por día sugeridas:</label>
+                        <input type="number" id="pref-events" value="${userPreferences.eventsPerDay}" min="1" max="10" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:white;box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button onclick="guardarPreferencias()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--verde),var(--azul));color:black;border:none;border-radius:14px;font-weight:bold;cursor:pointer;font-size:0.95rem;">Guardar cambios</button>
+                    <button onclick="document.getElementById('modal-preferencias').remove()" style="flex:1;padding:14px;background:rgba(255,255,255,0.08);color:white;border:1px solid var(--border);border-radius:14px;cursor:pointer;font-size:0.95rem;">Cerrar</button>
                 </div>
             </div>
         </div>`;
         document.body.insertAdjacentHTML('beforeend', html);
     }
+    window.abrirPreferencias = abrirPreferencias;
 
     function guardarPreferencias() {
-        userPreferences.eventsPerDay = parseInt(document.getElementById('pref-events').value) || 4;
-        userPreferences.pace = document.getElementById('pref-pace').value;
+        const eventsEl = document.getElementById('pref-events');
+        const paceEl = document.getElementById('pref-pace');
+        if (eventsEl) userPreferences.eventsPerDay = parseInt(eventsEl.value) || 4;
+        if (paceEl) userPreferences.pace = paceEl.value;
         autoSave();
-        document.getElementById('modal-preferencias').remove();
-        showToast('Preferencias guardadas', 'success');
+        const m = document.getElementById('modal-preferencias');
+        if (m) m.remove();
+        showToast('Preferencias guardadas correctamente ✨', 'success');
     }
+    window.guardarPreferencias = guardarPreferencias;
 
     // Profile actions
     function verMisViajes() {
@@ -6631,7 +7122,10 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                              <span style="font-size:0.75rem; color:var(--gris);">Ver perfil</span>
                          </div>
                      </div>
-                     <div style="display:flex; gap:8px;">
+                     <div style="display:flex; gap:6px;">
+                         <button onclick="window.cerrarAmigos(); window.iniciarChatConUsuario('${friend}');" style="background:rgba(52,211,153,0.15); border:1px solid var(--verde); width:32px; height:32px; border-radius:8px; color:var(--verde); display:flex; align-items:center; justify-content:center; cursor:pointer; padding: 0;" title="Chatear con @${friend}">
+                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                         </button>
                          <button onclick="abrirDetalleAmigo('${friend}')" style="background:rgba(96,165,250,0.1); border:1px solid var(--azul); width:32px; height:32px; border-radius:8px; color:var(--azul); display:flex; align-items:center; justify-content:center; cursor:pointer; padding: 0;" title="Ver stats">
                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                          </button>
@@ -6723,7 +7217,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                  return;
              }
              
-             const data = userDoc.data();
+const data = userDoc.data();
              const trips = data.viajes_guardados || [];
              let totalDestinations = 0;
              let totalDays = 0;
@@ -6759,21 +7253,119 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
              }
              document.getElementById('friendDetailConnection').innerText = `Última conexión: ${connStr}`;
              
-             // Set click handler for share
-             document.getElementById('friendDetailShareBtn').onclick = () => compartirViajeConAmigo(friendNick);
-         } catch(e) {
-             console.error('Error al abrir detalle amigo:', e);
-             showToast('Error al cargar datos del amigo', 'error');
-             cerrarDetalleAmigo();
-         }
-     }
+             // Set friend avatar if custom photo exists
+              const friendAvatarEl = document.getElementById('friendDetailAvatar');
+              if (friendAvatarEl) {
+                if (data.photoUrl) {
+                  friendAvatarEl.innerHTML = `<img src="${data.photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+                } else {
+                  friendAvatarEl.innerHTML = `<div style="font-weight:bold; font-size:1.4rem;">${friendNick.substring(0, 2).toUpperCase()}</div>`;
+                }
+              }
 
-     function cerrarDetalleAmigo() {
-         const modal = document.getElementById('modal-detalle-amigo');
-         if (modal) modal.style.display = 'none';
-     }
+              // Set click handlers for profile actions
+              const shareBtn = document.getElementById('friendDetailShareBtn');
+              if (shareBtn) shareBtn.onclick = () => compartirViajeConAmigo(friendNick);
 
-     async function compartirViajeConAmigo(friendNick) {
+              const chatBtn = document.getElementById('friendDetailChatBtn');
+              if (chatBtn) {
+                chatBtn.onclick = () => {
+                  cerrarDetalleAmigo();
+                  cerrarAmigos();
+                  iniciarChatConUsuario(friendNick);
+                };
+              }
+
+              const groupBtn = document.getElementById('friendDetailGroupBtn');
+              if (groupBtn) {
+                groupBtn.onclick = () => {
+                  cerrarDetalleAmigo();
+                  cerrarAmigos();
+                  abrirModalCrearGrupo(friendNick);
+                };
+              }
+          } catch(e) {
+              console.error('Error al abrir detalle amigo:', e);
+              showToast('Error al cargar datos del amigo', 'error');
+              cerrarDetalleAmigo();
+          }
+      }
+
+      function cerrarDetalleAmigo() {
+          const modal = document.getElementById('modal-detalle-amigo');
+          if (modal) modal.style.display = 'none';
+      }
+      window.cerrarDetalleAmigo = cerrarDetalleAmigo;
+
+      // ================== GESTIÓN DE GRUPOS PERSONALIZADOS ==================
+      function abrirModalCrearGrupo(preselectedNick) {
+        const modal = document.getElementById('modal-crear-grupo');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        const nameInput = document.getElementById('group-name-input');
+        if (nameInput) { nameInput.value = ''; nameInput.focus(); }
+
+        const friends = (typeof getStoredFriends === 'function') ? getStoredFriends() : [];
+        const container = document.getElementById('group-friends-checkboxes');
+        if (!container) return;
+
+        const cleanPreselected = preselectedNick ? preselectedNick.replace(/^@/, '').toLowerCase().trim() : '';
+
+        if (friends.length === 0 && !cleanPreselected) {
+          container.innerHTML = '<div style="text-align:center; color:var(--gris); font-size:0.85rem; padding:12px;">No tienes amigos en tu lista aún. Puedes agregarlos desde Familia y amigos.</div>';
+          return;
+        }
+
+        const friendSet = new Set(friends.map(f => (typeof f === 'string' ? f.replace(/^@/, '').toLowerCase().trim() : '')));
+        if (cleanPreselected) friendSet.add(cleanPreselected);
+
+        container.innerHTML = Array.from(friendSet).filter(Boolean).map(f => {
+          const isChecked = cleanPreselected && f === cleanPreselected;
+          return `
+            <label style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,0.03); cursor:pointer; color:white; font-size:0.9rem;">
+              <input type="checkbox" value="${escapeHtml(f)}" class="group-member-checkbox" ${isChecked ? 'checked' : ''} style="accent-color:var(--verde); width:18px; height:18px;">
+              <span>@${escapeHtml(f)}</span>
+            </label>
+          `;
+        }).join('');
+      }
+      window.abrirModalCrearGrupo = abrirModalCrearGrupo;
+
+      function cerrarModalCrearGrupo() {
+        const modal = document.getElementById('modal-crear-grupo');
+        if (modal) modal.style.display = 'none';
+      }
+      window.cerrarModalCrearGrupo = cerrarModalCrearGrupo;
+
+      function confirmarCrearGrupo() {
+        const nameInput = document.getElementById('group-name-input');
+        const rawName = nameInput ? nameInput.value.trim() : '';
+        const groupName = rawName || 'Grupo de Viajeros 👥';
+
+        const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
+        const selectedMembers = Array.from(checkboxes).map(cb => cb.value);
+
+        const myNick = currentNickname || 'yo';
+        const allMembers = Array.from(new Set([myNick, ...selectedMembers]));
+
+        const groupId = 'group_' + Date.now();
+        if (!pluxSocialChats) pluxSocialChats = {};
+        pluxSocialChats[groupId] = {
+          id: groupId,
+          type: 'group',
+          name: groupName,
+          participants: allMembers,
+          messages: []
+        };
+
+        localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+        cerrarModalCrearGrupo();
+        abrirChatSocial(groupId);
+        showToast(`Grupo "${groupName}" creado con éxito ✨`, 'success');
+      }
+      window.confirmarCrearGrupo = confirmarCrearGrupo;
+
+      async function compartirViajeConAmigo(friendNick) {
          if (!currentUserUid) { showToast('Iniciá sesión para invitar', 'error'); return; }
          if (friendNick === currentNickname) { showToast('No podés invitarte a vos mismo', 'error'); return; }
          if (!db) { showToast('Base de datos no disponible', 'error'); return; }
@@ -6786,13 +7378,24 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
          }
          
          try {
+             const cleanFriend = friendNick.replace(/^@/, '').trim();
              await db.collection('plux_viajes_compartidos').doc(syncCode).set({
-                 colaboradores: firebase.firestore.FieldValue.arrayUnion(friendNick),
+                 colaboradores: firebase.firestore.FieldValue.arrayUnion(cleanFriend),
                  propietario: currentNickname,
                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
              }, { merge: true });
+
+             const formattedNick = '@' + cleanFriend;
+             if (!listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === cleanFriend.toLowerCase())) {
+                 listaViajeros.push(formattedNick);
+                 window.renderTravelerChips();
+                 autoSave();
+             }
+             if (typeof window.sumarUsuarioAlChatDelViaje === 'function') {
+                 window.sumarUsuarioAlChatDelViaje(cleanFriend, 'invitado');
+             }
              
-             showToast(`@${friendNick} invitado al viaje ✅`, 'success');
+             showToast(`@${cleanFriend} invitado al viaje y sumado al chat ✅`, 'success');
              cerrarDetalleAmigo();
              cerrarAmigos();
              abrirColaboradores();
@@ -6898,15 +7501,26 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
         // Add collaborator to the shared trip
         try {
+            const cleanTargetNick = targetNick.replace(/^@/, '').trim();
             const role = document.getElementById('colab-role-select')?.value || 'editor';
             await db.collection('plux_viajes_compartidos').doc(syncCode).set({
-                colaboradores: firebase.firestore.FieldValue.arrayUnion(targetNick),
-                [`colaboradores_roles.${targetNick}`]: role,
+                colaboradores: firebase.firestore.FieldValue.arrayUnion(cleanTargetNick),
+                [`colaboradores_roles.${cleanTargetNick}`]: role,
                 propietario: currentNickname,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
 
-            showToast(`@${targetNick} invitado al viaje ✅`, 'success');
+            const formattedNick = '@' + cleanTargetNick;
+            if (!listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === cleanTargetNick.toLowerCase())) {
+                listaViajeros.push(formattedNick);
+                window.renderTravelerChips();
+                autoSave();
+            }
+            if (typeof window.sumarUsuarioAlChatDelViaje === 'function') {
+                window.sumarUsuarioAlChatDelViaje(cleanTargetNick, 'invitado');
+            }
+
+            showToast(`@${cleanTargetNick} invitado al viaje y sumado al chat ✅`, 'success');
             if (nickInput) nickInput.value = '';
             abrirColaboradores(); // Refresh list
         } catch (e) {
@@ -6972,14 +7586,29 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             const docSnap = await db.collection('plux_viajes_compartidos').doc(code).get();
             if (docSnap.exists) {
                 syncCode = code;
+                currentTripId = code;
+                localStorage.setItem('PluxSyncCode', code);
                 importarViajeString(docSnap.data().data);
                 const data = docSnap.data();
+                const colabs = data.colaboradores || [];
                 const roles = data.colaboradores_roles || {};
                 const owner = data.propietario;
                 const joiningName = currentNickname || 'Anónimo';
                 await db.collection('plux_viajes_compartidos').doc(code).set({
                     colaboradores: firebase.firestore.FieldValue.arrayUnion(joiningName)
                 }, { merge: true });
+
+                // Sincronizar todos los colaboradores a la lista de viajeros
+                colabs.forEach(c => {
+                    const norm = c.toLowerCase().replace(/^@/, '');
+                    if (!listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === norm)) {
+                        listaViajeros.push('@' + norm);
+                    }
+                });
+                if (joiningName && !listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === joiningName.toLowerCase().replace(/^@/, ''))) {
+                    listaViajeros.push('@' + joiningName.replace(/^@/, ''));
+                }
+                window.renderTravelerChips();
                 
                 // Determine current user's role
                 if (currentNickname === owner) {
@@ -6998,6 +7627,17 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 }
                 
                 activarListenerNube();
+                if (typeof pluxChatUnsubscribe === 'function' && pluxChatUnsubscribe) {
+                    pluxChatUnsubscribe();
+                    pluxChatUnsubscribe = null;
+                }
+                if (typeof getTripChatChannelId === 'function') {
+                    pluxActiveChatId = getTripChatChannelId();
+                    if (typeof ensureChatChannel === 'function') ensureChatChannel();
+                }
+                if (typeof window.sumarUsuarioAlChatDelViaje === 'function') {
+                    window.sumarUsuarioAlChatDelViaje(joiningName, 'unido');
+                }
                 showToast(`¡Viaje con código ${code} cargado!`, 'success');
                 cerrarModalViajes();
                 empezar();
@@ -7129,51 +7769,104 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     function abrirSeguridad() {
       const modal = document.getElementById('modal-seguridad');
       if (modal) modal.style.display = 'flex';
-      const userSpan = document.getElementById('seguridad-username');
-      if (userSpan) userSpan.innerText = `@${currentNickname || 'invitado'}`;
+      const nickInput = document.getElementById('seguridad-new-nickname');
+      if (nickInput) nickInput.value = currentNickname || '';
+      const emailInput = document.getElementById('seguridad-email');
+      const storedEmail = localStorage.getItem('Plux_UserProfile_Email') || (firebaseUser && firebaseUser.email) || '';
+      if (emailInput) emailInput.value = storedEmail === 'Nickname Login' ? '' : storedEmail;
+      const p1 = document.getElementById('seguridad-new-password');
+      const p2 = document.getElementById('seguridad-confirm-password');
+      if (p1) p1.value = '';
+      if (p2) p2.value = '';
     }
+    window.abrirSeguridad = abrirSeguridad;
 
     function cerrarSeguridad() {
       const modal = document.getElementById('modal-seguridad');
       if (modal) modal.style.display = 'none';
     }
+    window.cerrarSeguridad = cerrarSeguridad;
 
     async function guardarNuevaContrasena() {
+      const newNickRaw = document.getElementById('seguridad-new-nickname')?.value || '';
+      const newEmailRaw = document.getElementById('seguridad-email')?.value || '';
       const newPass = document.getElementById('seguridad-new-password')?.value || '';
       const confirmPass = document.getElementById('seguridad-confirm-password')?.value || '';
-      if (!currentNickname) {
+
+      const cleanNewNick = newNickRaw.trim().replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const cleanEmail = newEmailRaw.trim();
+
+      if (!currentNickname && !currentUserUid && !(firebaseUser && firebaseUser.email)) {
         showToast('Iniciá sesión primero', 'error');
         return;
       }
-      if (!newPass) {
-        showToast('Ingresá la nueva contraseña', 'error');
-        return;
+
+      if (newPass) {
+        if (newPass.length < 6) {
+          showToast('La contraseña debe tener al menos 6 caracteres', 'error');
+          return;
+        }
+        if (newPass !== confirmPass) {
+          showToast('Las contraseñas no coinciden', 'error');
+          return;
+        }
       }
-      if (newPass.length < 6) {
-        showToast('La contraseña debe tener al menos 6 caracteres', 'error');
-        return;
-      }
-      if (newPass !== confirmPass) {
-        showToast('Las contraseñas no coinciden', 'error');
-        return;
-      }
-      if (!db) {
-        showToast('Base de datos no disponible', 'error');
-        return;
-      }
+
+      showToast('Guardando cambios de seguridad...', 'info');
+
       try {
-        await db.collection('plux_usuarios').doc(currentNickname).set({
-          password: newPass
-        }, { merge: true });
-        showToast('Contraseña actualizada correctamente', 'success');
+        const updates = {};
+        if (newPass) updates.password = newPass;
+        if (cleanEmail) {
+          updates.email = cleanEmail;
+          localStorage.setItem('Plux_UserProfile_Email', cleanEmail);
+          const emailEl = document.getElementById('profileEmail');
+          if (emailEl) emailEl.innerText = cleanEmail;
+        }
+
+        const oldNick = currentNickname;
+        if (cleanNewNick && cleanNewNick !== oldNick) {
+          if (cleanNewNick.length < 3) {
+            showToast('El nickname debe tener al menos 3 caracteres', 'error');
+            return;
+          }
+          if (typeof db !== 'undefined' && db) {
+            const checkDoc = await db.collection('plux_usuarios').doc(cleanNewNick).get();
+            if (checkDoc.exists) {
+              showToast(`El nickname @${cleanNewNick} ya está en uso`, 'error');
+              return;
+            }
+            let oldData = {};
+            if (oldNick) {
+              const oldDoc = await db.collection('plux_usuarios').doc(oldNick).get();
+              if (oldDoc.exists) oldData = oldDoc.data() || {};
+            }
+            await db.collection('plux_usuarios').doc(cleanNewNick).set({
+              ...oldData,
+              ...updates,
+              nickname: cleanNewNick,
+              ultimaConexion: new Date().toISOString()
+            });
+          }
+          currentNickname = cleanNewNick;
+          localStorage.setItem('Plux_CurrentNickname', cleanNewNick);
+          const nameEl = document.getElementById('profileName');
+          if (nameEl) nameEl.innerText = cleanNewNick;
+        } else if (oldNick && typeof db !== 'undefined' && db && Object.keys(updates).length > 0) {
+          await db.collection('plux_usuarios').doc(oldNick).set(updates, { merge: true });
+        }
+
+        updateUserButtonDisplay();
+        showToast('Datos de cuenta actualizados correctamente ✨', 'success');
         cerrarSeguridad();
         if (document.getElementById('seguridad-new-password')) document.getElementById('seguridad-new-password').value = '';
         if (document.getElementById('seguridad-confirm-password')) document.getElementById('seguridad-confirm-password').value = '';
       } catch (e) {
-        console.error("Error updating password:", e);
-        showToast('Error al actualizar contraseña', 'error');
+        console.error("Error updating security info:", e);
+        showToast('Error al actualizar datos de seguridad', 'error');
       }
     }
+    window.guardarNuevaContrasena = guardarNuevaContrasena;
 
     function abrirInfo() {
       const modal = document.getElementById('modal-info');
@@ -7195,9 +7888,27 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       vueltaPrecioGlobal = 0;
       vueltaCostosAdicionales = [];
       syncCode = null;
+      localStorage.removeItem('PluxSyncCode');
       loadedTripIndex = null;
       window.currentTripRole = 'editor';
       
+      // Reset lista de viajeros y UI
+      listaViajeros = [];
+      nombresPersonasGlobal = '';
+      const fNp = document.getElementById('nombresPersonas'); if (fNp) fNp.value = '';
+      const fChip = document.getElementById('traveler-chip-input'); if (fChip) fChip.value = '';
+      if (typeof window.renderTravelerChips === 'function') window.renderTravelerChips();
+
+      // Reset ID de viaje e inicializar chat nuevo y limpio
+      currentTripId = 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
+      if (typeof pluxChatUnsubscribe === 'function' && pluxChatUnsubscribe) {
+        pluxChatUnsubscribe();
+        pluxChatUnsubscribe = null;
+      }
+      if (typeof initNewTripChatChannel === 'function') {
+        initNewTripChatChannel();
+      }
+
       // Reset inputs
       const fSal = document.getElementById('lugarSalida'); if (fSal) fSal.value = '';
       const fPer = document.getElementById('numPersonas'); if (fPer) fPer.value = 1;
@@ -7223,9 +7934,27 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       vueltaPrecioGlobal = 0;
       vueltaCostosAdicionales = [];
       syncCode = null;
+      localStorage.removeItem('PluxSyncCode');
       loadedTripIndex = null;
       window.currentTripRole = 'editor';
       
+      // Reset lista de viajeros y UI
+      listaViajeros = [];
+      nombresPersonasGlobal = '';
+      const fNp = document.getElementById('nombresPersonas'); if (fNp) fNp.value = '';
+      const fChip = document.getElementById('traveler-chip-input'); if (fChip) fChip.value = '';
+      if (typeof window.renderTravelerChips === 'function') window.renderTravelerChips();
+
+      // Reset ID de viaje e inicializar chat nuevo y limpio
+      currentTripId = 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
+      if (typeof pluxChatUnsubscribe === 'function' && pluxChatUnsubscribe) {
+        pluxChatUnsubscribe();
+        pluxChatUnsubscribe = null;
+      }
+      if (typeof initNewTripChatChannel === 'function') {
+        initNewTripChatChannel();
+      }
+
       // Reset inputs
       const fSal = document.getElementById('lugarSalida'); if (fSal) fSal.value = '';
       const fPer = document.getElementById('numPersonas'); if (fPer) fPer.value = 1;
@@ -7768,9 +8497,161 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   // PLUX SOCIAL CHAT (INDIVIDUAL & GRUPAL - REALTIME FIRESTORE & LOCAL ENGINE)
   // ==========================================================================
   
-  let pluxActiveChatId = 'trip_group';
+  let pluxActiveChatId = null;
   let pluxSocialChats = JSON.parse(localStorage.getItem('PluxSocialChats_V2') || '{}');
   let pluxChatUnsubscribe = null;
+
+  function getActiveTripChat() {
+    const tripChatId = getTripChatChannelId();
+    ensureChatChannel();
+    return pluxSocialChats[tripChatId];
+  }
+  window.getActiveTripChat = getActiveTripChat;
+
+  function initNewTripChatChannel() {
+    const tripChatId = getTripChatChannelId();
+    pluxActiveChatId = tripChatId;
+    if (!pluxSocialChats) pluxSocialChats = {};
+    const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Vos';
+    pluxSocialChats[tripChatId] = {
+      id: tripChatId,
+      tripId: getCurrentTripId(),
+      type: 'group',
+      name: 'Viaje Nuevo ✈️',
+      participants: [myNick],
+      messages: []
+    };
+    localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+  }
+  window.initNewTripChatChannel = initNewTripChatChannel;
+
+  function migrarChatALocalACodigo(code, oldTripId) {
+    if (!code) return;
+    const newChatId = `trip_${code}`;
+    const oldChatId = oldTripId ? `trip_${oldTripId}` : null;
+    if (!pluxSocialChats) pluxSocialChats = {};
+
+    let msgsToMigrate = [];
+    if (oldChatId && pluxSocialChats[oldChatId] && pluxSocialChats[oldChatId].messages?.length > 0) {
+      msgsToMigrate = [...pluxSocialChats[oldChatId].messages];
+      delete pluxSocialChats[oldChatId];
+    } else if (pluxSocialChats['trip_group'] && pluxSocialChats['trip_group'].messages?.length > 0) {
+      msgsToMigrate = [...pluxSocialChats['trip_group'].messages];
+      delete pluxSocialChats['trip_group'];
+    }
+
+    const tripNames = (typeof destinos !== 'undefined' && destinos.length > 0)
+      ? destinos.map(d => d.nombre).join(' & ')
+      : 'Mi Viaje';
+
+    if (!pluxSocialChats[newChatId]) {
+      pluxSocialChats[newChatId] = {
+        id: newChatId,
+        tripId: code,
+        type: 'group',
+        name: `Viaje a ${tripNames} ✈️`,
+        participants: (typeof getTripParticipants === 'function') ? getTripParticipants() : [],
+        messages: msgsToMigrate
+      };
+    } else if (msgsToMigrate.length > 0 && pluxSocialChats[newChatId].messages.length === 0) {
+      pluxSocialChats[newChatId].messages = msgsToMigrate;
+    }
+
+    pluxActiveChatId = newChatId;
+    localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+    setupFirestoreRealtimeChat();
+  }
+  window.migrarChatALocalACodigo = migrarChatALocalACodigo;
+
+  function sumarUsuarioAlChatDelViaje(nickname, motivo = 'invitado') {
+    if (!nickname) return;
+    const cleanNick = nickname.trim().replace(/^@/, '');
+    if (!cleanNick) return;
+
+    // 1. Asegurar que esté en listaViajeros
+    const displayTag = '@' + cleanNick;
+    if (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros)) {
+      const existsInViajeros = listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === cleanNick.toLowerCase());
+      if (!existsInViajeros) {
+        listaViajeros.push(displayTag);
+        if (typeof window.renderTravelerChips === 'function') window.renderTravelerChips();
+        if (typeof autoSave === 'function') autoSave();
+      }
+    }
+
+    // 2. Asegurar que el chat del viaje exista y sumarlo a participantes
+    ensureChatChannel();
+    const tripChatId = getTripChatChannelId();
+    const chat = pluxSocialChats[tripChatId] || getActiveTripChat();
+    if (chat) {
+      if (!Array.isArray(chat.participants)) {
+        chat.participants = [];
+      }
+      if (!chat.participants.some(p => p.toLowerCase().replace(/^@/, '') === cleanNick.toLowerCase())) {
+        chat.participants.push(cleanNick);
+      }
+
+      // 3. Notificación de sistema en el chat
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const actionText = motivo === 'unido'
+        ? `👋 @${cleanNick} se unió al viaje y al chat grupal ✈️`
+        : `🎉 @${cleanNick} fue sumado(a) al viaje y al chat grupal ✈️`;
+
+      const isDup = chat.messages.some(m => m.isSystem && m.text === actionText && (Date.now() - (m.timestampMs || 0)) < 15000);
+      if (!isDup) {
+        const sysMsg = {
+          id: 'msg_sys_' + Date.now(),
+          sender: 'Plux',
+          text: actionText,
+          time: timeStr,
+          color: 'emerald',
+          isSystem: true,
+          timestampMs: Date.now()
+        };
+        chat.messages.push(sysMsg);
+        localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+
+        if (typeof db !== 'undefined' && db) {
+          const roomKey = getActiveChatRoomKey();
+          if (!roomKey.startsWith('trip_local_')) {
+            try {
+              const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+                ? firebase.firestore.FieldValue.serverTimestamp()
+                : Date.now();
+              db.collection('plux_chat_rooms').doc(roomKey).collection('mensajes').add({
+                sender: 'Plux',
+                text: actionText,
+                time: timeStr,
+                color: 'emerald',
+                isSystem: true,
+                timestamp: serverTs
+              }).catch(e => console.log('Firestore sys message error:', e));
+            } catch(e) {}
+          }
+        }
+      }
+    }
+
+    // 4. Asegurar que exista canal de chat directo DM para hablar 1 a 1
+    const dmId = 'dm_' + cleanNick.toLowerCase();
+    if (!pluxSocialChats[dmId]) {
+      pluxSocialChats[dmId] = {
+        id: dmId,
+        type: 'direct',
+        name: `@${cleanNick}`,
+        targetUser: cleanNick,
+        messages: []
+      };
+      localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+    }
+
+    // 5. Actualizar interfaz si está abierta
+    if (typeof renderActiveChatHeader === 'function') renderActiveChatHeader();
+    if (typeof renderChatMessages === 'function') renderChatMessages();
+    if (typeof renderChannelsList === 'function') renderChannelsList();
+  }
+  window.sumarUsuarioAlChatDelViaje = sumarUsuarioAlChatDelViaje;
 
   // Neon color palette
   const PLUX_NEON_COLORS = ['emerald', 'cyan', 'purple', 'pink', 'amber'];
@@ -7790,9 +8671,12 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   }
 
   function getActiveChatRoomKey() {
-    if (pluxActiveChatId === 'trip_group') {
-      const code = (typeof syncCode !== 'undefined' && syncCode) ? syncCode : (localStorage.getItem('PluxSyncCode') || 'trip_general');
-      return `trip_${code}`;
+    if (pluxActiveChatId && (pluxActiveChatId === 'trip_group' || pluxActiveChatId.startsWith('trip_'))) {
+      const code = (typeof syncCode !== 'undefined' && syncCode) ? syncCode : null;
+      if (code) {
+        return `trip_${code}`;
+      }
+      return `trip_local_${getCurrentTripId()}`;
     }
     if (pluxActiveChatId && pluxActiveChatId.startsWith('dm_')) {
       const myNick = (currentNickname || 'yo').toLowerCase().trim();
@@ -7800,24 +8684,44 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const pair = [myNick, otherNick].sort().join('_');
       return `dm_${pair}`;
     }
-    return pluxActiveChatId || 'trip_general';
+    return pluxActiveChatId || 'trip_local';
   }
 
   function ensureChatChannel() {
-    if (!pluxSocialChats[pluxActiveChatId]) {
-      const isGroup = pluxActiveChatId === 'trip_group';
+    if (!pluxSocialChats) pluxSocialChats = {};
+    const tripChatId = getTripChatChannelId();
+
+    if (!pluxSocialChats[tripChatId]) {
       const tripNames = (typeof destinos !== 'undefined' && destinos.length > 0)
         ? destinos.map(d => d.nombre).join(' & ')
         : 'Mi Viaje';
 
-      pluxSocialChats[pluxActiveChatId] = {
-        id: pluxActiveChatId,
-        type: isGroup ? 'group' : 'direct',
-        name: isGroup ? `Viaje a ${tripNames} ✈️` : pluxActiveChatId.replace('dm_', '@'),
+      pluxSocialChats[tripChatId] = {
+        id: tripChatId,
+        tripId: getCurrentTripId(),
+        type: 'group',
+        name: `Viaje a ${tripNames} ✈️`,
+        participants: (typeof getTripParticipants === 'function') ? getTripParticipants() : [],
         messages: []
       };
-      localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
     }
+
+    if (!pluxActiveChatId || pluxActiveChatId === 'trip_group') {
+      pluxActiveChatId = tripChatId;
+    }
+
+    if (!pluxSocialChats[pluxActiveChatId]) {
+      const isGroup = pluxActiveChatId.startsWith('trip_') || pluxActiveChatId.startsWith('group_');
+      pluxSocialChats[pluxActiveChatId] = {
+        id: pluxActiveChatId,
+        tripId: pluxActiveChatId.startsWith('trip_') ? getCurrentTripId() : null,
+        type: isGroup ? 'group' : 'direct',
+        name: isGroup ? (pluxActiveChatId.startsWith('group_') ? 'Grupo 👥' : 'Viaje ✈️') : pluxActiveChatId.replace('dm_', '@'),
+        participants: isGroup ? (pluxActiveChatId.startsWith('group_') ? [currentNickname || 'yo'] : getTripParticipants()) : [],
+        messages: []
+      };
+    }
+    localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
   }
 
   function setupFirestoreRealtimeChat() {
@@ -7828,6 +8732,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
     if (typeof db !== 'undefined' && db) {
       const roomKey = getActiveChatRoomKey();
+      if (roomKey.startsWith('trip_local_')) {
+        return;
+      }
       try {
         pluxChatUnsubscribe = db.collection('plux_chat_rooms')
           .doc(roomKey)
@@ -7855,15 +8762,20 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
   }
 
   function abrirChatSocial(chatId) {
-    if (chatId) pluxActiveChatId = chatId;
+    if (chatId) {
+      pluxActiveChatId = chatId;
+    } else {
+      pluxActiveChatId = getTripChatChannelId();
+    }
     ensureChatChannel();
 
     // Dynamic trip title update
-    if (pluxActiveChatId === 'trip_group' && pluxSocialChats['trip_group']) {
+    const activeTripId = getTripChatChannelId();
+    if (pluxSocialChats[activeTripId]) {
       const tripNames = (typeof destinos !== 'undefined' && destinos.length > 0)
         ? destinos.map(d => d.nombre).join(' & ')
         : 'Mi Viaje';
-      pluxSocialChats['trip_group'].name = `Viaje a ${tripNames} ✈️`;
+      pluxSocialChats[activeTripId].name = `Viaje a ${tripNames} ✈️`;
     }
 
     const modal = document.getElementById('modal-plux-chat-social');
@@ -7897,7 +8809,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
   function renderActiveChatHeader() {
     ensureChatChannel();
-    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    const chat = pluxSocialChats[pluxActiveChatId] || getActiveTripChat();
     if (!chat) return;
 
     const titleEl = document.getElementById('pluxChatActiveTitle');
@@ -7906,8 +8818,11 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     if (titleEl) titleEl.textContent = chat.name;
     if (subtitleEl) {
       if (chat.type === 'group') {
-        const count = (typeof colaboradores !== 'undefined' && colaboradores.length > 0) ? colaboradores.length + 1 : 1;
-        subtitleEl.textContent = `Grupo del viaje · ${count} ${count === 1 ? 'viajero' : 'viajeros'}`;
+        const participants = (typeof getTripParticipants === 'function') ? getTripParticipants() : [];
+        const count = Math.max(participants.length, 1);
+        const namesList = participants.slice(0, 3).map(p => p.startsWith('@') ? p : '@' + p).join(', ');
+        const extra = participants.length > 3 ? ` y ${participants.length - 3} más` : '';
+        subtitleEl.textContent = `Grupo del viaje · ${count} ${count === 1 ? 'viajero' : 'viajeros'} (${namesList}${extra})`;
       } else {
         subtitleEl.textContent = `Chat Directo · ${chat.targetUser ? '@' + chat.targetUser : 'En línea'}`;
       }
@@ -7919,7 +8834,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     if (!timeline) return;
 
     ensureChatChannel();
-    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    const chat = pluxSocialChats[pluxActiveChatId] || getActiveTripChat();
     if (!chat || !chat.messages || chat.messages.length === 0) {
       timeline.innerHTML = `
         <div class="plux-chat-empty-state">
@@ -7953,6 +8868,15 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     const currentNickNorm = (currentNickname || 'Vos').toLowerCase();
 
     timeline.innerHTML = msgs.map(m => {
+      if (m.isSystem || m.cardType === 'system_notice') {
+        return `
+          <div class="plux-msg-system-row">
+            <span class="plux-msg-system-notice">
+              ${escapeHtml(m.text)}
+            </span>
+          </div>
+        `;
+      }
       const isSelf = m.isSelf || (m.sender && m.sender.toLowerCase() === currentNickNorm) || (m.sender && m.sender.toLowerCase() === 'vos');
       const side = isSelf ? 'right' : 'left';
       const color = m.color || getParticipantColor(m.sender);
@@ -8057,13 +8981,82 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     if (!listEl) return;
 
     ensureChatChannel();
-    const channels = Object.values(pluxSocialChats);
+    const activeTripChatId = getTripChatChannelId();
+    const activeTripChat = pluxSocialChats[activeTripChatId];
+    
+    let html = '';
 
-    listEl.innerHTML = channels.map(c => {
+    // Canal Grupal del Viaje Activo
+    if (activeTripChat) {
+      const isActive = pluxActiveChatId === activeTripChatId;
+      const lastMsg = activeTripChat.messages && activeTripChat.messages.length > 0
+        ? (activeTripChat.messages[activeTripChat.messages.length - 1].text || 'Tarjeta adjunta')
+        : 'Sin mensajes aún';
+      const participants = (typeof getTripParticipants === 'function') ? getTripParticipants() : [];
+      const participantsCount = Math.max(participants.length, 1);
+      
+      html += `
+        <div style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; padding:6px 12px 4px 12px;">
+          Viaje Activo
+        </div>
+        <div class="plux-channel-item ${isActive ? 'active' : ''}" onclick="window.cambiarCanalSocial('${activeTripChatId}')">
+          <div style="font-size:1.2rem;">✈️</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:700; font-size:0.85rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(activeTripChat.name)}</div>
+            <div style="font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lastMsg)} · <span style="color:#10b981;">${participantsCount} ${participantsCount === 1 ? 'viajero' : 'viajeros'}</span></div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Grupos Personalizados (group_*)
+    const groupChannels = Object.values(pluxSocialChats).filter(c => c.id && c.id.startsWith('group_'));
+    if (groupChannels.length > 0) {
+      html += `
+        <div style="font-size:0.75rem; font-weight:700; color:#34d399; text-transform:uppercase; letter-spacing:0.5px; padding:12px 12px 4px 12px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Grupos</span>
+        </div>
+      `;
+      groupChannels.forEach(c => {
+        const isActive = c.id === pluxActiveChatId;
+        const lastMsg = c.messages && c.messages.length > 0 ? (c.messages[c.messages.length - 1].text || 'Tarjeta adjunta') : 'Sin mensajes aún';
+        const membersCount = c.participants ? c.participants.length : 1;
+        html += `
+          <div class="plux-channel-item ${isActive ? 'active' : ''}" onclick="window.cambiarCanalSocial('${c.id}')">
+            <div style="font-size:1.2rem;">👥</div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:700; font-size:0.85rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
+              <div style="font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lastMsg)} · <span style="color:#10b981;">${membersCount} miembros</span></div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Chats Directos (dm_*)
+    const directChannels = Object.values(pluxSocialChats).filter(c => c.id && c.id.startsWith('dm_'));
+    if (!directChannels.some(c => c.id === 'dm_pluxy')) {
+      directChannels.unshift({
+        id: 'dm_pluxy',
+        type: 'direct',
+        name: '🐾 Pluxy IA',
+        targetUser: 'Pluxy',
+        messages: []
+      });
+    }
+
+    html += `
+      <div style="font-size:0.75rem; font-weight:700; color:#a855f7; text-transform:uppercase; letter-spacing:0.5px; padding:12px 12px 4px 12px; display:flex; justify-content:space-between; align-items:center;">
+        <span>Chats Directos</span>
+      </div>
+    `;
+
+    directChannels.forEach(c => {
       const isActive = c.id === pluxActiveChatId;
       const lastMsg = c.messages && c.messages.length > 0 ? (c.messages[c.messages.length - 1].text || 'Tarjeta adjunta') : 'Sin mensajes aún';
-      const icon = c.type === 'group' ? '✈️' : '👤';
-      return `
+      const isPluxy = c.id === 'dm_pluxy';
+      const icon = isPluxy ? '🐾' : '👤';
+      html += `
         <div class="plux-channel-item ${isActive ? 'active' : ''}" onclick="window.cambiarCanalSocial('${c.id}')">
           <div style="font-size:1.2rem;">${icon}</div>
           <div style="flex:1; min-width:0;">
@@ -8072,7 +9065,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           </div>
         </div>
       `;
-    }).join('');
+    });
+
+    listEl.innerHTML = html;
   }
 
   function cambiarCanalSocial(chatId) {
@@ -8130,7 +9125,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     input.value = '';
 
     ensureChatChannel();
-    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    const chat = pluxSocialChats[pluxActiveChatId] || getActiveTripChat();
     if (!chat) return;
 
     const myName = currentNickname || 'Vos';
@@ -8154,7 +9149,8 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     // Send to Firestore in real-time if connected
     if (typeof db !== 'undefined' && db) {
       const roomKey = getActiveChatRoomKey();
-      try {
+      if (!roomKey.startsWith('trip_local_')) {
+        try {
         const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
           ? firebase.firestore.FieldValue.serverTimestamp()
           : Date.now();
@@ -8170,8 +9166,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             timestamp: serverTs
           })
           .catch(e => console.log('Firestore add message error:', e));
-      } catch (e) {
-        console.log('Error enviando mensaje a Firestore:', e);
+        } catch (e) {
+          console.log('Error enviando mensaje a Firestore:', e);
+        }
       }
     }
 
@@ -8283,7 +9280,7 @@ Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
 
   function enviarCardChatSocial(cardPayload) {
     ensureChatChannel();
-    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    const chat = pluxSocialChats[pluxActiveChatId] || getActiveTripChat();
     if (!chat) return;
 
     const myName = currentNickname || 'Vos';
@@ -8333,7 +9330,7 @@ Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
   }
 
   function toggleChecklistItemInChat(msgId, itemIdx) {
-    const chat = pluxSocialChats[pluxActiveChatId] || pluxSocialChats['trip_group'];
+    const chat = pluxSocialChats[pluxActiveChatId] || getActiveTripChat();
     if (!chat || !chat.messages) return;
     const msg = chat.messages.find(m => m.id === msgId);
     if (msg && msg.cardData && msg.cardData.items && msg.cardData.items[itemIdx]) {
@@ -8366,16 +9363,15 @@ Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
     if (!container) return;
 
     const friends = (typeof getStoredFriends === 'function') ? getStoredFriends() : [];
-    const colabs = (typeof colaboradores !== 'undefined' && Array.isArray(colaboradores)) ? colaboradores : [];
-    const travelers = (typeof tripTravelers !== 'undefined' && Array.isArray(tripTravelers)) ? tripTravelers : [];
+    const tripParticipants = (typeof getTripParticipants === 'function') ? getTripParticipants() : [];
 
     const currentNorm = (currentNickname || '').toLowerCase();
     const contactSet = new Set();
     
-    [...friends, ...colabs, ...travelers].forEach(c => {
+    [...friends, ...tripParticipants].forEach(c => {
       if (typeof c === 'string' && c.trim()) {
         const clean = c.trim().replace(/^@/, '');
-        if (clean.toLowerCase() !== currentNorm) contactSet.add(clean);
+        if (clean.toLowerCase() !== currentNorm && clean.toLowerCase() !== 'vos') contactSet.add(clean);
       }
     });
 
@@ -8444,9 +9440,9 @@ Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
 
     // Verificar si ya es un amigo o colaborador local
     const isKnownFriend = (typeof getStoredFriends === 'function' ? getStoredFriends() : []).some(f => (typeof f === 'string' ? f.toLowerCase().replace(/^@/, '') : '') === cleanNick);
-    const isKnownColab = (typeof colaboradores !== 'undefined' ? colaboradores : []).some(c => (typeof c === 'string' ? c.toLowerCase().replace(/^@/, '') : '') === cleanNick);
+    const isKnownParticipant = (typeof getTripParticipants === 'function' ? getTripParticipants() : []).some(p => p.toLowerCase().replace(/^@/, '') === cleanNick);
     
-    let userExists = isKnownFriend || isKnownColab;
+    let userExists = isKnownFriend || isKnownParticipant;
     let targetDisplayName = rawNick;
     let targetPhoto = null;
 

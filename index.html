@@ -104,7 +104,7 @@
   <script src="/plux/firebase/firebase-database-compat.js"></script>
   <script src="/plux/firebase/firebase-firestore-compat.js"></script>
   <script src="/plux/firebase/firebase-analytics-compat.js"></script>
-  <script defer src="/plux/script.js?v=1788900000000"></script>
+  <script defer src="/plux/script.js?v=1788902500000"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -1000,8 +1000,18 @@
             <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Nombre:</span>
             <div id="friendDetailFullName" style="font-size:0.95rem; color:var(--texto); font-weight:600;"></div>
           </div>
+          <div style="display:flex; gap:16px;">
+            <div id="friendDetailAgeRow" style="display:none; flex:1;">
+              <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Edad:</span>
+              <div id="friendDetailAge" style="font-size:0.95rem; color:var(--naranja); font-weight:600;"></div>
+            </div>
+            <div id="friendDetailGenderRow" style="display:none; flex:1;">
+              <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Género:</span>
+              <div id="friendDetailGender" style="font-size:0.95rem; color:#a855f7; font-weight:600;"></div>
+            </div>
+          </div>
           <div id="friendDetailLocationRow" style="display:none;">
-            <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Residencia:</span>
+            <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Residencia / Ciudad:</span>
             <div id="friendDetailLocation" style="font-size:0.9rem; color:var(--verde);"></div>
           </div>
           <div id="friendDetailStyleRow" style="display:none;">
@@ -1011,6 +1021,9 @@
           <div id="friendDetailBioRow" style="display:none;">
             <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Sobre mí:</span>
             <div id="friendDetailBio" style="font-size:0.85rem; color:var(--texto); font-style:italic; line-height:1.4;"></div>
+          </div>
+          <div id="friendDetailPrivateNotice" style="display:none; font-size:0.8rem; color:#94a3b8; text-align:center; padding:6px;">
+            🔒 Este viajero mantiene parte de su información en privado.
           </div>
         </div>
 
@@ -1192,10 +1205,21 @@
           <input type="hidden" id="info-travel-style" value="mochilero">
         </div>
 
-        <!-- Bio / Sobre mí -->
-        <div>
-          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Sobre mí (Bio):</label>
-          <textarea id="info-bio" rows="3" placeholder="Contanos sobre tus viajes o intereses..." style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box; resize:none;"></textarea>
+        <!-- Privacidad / Opciones de visibilidad -->
+        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="font-size:0.8rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px;">🔒 Privacidad de tu perfil</div>
+          <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--texto); cursor:pointer;">
+            <input type="checkbox" id="info-mostrar-perfil" checked style="accent-color:var(--verde); width:16px; height:16px;">
+            <span>Mostrar mi perfil e info a amigos y compañeros de viaje</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--texto); cursor:pointer;">
+            <input type="checkbox" id="info-mostrar-edad" checked style="accent-color:var(--verde); width:16px; height:16px;">
+            <span>Mostrar mi edad en mi perfil público</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--texto); cursor:pointer;">
+            <input type="checkbox" id="info-mostrar-ciudad" checked style="accent-color:var(--verde); width:16px; height:16px;">
+            <span>Mostrar mi ciudad de residencia</span>
+          </label>
         </div>
 
         <button onclick="window.guardarInfoPersonal()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer; width:100%; margin-top:4px;">

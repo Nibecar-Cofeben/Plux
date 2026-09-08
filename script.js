@@ -1798,8 +1798,36 @@
     window.eliminarViajeroChip = function(idx) {
       if (idx >= 0 && idx < listaViajeros.length) {
         const removed = listaViajeros[idx];
+        const cleanRemoved = (removed || '').toLowerCase().replace(/^@/, '').trim();
         listaViajeros.splice(idx, 1);
+        nombresPersonasGlobal = listaViajeros.join(', ');
         window.renderTravelerChips();
+
+        // Actualizar el viaje guardado si está cargado
+        const trips = (typeof getStoredTrips === 'function') ? getStoredTrips() : [];
+        if (loadedTripIndex !== null && trips[loadedTripIndex]) {
+          trips[loadedTripIndex].listaViajeros = [...listaViajeros];
+          trips[loadedTripIndex].nombresPersonas = nombresPersonasGlobal;
+          if (typeof saveTrips === 'function') saveTrips(trips);
+        }
+
+        // Remover participante del chat grupal del viaje
+        if (typeof getTripChatChannelId === 'function' && typeof pluxSocialChats !== 'undefined' && pluxSocialChats) {
+          const tripChatId = getTripChatChannelId();
+          if (pluxSocialChats[tripChatId] && Array.isArray(pluxSocialChats[tripChatId].participants)) {
+            pluxSocialChats[tripChatId].participants = pluxSocialChats[tripChatId].participants.filter(p => (typeof p === 'string' ? p.toLowerCase().replace(/^@/, '').trim() : '') !== cleanRemoved);
+            localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+          }
+        }
+
+        // Sincronizar en Firestore si el viaje es colaborativo en la nube
+        if (syncCode && typeof db !== 'undefined' && db) {
+          db.collection('plux_viajes_compartidos').doc(syncCode).set({
+            listaViajeros: listaViajeros,
+            nombresPersonas: nombresPersonasGlobal
+          }, { merge: true }).catch(console.warn);
+        }
+
         autoSave();
         if (document.getElementById('pantalla-resumen') && document.getElementById('pantalla-resumen').style.display === 'flex') {
           renderResumen();
@@ -1809,6 +1837,9 @@
         }
         if (typeof renderChannelsList === 'function') {
           renderChannelsList();
+        }
+        if (typeof showToast === 'function') {
+          showToast(`Viajero @${cleanRemoved} eliminado del viaje`, 'info');
         }
       }
     };
@@ -2454,12 +2485,14 @@
 
     // ================== CHAT IA AGENTE ==================
     let chatHistory = [];
-    const CHAT_SYSTEM = `Sos PluxIA, un asistente de viajes inteligente y amigable con capacidades AGENTES REALES. Tenés acceso completo al itinerario del usuario y podés modificarlo directamente.
+    const CHAT_SYSTEM = `Sos Pluxy, el asistente de viajes inteligente y compañero de rutas de Plux con capacidades AGENTES REALES. Tenés acceso completo al itinerario del usuario y podés modificarlo directamente.
+IMPORTANTE SOBRE TU IDENTIDAD: Sos Pluxy, un asistente de viajes inteligente y copiloto digital. NUNCA sos un perro, ni animal de 4 patas, ni mascota canina. Tu nombre es siempre Pluxy.
 
 Al final de tu respuesta podés incluir comandos especiales para ejecutar acciones simultáneamente:
 
 DESTINOS Y ESTRUCTURA:
 - [ACCION:DESTINO:Ciudad] → Agrega un nuevo destino al viaje (ej: [ACCION:DESTINO:Madrid] o [ACCION:DESTINO:Tokio]). REGLA: Reemplazá "Ciudad" por el nombre exacto de la ciudad real. NUNCA escribas la palabra "NombreDestino" ni pongas múltiples ciudades separadas por comas en un solo corchete. Usá un comando por ciudad.
+- [ACCION:ELIMINAR_DESTINO:Ciudad] → Elimina por completo ese destino del viaje (ej: [ACCION:ELIMINAR_DESTINO:Tokio])
 - [ACCION:LIMPIAR_DESTINO:Ciudad] → Borra todos los días de ese destino (ej: [ACCION:LIMPIAR_DESTINO:Madrid])
 - [ACCION:AGREGAR_DIA:Ciudad|DiaNumero] → Agrega un día específico (ej: [ACCION:AGREGAR_DIA:Roma|5])
 - [ACCION:ELIMINAR_DIA:Ciudad|DiaNumero] → Elimina un día
@@ -2979,6 +3012,24 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           const w = document.getElementById('welcome');
           if (w && w.style.display !== 'none' && typeof empezar === 'function') empezar();
           accionesEjecutadas = true;
+        });
+      });
+
+      // ELIMINAR_DESTINO / BORRAR_DESTINO
+      const accionesEliminarDest = [...respuesta.matchAll(/\[ACCION:(?:ELIMINAR_DESTINO|BORRAR_DESTINO):([^\]]+)\]/g)];
+      accionesEliminarDest.forEach((match) => {
+        const rawNombre = match[1].trim();
+        const cleanNames = sanitizeDestinoNombres(rawNombre);
+        cleanNames.forEach((nombre) => {
+          const destIndex = destinos.findIndex(d => d.nombre.toLowerCase().includes(nombre.toLowerCase()) || nombre.toLowerCase().includes(d.nombre.toLowerCase()));
+          if (destIndex !== -1) {
+            const destBorrado = destinos[destIndex];
+            destinos.splice(destIndex, 1);
+            if (typeof renderDestinos === 'function') renderDestinos();
+            if (typeof autoSave === 'function') autoSave();
+            if (typeof showToast === 'function') showToast(`🗑️ Destino "${destBorrado.nombre}" eliminado del viaje`, 'info');
+            accionesEjecutadas = true;
+          }
         });
       });
 
@@ -6622,6 +6673,20 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       if (sync) sincronizarPerfil();
     }
 
+    function renombrarViajeGuardado(index) {
+      const trips = getStoredTrips();
+      const trip = trips[index];
+      if (!trip) return;
+      const nuevoNombre = prompt('Ingresá el nuevo nombre para este viaje:', trip.nombre);
+      if (nuevoNombre && nuevoNombre.trim()) {
+        trip.nombre = nuevoNombre.trim();
+        saveTrips(trips);
+        renderTripLists();
+        showToast(`Viaje renombrado a "${trip.nombre}" ✨`, 'success');
+      }
+    }
+    window.renombrarViajeGuardado = renombrarViajeGuardado;
+
     function renderTripLists() {
       const trips = getStoredTrips();
       const templates = getStoredTemplates();
@@ -6638,12 +6703,15 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           const dests = (trip.destinos || []).map(d => d.nombre).join(', ') || 'Sin destinos';
           item.innerHTML = `
             <div class="trip-info" onclick="cargarViaje(${index})" style="cursor:pointer;flex:1;">
-              <h4>${trip.nombre}</h4>
-              <small style="color:var(--gris);">${new Date(trip.fecha).toLocaleDateString()} · ${dests}</small>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h4 style="margin:0;">${escapeHtml(trip.nombre)}</h4>
+                <button onclick="event.stopPropagation(); window.renombrarViajeGuardado(${index})" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:0.85rem; padding:2px 4px;" title="Renombrar viaje">✏️</button>
+              </div>
+              <small style="color:var(--gris);">${new Date(trip.fecha).toLocaleDateString()} · ${escapeHtml(dests)}</small>
             </div>
             <div class="trip-actions">
               <button onclick="event.stopPropagation();abrirCompartirModal()" style="background:var(--azul);" title="Compartir">🔗</button>
-              <button onclick="event.stopPropagation();eliminarViaje(${index})" style="background:#dc2626;">×</button>
+              <button onclick="event.stopPropagation();eliminarViaje(${index})" style="background:#dc2626;" title="Eliminar">×</button>
             </div>
           `;
           tripList.appendChild(item);
@@ -6661,7 +6729,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           item.style.cursor = 'pointer';
           item.innerHTML = `
             <div class="trip-info" onclick="cargarPlantilla(${index})" style="cursor:pointer;flex:1;">
-              <h4>${tpl.nombre}</h4>
+              <h4>${escapeHtml(tpl.nombre)}</h4>
               <small>Plantilla · Click para cargar</small>
             </div>
             <div class="trip-actions">
@@ -6678,8 +6746,15 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
     function guardarViaje() {
       if (!checkEditPermission()) return;
-      const nombre = document.getElementById('nombreViaje').value.trim();
-      if (!nombre) { showToast('Escribe un nombre para el viaje', 'error'); return; }
+      let nombre = document.getElementById('nombreViaje').value.trim();
+      if (!nombre) {
+        if (destinos && destinos.length > 0) {
+          const nombres = destinos.map(d => d.nombre).slice(0, 3).join(' & ');
+          nombre = `Viaje a ${nombres}`;
+        } else {
+          nombre = currentNickname ? `Viaje de @${currentNickname}` : 'Mi Viaje';
+        }
+      }
 
       const tripId = getCurrentTripId();
       const viaje = {
@@ -7281,6 +7356,37 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         if (sync) sincronizarPerfil();
     }
 
+    function getFriendsProfilesCache() {
+      try {
+        return JSON.parse(localStorage.getItem('Plux_Friends_Cache') || '{}');
+      } catch(e) { return {}; }
+    }
+
+    function saveFriendsProfilesCache(cache) {
+      try {
+        localStorage.setItem('Plux_Friends_Cache', JSON.stringify(cache));
+      } catch(e) {}
+    }
+
+    async function fetchFriendProfile(cleanNick) {
+      if (!cleanNick || typeof db === 'undefined' || !db) return null;
+      try {
+        const docSnap = await db.collection('plux_usuarios').doc(cleanNick.toLowerCase()).get();
+        if (docSnap.exists) {
+          const d = docSnap.data() || {};
+          const cache = getFriendsProfilesCache();
+          cache[cleanNick.toLowerCase()] = {
+            photoUrl: d.photoUrl || null,
+            fullname: d.nombreCompleto || d.info_personal?.fullname || null,
+            location: d.residencia || d.info_personal?.location || null
+          };
+          saveFriendsProfilesCache(cache);
+          return cache[cleanNick.toLowerCase()];
+        }
+      } catch(e) {}
+      return null;
+    }
+
     function abrirAmigos() {
         if (!currentUserUid) {
             showToast('Iniciá sesión para ver tus amigos y familia', 'info');
@@ -7306,297 +7412,406 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             return;
         }
         
+        const cache = getFriendsProfilesCache();
         let html = '';
+        const toFetch = [];
+
         friends.forEach(friend => {
+            const clean = (typeof friend === 'string' ? friend : '').replace(/^@/, '').trim();
+            if (!clean) return;
+            const friendData = cache[clean.toLowerCase()] || {};
+            const photoUrl = friendData.photoUrl || null;
+            if (!cache[clean.toLowerCase()]) toFetch.push(clean);
+
+            const avatarInner = photoUrl
+              ? `<img src="${photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`
+              : clean.substring(0, 2).toUpperCase();
+
             html += `
                 <div class="friend-item" style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:16px; padding:12px 16px; gap:12px;">
-                    <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="abrirDetalleAmigo('${friend}')">
-                        <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:0.95rem;">
-                            ${friend.substring(0, 2).toUpperCase()}
-                         </div>
-                         <div style="display:flex; flex-direction:column;">
-                             <strong style="color:white; font-size:0.95rem;">@${friend}</strong>
-                             <span style="font-size:0.75rem; color:var(--gris);">Ver perfil</span>
-                         </div>
-                     </div>
-                     <div style="display:flex; gap:6px;">
-                         <button onclick="window.cerrarAmigos(); window.iniciarChatConUsuario('${friend}');" style="background:rgba(52,211,153,0.15); border:1px solid var(--verde); width:32px; height:32px; border-radius:8px; color:var(--verde); display:flex; align-items:center; justify-content:center; cursor:pointer; padding: 0;" title="Chatear con @${friend}">
-                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                         </button>
-                         <button onclick="abrirDetalleAmigo('${friend}')" style="background:rgba(96,165,250,0.1); border:1px solid var(--azul); width:32px; height:32px; border-radius:8px; color:var(--azul); display:flex; align-items:center; justify-content:center; cursor:pointer; padding: 0;" title="Ver stats">
-                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                         </button>
-                         <button onclick="eliminarAmigo('${friend}')" style="background:rgba(239,68,68,0.1); border:1px solid var(--rojo); width:32px; height:32px; border-radius:8px; color:var(--rojo); display:flex; align-items:center; justify-content:center; cursor:pointer; padding: 0;" title="Eliminar">
-                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                         </button>
-                     </div>
-                 </div>
-             `;
+                    <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="abrirDetalleAmigo('${escapeHtml(clean)}')">
+                        <div class="friend-avatar-circle" data-nick="${clean.toLowerCase()}" style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:0.95rem; overflow:hidden; flex-shrink:0;">
+                            ${avatarInner}
+                        </div>
+                        <div style="display:flex; flex-direction:column; min-width:0;">
+                            <strong style="color:white; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${escapeHtml(clean)}</strong>
+                            <span style="font-size:0.75rem; color:var(--gris);">Ver perfil</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                        <button onclick="window.cerrarAmigos(); window.iniciarChatConUsuario('${escapeHtml(clean)}');" style="background:rgba(52,211,153,0.15); border:1px solid var(--verde); width:32px; height:32px; border-radius:8px; color:var(--verde); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;" title="Chatear con @${escapeHtml(clean)}">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        </button>
+                        <button onclick="abrirDetalleAmigo('${escapeHtml(clean)}')" style="background:rgba(96,165,250,0.1); border:1px solid var(--azul); width:32px; height:32px; border-radius:8px; color:var(--azul); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;" title="Ver perfil">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </button>
+                        <button onclick="eliminarAmigo('${escapeHtml(clean)}')" style="background:rgba(239,68,68,0.1); border:1px solid var(--rojo); width:32px; height:32px; border-radius:8px; color:var(--rojo); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;" title="Eliminar de amigos">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
         });
         container.innerHTML = html;
-     }
 
-     async function agregarAmigoPorNickname() {
-         const input = document.getElementById('friend-nickname-input');
-         const rawNick = input ? input.value.trim() : '';
-         const nick = rawNick.toLowerCase().replace(/[^a-z0-9]/g, '');
-         
-         if (!nick) {
-             showToast('Ingresá un nickname', 'error');
-             return;
-         }
-         if (nick === currentNickname) {
-             showToast('No podés agregarte a vos mismo', 'error');
-             return;
-         }
-         
-         const friends = getStoredFriends();
-         if (friends.includes(nick)) {
-             showToast(`@${nick} ya está en tu lista`, 'info');
-             return;
-         }
-         
-         if (!db) {
-             showToast('Base de datos no disponible', 'error');
-             return;
-         }
-         
-         try {
-             const userDoc = await db.collection('plux_usuarios').doc(nick).get();
-             if (!userDoc.exists) {
-                 showToast(`El usuario @${nick} no existe en Plux`, 'error');
-                 return;
-             }
-             
-             friends.push(nick);
-             saveFriends(friends);
-             showToast(`@${nick} agregado correctamente`, 'success');
-             if (input) input.value = '';
-             renderAmigosList();
-         } catch(e) {
-             console.error('Error al agregar amigo:', e);
-             showToast('Error al conectar con la base de datos', 'error');
-         }
-     }
+        // Asynchronously fetch uncached profiles
+        if (toFetch.length > 0 && typeof db !== 'undefined' && db) {
+            toFetch.forEach(async (fNick) => {
+                const p = await fetchFriendProfile(fNick);
+                if (p && p.photoUrl) {
+                    const el = container.querySelector(`.friend-avatar-circle[data-nick="${fNick.toLowerCase()}"]`);
+                    if (el) el.innerHTML = `<img src="${p.photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+                }
+            });
+        }
+    }
 
-     function eliminarAmigo(friendNick) {
-         if (!confirm(`¿Estás seguro de que querés eliminar a @${friendNick} de tu lista?`)) return;
-         let friends = getStoredFriends();
-         friends = friends.filter(f => f !== friendNick);
-         saveFriends(friends);
-         showToast(`@${friendNick} eliminado`, 'info');
-         renderAmigosList();
-     }
+    async function agregarAmigoPorNickname() {
+        const input = document.getElementById('friend-nickname-input');
+        const rawNick = input ? input.value.trim() : '';
+        const nick = rawNick.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        if (!nick) {
+            showToast('Ingresá un nickname', 'error');
+            return;
+        }
+        if (nick === currentNickname?.toLowerCase()) {
+            showToast('No podés agregarte a vos mismo', 'error');
+            return;
+        }
+        
+        const friends = getStoredFriends();
+        if (friends.some(f => (typeof f === 'string' ? f.toLowerCase().replace(/^@/, '') : '') === nick)) {
+            showToast(`@${nick} ya está en tu lista`, 'info');
+            return;
+        }
+        
+        if (!db) {
+            showToast('Base de datos no disponible', 'error');
+            return;
+        }
+        
+        try {
+            const userDoc = await db.collection('plux_usuarios').doc(nick).get();
+            if (!userDoc.exists) {
+                showToast(`El usuario @${nick} no existe en Plux`, 'error');
+                return;
+            }
+            
+            const uData = userDoc.data() || {};
+            const cache = getFriendsProfilesCache();
+            cache[nick] = {
+                photoUrl: uData.photoUrl || null,
+                fullname: uData.nombreCompleto || uData.info_personal?.fullname || null,
+                location: uData.residencia || uData.info_personal?.location || null
+            };
+            saveFriendsProfilesCache(cache);
 
-     async function abrirDetalleAmigo(friendNick) {
-         const modal = document.getElementById('modal-detalle-amigo');
-         if (modal) modal.style.display = 'flex';
-         
-         const cleanNick = (friendNick || '').replace(/^@/, '').trim();
-         const titleNick = `@${cleanNick}`;
-         
-         // Set loading states
-         const nameHeaderEl = document.getElementById('friendDetailName');
-         if (nameHeaderEl) nameHeaderEl.innerText = titleNick;
-         const connEl = document.getElementById('friendDetailConnection');
-         if (connEl) connEl.innerText = 'Cargando...';
-         const setStat = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-         setStat('friendStatTrips', '--');
-         setStat('friendStatDestinations', '--');
-         setStat('friendStatDays', '--');
-         setStat('friendStatEvents', '--');
-         setStat('friendStatCountries', '--');
-         
-         const infoCard = document.getElementById('friend-personal-info-card');
-         if (infoCard) infoCard.style.display = 'none';
+            friends.push(nick);
+            saveFriends(friends);
+            showToast(`@${nick} agregado correctamente`, 'success');
+            if (input) input.value = '';
+            renderAmigosList();
+            if (typeof renderContactosNuevaConversacion === 'function') renderContactosNuevaConversacion();
+        } catch(e) {
+            console.error('Error al agregar amigo:', e);
+            showToast('Error al conectar con la base de datos', 'error');
+        }
+    }
 
-         if (!db) {
-             showToast('Base de datos no disponible', 'error');
-             return;
-         }
-         
-         try {
-             let data = null;
-             // 1. Try finding doc directly by cleanNick in plux_usuarios
-             const userDoc = await db.collection('plux_usuarios').doc(cleanNick).get();
-             if (userDoc.exists) {
-                 data = userDoc.data();
-             } else {
-                 // 2. Query where nickname == cleanNick in plux_usuarios
-                 const qSnap = await db.collection('plux_usuarios').where('nickname', '==', cleanNick).limit(1).get();
-                 if (!qSnap.empty) {
-                     data = qSnap.docs[0].data();
-                 } else {
-                     // 3. Query in users collection by id or nickname
-                     const uDoc = await db.collection('users').doc(cleanNick).get();
-                     if (uDoc.exists) {
-                         data = uDoc.data();
-                     } else {
-                         const qUsers = await db.collection('users').where('nickname', '==', cleanNick).limit(1).get();
-                         if (!qUsers.empty) {
-                             data = qUsers.docs[0].data();
-                         }
-                     }
-                 }
-             }
+    function eliminarAmigo(friendNick) {
+        const cleanNick = (friendNick || '').replace(/^@/, '').trim();
+        if (!confirm(`¿Estás seguro de que querés eliminar a @${cleanNick} de tu lista?`)) return;
+        let friends = getStoredFriends();
+        friends = friends.filter(f => (typeof f === 'string' ? f.toLowerCase().replace(/^@/, '').trim() : '') !== cleanNick.toLowerCase());
+        saveFriends(friends);
+        showToast(`@${cleanNick} eliminado de amigos`, 'info');
+        renderAmigosList();
+        if (typeof renderContactosNuevaConversacion === 'function') renderContactosNuevaConversacion();
+    }
 
-             if (!data) {
-                 if (connEl) connEl.innerText = 'Última conexión: No disponible';
-                 setStat('friendStatTrips', '0');
-                 setStat('friendStatDestinations', '0');
-                 setStat('friendStatDays', '0');
-                 setStat('friendStatEvents', '0');
-                 setStat('friendStatCountries', '0');
-                 return;
-             }
+    async function abrirDetalleAmigo(friendNick) {
+        const modal = document.getElementById('modal-detalle-amigo');
+        if (modal) modal.style.display = 'flex';
+        
+        const cleanNick = (friendNick || '').replace(/^@/, '').trim();
+        const titleNick = `@${cleanNick}`;
+        
+        // Set loading states
+        const nameHeaderEl = document.getElementById('friendDetailName');
+        if (nameHeaderEl) nameHeaderEl.innerText = titleNick;
+        const connEl = document.getElementById('friendDetailConnection');
+        if (connEl) connEl.innerText = 'Cargando...';
+        const setStat = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        setStat('friendStatTrips', '--');
+        setStat('friendStatDestinations', '--');
+        setStat('friendStatDays', '--');
+        setStat('friendStatEvents', '--');
+        setStat('friendStatCountries', '--');
+        
+        const infoCard = document.getElementById('friend-personal-info-card');
+        if (infoCard) infoCard.style.display = 'none';
 
-             const trips = data.viajes_guardados || [];
-             let totalDestinations = 0;
-             let totalDays = 0;
-             let totalEvents = 0;
-             let countries = new Set();
-             
-             // Format Last Connection safely
-             let connStr = 'Reciente';
-             if (data.ultimaConexion) {
-               try {
-                 let connDate;
-                 if (data.ultimaConexion && typeof data.ultimaConexion.toDate === 'function') {
-                   connDate = data.ultimaConexion.toDate();
-                 } else {
-                   connDate = new Date(data.ultimaConexion);
-                 }
-                 if (!isNaN(connDate.getTime())) {
-                   connStr = connDate.toLocaleDateString() + ' ' + connDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                 }
-               } catch(e) {}
-             }
-             if (connEl) connEl.innerText = `Última conexión: ${connStr}`;
+        if (!db) {
+            showToast('Base de datos no disponible', 'error');
+            return;
+        }
+        
+        try {
+            let data = null;
+            // 1. Try finding doc directly by cleanNick in plux_usuarios
+            const userDoc = await db.collection('plux_usuarios').doc(cleanNick.toLowerCase()).get();
+            if (userDoc.exists) {
+                data = userDoc.data();
+            } else {
+                // 2. Query where nickname == cleanNick in plux_usuarios
+                const qSnap = await db.collection('plux_usuarios').where('nickname', '==', cleanNick).limit(1).get();
+                if (!qSnap.empty) {
+                    data = qSnap.docs[0].data();
+                } else {
+                    // 3. Query in users collection by id or nickname
+                    const uDoc = await db.collection('users').doc(cleanNick.toLowerCase()).get();
+                    if (uDoc.exists) {
+                        data = uDoc.data();
+                    } else {
+                        const qUsers = await db.collection('users').where('nickname', '==', cleanNick).limit(1).get();
+                        if (!qUsers.empty) {
+                            data = qUsers.docs[0].data();
+                        }
+                    }
+                }
+            }
 
-             // Render Friend Personal Info (from nested or flat fields)
-             const rawPersonal = data.info_personal || data.infoPersonal || data.personalInfo || data.info || {};
-             const personalInfo = {
-               fullname: rawPersonal.fullname || data.nombreCompleto || data.fullname || data.nombre || '',
-               location: rawPersonal.location || data.residencia || data.location || data.ciudad || data.origen || '',
-               travelStyle: rawPersonal.travelStyle || data.estiloViaje || data.travelStyle || data.style || '',
-               bio: rawPersonal.bio || data.descripcion || data.bio || data.sobreMi || ''
-             };
+            if (!data) {
+                if (connEl) connEl.innerText = 'Última conexión: No disponible';
+                setStat('friendStatTrips', '0');
+                setStat('friendStatDestinations', '0');
+                setStat('friendStatDays', '0');
+                setStat('friendStatEvents', '0');
+                setStat('friendStatCountries', '0');
+                return;
+            }
 
-             let hasAnyInfo = false;
+            // Cache friend photo if found
+            if (data.photoUrl) {
+              const cache = getFriendsProfilesCache();
+              cache[cleanNick.toLowerCase()] = {
+                photoUrl: data.photoUrl,
+                fullname: data.nombreCompleto || data.info_personal?.fullname || null,
+                location: data.residencia || data.info_personal?.location || null
+              };
+              saveFriendsProfilesCache(cache);
+            }
 
-             const nameEl = document.getElementById('friendDetailFullName');
-             const nameRow = document.getElementById('friendDetailFullNameRow');
-             if (personalInfo.fullname && personalInfo.fullname.trim()) {
-               if (nameEl) nameEl.innerText = personalInfo.fullname.trim();
-               if (nameRow) nameRow.style.display = 'block';
-               hasAnyInfo = true;
-             } else if (nameRow) {
-               nameRow.style.display = 'none';
-             }
+            const trips = data.viajes_guardados || [];
+            let totalDestinations = 0;
+            let totalDays = 0;
+            let totalEvents = 0;
+            let countries = new Set();
+            
+            // Format Last Connection safely
+            let connStr = 'Reciente';
+            if (data.ultimaConexion) {
+              try {
+                let connDate;
+                if (data.ultimaConexion && typeof data.ultimaConexion.toDate === 'function') {
+                  connDate = data.ultimaConexion.toDate();
+                } else {
+                  connDate = new Date(data.ultimaConexion);
+                }
+                if (!isNaN(connDate.getTime())) {
+                  connStr = connDate.toLocaleDateString() + ' ' + connDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+              } catch(e) {}
+            }
+            if (connEl) connEl.innerText = `Última conexión: ${connStr}`;
 
-             const locEl = document.getElementById('friendDetailLocation');
-             const locRow = document.getElementById('friendDetailLocationRow');
-             if (personalInfo.location && personalInfo.location.trim()) {
-               if (locEl) locEl.innerText = personalInfo.location.trim();
-               if (locRow) locRow.style.display = 'block';
-               hasAnyInfo = true;
-             } else if (locRow) {
-               locRow.style.display = 'none';
-             }
+            // Render Friend Personal Info (respecting privacy toggles)
+            const rawPersonal = data.info_personal || data.infoPersonal || data.personalInfo || data.info || {};
+            const isProfilePublic = rawPersonal.mostrarPerfilPublico !== false;
+            const isAgePublic = rawPersonal.mostrarEdad !== false;
+            const isCityPublic = rawPersonal.mostrarCiudad !== false;
 
-             const styleEl = document.getElementById('friendDetailStyle');
-             const styleRow = document.getElementById('friendDetailStyleRow');
-             if (personalInfo.travelStyle) {
-               const styleMap = {
-                 'mochilero': 'Mochilero y Aventura',
-                 'relax': 'Relax y Playa',
-                 'cultural': 'Cultural y Museos',
-                 'gastronomico': 'Gastronómico',
-                 'urbano': 'Urbano y Noche',
-                 'lujo': 'Lujo y Confort'
-               };
-               if (styleEl) styleEl.innerText = styleMap[personalInfo.travelStyle] || personalInfo.travelStyle;
-               if (styleRow) styleRow.style.display = 'block';
-               hasAnyInfo = true;
-             } else if (styleRow) {
-               styleRow.style.display = 'none';
-             }
+            const personalInfo = {
+              fullname: isProfilePublic ? (rawPersonal.fullname || data.nombreCompleto || data.fullname || data.nombre || '') : '',
+              age: (isProfilePublic && isAgePublic) ? (rawPersonal.age || data.edad || '') : '',
+              gender: isProfilePublic ? (rawPersonal.gender || data.genero || '') : '',
+              location: (isProfilePublic && isCityPublic) ? (rawPersonal.location || data.residencia || data.location || data.ciudad || data.origen || '') : '',
+              travelStyle: isProfilePublic ? (rawPersonal.travelStyle || data.estiloViaje || data.travelStyle || data.style || '') : '',
+              bio: isProfilePublic ? (rawPersonal.bio || data.descripcion || data.bio || data.sobreMi || '') : ''
+            };
 
-             const bioEl = document.getElementById('friendDetailBio');
-             const bioRow = document.getElementById('friendDetailBioRow');
-             if (personalInfo.bio && personalInfo.bio.trim()) {
-               if (bioEl) bioEl.innerText = `"${personalInfo.bio.trim()}"`;
-               if (bioRow) bioRow.style.display = 'block';
-               hasAnyInfo = true;
-             } else if (bioRow) {
-               bioRow.style.display = 'none';
-             }
+            let hasAnyInfo = false;
 
-             if (infoCard) {
-               infoCard.style.display = hasAnyInfo ? 'flex' : 'none';
-             }
-             
-             // Set friend avatar if custom photo exists
-             const friendAvatarEl = document.getElementById('friendDetailAvatar');
-             if (friendAvatarEl) {
-               if (data.photoUrl) {
-                 friendAvatarEl.innerHTML = `<img src="${data.photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
-               } else {
-                 friendAvatarEl.innerHTML = `<div style="font-weight:bold; font-size:1.4rem;">${cleanNick.substring(0, 2).toUpperCase()}</div>`;
-               }
-             }
+            const nameEl = document.getElementById('friendDetailFullName');
+            const nameRow = document.getElementById('friendDetailFullNameRow');
+            if (personalInfo.fullname && personalInfo.fullname.trim()) {
+              if (nameEl) nameEl.innerText = personalInfo.fullname.trim();
+              if (nameRow) nameRow.style.display = 'block';
+              hasAnyInfo = true;
+            } else if (nameRow) {
+              nameRow.style.display = 'none';
+            }
 
-             trips.forEach(trip => {
-                 const dests = trip.destinos || [];
-                 totalDestinations += dests.length;
-                 dests.forEach(d => {
-                     if (d.pais) countries.add(d.pais.trim().toLowerCase());
-                     if (Array.isArray(d.actividades)) totalEvents += d.actividades.length;
-                     if (d.fechaInicio && d.fechaFin) {
-                         const start = new Date(d.fechaInicio);
-                         const end = new Date(d.fechaFin);
-                         const diffTime = Math.abs(end - start);
-                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                         if (!isNaN(diffDays)) totalDays += diffDays;
-                     }
-                 });
-             });
-             
-             document.getElementById('friendStatTrips').innerText = trips.length;
-             document.getElementById('friendStatDestinations').innerText = totalDestinations;
-             document.getElementById('friendStatDays').innerText = totalDays;
-             document.getElementById('friendStatEvents').innerText = totalEvents;
-             document.getElementById('friendStatCountries').innerText = countries.size;
-             
-              // Set click handlers for profile actions
-              const shareBtn = document.getElementById('friendDetailShareBtn');
-              if (shareBtn) shareBtn.onclick = () => compartirViajeConAmigo(cleanNick);
+            const ageEl = document.getElementById('friendDetailAge');
+            const ageRow = document.getElementById('friendDetailAgeRow');
+            if (personalInfo.age) {
+              if (ageEl) ageEl.innerText = `${personalInfo.age} años`;
+              if (ageRow) ageRow.style.display = 'block';
+              hasAnyInfo = true;
+            } else if (ageRow) {
+              ageRow.style.display = 'none';
+            }
 
-              const chatBtn = document.getElementById('friendDetailChatBtn');
-              if (chatBtn) {
-                chatBtn.onclick = () => {
-                  cerrarDetalleAmigo();
-                  cerrarAmigos();
-                  iniciarChatConUsuario(friendNick);
-                };
+            const genderEl = document.getElementById('friendDetailGender');
+            const genderRow = document.getElementById('friendDetailGenderRow');
+            if (personalInfo.gender) {
+              const genderMap = {
+                'masculino': 'Masculino',
+                'femenino': 'Femenino',
+                'no_binario': 'No binario',
+                'otro': 'Otro',
+                'prefiero_no_decir': ''
+              };
+              const gText = genderMap[personalInfo.gender] || personalInfo.gender;
+              if (gText) {
+                if (genderEl) genderEl.innerText = gText;
+                if (genderRow) genderRow.style.display = 'block';
+                hasAnyInfo = true;
+              } else if (genderRow) {
+                genderRow.style.display = 'none';
               }
+            } else if (genderRow) {
+              genderRow.style.display = 'none';
+            }
 
-              const groupBtn = document.getElementById('friendDetailGroupBtn');
-              if (groupBtn) {
-                groupBtn.onclick = () => {
-                  cerrarDetalleAmigo();
-                  cerrarAmigos();
-                  abrirModalCrearGrupo(friendNick);
-                };
+            const locEl = document.getElementById('friendDetailLocation');
+            const locRow = document.getElementById('friendDetailLocationRow');
+            if (personalInfo.location && personalInfo.location.trim()) {
+              if (locEl) locEl.innerText = personalInfo.location.trim();
+              if (locRow) locRow.style.display = 'block';
+              hasAnyInfo = true;
+            } else if (locRow) {
+              locRow.style.display = 'none';
+            }
+
+            const styleEl = document.getElementById('friendDetailStyle');
+            const styleRow = document.getElementById('friendDetailStyleRow');
+            if (personalInfo.travelStyle) {
+              const styleMap = {
+                'mochilero': 'Mochilero y Aventura',
+                'relax': 'Relax y Playa',
+                'cultural': 'Cultural y Museos',
+                'gastronomico': 'Gastronómico',
+                'urbano': 'Urbano y Noche',
+                'lujo': 'Lujo y Confort'
+              };
+              if (styleEl) styleEl.innerText = styleMap[personalInfo.travelStyle] || personalInfo.travelStyle;
+              if (styleRow) styleRow.style.display = 'block';
+              hasAnyInfo = true;
+            } else if (styleRow) {
+              styleRow.style.display = 'none';
+            }
+
+            const bioEl = document.getElementById('friendDetailBio');
+            const bioRow = document.getElementById('friendDetailBioRow');
+            if (personalInfo.bio && personalInfo.bio.trim()) {
+              if (bioEl) bioEl.innerText = `"${personalInfo.bio.trim()}"`;
+              if (bioRow) bioRow.style.display = 'block';
+              hasAnyInfo = true;
+            } else if (bioRow) {
+              bioRow.style.display = 'none';
+            }
+
+            const privateNotice = document.getElementById('friendDetailPrivateNotice');
+            if (!isProfilePublic) {
+              if (privateNotice) {
+                privateNotice.style.display = 'block';
+                privateNotice.innerText = '🔒 Este viajero mantiene su información personal privada.';
               }
-          } catch(e) {
-              console.error('Error al abrir detalle amigo:', e);
-              showToast('Error al cargar datos del amigo', 'error');
-              cerrarDetalleAmigo();
-          }
-      }
+            } else if (!isAgePublic || !isCityPublic) {
+              if (privateNotice) {
+                privateNotice.style.display = 'block';
+                privateNotice.innerText = '🔒 Este viajero configuró algunos datos como privados.';
+              }
+            } else if (privateNotice) {
+              privateNotice.style.display = 'none';
+            }
 
-      function cerrarDetalleAmigo() {
+            if (infoCard) {
+              infoCard.style.display = (hasAnyInfo || !isProfilePublic || !isAgePublic || !isCityPublic) ? 'flex' : 'none';
+            }
+            
+            // Set friend avatar if custom photo exists
+            const friendAvatarEl = document.getElementById('friendDetailAvatar');
+            if (friendAvatarEl) {
+              if (data.photoUrl) {
+                friendAvatarEl.innerHTML = `<img src="${data.photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+              } else {
+                friendAvatarEl.innerHTML = `<div style="font-weight:bold; font-size:1.4rem;">${cleanNick.substring(0, 2).toUpperCase()}</div>`;
+              }
+            }
+
+            trips.forEach(trip => {
+                const dests = trip.destinos || [];
+                totalDestinations += dests.length;
+                dests.forEach(d => {
+                    if (d.pais) countries.add(d.pais.trim().toLowerCase());
+                    if (Array.isArray(d.actividades)) totalEvents += d.actividades.length;
+                    if (d.fechaInicio && d.fechaFin) {
+                        const start = new Date(d.fechaInicio);
+                        const end = new Date(d.fechaFin);
+                        const diffTime = Math.abs(end - start);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        if (!isNaN(diffDays)) totalDays += diffDays;
+                    }
+                });
+            });
+
+            setStat('friendStatTrips', trips.length);
+            setStat('friendStatDestinations', totalDestinations);
+            setStat('friendStatDays', totalDays);
+            setStat('friendStatEvents', totalEvents);
+            setStat('friendStatCountries', countries.size);
+
+            // Hook direct chat button
+            const chatBtn = document.getElementById('friendDetailChatBtn');
+            if (chatBtn) {
+              chatBtn.onclick = () => {
+                window.cerrarDetalleAmigo();
+                window.cerrarAmigos();
+                window.iniciarChatConUsuario(cleanNick);
+              };
+            }
+
+            // Hook share button
+            const shareBtn = document.getElementById('friendDetailShareBtn');
+            if (shareBtn) {
+              shareBtn.onclick = () => {
+                if (typeof window.autoCompartirConUsuario === 'function') {
+                  window.autoCompartirConUsuario(cleanNick);
+                }
+              };
+            }
+
+            // Hook group button
+            const groupBtn = document.getElementById('friendDetailGroupBtn');
+            if (groupBtn) {
+              groupBtn.onclick = () => {
+                window.cerrarDetalleAmigo();
+                window.cerrarAmigos();
+                if (typeof window.abrirModalCrearGrupo === 'function') {
+                  window.abrirModalCrearGrupo();
+                }
+              };
+            }
+        } catch(e) {
+            console.error('Error al cargar stats del amigo:', e);
+            if (connEl) connEl.innerText = 'Error al cargar perfil';
+        }
+    }
+
+    function cerrarDetalleAmigo() {
           const modal = document.getElementById('modal-detalle-amigo');
           if (modal) modal.style.display = 'none';
       }
@@ -8202,12 +8417,18 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const elGender = document.getElementById('info-gender');
       const elLoc = document.getElementById('info-location');
       const elBio = document.getElementById('info-bio');
+      const elCheckPerfil = document.getElementById('info-mostrar-perfil');
+      const elCheckEdad = document.getElementById('info-mostrar-edad');
+      const elCheckCiudad = document.getElementById('info-mostrar-ciudad');
       
       if (elName) elName.value = info.fullname || (firebaseUser && firebaseUser.displayName) || '';
       if (elAge) elAge.value = info.age || '';
       if (elGender) elGender.value = info.gender || '';
       if (elLoc) elLoc.value = info.location || '';
       if (elBio) elBio.value = info.bio || '';
+      if (elCheckPerfil) elCheckPerfil.checked = (info.mostrarPerfilPublico !== false);
+      if (elCheckEdad) elCheckEdad.checked = (info.mostrarEdad !== false);
+      if (elCheckCiudad) elCheckCiudad.checked = (info.mostrarCiudad !== false);
 
       selectTravelStyle(info.travelStyle || 'mochilero');
       
@@ -8228,6 +8449,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const elLoc = document.getElementById('info-location');
       const elStyle = document.getElementById('info-travel-style');
       const elBio = document.getElementById('info-bio');
+      const elCheckPerfil = document.getElementById('info-mostrar-perfil');
+      const elCheckEdad = document.getElementById('info-mostrar-edad');
+      const elCheckCiudad = document.getElementById('info-mostrar-ciudad');
       
       const locVal = elLoc ? elLoc.value.trim() : '';
       const info = {
@@ -8237,6 +8461,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         location: locVal,
         travelStyle: elStyle ? elStyle.value : 'mochilero',
         bio: elBio ? elBio.value.trim() : '',
+        mostrarPerfilPublico: elCheckPerfil ? elCheckPerfil.checked : true,
+        mostrarEdad: elCheckEdad ? elCheckEdad.checked : true,
+        mostrarCiudad: elCheckCiudad ? elCheckCiudad.checked : true,
         updatedAt: new Date().toISOString()
       };
       
@@ -8259,6 +8486,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             residencia: info.location,
             estiloViaje: info.travelStyle,
             bio: info.bio,
+            mostrarPerfilPublico: info.mostrarPerfilPublico,
+            mostrarEdad: info.mostrarEdad,
+            mostrarCiudad: info.mostrarCiudad,
             ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
           };
           if (currentNickname) {

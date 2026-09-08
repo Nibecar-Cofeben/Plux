@@ -91,7 +91,7 @@
   </script>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/plux/styles.css?v=1779999999999">
+  <link rel="stylesheet" href="/plux/styles.css?v=1788897200000">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -101,9 +101,10 @@
   <!-- Firebase (compat) Local Offline SDK -->
   <script src="/plux/firebase/firebase-app-compat.js"></script>
   <script src="/plux/firebase/firebase-auth-compat.js"></script>
+  <script src="/plux/firebase/firebase-database-compat.js"></script>
   <script src="/plux/firebase/firebase-firestore-compat.js"></script>
   <script src="/plux/firebase/firebase-analytics-compat.js"></script>
-  <script defer src="/plux/script.js?v=1779999999999"></script>
+  <script defer src="/plux/script.js?v=1788900000000"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -463,7 +464,7 @@
       <div class="chat-messages" id="chat-messages">
         <div class="chat-msg ai" style="display:flex; gap:10px; align-items:flex-start;">
           <img src="/plux/pet.png" alt="Pluxy" style="height:28px; width:auto; flex-shrink:0; margin-top:2px;">
-          <div>¡Hola! Soy tu asistente de viaje Pluxy 🐾. Contame qué tenés en mente; puedo ayudarte a armar tu itinerario, crear la checklist, calcular costos o sugerir actividades.</div>
+          <div>¡Hola! Soy tu asistente de viaje Pluxy ✨. Contame qué tenés en mente; puedo ayudarte a armar tu itinerario, crear la checklist, calcular costos o sugerir actividades.</div>
         </div>
       </div>
       <div class="chat-input-area">
@@ -523,9 +524,10 @@
     <details class="datos-generales-foldable" open>
       <summary id="datosViajeLabel">⚙️ Configuración del viaje (Salida, Personas, Fechas, Vuelta)</summary>
       <div class="datos-generales" style="margin-top:14px; border:none; padding:0;">
-        <div class="fila-dato">
+        <div class="fila-dato" style="position:relative;">
           <label id="lugarSalidaLabel">Lugar de salida:</label>
-          <input type="text" id="lugarSalida" placeholder="Ej. Buenos Aires">
+          <input type="text" id="lugarSalida" placeholder="Ej. Buenos Aires" autocomplete="off">
+          <div id="lugar-salida-autocomplete" class="city-autocomplete-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:150;"></div>
         </div>
         <div class="fila-dato">
           <label id="personasLabel">Cantidad de personas:</label>
@@ -730,8 +732,8 @@
 
           <!-- Form Login -->
           <form id="form-nc-login" onsubmit="window.handleNCLogin(event)" style="display:flex; flex-direction:column; gap:10px;">
-            <input type="email" id="ncLoginEmail" required placeholder="Correo electrónico" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box;">
-            <input type="password" id="ncLoginPassword" required minlength="6" placeholder="Contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box;">
+            <input type="text" id="ncLoginEmail" required placeholder="Correo o Nickname" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box;">
+            <input type="password" id="ncLoginPassword" placeholder="Contraseña (opcional si usás nickname)" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box;">
             <button type="submit" id="btnNCLoginSubmit" class="btn-add-feed" style="padding:12px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:10px; border:none; cursor:pointer; width:100%;">Ingresar</button>
           </form>
 
@@ -790,138 +792,138 @@
         </div>
       </div>
 
-      <!-- Logged in state - Airbnb Style Profile -->
-      <div class="cuenta-profile" id="cuentaProfile" style="display:none; flex-direction:column; gap:16px;">
-        
-        <!-- Airbnb-style Card Profile wrapper -->
-        <div class="airbnb-profile-card" style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:24px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.4); display:flex; flex-direction:column; gap:16px; align-items:stretch; margin-bottom:10px;">
-          
-          <!-- Avatar, Name & Email row with Cloudinary Photo Upload -->
-          <input type="file" id="profile-photo-input" accept="image/*" style="display:none;" onchange="window.handleProfilePhotoUpload(event)">
-          <div style="display:flex; align-items:center; gap:16px;">
-            <div class="profile-avatar" id="profileAvatar" onclick="window.cambiarFotoPerfil()" title="Haz clic para cambiar tu foto de perfil con Cloudinary" style="width:74px; height:74px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-size:28px; box-shadow:0 4px 15px rgba(52,211,153,0.3); flex-shrink:0; position:relative; cursor:pointer; overflow:hidden; border:2px solid rgba(255,255,255,0.2);">
-              <div id="profileAvatarInner" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              </div>
-              <div class="profile-avatar-overlay">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-              </div>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:4px; overflow:hidden; flex:1;">
-              <h2 id="profileName" style="margin:0; font-size:1.3rem; font-weight:700; color:white; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Usuario</h2>
-              <p id="profileEmail" style="margin:0; color:var(--gris); font-size:0.8rem; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">email@ejemplo.com</p>
-              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px;">
-                <div class="profile-badge" id="profileBadge" style="display:inline-flex; align-items:center; gap:4px; padding:3px 10px; background:rgba(52,211,153,0.1); border:1px solid var(--verde); border-radius:20px; font-size:0.7rem; color:var(--verde);">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  <span id="profileMemberSince">Miembro desde 2024</span>
+        <!-- Centered Airbnb-style Card Profile wrapper -->
+        <div id="cuentaProfile" style="display:none; flex-direction:column; gap:12px; width:100%;">
+          <div class="airbnb-profile-card" style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:24px; padding:22px 18px; box-shadow:0 8px 30px rgba(0,0,0,0.4); display:flex; flex-direction:column; gap:16px; align-items:center; text-align:center; margin-bottom:10px;">
+            
+            <!-- Avatar with Cloudinary Photo Upload -->
+            <input type="file" id="profile-photo-input" accept="image/*" style="display:none;" onchange="window.handleProfilePhotoUpload(event)">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:10px; width:100%;">
+              <div class="profile-avatar" id="profileAvatar" onclick="window.cambiarFotoPerfil()" title="Haz clic para cambiar tu foto de perfil" style="width:84px; height:84px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-size:32px; box-shadow:0 6px 20px rgba(52,211,153,0.35); position:relative; cursor:pointer; overflow:hidden; border:3px solid rgba(255,255,255,0.25);">
+                <div id="profileAvatarInner" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
-                <button type="button" class="btn-change-photo-mini" onclick="window.cambiarFotoPerfil()">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                  <span>Cambiar foto</span>
-                </button>
+                <div class="profile-avatar-overlay">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                </div>
+              </div>
+              
+              <!-- Name, email, member badge -->
+              <div style="display:flex; flex-direction:column; align-items:center; gap:4px; width:100%;">
+                <h2 id="profileName" style="margin:0; font-size:1.35rem; font-weight:800; color:white; word-break:break-word;">Usuario</h2>
+                <p id="profileEmail" style="margin:0; color:var(--gris); font-size:0.85rem; word-break:break-word;">email@ejemplo.com</p>
+                <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:4px;">
+                  <div class="profile-badge" id="profileBadge" style="display:inline-flex; align-items:center; gap:5px; padding:4px 12px; background:rgba(52,211,153,0.12); border:1px solid var(--verde); border-radius:20px; font-size:0.75rem; color:var(--verde); font-weight:600;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span id="profileMemberSince">Miembro desde 2026</span>
+                  </div>
+                  <button type="button" class="btn-change-photo-mini" onclick="window.cambiarFotoPerfil()" style="padding:4px 10px; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:20px; color:white; font-size:0.72rem; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    <span>Cambiar foto</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Main Stats Row -->
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:100%; padding:14px 0 10px 0; border-top:1px solid var(--border); text-align:center;">
+              <div style="border-right:1px solid var(--border);">
+                <div class="stat-value" id="statTrips" style="font-size:1.45rem; font-weight:800; color:var(--verde);">0</div>
+                <div style="font-size:0.68rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Viajes</div>
+              </div>
+              <div style="border-right:1px solid var(--border);">
+                <div class="stat-value" id="statDestinations" style="font-size:1.45rem; font-weight:800; color:var(--azul);">0</div>
+                <div style="font-size:0.68rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Destinos</div>
+              </div>
+              <div>
+                <div class="stat-value" id="statDays" style="font-size:1.45rem; font-weight:800; color:var(--naranja);">0</div>
+                <div style="font-size:0.68rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Días</div>
+              </div>
+            </div>
+
+            <!-- Extra Stats Row -->
+            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; width:100%; padding-top:10px; border-top:1px dashed var(--border); text-align:center; font-size:0.8rem;">
+              <div>
+                <span style="color:var(--gris);">Actividades:</span> <strong id="statEvents" style="color:var(--rosa);">0</strong>
+              </div>
+              <div>
+                <span style="color:var(--gris);">Países:</span> <strong id="statCountries" style="color:var(--morado);">0</strong>
               </div>
             </div>
           </div>
-          
-          <!-- Main Stats Row -->
-          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:12px 0; border-top:1px solid var(--border); text-align:center;">
-            <div style="border-right:1px solid var(--border);">
-              <div class="stat-value" id="statTrips" style="font-size:1.4rem; font-weight:800; color:var(--verde);">0</div>
-              <div style="font-size:0.65rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px;">Viajes</div>
-            </div>
-            <div style="border-right:1px solid var(--border);">
-              <div class="stat-value" id="statDestinations" style="font-size:1.4rem; font-weight:800; color:var(--azul);">0</div>
-              <div style="font-size:0.65rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px;">Destinos</div>
-            </div>
-            <div>
-              <div class="stat-value" id="statDays" style="font-size:1.4rem; font-weight:800; color:var(--naranja);">0</div>
-              <div style="font-size:0.65rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px;">Días</div>
-            </div>
+
+          <!-- Unified Account Actions (Grid on PC & Mobile) -->
+          <div class="profile-actions-grid">
+            <!-- Familia y amigos -->
+            <button onclick="window.abrirAmigos()" class="profile-action-btn">
+              <div class="profile-action-icon" style="background:rgba(96,165,250,0.15); color:var(--azul);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
+              <span>Familia<br>y amigos</span>
+            </button>
+
+            <!-- Info Personal -->
+            <button onclick="window.abrirInfoPersonal()" class="profile-action-btn">
+              <div class="profile-action-icon" style="background:rgba(52,211,153,0.15); color:var(--verde);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <span>Info<br>Personal</span>
+            </button>
+
+            <!-- Seguridad y contraseña -->
+            <button onclick="window.abrirSeguridad()" class="profile-action-btn">
+              <div class="profile-action-icon" style="background:rgba(167,139,250,0.15); color:var(--morado);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </div>
+              <span>Seguridad</span>
+            </button>
+
+            <!-- Tus viajes -->
+            <button onclick="verMisViajes()" class="profile-action-btn">
+              <div class="profile-action-icon" style="background:rgba(56,189,248,0.15); color:#38bdf8;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+              </div>
+              <span>Tus viajes</span>
+            </button>
+
+            <!-- Personalizar -->
+            <button onclick="abrirPreferencias()" class="profile-action-btn">
+              <div class="profile-action-icon" style="background:rgba(251,146,60,0.15); color:var(--naranja);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+              </div>
+              <span>Personalizar</span>
+            </button>
           </div>
 
-          <!-- Extra Stats Row -->
-          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding-top:10px; border-top:1px dashed var(--border); text-align:center; font-size:0.75rem;">
-            <div>
-              <span style="color:var(--gris);">Actividades:</span> <strong id="statEvents" style="color:var(--rosa);">0</strong>
-            </div>
-            <div>
-              <span style="color:var(--gris);">Países:</span> <strong id="statCountries" style="color:var(--morado);">0</strong>
-            </div>
-          </div>
-        </div>
-
-        <!-- Unified Account Actions (Grid on PC & Mobile) -->
-        <div class="profile-actions-grid">
-          <!-- Familia y amigos -->
-          <button onclick="window.abrirAmigos()" class="profile-action-btn">
-            <div class="profile-action-icon" style="background:rgba(96,165,250,0.15); color:var(--azul);">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </div>
-            <span>Familia<br>y amigos</span>
+          <!-- Soporte en perfil -->
+          <button onclick="abrirSupport()" id="profileSoporteBtn" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); border-radius:16px; color:#a78bfa; font-weight:600; cursor:pointer; width:100%; box-sizing:border-box; margin-top:4px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>Soporte y sugerencias</span>
           </button>
 
-          <!-- Seguridad y contraseña -->
-          <button onclick="window.abrirSeguridad()" class="profile-action-btn">
-            <div class="profile-action-icon" style="background:rgba(167,139,250,0.15); color:var(--morado);">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            </div>
-            <span>Seguridad</span>
-          </button>
-
-          <!-- Tus viajes -->
-          <button onclick="verMisViajes()" class="profile-action-btn">
-            <div class="profile-action-icon" style="background:rgba(52,211,153,0.15); color:var(--verde);">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
-            </div>
-            <span>Tus viajes</span>
-          </button>
-
-          <!-- Personalizar -->
-          <button onclick="abrirPreferencias()" class="profile-action-btn">
-            <div class="profile-action-icon" style="background:rgba(251,146,60,0.15); color:var(--naranja);">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-            </div>
-            <span>Personalizar</span>
-          </button>
-
-          <!-- Info -->
-          <button onclick="window.abrirInfo()" class="profile-action-btn">
-            <div class="profile-action-icon" style="background:rgba(156,163,175,0.15); color:var(--gris);">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            </div>
-            <span>Info</span>
+          <!-- Cerrar sesión (Full width button) -->
+          <button id="btnCerrarSesionPerfil" onclick="cerrarSesion()" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:16px; color:var(--rojo); font-weight:600; cursor:pointer; transition:all 0.2s; width:100%; box-sizing:border-box; margin-top:2px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Cerrar sesión</span>
           </button>
         </div>
-
-        <!-- Soporte en perfil -->
-        <button onclick="abrirSupport()" id="profileSoporteBtn" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); border-radius:16px; color:#a78bfa; font-weight:600; cursor:pointer; width:100%; box-sizing:border-box; margin-top:4px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <span>Soporte y sugerencias</span>
-        </button>
-
-        <!-- Cerrar sesión (Full width button) -->
-        <button id="btnCerrarSesionPerfil" onclick="cerrarSesion()" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:16px; color:var(--rojo); font-weight:600; cursor:pointer; transition:all 0.2s; width:100%; box-sizing:border-box; margin-top:2px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-          <span>Cerrar sesión</span>
-        </button>
-      </div>
     </div>
   </div>
 
   <!-- MODAL: CONFIRMAR CIERRE DE SESIÓN Y GESTIÓN DE CHATS -->
-  <div id="modal-confirmar-logout" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:2100; align-items:center; justify-content:center; backdrop-filter:blur(8px);" onclick="if(event.target===this) window.cancelarCerrarSesion()">
-    <div class="modal-content" style="max-width:440px; text-align:center; padding:28px; background:var(--card); border:1px solid var(--border); border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.7); position:relative;">
+  <div id="modal-confirmar-logout" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:2100; align-items:center; justify-content:center; backdrop-filter:blur(8px);" onclick="if(event.target===this) window.cancelarCerrarSesion()">
+    <div class="modal-content" style="max-width:440px; width:92%; text-align:center; padding:28px; background:var(--card); border:1px solid var(--border); border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.7); position:relative;">
       <div style="font-size:2.8rem; margin-bottom:12px;">🔒</div>
-      <h3 style="color:var(--texto); margin:0 0 10px 0; font-size:1.3rem;">¿Cerrar sesión?</h3>
+      <h3 style="color:var(--texto); margin:0 0 10px 0; font-size:1.3rem; font-weight:700;">¿Cerrar sesión?</h3>
       <p style="color:var(--gris); font-size:0.92rem; line-height:1.5; margin-bottom:24px;">
-        Por tu privacidad, ¿deseas <strong>borrar los chats y mensajes</strong> guardados en este dispositivo o mantenerlos en este equipo?
+        Podés cerrar sesión y borrar todos tus chats y viajes de este dispositivo, o conservarlos guardados localmente.
       </p>
       <div style="display:flex; flex-direction:column; gap:10px;">
         <button onclick="window.ejecutarCerrarSesion(true)" style="background:linear-gradient(135deg, #ef4444, #f43f5e); color:white; border:none; border-radius:14px; padding:13px; font-weight:700; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 15px rgba(239,68,68,0.3);">
-          🗑️ Borrar chats y cerrar sesión
+          🗑️ Borrar chats, viajes y datos (Cierre total)
         </button>
         <button onclick="window.ejecutarCerrarSesion(false)" style="background:rgba(255,255,255,0.08); color:var(--texto); border:1px solid var(--border); border-radius:14px; padding:12px; font-weight:600; font-size:0.9rem; cursor:pointer;">
-          💾 Mantener chats en este equipo
+          💾 Mantener viajes y datos en este equipo
         </button>
         <button onclick="window.cancelarCerrarSesion()" style="background:transparent; color:var(--gris); border:none; padding:8px; font-size:0.85rem; cursor:pointer;">
           Cancelar
@@ -941,7 +943,7 @@
           <span>Volver</span>
         </button>
         <h2 style="margin:0; font-size:1.4rem; color:var(--verde); font-weight:700;">Familia y amigos</h2>
-        <span class="close-panel" onclick="window.cerrarAmigos()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
+        <span class="modal-close-btn" onclick="window.cerrarAmigos()">×</span>
       </div>
 
       <!-- Quick Actions: Chatear y Crear Grupo -->
@@ -967,9 +969,9 @@
     </div>
   </div>
 
-  <!-- Modal Detalle Amigo -->
+  <!-- Modal Detalle de Amigo -->
   <div id="modal-detalle-amigo" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:500; padding:10px;">
-    <div class="cuenta-content" style="max-width:440px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
+    <div class="cuenta-content" style="max-width:440px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px; max-height:88vh; overflow-y:auto;">
       
       <!-- Header -->
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
@@ -977,8 +979,8 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
           <span>Volver</span>
         </button>
-        <h2 id="detalleAmigoTitle" style="margin:0; font-size:1.3rem; color:white; font-weight:700;">Perfil de Amigo</h2>
-        <span class="close-panel" onclick="window.cerrarDetalleAmigo()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
+        <h2 id="detalleAmigoTitle" style="margin:0; font-size:1.3rem; color:var(--texto); font-weight:700;">Perfil de Amigo</h2>
+        <span class="modal-close-btn" onclick="window.cerrarDetalleAmigo()">×</span>
       </div>
 
       <!-- Friend Profile Content -->
@@ -988,8 +990,28 @@
           <div id="friendDetailAvatar" style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-size:28px; box-shadow:0 4px 15px rgba(52,211,153,0.3);">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           </div>
-          <h3 id="friendDetailName" style="margin:0; font-size:1.4rem; color:white; font-weight:700;">@nickname</h3>
+          <h3 id="friendDetailName" style="margin:0; font-size:1.4rem; color:var(--texto); font-weight:700;">@nickname</h3>
           <p id="friendDetailConnection" style="margin:0; font-size:0.8rem; color:var(--gris);">Última conexión: --</p>
+        </div>
+
+        <!-- Personal Info Card of Friend -->
+        <div id="friend-personal-info-card" style="display:none; background:rgba(125,125,125,0.06); border:1px solid var(--border); border-radius:16px; padding:14px; text-align:left; flex-direction:column; gap:8px;">
+          <div id="friendDetailFullNameRow" style="display:none;">
+            <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Nombre:</span>
+            <div id="friendDetailFullName" style="font-size:0.95rem; color:var(--texto); font-weight:600;"></div>
+          </div>
+          <div id="friendDetailLocationRow" style="display:none;">
+            <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Residencia:</span>
+            <div id="friendDetailLocation" style="font-size:0.9rem; color:var(--verde);"></div>
+          </div>
+          <div id="friendDetailStyleRow" style="display:none;">
+            <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Estilo de Viaje:</span>
+            <div id="friendDetailStyle" style="font-size:0.9rem; color:var(--azul); font-weight:600;"></div>
+          </div>
+          <div id="friendDetailBioRow" style="display:none;">
+            <span style="font-size:0.75rem; color:var(--gris); text-transform:uppercase; font-weight:700;">Sobre mí:</span>
+            <div id="friendDetailBio" style="font-size:0.85rem; color:var(--texto); font-style:italic; line-height:1.4;"></div>
+          </div>
         </div>
 
         <!-- Stats Grid -->
@@ -1039,17 +1061,17 @@
   <div id="modal-crear-grupo" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:500; padding:10px;">
     <div class="cuenta-content" style="max-width:440px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-        <button class="mobile-back-btn" onclick="window.cerrarModalCrearGrupo()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <button onclick="window.cerrarModalCrearGrupo()" style="background:none; border:none; color:var(--verde); font-size:0.95rem; display:flex; align-items:center; gap:4px; cursor:pointer; padding:6px 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
           <span>Volver</span>
         </button>
-        <h2 style="margin:0; font-size:1.3rem; color:white; font-weight:700;">Crear Grupo</h2>
-        <span class="close-panel" onclick="window.cerrarModalCrearGrupo()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
+        <h2 style="margin:0; font-size:1.2rem; color:white; font-weight:700; text-align:center;">Crear Grupo</h2>
+        <span class="modal-close-btn" onclick="window.cerrarModalCrearGrupo()">×</span>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; width:100%;">
         <div>
           <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Nombre del grupo:</label>
-          <input type="text" id="group-name-input" placeholder="Ej: Amigos de Viaje ✈️" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
+          <input type="text" id="group-name-input" placeholder="Ej: Amigos de Viaje" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
         </div>
         <div>
           <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Seleccionar participantes:</label>
@@ -1058,7 +1080,7 @@
           </div>
         </div>
         <button onclick="window.confirmarCrearGrupo()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, #a855f7, #6366f1); color:white; font-weight:bold; border-radius:12px; border:none; cursor:pointer; width:100%; margin-top:4px;">
-          🚀 Crear grupo e ir al chat
+          Crear grupo e ir al chat
         </button>
       </div>
     </div>
@@ -1068,12 +1090,12 @@
   <div id="modal-seguridad" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:400; padding:10px;">
     <div class="cuenta-content" style="max-width:420px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-        <button class="mobile-back-btn" onclick="window.cerrarSeguridad()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <button onclick="window.cerrarSeguridad()" style="background:none; border:none; color:var(--verde); font-size:0.95rem; display:flex; align-items:center; gap:4px; cursor:pointer; padding:6px 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
           <span>Volver</span>
         </button>
-        <h2 id="seguridadTitle" style="margin:0; font-size:1.3rem; color:var(--verde); font-weight:700;">Seguridad y Cuenta</h2>
-        <span class="close-panel" onclick="window.cerrarSeguridad()" style="cursor:pointer; font-size:1.5rem; color:var(--gris);">×</span>
+        <h2 id="seguridadTitle" style="margin:0; font-size:1.2rem; color:var(--verde); font-weight:700;">Seguridad y Cuenta</h2>
+        <span class="modal-close-btn" onclick="window.cerrarSeguridad()">×</span>
       </div>
       <div style="display:flex; flex-direction:column; gap:12px; width:100%;">
         <div>
@@ -1085,47 +1107,100 @@
           <input type="email" id="seguridad-email" placeholder="ejemplo@correo.com" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
         </div>
         <div>
-          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Nueva contraseña (opcional):</label>
-          <input type="password" id="seguridad-new-password" placeholder="Nueva contraseña (mín. 6 caracteres)" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Nueva contraseña:</label>
+          <input type="password" id="seguridad-new-password" placeholder="Contraseña nueva" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
         </div>
         <div>
-          <input type="password" id="seguridad-confirm-password" placeholder="Confirmar nueva contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Confirmar contraseña:</label>
+          <input type="password" id="seguridad-confirm-password" placeholder="Confirmar contraseña" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
         </div>
-        <button id="seguridadSaveBtn" onclick="window.guardarNuevaContrasena()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer; width:100%; margin-top:4px;">Guardar cambios</button>
+        <button onclick="window.guardarNuevaContrasena()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer; width:100%; margin-top:4px;">
+          Guardar cambios
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Info -->
-  <div id="modal-info" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:400; padding:10px;">
-    <div class="cuenta-content" style="max-width:460px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
+  <!-- Modal Información Personal -->
+  <div id="modal-info-personal" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:400; padding:10px;">
+    <div class="cuenta-content" style="max-width:460px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px; max-height:90vh; overflow-y:auto;">
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-        <button class="mobile-back-btn" onclick="window.cerrarInfo()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <button onclick="window.cerrarInfoPersonal()" style="background:none; border:none; color:var(--verde); font-size:0.95rem; display:flex; align-items:center; gap:4px; cursor:pointer; padding:6px 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
           <span>Volver</span>
         </button>
-        <h2 id="infoTitle" style="margin:0; font-size:1.3rem; color:white; font-weight:700;">Acerca de Plux</h2>
-        <span onclick="window.cerrarInfo()" style="cursor:pointer; font-size:1.6rem; color:var(--gris); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,0.06);">×</span>
+        <h2 id="infoPersonalTitle" style="margin:0; font-size:1.2rem; color:white; font-weight:700; text-align:center;">Información Personal</h2>
+        <span class="modal-close-btn" onclick="window.cerrarInfoPersonal()">×</span>
       </div>
-      <div style="display:flex; flex-direction:column; gap:14px; color:var(--blanco); font-size:0.9rem; line-height:1.5; text-align:left;">
-        <p id="infoDesc" style="margin:0;"><strong>Plux</strong> es tu asistente inteligente y planificador de viajes integral. Diseñado para organizar itinerarios, coordinar grupos y explorar destinos de forma ágil y cómoda.</p>
-        
-        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px;">
-          <div style="font-size:0.8rem; font-weight:700; color:var(--verde); text-transform:uppercase;">✨ Características destacadas</div>
-          <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem;"><span style="color:var(--verde);">•</span> <span><strong>Asistente Pluxy IA:</strong> Generación automática de itinierarios y actividades.</span></div>
-          <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem;"><span style="color:var(--azul);">•</span> <span><strong>Selector de ciudades:</strong> Diferenciación exacta por país y banderas.</span></div>
-          <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem;"><span style="color:var(--naranja);">•</span> <span><strong>Clima Inteligente:</strong> Pronósticos exactos y estimaciones estacionales.</span></div>
-          <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem;"><span style="color:var(--rosa);">•</span> <span><strong>Colaboración en tiempo real:</strong> Viajes compartidos y amigos.</span></div>
-          <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem;"><span style="color:var(--morado);">•</span> <span><strong>Exportación:</strong> Descargá itinerarios en PDF o sincronizá con Google Calendar.</span></div>
+      
+      <div style="display:flex; flex-direction:column; gap:14px; width:100%; text-align:left;">
+        <!-- Nombre Completo -->
+        <div>
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Nombre Completo:</label>
+          <input type="text" id="info-fullname" placeholder="Ej: Juan Pérez" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
         </div>
 
-        <div style="border-top:1px dashed var(--border); padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <p id="infoCreatedBy" style="margin:0; color:var(--gris); font-size:0.85rem;">Creado por <strong>nibecar cofeben</strong></p>
-            <p id="infoVersion" style="margin:2px 0 0 0; color:var(--verde); font-weight:bold; font-size:0.85rem;">Versión 6.00</p>
+        <!-- Edad y Género -->
+        <div style="display:flex; gap:10px;">
+          <div style="flex:1;">
+            <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Edad:</label>
+            <input type="number" id="info-age" min="1" max="120" placeholder="Ej: 25" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
           </div>
-          <button onclick="window.cerrarInfo(); abrirSupport();" class="btn-add-feed" style="padding:8px 14px; font-size:0.8rem; background:rgba(255,255,255,0.08); color:white; border:1px solid var(--border); border-radius:10px;">Contacto / Soporte</button>
+          <div style="flex:1.5;">
+            <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Género:</label>
+            <select id="info-gender" style="padding:12px; background:#12102e; border:1px solid var(--border); border-radius:10px; color:white; font-size:0.92rem; width:100%; box-sizing:border-box; outline:none;">
+              <option value="">Seleccionar...</option>
+              <option value="masculino">Masculino</option>
+              <option value="femenino">Femenino</option>
+              <option value="no_binario">No binario</option>
+              <option value="otro">Otro</option>
+              <option value="prefiero_no_decir">Prefiero no decir</option>
+            </select>
+          </div>
         </div>
+
+        <!-- País / Ciudad con Autocompletado -->
+        <div style="position:relative;">
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">País / Ciudad de residencia:</label>
+          <input type="text" id="info-location" placeholder="Ej: Buenos Aires, Argentina" autocomplete="off" style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.95rem; width:100%; box-sizing:border-box;">
+          <div id="info-location-autocomplete" class="city-autocomplete-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:150;"></div>
+        </div>
+
+        <!-- Estilo de Viaje (Selector Visual con Chips Modernos) -->
+        <div>
+          <label style="display:block; margin-bottom:8px; font-size:0.85rem; color:var(--gris);">Estilo de Viaje Preferido:</label>
+          <div id="travel-style-chip-group" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;">
+            <div class="travel-style-chip active" data-style="mochilero" onclick="window.selectTravelStyle('mochilero')" style="padding:10px 12px; border-radius:12px; border:1.5px solid var(--verde); background:rgba(52,211,153,0.15); color:white; font-size:0.85rem; font-weight:600; cursor:pointer; text-align:center; transition:all 0.2s;">
+              Mochilero y Aventura
+            </div>
+            <div class="travel-style-chip" data-style="relax" onclick="window.selectTravelStyle('relax')" style="padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:white; font-size:0.85rem; font-weight:600; cursor:pointer; text-align:center; transition:all 0.2s;">
+              Relax y Playa
+            </div>
+            <div class="travel-style-chip" data-style="cultural" onclick="window.selectTravelStyle('cultural')" style="padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:white; font-size:0.85rem; font-weight:600; cursor:pointer; text-align:center; transition:all 0.2s;">
+              Cultural y Museos
+            </div>
+            <div class="travel-style-chip" data-style="gastronomico" onclick="window.selectTravelStyle('gastronomico')" style="padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:white; font-size:0.85rem; font-weight:600; cursor:pointer; text-align:center; transition:all 0.2s;">
+              Gastronómico
+            </div>
+            <div class="travel-style-chip" data-style="urbano" onclick="window.selectTravelStyle('urbano')" style="padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:white; font-size:0.85rem; font-weight:600; cursor:pointer; text-align:center; transition:all 0.2s;">
+              Urbano y Noche
+            </div>
+            <div class="travel-style-chip" data-style="lujo" onclick="window.selectTravelStyle('lujo')" style="padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:white; font-size:0.85rem; font-weight:600; cursor:pointer; text-align:center; transition:all 0.2s;">
+              Lujo y Confort
+            </div>
+          </div>
+          <input type="hidden" id="info-travel-style" value="mochilero">
+        </div>
+
+        <!-- Bio / Sobre mí -->
+        <div>
+          <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--gris);">Sobre mí (Bio):</label>
+          <textarea id="info-bio" rows="3" placeholder="Contanos sobre tus viajes o intereses..." style="padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:white; font-size:0.9rem; width:100%; box-sizing:border-box; resize:none;"></textarea>
+        </div>
+
+        <button onclick="window.guardarInfoPersonal()" class="btn-add-feed" style="padding:14px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; border-radius:12px; border:none; cursor:pointer; width:100%; margin-top:4px;">
+          💾 Guardar información personal
+        </button>
       </div>
     </div>
   </div>
@@ -1299,11 +1374,13 @@
       <div style="padding:10px 16px; overflow-y:auto; max-height:50vh; display:flex; flex-direction:column; gap:14px;">
         <!-- Pluxy Assistant -->
         <div>
-          <div style="font-size:0.75rem; font-weight:700; color:#818cf8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">🐾 Asistente de Viaje</div>
+          <div style="font-size:0.75rem; font-weight:700; color:#818cf8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">✨ Asistente de Viaje</div>
           <div class="plux-contact-item" onclick="window.iniciarChatConUsuario('Pluxy')">
-            <div class="plux-chat-avatar plux-avatar-pluxy" style="width:38px; height:38px;">🐾</div>
+            <div class="plux-chat-avatar plux-avatar-pluxy" style="width:38px; height:38px; display:flex; align-items:center; justify-content:center; padding:0;">
+              <img src="/plux/pet.png" alt="Pluxy" style="width:24px; height:24px; object-fit:contain; display:block;">
+            </div>
             <div style="flex:1; min-width:0;">
-              <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">Pluxy IA</div>
+              <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">Pluxy</div>
               <div style="color:#94a3b8; font-size:0.75rem;">Tu compañero inteligente y guía de viaje</div>
             </div>
             <button class="plux-contact-start-btn">Chatear</button>

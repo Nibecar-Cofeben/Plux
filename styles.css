@@ -130,6 +130,7 @@
     /* Modales en tema claro */
     .theme-claro .modal-contenido,
     .theme-claro .modal-content,
+    .theme-claro .cuenta-content,
     .theme-claro .panel-herramientas-content,
     .theme-claro .chat-container,
     .theme-claro .mapa-content,
@@ -147,6 +148,22 @@
       color: #0f172a !important;
       border: 1px solid #cbd5e1 !important;
       box-shadow: 0 25px 60px rgba(15, 23, 42, 0.18) !important;
+    }
+    .theme-claro .pref-theme-card,
+    .theme-claro .pref-lang-btn,
+    .theme-claro .pref-card-section {
+      background: #f8fafc !important;
+      border: 1.5px solid #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    .theme-claro .pref-theme-card .theme-name {
+      color: #0f172a !important;
+    }
+    .theme-claro .pref-theme-card .theme-desc {
+      color: #64748b !important;
+    }
+    .theme-claro .pref-theme-card.active {
+      background: #f1f5f9 !important;
     }
     /* Cruces de cierre en tema claro */
     .theme-claro .close-panel,
@@ -341,97 +358,287 @@
     }
 
     /* ============================
-       THEME: STARSHIP (Deep Space)
+       THEME: STARSHIP (Deep Space & Sci-Fi Cosmos)
        ============================ */
-    @keyframes twinkle {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.2; transform: scale(0.5); }
+    @keyframes starshipTwinkle {
+      0%, 100% { opacity: 0.85; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.75); }
     }
-    @keyframes nebula {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    @keyframes nebulaFloat {
+      0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.45; }
+      50% { transform: scale(1.08) translate(-1%, 1.5%); opacity: 0.65; }
     }
-    @keyframes shipGlow {
-      0%, 100% { text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 30px rgba(147,197,253,0.4); }
-      50% { text-shadow: 0 0 20px rgba(255,255,255,1), 0 0 60px rgba(196,181,253,0.6), 0 0 100px rgba(147,197,253,0.4); }
-    }
-    .theme-starship {
-      --fondo: #020209;
-      --card: rgba(255,255,255,0.04);
-      --texto: #e2e8f0;
-      --border: rgba(255,255,255,0.15);
-      --placeholder: rgba(255,255,255,0.3);
+
+    .theme-starship,
+    body.theme-starship {
+      --fondo: #060515;
+      --card: #12102e;
+      --texto: #f8fafc;
+      --border: rgba(165, 180, 252, 0.28);
+      --placeholder: rgba(148, 163, 184, 0.55);
       --gris: #94a3b8;
-      --verde: #93c5fd;
-      --azul: #c4b5fd;
-      --rosa: #f9a8d4;
-      background: radial-gradient(ellipse at 20% 50%, rgba(29,8,80,0.6) 0%, transparent 60%),
-                  radial-gradient(ellipse at 80% 20%, rgba(8,30,80,0.5) 0%, transparent 55%),
-                  radial-gradient(ellipse at 60% 80%, rgba(60,10,80,0.4) 0%, transparent 50%),
-                  #020209 !important;
-      background-size: 400% 400% !important;
-      animation: nebula 20s ease infinite !important;
-      letter-spacing: 1.5px;
+      --verde: #38bdf8;
+      --azul: #818cf8;
+      --rosa: #c084fc;
+      background-color: #060515 !important;
+      background-image:
+        radial-gradient(ellipse 90% 60% at 50% -10%, rgba(99, 102, 241, 0.24) 0%, transparent 65%),
+        radial-gradient(ellipse 70% 50% at 90% 85%, rgba(139, 92, 246, 0.2) 0%, transparent 55%),
+        radial-gradient(ellipse 65% 45% at 10% 70%, rgba(14, 165, 233, 0.16) 0%, transparent 50%) !important;
+      background-attachment: fixed !important;
+      color: #f8fafc !important;
     }
-    /* CSS Stars using box-shadow trick */
-    .theme-starship::before, .theme-starship::after {
+
+    .theme-starship .welcome {
+      background: transparent !important;
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      min-height: 100vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 100 !important;
+    }
+
+    .theme-starship #bg-parallax {
+      background: radial-gradient(circle at center, rgba(124, 58, 237, 0.08) 0%, transparent 60%) !important;
+    }
+
+    /* Manto estelar multidimensional distribuido en toda la pantalla */
+    .theme-starship::before {
       content: '';
       position: fixed;
-      width: 2px; height: 2px;
-      top: 0; left: 0;
-      border-radius: 50%;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
       z-index: 0;
+      background: transparent;
+      background-image:
+        radial-gradient(1.5px 1.5px at 12% 18%, rgba(255, 255, 255, 0.95), transparent),
+        radial-gradient(1px 1px at 28% 42%, rgba(196, 181, 253, 0.8), transparent),
+        radial-gradient(2px 2px at 45% 15%, rgba(255, 255, 255, 1), transparent),
+        radial-gradient(1px 1px at 62% 28%, rgba(147, 197, 253, 0.85), transparent),
+        radial-gradient(1.5px 1.5px at 78% 12%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 92% 35%, rgba(224, 231, 255, 0.95), transparent),
+        radial-gradient(1px 1px at 8% 68%, rgba(196, 181, 253, 0.75), transparent),
+        radial-gradient(1.5px 1.5px at 24% 82%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 40% 65%, rgba(147, 197, 253, 0.85), transparent),
+        radial-gradient(1px 1px at 58% 85%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(1.5px 1.5px at 75% 62%, rgba(216, 180, 254, 0.9), transparent),
+        radial-gradient(2px 2px at 88% 80%, rgba(255, 255, 255, 0.95), transparent),
+        radial-gradient(1px 1px at 52% 48%, rgba(255, 255, 255, 0.75), transparent),
+        radial-gradient(1.5px 1.5px at 84% 54%, rgba(165, 180, 252, 0.85), transparent),
+        radial-gradient(1px 1px at 35% 92%, rgba(255, 255, 255, 0.8), transparent);
+      animation: starshipTwinkle 5s ease-in-out infinite;
     }
-    .theme-starship::before {
-      background: white;
-      box-shadow:
-        120px 45px 0 white, 280px 100px 0 rgba(255,255,255,0.8),
-        450px 30px 0 rgba(255,255,255,0.6), 680px 180px 0 white,
-        820px 60px 0 rgba(255,255,255,0.9), 950px 140px 0 white,
-        1100px 80px 0 rgba(255,255,255,0.7), 230px 280px 0 white,
-        410px 350px 0 rgba(255,255,255,0.8), 560px 420px 0 white,
-        730px 290px 0 rgba(255,255,255,0.6), 890px 380px 0 white,
-        60px 520px 0 rgba(255,255,255,0.9), 340px 580px 0 white,
-        770px 490px 0 rgba(255,255,255,0.7), 1050px 560px 0 white;
-      animation: twinkle 4s ease infinite;
-    }
+
+    /* Brillo de nebulosa sutil */
     .theme-starship::after {
-      background: rgba(196,181,253,0.8);
-      box-shadow:
-        180px 200px 0 rgba(147,197,253,0.9), 380px 150px 0 rgba(249,168,212,0.7),
-        590px 300px 0 rgba(196,181,253,0.8), 760px 400px 0 rgba(147,197,253,0.6),
-        920px 250px 0 rgba(249,168,212,0.9), 140px 450px 0 rgba(196,181,253,0.7),
-        480px 500px 0 rgba(147,197,253,0.8), 840px 150px 0 rgba(249,168,212,0.6);
-      animation: twinkle 6s ease infinite 2s;
+      content: '';
+      position: fixed;
+      top: -20%;
+      right: -10%;
+      width: 60vw;
+      height: 60vw;
+      max-width: 800px;
+      max-height: 800px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.12) 0%, rgba(56, 189, 248, 0.05) 50%, transparent 75%);
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(40px);
+      animation: nebulaFloat 12s ease-in-out infinite;
     }
-    .theme-starship .welcome,
-    .theme-starship .container { z-index: 1; position: relative; }
+
+    /* Títulos con brillo estelar */
+    .theme-starship h1,
+    .theme-starship h2,
+    .theme-starship h3 {
+      color: #ffffff !important;
+      text-shadow: 0 2px 14px rgba(129, 140, 248, 0.45);
+    }
+
+    /* Logo cósmico */
     .theme-starship .logo-bubble {
-      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(196,181,253,0.2)) !important;
-      border: 1px solid rgba(255,255,255,0.3) !important;
-      backdrop-filter: blur(20px);
-      animation: shipGlow 3s ease infinite !important;
-      color: white !important;
+      background: linear-gradient(135deg, #312e81 0%, #4c1d95 60%, #6d28d9 100%) !important;
+      border: 2px solid rgba(196, 181, 253, 0.5) !important;
+      color: #ffffff !important;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.45), 0 0 20px rgba(168, 85, 247, 0.3) !important;
     }
+
+    /* Botón principal estelar con degradado premium */
     .theme-starship .main-btn {
-      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(196,181,253,0.15)) !important;
-      border: 1px solid rgba(255,255,255,0.2) !important;
-      backdrop-filter: blur(10px);
-      color: white !important;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #9333ea 100%) !important;
+      border: 1px solid rgba(216, 180, 254, 0.4) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 18px rgba(124, 58, 237, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.3px;
     }
-    .theme-starship .main-btn:hover {
-      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(196,181,253,0.3)) !important;
-      border-color: rgba(255,255,255,0.5) !important;
-      animation: shipGlow 1s ease infinite !important;
+    .theme-starship .main-btn:hover,
+    .theme-starship .main-btn:active {
+      background: linear-gradient(135deg, #4338ca 0%, #6d28d9 55%, #7e22ce 100%) !important;
+      border-color: #e9d5ff !important;
+      box-shadow: 0 8px 30px rgba(124, 58, 237, 0.65), 0 0 18px rgba(56, 189, 248, 0.35) !important;
+      transform: translateY(-2px);
     }
-    .theme-starship .destino, .theme-starship .dia, .theme-starship .evento {
-      background: rgba(255,255,255,0.04) !important;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.1) !important;
+
+    /* Tarjetas opacas de alta definición (adiós a la transparencia excesiva) */
+    .theme-starship .card,
+    .theme-starship .destino,
+    .theme-starship .dia,
+    .theme-starship .evento,
+    .theme-starship .tramo-card,
+    .theme-starship .alojamiento-item,
+    .theme-starship .checklist-item,
+    .theme-starship .stat-card,
+    .theme-starship .lugar-card,
+    .theme-starship .destiny-card,
+    .theme-starship .feed-card {
+      background: linear-gradient(145deg, rgba(22, 19, 54, 0.94), rgba(15, 13, 38, 0.98)) !important;
+      border: 1px solid rgba(165, 180, 252, 0.25) !important;
+      color: #f1f5f9 !important;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
     }
-    .theme-starship h1, .theme-starship h2 { animation: shipGlow 3s ease infinite; }
+    .theme-starship .inspo-card {
+      border: 1.5px solid rgba(165, 180, 252, 0.35) !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 14px rgba(99, 102, 241, 0.25) !important;
+    }
+    .theme-starship .inspo-card:hover {
+      border-color: #a78bfa !important;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.65), 0 0 20px rgba(124, 58, 237, 0.45) !important;
+      transform: scale(1.05) translateY(-4px);
+    }
+    .theme-starship .inspo-card-label {
+      background: rgba(18, 16, 46, 0.85) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(165, 180, 252, 0.25);
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+    .theme-starship .destino:hover,
+    .theme-starship .dia:hover,
+    .theme-starship .evento:hover,
+    .theme-starship .card:hover,
+    .theme-starship .destiny-card:hover,
+    .theme-starship .lugar-card:hover {
+      border-color: rgba(167, 139, 250, 0.65) !important;
+      box-shadow: 0 12px 36px rgba(99, 102, 241, 0.28), 0 0 12px rgba(147, 197, 253, 0.15) !important;
+    }
+
+    /* Modales, chat y ventanas emergentes sólidas y elegantes */
+    .theme-starship .modal-contenido,
+    .theme-starship .modal-content,
+    .theme-starship .panel-herramientas-content,
+    .theme-starship .chat-container,
+    .theme-starship .mapa-content,
+    .theme-starship .clima-content,
+    .theme-starship .conversor-content,
+    .theme-starship .checklist-content,
+    .theme-starship .resumen-modal-content,
+    .theme-starship .resumen-content,
+    .theme-starship .calendario-content,
+    .theme-starship .reloj-content,
+    .theme-starship .compartir-content,
+    .theme-starship .support-content,
+    .theme-starship .perfil-content {
+      background: linear-gradient(160deg, #161338 0%, #0d0b24 100%) !important;
+      border: 1px solid rgba(165, 180, 252, 0.32) !important;
+      color: #f8fafc !important;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.75), 0 0 35px rgba(99, 102, 241, 0.25) !important;
+    }
+
+    /* Controles secundarios, chips y toggles */
+    .theme-starship .herramienta-btn,
+    .theme-starship .btn-secundario,
+    .theme-starship .view-toggle,
+    .theme-starship .sugerencia-btn,
+    .theme-starship .chip,
+    .theme-starship .lang-button,
+    .theme-starship .theme-button {
+      background: rgba(30, 27, 75, 0.75) !important;
+      border: 1px solid rgba(165, 180, 252, 0.28) !important;
+      color: #e2e8f0 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    }
+    .theme-starship .herramienta-btn:hover,
+    .theme-starship .btn-secundario:hover,
+    .theme-starship .view-toggle:hover,
+    .theme-starship .sugerencia-btn:hover,
+    .theme-starship .chip:hover,
+    .theme-starship .lang-button:hover,
+    .theme-starship .theme-button:hover {
+      background: rgba(49, 46, 129, 0.95) !important;
+      border-color: #a5b4fc !important;
+      color: #ffffff !important;
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35) !important;
+    }
+
+    /* Inputs, textareas y selects */
+    .theme-starship input,
+    .theme-starship select,
+    .theme-starship textarea {
+      background: #0c0a24 !important;
+      color: #f8fafc !important;
+      border: 1.5px solid rgba(165, 180, 252, 0.28) !important;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    }
+    .theme-starship input:focus,
+    .theme-starship select:focus,
+    .theme-starship textarea:focus {
+      border-color: #818cf8 !important;
+      box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25), 0 0 12px rgba(129, 140, 248, 0.3) !important;
+      outline: none !important;
+    }
+    .theme-starship input::placeholder,
+    .theme-starship textarea::placeholder {
+      color: rgba(148, 163, 184, 0.6) !important;
+    }
+
+    /* Menús y dropdowns */
+    .theme-starship .dropdown-menu,
+    .theme-starship #langDropdown,
+    .theme-starship #themeDropdown,
+    .theme-starship .lang-dropdown,
+    .theme-starship .theme-dropdown {
+      background: #151236 !important;
+      border: 1px solid rgba(165, 180, 252, 0.35) !important;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(99, 102, 241, 0.2) !important;
+      color: #f8fafc !important;
+    }
+    .theme-starship .lang-option,
+    .theme-starship .theme-option,
+    .theme-starship .dropdown-item {
+      color: #e2e8f0 !important;
+    }
+    .theme-starship .lang-option:hover,
+    .theme-starship .theme-option:hover,
+    .theme-starship .dropdown-item:hover,
+    .theme-starship .lang-option.active,
+    .theme-starship .theme-option.active {
+      background: rgba(99, 102, 241, 0.25) !important;
+      color: #ffffff !important;
+    }
+
+    /* Chat de Pluxy en Starship */
+    .theme-starship .chat-msg.ai {
+      background: rgba(30, 27, 75, 0.85) !important;
+      color: #f1f5f9 !important;
+      border: 1px solid rgba(165, 180, 252, 0.25) !important;
+    }
+    .theme-starship .chat-input-area {
+      background: #100e2b !important;
+      border-top: 1px solid rgba(165, 180, 252, 0.2) !important;
+    }
+    .theme-starship #chat-input {
+      background: #0b0920 !important;
+      color: #f8fafc !important;
+      border: 1.5px solid rgba(165, 180, 252, 0.25) !important;
+    }
 
     /* ============================
        THEME: ARES (unchanged)
@@ -526,6 +733,11 @@
       --rosa: #cd212a;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100vw;
+    }
     body {
       font-family: system-ui, sans-serif;
       background: linear-gradient(135deg, var(--fondo), var(--fondo));
@@ -533,6 +745,7 @@
       min-height: 100vh;
       padding: 20px;
       overflow-y: auto;
+      overflow-x: hidden;
       transition: background 0.5s ease, color 0.3s ease;
     }
     .welcome {
@@ -546,6 +759,7 @@
       z-index: 100;
       transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1), background 0.3s;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 20px;
       animation: fadeInScale 0.5s ease;
     }
@@ -1895,6 +2109,41 @@
 #modal-cuenta {
   position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px);
   display:none; align-items:center; justify-content:center; z-index:300; padding:10px;
+}
+.close-panel,
+.close-modal,
+.close-calendario,
+.close-resumen,
+.close-clima,
+.close-conversor,
+.modal-close-btn,
+.photo-lightbox-close {
+  cursor: pointer !important;
+  font-size: 1.8rem !important;
+  color: var(--gris) !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease, background 0.25s ease !important;
+  user-select: none !important;
+  border: none !important;
+  background: transparent !important;
+}
+.close-panel:hover,
+.close-modal:hover,
+.close-calendario:hover,
+.close-resumen:hover,
+.close-clima:hover,
+.close-conversor:hover,
+.modal-close-btn:hover,
+.photo-lightbox-close:hover {
+  color: #ef4444 !important;
+  transform: rotate(90deg) scale(1.15) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
 }
 .cuenta-content {
   max-width:460px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo));

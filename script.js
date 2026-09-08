@@ -595,6 +595,26 @@
     }
     window.t = t;
 
+    // ================== STORAGE & CONSTANTS ==================
+    var TRIPS_STORAGE_KEY = 'Plux_trips';
+    var TEMPLATE_KEY = 'Plux_templates';
+
+    function getStoredTrips() {
+      try {
+        return JSON.parse(localStorage.getItem(TRIPS_STORAGE_KEY) || '[]');
+      } catch(e) {
+        return [];
+      }
+    }
+
+    function getStoredTemplates() {
+      try {
+        return JSON.parse(localStorage.getItem(TEMPLATE_KEY) || '[]');
+      } catch(e) {
+        return [];
+      }
+    }
+
     // ================== ACCOUNT (Firebase Auth → /login) ==================
     let firebaseUser = null;
     let currentUserUid = null;
@@ -704,8 +724,12 @@
     function onFirebaseUserSignedIn(user) {
       firebaseUser = user;
       currentUserUid = user.uid;
+      if (user.photoURL) {
+        localStorage.setItem('Plux_UserProfile_Photo', user.photoURL);
+      }
       const btn = document.getElementById('cuentaButton');
       if (btn) btn.classList.add('logged-in');
+      updateUserButtonDisplay();
       cargarPerfilUsuario();
     }
 
@@ -731,7 +755,7 @@
     function updateUserButtonDisplay() {
       const btn = document.getElementById('cuentaButton');
       if (!btn) return;
-      const photo = localStorage.getItem('Plux_UserProfile_Photo');
+      const photo = localStorage.getItem('Plux_UserProfile_Photo') || (firebaseUser && firebaseUser.photoURL);
       const isLogged = !!(currentNickname || (firebaseUser && firebaseUser.email) || (typeof currentUserUid !== 'undefined' && currentUserUid));
       if (isLogged) {
         btn.classList.add('logged-in');
@@ -769,19 +793,20 @@
       try {
         if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
           const enc = new TextEncoder();
-          const data = enc.encode(`${salt}:${password}`);
+          const data = enc.encode(password + ':' + salt);
           const hashBuf = await window.crypto.subtle.digest('SHA-256', data);
           const hashArr = Array.from(new Uint8Array(hashBuf));
           return hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
         }
       } catch (e) {
-        console.warn('Crypto subtle error, fallback hash:', e);
+        console.warn('Crypto subtle fallback:', e);
       }
       let h = 0;
-      for (let i = 0; i < password.length; i++) {
-        h = Math.imul(31, h) + password.charCodeAt(i) | 0;
+      const str = password + ':' + salt;
+      for (let i = 0; i < str.length; i++) {
+        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
       }
-      return 'fb_' + Math.abs(h).toString(16);
+      return 'fallback_' + Math.abs(h).toString(16);
     }
     window.hashPassword = hashPassword;
 
@@ -812,7 +837,7 @@
         }
         
         const nick = currentNickname || (firebaseUser && (firebaseUser.displayName || firebaseUser.email.split('@')[0]));
-        const email = firebaseUser ? firebaseUser.email : 'Nickname Login';
+        const email = firebaseUser ? firebaseUser.email : (currentNickname ? `@${currentNickname}` : 'Usuario');
         
         const setEl = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
 
@@ -820,14 +845,17 @@
         setEl('profileName', nick);
         setEl('profileEmail', email);
         
-        // Update avatar image if user has custom photo
-        const photo = localStorage.getItem('Plux_UserProfile_Photo');
+        // Update avatar image if user has custom photo or Google photo
+        const photo = localStorage.getItem('Plux_UserProfile_Photo') || (firebaseUser && firebaseUser.photoURL);
+        if (photo && !localStorage.getItem('Plux_UserProfile_Photo')) {
+          localStorage.setItem('Plux_UserProfile_Photo', photo);
+        }
         const avatarEl = document.getElementById('profileAvatarInner');
         if (avatarEl) {
           if (photo) {
             avatarEl.innerHTML = `<img src="${photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
           } else {
-            avatarEl.innerHTML = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+            avatarEl.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
           }
         }
         updateUserButtonDisplay();
@@ -925,7 +953,7 @@
       if (modal) {
         modal.style.display = 'flex';
       } else {
-        const confirmarBorrar = confirm('¿Deseas borrar los chats guardados en este dispositivo al cerrar sesión?');
+        const confirmarBorrar = confirm('¿Deseas borrar tus chats y viajes guardados en este dispositivo al cerrar sesión?');
         ejecutarCerrarSesion(confirmarBorrar);
       }
     }
@@ -937,7 +965,7 @@
     }
     window.cancelarCerrarSesion = cancelarCerrarSesion;
 
-    async function ejecutarCerrarSesion(borrarChats = false) {
+    async function ejecutarCerrarSesion(borrarTodo = false) {
       cancelarCerrarSesion();
       try {
         if (typeof pluxChatUnsubscribe === 'function' && pluxChatUnsubscribe) {
@@ -945,8 +973,17 @@
           pluxChatUnsubscribe = null;
         }
 
-        if (borrarChats) {
+        if (borrarTodo) {
           localStorage.removeItem('PluxSocialChats_V2');
+          localStorage.removeItem('Plux_Viajes');
+          localStorage.removeItem('Plux_ActiveTrip');
+          localStorage.removeItem('itinerario_actual');
+          localStorage.removeItem('itinerario');
+          localStorage.removeItem('viaje_colaborativo');
+          localStorage.removeItem('PluxSyncCode');
+          localStorage.removeItem('Plux_PersonalInfo');
+          localStorage.removeItem('Plux_UserProfile_Photo');
+          localStorage.removeItem('Plux_MemberSince');
           if (typeof pluxSocialChats !== 'undefined') {
             pluxSocialChats = {};
             pluxActiveChatId = 'trip_group';
@@ -954,6 +991,9 @@
             if (typeof renderChatMessages === 'function') renderChatMessages();
             if (typeof renderChannelsList === 'function') renderChannelsList();
           }
+          destinos = [];
+          if (typeof renderDestinos === 'function') renderDestinos();
+          if (typeof renderTripLists === 'function') renderTripLists();
         }
 
         localStorage.removeItem('Plux_Nickname');
@@ -964,7 +1004,7 @@
 
         await firebase.auth().signOut();
         onFirebaseUserSignedOut();
-        showToast(borrarChats ? 'Sesión cerrada y chats eliminados del dispositivo' : t('auth_logout'), 'info');
+        showToast(borrarTodo ? 'Sesión cerrada y datos eliminados del dispositivo' : (typeof t === 'function' ? t('auth_logout') : 'Sesión cerrada'), 'info');
 
         try {
           await firebase.auth().signInAnonymously();
@@ -1004,21 +1044,51 @@
 
     async function handleNCLogin(e) {
       if (e) e.preventDefault();
-      const email = document.getElementById('ncLoginEmail')?.value?.trim();
-      const password = document.getElementById('ncLoginPassword')?.value;
-      if (!email || !password) return showToast('Ingresá correo y contraseña', 'error');
+      const loginVal = document.getElementById('ncLoginEmail')?.value?.trim();
+      const password = document.getElementById('ncLoginPassword')?.value || '';
+      if (!loginVal) return showToast('Ingresá tu usuario o correo', 'error');
       
       const submitBtn = document.getElementById('btnNCLoginSubmit');
       if (submitBtn) submitBtn.disabled = true;
 
       try {
+        // Si no tiene @, es un Nickname directo (no requiere base de datos)
+        if (!loginVal.includes('@')) {
+          const nick = loginVal.toLowerCase().replace(/[^a-z0-9_]/g, '');
+          if (nick.length < 3) {
+            showToast('El nickname debe tener al menos 3 caracteres', 'error');
+            return;
+          }
+          currentNickname = nick;
+          currentUserUid = nick;
+          localStorage.setItem('Plux_Nickname', nick);
+          localStorage.setItem('Plux_Uid', nick);
+          if (typeof updateUserButtonDisplay === 'function') updateUserButtonDisplay();
+          showToast('¡Bienvenido, @' + nick + '!', 'success');
+          if (typeof cerrarCuenta === 'function') cerrarCuenta();
+          return;
+        }
+
+        // Si es correo, autenticar con Firebase
         if (!firebase.apps || !firebase.apps.length) await initFirebaseAuth();
-        const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+        const cred = await firebase.auth().signInWithEmailAndPassword(loginVal, password);
         showToast('¡Bienvenido! Sesión iniciada', 'success');
         if (typeof cerrarCuenta === 'function') cerrarCuenta();
         if (typeof onFirebaseUserSignedIn === 'function') onFirebaseUserSignedIn(cred.user);
       } catch (err) {
         console.error("Login error:", err);
+        // Fallback offline si no hay red o base de datos
+        if (err.code === 'auth/network-request-failed' || !window.navigator.onLine) {
+          const fallbackNick = loginVal.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') || 'viajero';
+          currentNickname = fallbackNick;
+          currentUserUid = fallbackNick;
+          localStorage.setItem('Plux_Nickname', fallbackNick);
+          localStorage.setItem('Plux_Uid', fallbackNick);
+          if (typeof updateUserButtonDisplay === 'function') updateUserButtonDisplay();
+          showToast('Modo offline: Ingresaste como @' + fallbackNick, 'info');
+          if (typeof cerrarCuenta === 'function') cerrarCuenta();
+          return;
+        }
         let msg = 'Error de autenticación';
         if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') msg = 'Contraseña o usuario incorrecto';
         else if (err.code === 'auth/user-not-found') msg = 'No existe una cuenta con este correo';
@@ -1063,13 +1133,22 @@
       try {
         if (!firebase.apps || !firebase.apps.length) await initFirebaseAuth();
         const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
         const res = await firebase.auth().signInWithPopup(provider);
-        showToast('¡Bienvenido!', 'success');
+        const displayName = res.user?.displayName || res.user?.email || '';
+        showToast('¡Bienvenido ' + displayName + '!', 'success');
         if (typeof cerrarCuenta === 'function') cerrarCuenta();
         if (typeof onFirebaseUserSignedIn === 'function') onFirebaseUserSignedIn(res.user);
       } catch (err) {
         console.error("Google login error:", err);
-        showToast('Error al autenticar con Google', 'error');
+        if (err.code === 'auth/popup-closed-by-user') {
+          return;
+        }
+        if (err.code === 'auth/disallowed-useragent' || err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment' || /Android|PluxMobile/i.test(navigator.userAgent)) {
+          showToast('En la app móvil o si se bloquean popups, ingresá con tu Nickname o Correo', 'info');
+        } else {
+          showToast('Error al autenticar con Google', 'error');
+        }
       }
     }
     window.handleNCGoogle = handleNCGoogle;
@@ -1300,19 +1379,34 @@
       const templates = getStoredTemplates();
       const friends = getStoredFriends();
       const photo = localStorage.getItem('Plux_UserProfile_Photo') || null;
-      ref.set({
+      let personalInfo = {};
+      try {
+        personalInfo = JSON.parse(localStorage.getItem('Plux_PersonalInfo') || '{}');
+      } catch(e){}
+
+      const payload = {
         uid: currentUserUid,
         email: firebaseUser?.email || null,
         nickname: currentNickname,
         photoUrl: photo,
         idioma: currentLang,
         tema: currentTheme,
+        info_personal: personalInfo,
+        nombreCompleto: personalInfo.fullname || null,
+        residencia: personalInfo.location || null,
+        estiloViaje: personalInfo.travelStyle || null,
+        bio: personalInfo.bio || null,
         viajes_guardados: trips,
         plantillas: templates,
         preferencias: userPreferences,
         amigos: friends,
         ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).catch(e => console.error("Error sincronizando perfil:", e));
+      };
+
+      ref.set(payload, { merge: true }).catch(e => console.error("Error sincronizando perfil:", e));
+      if (currentNickname && db && currentUserUid !== currentNickname) {
+        db.collection('plux_usuarios').doc(currentNickname).set(payload, { merge: true }).catch(e => console.error("Error sincronizando perfil por nick:", e));
+      }
     }
 
     function cargarPerfilUsuario() {
@@ -1326,6 +1420,19 @@
           localStorage.setItem('Plux_Uid', currentUserUid);
           if (data.photoUrl) {
             localStorage.setItem('Plux_UserProfile_Photo', data.photoUrl);
+          }
+          if (data.info_personal && typeof data.info_personal === 'object') {
+            localStorage.setItem('Plux_PersonalInfo', JSON.stringify(data.info_personal));
+          } else if (data.infoPersonal && typeof data.infoPersonal === 'object') {
+            localStorage.setItem('Plux_PersonalInfo', JSON.stringify(data.infoPersonal));
+          } else if (data.nombreCompleto || data.residencia || data.estiloViaje || data.bio) {
+            const reconstructed = {
+              fullname: data.nombreCompleto || '',
+              location: data.residencia || '',
+              travelStyle: data.estiloViaje || 'mochilero',
+              bio: data.bio || ''
+            };
+            localStorage.setItem('Plux_PersonalInfo', JSON.stringify(reconstructed));
           }
           if (data.idioma && data.idioma !== currentLang) setLanguage(data.idioma, false);
           if (data.tema && data.tema !== currentTheme) setTheme(data.tema, false);
@@ -1719,6 +1826,7 @@
     let MULE_ROUTER_API_KEY = '';
     let OPENWEATHER_API_KEY = '';
     let db = null;
+    let rtdb = null;
     let syncCode = null; // Current cloud sync code
     let currentTripId = null; // Unique identifier for current trip
 
@@ -1776,6 +1884,25 @@
     }
     window.getTripParticipants = getTripParticipants;
 
+    function getRealtimeDb() {
+      if (rtdb) return rtdb;
+      try {
+        if (typeof firebase !== 'undefined') {
+          if (!firebase.apps || !firebase.apps.length) {
+            getFirestoreDb();
+          }
+          if (typeof firebase.database === 'function') {
+            rtdb = firebase.database();
+            console.log("⚡ Firebase Realtime Database conectado y disponible.");
+          }
+        }
+      } catch (e) {
+        console.warn("Inicializando RTDB fallback:", e);
+      }
+      return rtdb;
+    }
+    window.getRealtimeDb = getRealtimeDb;
+
     // Inicialización inmediata e incondicional de Firebase y Cloud Firestore
     function getFirestoreDb() {
       if (db) return db;
@@ -1799,6 +1926,10 @@
               db.enablePersistence({synchronizeTabs:true}).catch(() => {});
             } catch(e) {}
             console.log("🔥 Cloud Firestore conectado y disponible.");
+          }
+          if (typeof firebase.database === 'function') {
+            rtdb = firebase.database();
+            console.log("⚡ Firebase Realtime Database conectado.");
           }
         }
       } catch (e) {
@@ -1987,6 +2118,10 @@
 
       if (typeof firebase.firestore === 'function') {
         db = firebase.firestore();
+      }
+
+      if (typeof firebase.database === 'function') {
+        rtdb = firebase.database();
       }
       
       // Inicializar Analytics
@@ -3398,12 +3533,14 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     // ================== NOTIFICACIONES ==================
-    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-      Notification.requestPermission();
+    if (typeof Notification !== 'undefined' && Notification.requestPermission) {
+      if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
     }
 
     function programarNotificacion(evento, fechaHoraEvento) {
-      if (!fechaHoraEvento) return;
+      if (!fechaHoraEvento || typeof Notification === 'undefined') return;
       const tiempos = [0,15,30,60];
       tiempos.forEach(minutos => {
         const tiempoEvento = new Date(fechaHoraEvento).getTime();
@@ -3411,7 +3548,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         const delay = tiempoEvento - ahora - minutos * 60000;
         if (delay <= 0) return;
         setTimeout(() => {
-          if (Notification.permission === 'granted') {
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             let mensaje = `${evento.titulo || 'Evento'}`;
             if (minutos === 0) mensaje = `¡Ahora! ${mensaje}`;
             else if (minutos === 15) mensaje = `En 15 minutos: ${mensaje}`;
@@ -3424,7 +3561,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     function programarTodasLasNotificaciones() {
-      if (!Notification || Notification.permission !== 'granted') return;
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
       const fechaBase = document.getElementById('fechaInicio').value;
       if (!fechaBase) return;
       destinos.forEach(dest => {
@@ -3490,14 +3627,15 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       return String.fromCodePoint(...codePoints);
     }
 
-    function setupCityAutocomplete() {
-      const input = document.getElementById('nuevoDestino');
-      const dropdown = document.getElementById('city-autocomplete-dropdown');
+    function attachGenericCityAutocomplete(inputId, dropdownId) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
       if (!input || !dropdown) return;
 
+      let timer = null;
       input.addEventListener('input', (e) => {
         const val = e.target.value.trim();
-        clearTimeout(citySearchTimeout);
+        clearTimeout(timer);
         if (val.length < 2) {
           dropdown.style.display = 'none';
           dropdown.innerHTML = '';
@@ -3507,7 +3645,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         dropdown.style.display = 'block';
         dropdown.innerHTML = `<div class="city-autocomplete-loading">🔍 Buscando "${val}"...</div>`;
 
-        citySearchTimeout = setTimeout(async () => {
+        timer = setTimeout(async () => {
           try {
             const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=6&language=${currentLang || 'es'}&format=json`;
             const res = await fetch(url);
@@ -3520,15 +3658,15 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
             let html = '';
             data.results.forEach(item => {
-              const flag = getCountryEmoji(item.country_code);
+              const countryCode = (item.country_code || '').toUpperCase();
               const countryName = item.country || item.country_code || '';
               const stateName = item.admin1 ? `${item.admin1}, ` : '';
+              const fullFormatted = countryName ? `${item.name}, ${countryName}` : item.name;
               html += `
-                <div class="city-autocomplete-item" onclick="selectCityFromDropdown('${item.name.replace(/'/g, "\\'")}', '${(item.country_code || '').toUpperCase()}')">
-                  <span class="city-ac-flag">${flag}</span>
+                <div class="city-autocomplete-item" onclick="window._handleCitySelection('${inputId}', '${dropdownId}', '${item.name.replace(/'/g, "\\'")}', '${countryCode}', '${fullFormatted.replace(/'/g, "\\'")}')">
                   <div class="city-ac-info">
                     <div class="city-ac-name">${item.name}</div>
-                    <div class="city-ac-country">${stateName}${countryName} (${item.country_code || ''})</div>
+                    <div class="city-ac-country">${stateName}${countryName} (${countryCode})</div>
                   </div>
                 </div>`;
             });
@@ -3545,6 +3683,46 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           dropdown.style.display = 'none';
         }
       });
+    }
+
+    window._cityCallbacks = {};
+    window._handleCitySelection = function(inputId, dropdownId, cityName, countryCode, fullFormatted) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
+      if (input) {
+        input.value = fullFormatted || (countryCode ? `${cityName}, ${countryCode}` : cityName);
+      }
+      if (dropdown) dropdown.style.display = 'none';
+      if (window._cityCallbacks[inputId]) {
+        window._cityCallbacks[inputId](cityName, countryCode, fullFormatted);
+      }
+    };
+
+    function setupCityAutocomplete() {
+      // 1. Destino nuevo
+      window._cityCallbacks['nuevoDestino'] = (cityName, countryCode) => {
+        agregarDestino();
+      };
+      attachGenericCityAutocomplete('nuevoDestino', 'city-autocomplete-dropdown');
+
+      // 2. Lugar de Salida (Editor de viaje)
+      window._cityCallbacks['lugarSalida'] = (cityName, countryCode, fullFormatted) => {
+        lugarSalida = fullFormatted || (countryCode ? `${cityName}, ${countryCode}` : cityName);
+        autoSave();
+      };
+      attachGenericCityAutocomplete('lugarSalida', 'lugar-salida-autocomplete');
+
+      // 3. Info Personal: Residencia
+      window._cityCallbacks['info-location'] = (cityName, countryCode, fullFormatted) => {
+        const target = fullFormatted || (countryCode ? `${cityName}, ${countryCode}` : cityName);
+        if (!lugarSalida || !lugarSalida.trim()) {
+          lugarSalida = target;
+          const elSal = document.getElementById('lugarSalida');
+          if (elSal) elSal.value = lugarSalida;
+          autoSave();
+        }
+      };
+      attachGenericCityAutocomplete('info-location', 'info-location-autocomplete');
     }
 
     function selectCityFromDropdown(cityName, countryCode) {
@@ -3725,14 +3903,22 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       // Actualizar display del usuario
       updateUserButtonDisplay();
 
-      document.getElementById('langButton').addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.getElementById('langDropdown').classList.toggle('show');
-      });
-      document.getElementById('themeButton').addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.getElementById('themeDropdown').classList.toggle('show');
-      });
+      const langBtn = document.getElementById('langButton');
+      if (langBtn) {
+        langBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const dd = document.getElementById('langDropdown');
+          if (dd) dd.classList.toggle('show');
+        });
+      }
+      const themeBtn = document.getElementById('themeButton');
+      if (themeBtn) {
+        themeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const dd = document.getElementById('themeDropdown');
+          if (dd) dd.classList.toggle('show');
+        });
+      }
       // Click al botón de tour
       const tourBtn = document.getElementById('tourButton');
       if (tourBtn) {
@@ -4586,27 +4772,30 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       }
 
-      // 2. Try Gemini
+      // 2. Prioridad: Gemini oficial activo (gemini-2.5-flash / gemini-flash-latest)
       if (GEMINI_API_KEY) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-          const geminiContents = messages.map(msg => ({
-            role: msg.role === 'assistant' || msg.role === 'system' ? 'model' : 'user',
-            parts: [{ text: msg.content }]
-          }));
+        const geminiModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro'];
+        for (const gModel of geminiModels) {
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${GEMINI_API_KEY}`;
+            const geminiContents = messages.map(msg => ({
+              role: msg.role === 'assistant' || msg.role === 'system' ? 'model' : 'user',
+              parts: [{ text: msg.content }]
+            }));
 
-          const resp = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: geminiContents })
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) return text;
+            const resp = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: geminiContents })
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+            }
+          } catch (e) {
+            console.warn(`Gemini chat failed with ${gModel}:`, e);
           }
-        } catch (e) {
-          console.warn('Gemini chat failed', e);
         }
       }
 
@@ -4664,7 +4853,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
       // 5. Intelligent Fallback
       const destNames = destinos.map(d => d.nombre).join(', ') || 'tus destinos';
-      return `¡Hola! Como tu asistente Pluxy 🐾, para ${destNames}: te recomiendo planificar siempre las visitas a los monumentos principales por la mañana temprano para evitar filas, usar pases de transporte público de 24/48hs para ahorrar, y reservar actividades con antelación. ¡Podés pedirme sugerencias específicas para cualquier ciudad o usar los botones de acceso rápido arriba! ✨`;
+      return `¡Hola! Como tu asistente Pluxy ✨, para ${destNames}: te recomiendo planificar siempre las visitas a los monumentos principales por la mañana temprano para evitar filas, usar pases de transporte público de 24/48hs para ahorrar, y reservar actividades con antelación. ¡Podés pedirme sugerencias específicas para cualquier ciudad o usar los botones de acceso rápido arriba! ✨`;
     }
 
     // ================== GENERADOR AUTOMÁTICO DE ITINERARIO ==================
@@ -6422,16 +6611,6 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     // ================== FUNCIONES DE VIAJES (completamente funcionales) ==================
-    const TRIPS_STORAGE_KEY = 'Plux_trips';
-    const TEMPLATE_KEY = 'Plux_templates';
-
-    function getStoredTrips() {
-      return JSON.parse(localStorage.getItem(TRIPS_STORAGE_KEY) || '[]');
-    }
-
-    function getStoredTemplates() {
-      return JSON.parse(localStorage.getItem(TEMPLATE_KEY) || '[]');
-    }
 
     function saveTrips(trips, sync = true) {
       localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
@@ -6751,15 +6930,25 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         const curTheme = localStorage.getItem('Plux_Theme') || 'theme-oscuro';
         const curLang = localStorage.getItem('Plux_Lang') || 'es';
 
+        const themes = [
+          { id: 'theme-oscuro', name: 'Oscuro', desc: 'Predeterminado', color: '#090d16', border: '1.5px solid #475569', activeBorder: '#38bdf8' },
+          { id: 'theme-claro', name: 'Claro', desc: 'Luminoso', color: '#ffffff', border: '1.5px solid #94a3b8', activeBorder: '#0284c7' },
+          { id: 'theme-tokyo', name: 'Tokyo Night', desc: 'Cyber Neon', color: '#1a1b26', border: '1.5px solid #7aa2f7', activeBorder: '#7aa2f7' },
+          { id: 'theme-grid', name: 'Cyber Grid', desc: 'Futurista', color: '#00f0ff', border: 'none', activeBorder: '#00f0ff' },
+          { id: 'theme-starship', name: 'Starship', desc: 'Galáctico', color: '#a855f7', border: 'none', activeBorder: '#a855f7' },
+          { id: 'theme-terminal', name: 'Terminal', desc: 'Hacker', color: '#00ff66', border: 'none', activeBorder: '#00ff66' },
+          { id: 'theme-ares', name: 'Ares', desc: 'Crimson', color: '#ff3333', border: 'none', activeBorder: '#ff3333' }
+        ];
+
         let html = `<div id="modal-preferencias" style="position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:900;padding:15px;" onclick="if(event.target===this) this.remove()">
-            <div class="cuenta-content" style="background:linear-gradient(135deg,var(--card),var(--fondo));border:1px solid var(--border);border-radius:26px;padding:26px;max-width:480px;width:100%;max-height:88vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 25px 80px rgba(0,0,0,0.8);">
+            <div class="cuenta-content" style="background:linear-gradient(135deg,var(--card),var(--fondo));border:1px solid var(--border);border-radius:26px;padding:26px;max-width:500px;width:100%;max-height:88vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 25px 80px rgba(0,0,0,0.8);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-                    <h2 style="color:var(--verde);margin:0;font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:8px;">🎨 Personalizar</h2>
-                    <span onclick="document.getElementById('modal-preferencias').remove()" style="cursor:pointer;font-size:1.6rem;color:var(--gris);line-height:1;">×</span>
+                    <h2 style="color:var(--verde);margin:0;font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:8px;">Personalización</h2>
+                    <span class="modal-close-btn" onclick="document.getElementById('modal-preferencias').remove()">×</span>
                 </div>
 
                 <!-- 1. FOTO DE PERFIL -->
-                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
+                <div style="background:rgba(125,125,125,0.06);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
                     <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Foto de perfil</label>
                     <div style="display:flex;align-items:center;gap:16px;">
                         <div id="prefAvatarPreview" style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:2px solid var(--verde);flex-shrink:0;background:linear-gradient(135deg,var(--verde),var(--azul));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(52,211,153,0.3);">
@@ -6767,7 +6956,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                         </div>
                         <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
                             <button type="button" onclick="window.cambiarFotoPerfil()" style="padding:10px 14px;background:linear-gradient(135deg,var(--verde),var(--azul));color:black;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:0.86rem;display:flex;align-items:center;justify-content:center;gap:6px;">
-                                📷 Cambiar foto
+                                Cambiar foto
                             </button>
                             <button type="button" id="prefRemovePhotoBtn" onclick="window.quitarFotoPerfil()" style="display:${photo ? 'block' : 'none'};padding:6px 10px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;cursor:pointer;font-size:0.78rem;">
                                 Quitar foto
@@ -6777,43 +6966,51 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                 </div>
 
                 <!-- 2. IDIOMA -->
-                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
-                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Idioma</label>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(75px,1fr));gap:8px;">
+                <div style="background:rgba(125,125,125,0.06);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
+                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Idioma de la aplicación</label>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:8px;">
                         ${[
-                          { id: 'es', label: '🇪🇸 ES' },
-                          { id: 'en', label: '🇬🇧 EN' },
-                          { id: 'fr', label: '🇫🇷 FR' },
-                          { id: 'de', label: '🇩🇪 DE' },
-                          { id: 'it', label: '🇮🇹 IT' }
+                          { id: 'es', code: 'ES', label: 'Español' },
+                          { id: 'en', code: 'EN', label: 'English' },
+                          { id: 'fr', code: 'FR', label: 'Français' },
+                          { id: 'de', code: 'DE', label: 'Deutsch' },
+                          { id: 'it', code: 'IT', label: 'Italiano' }
                         ].map(l => `
-                          <button type="button" onclick="window.setLanguage('${l.id}'); document.querySelectorAll('.pref-lang-btn').forEach(b => { b.style.background = (b.dataset.lang==='${l.id}' ? 'rgba(52,211,153,0.18)' : 'rgba(255,255,255,0.04)'); b.style.borderColor = (b.dataset.lang==='${l.id}' ? 'var(--verde)' : 'var(--border)'); });" data-lang="${l.id}" class="pref-lang-btn" style="padding:10px 6px;border-radius:10px;border:1px solid ${curLang === l.id ? 'var(--verde)' : 'var(--border)'};background:${curLang === l.id ? 'rgba(52,211,153,0.18)' : 'rgba(255,255,255,0.04)'};color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">
-                            ${l.label}
+                          <button type="button" onclick="window.setLanguage('${l.id}'); document.querySelectorAll('.pref-lang-btn').forEach(b => { const active = (b.dataset.lang==='${l.id}'); b.style.background = active ? 'rgba(52,211,153,0.18)' : 'rgba(125,125,125,0.05)'; b.style.borderColor = active ? 'var(--verde)' : 'var(--border)'; b.style.color = active ? 'var(--verde)' : 'var(--texto)'; });" data-lang="${l.id}" class="pref-lang-btn" style="padding:10px 4px;border-radius:12px;border:1.5px solid ${curLang === l.id ? 'var(--verde)' : 'var(--border)'};background:${curLang === l.id ? 'rgba(52,211,153,0.18)' : 'rgba(125,125,125,0.05)'};color:${curLang === l.id ? 'var(--verde)' : 'var(--texto)'};font-weight:600;cursor:pointer;font-size:0.82rem;display:flex;flex-direction:column;align-items:center;gap:3px;">
+                            <span style="font-weight:800;font-size:0.95rem;color:var(--verde);">${l.code}</span>
+                            <span style="color:inherit;">${l.label}</span>
                           </button>
                         `).join('')}
                     </div>
                 </div>
 
-                <!-- 3. TEMA VISUAL -->
-                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
-                    <label style="display:block;margin-bottom:8px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Tema visual</label>
-                    <select id="pref-theme-select" onchange="window.setTheme(this.value)" style="width:100%;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;color:white;font-size:0.92rem;outline:none;box-sizing:border-box;">
-                        <option value="theme-oscuro" ${curTheme==='theme-oscuro'?'selected':''}>🌙 Oscuro (Predeterminado)</option>
-                        <option value="theme-claro" ${curTheme==='theme-claro'?'selected':''}>☀️ Claro</option>
-                        <option value="theme-tokyo" ${curTheme==='theme-tokyo'?'selected':''}>🌸 Tokyo Night</option>
-                        <option value="theme-grid" ${curTheme==='theme-grid'?'selected':''}>⚡ Cyber Grid</option>
-                        <option value="theme-starship" ${curTheme==='theme-starship'?'selected':''}>🚀 Starship</option>
-                        <option value="theme-terminal" ${curTheme==='theme-terminal'?'selected':''}>💻 Terminal Hacker</option>
-                        <option value="theme-ares" ${curTheme==='theme-ares'?'selected':''}>🔥 Ares OS</option>
-                    </select>
+                <!-- 3. TEMA VISUAL (GRID DE TARJETAS LIMPIO SIN EMOJIS) -->
+                <div style="background:rgba(125,125,125,0.06);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
+                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Tema visual</label>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
+                        ${themes.map(t => {
+                          const active = curTheme === t.id;
+                          const bColor = t.activeBorder || t.color;
+                          return `
+                            <div onclick="window.setTheme('${t.id}'); document.querySelectorAll('.pref-theme-card').forEach(c => { const act = c.dataset.themeId==='${t.id}'; c.style.borderColor = act ? '${bColor}' : 'var(--border)'; c.style.background = act ? 'rgba(52,211,153,0.12)' : 'rgba(125,125,125,0.05)'; const chk = c.querySelector('.theme-check-icon'); if (chk) chk.style.display = act ? 'inline-block' : 'none'; });" data-theme-id="${t.id}" class="pref-theme-card" style="cursor:pointer;padding:12px;border-radius:12px;border:2px solid ${active ? bColor : 'var(--border)'};background:${active ? 'rgba(52,211,153,0.12)' : 'rgba(125,125,125,0.05)'};display:flex;flex-direction:column;gap:6px;transition:all 0.2s ease;">
+                              <div style="display:flex;align-items:center;justify-content:space-between;">
+                                <span style="width:14px; height:14px; border-radius:50%; background:${t.color}; border:${t.border || 'none'}; box-shadow:0 0 8px ${t.color === '#ffffff' ? 'rgba(0,0,0,0.15)' : t.color}; display:inline-block;"></span>
+                                <span class="theme-check-icon" style="display:${active ? 'inline-block' : 'none'};color:var(--verde);font-size:0.85rem;font-weight:bold;">✓</span>
+                              </div>
+                              <span class="theme-name" style="font-size:0.9rem;font-weight:700;color:var(--texto);">${t.name}</span>
+                              <span class="theme-desc" style="font-size:0.75rem;color:var(--gris);">${t.desc}</span>
+                            </div>
+                          `;
+                        }).join('')}
+                    </div>
                 </div>
 
                 <!-- 4. RITMO Y EVENTOS IA -->
-                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px;">
+                <div style="background:rgba(125,125,125,0.06);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px;">
                     <label style="display:block;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Preferencias de viaje (IA)</label>
                     <div>
                         <label style="display:block;margin-bottom:6px;font-size:0.84rem;color:var(--gris);">Ritmo del itinerario:</label>
-                        <select id="pref-pace" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:white;font-size:0.9rem;box-sizing:border-box;">
+                        <select id="pref-pace" style="width:100%;padding:10px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--texto);font-size:0.9rem;box-sizing:border-box;outline:none;">
                             <option value="relaxed" ${userPreferences.pace==='relaxed'?'selected':''}>Relajado</option>
                             <option value="moderate" ${userPreferences.pace==='moderate'?'selected':''}>Moderado</option>
                             <option value="intense" ${userPreferences.pace==='intense'?'selected':''}>Intenso</option>
@@ -6821,13 +7018,13 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
                     </div>
                     <div>
                         <label style="display:block;margin-bottom:6px;font-size:0.84rem;color:var(--gris);">Actividades por día sugeridas:</label>
-                        <input type="number" id="pref-events" value="${userPreferences.eventsPerDay}" min="1" max="10" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:white;box-sizing:border-box;">
+                        <input type="number" id="pref-events" value="${userPreferences.eventsPerDay}" min="1" max="10" style="width:100%;padding:10px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--texto);box-sizing:border-box;">
                     </div>
                 </div>
 
                 <div style="display:flex;gap:10px;">
                     <button onclick="guardarPreferencias()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--verde),var(--azul));color:black;border:none;border-radius:14px;font-weight:bold;cursor:pointer;font-size:0.95rem;">Guardar cambios</button>
-                    <button onclick="document.getElementById('modal-preferencias').remove()" style="flex:1;padding:14px;background:rgba(255,255,255,0.08);color:white;border:1px solid var(--border);border-radius:14px;cursor:pointer;font-size:0.95rem;">Cerrar</button>
+                    <button onclick="document.getElementById('modal-preferencias').remove()" style="flex:1;padding:14px;background:rgba(125,125,125,0.1);color:var(--texto);border:1px solid var(--border);border-radius:14px;cursor:pointer;font-size:0.95rem;font-weight:600;">Cerrar</button>
                 </div>
             </div>
         </div>`;
@@ -7195,35 +7392,160 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
          const modal = document.getElementById('modal-detalle-amigo');
          if (modal) modal.style.display = 'flex';
          
-         // Set loading states
-         document.getElementById('friendDetailName').innerText = `@${friendNick}`;
-         document.getElementById('friendDetailConnection').innerText = 'Cargando...';
-         document.getElementById('friendStatTrips').innerText = '--';
-         document.getElementById('friendStatDestinations').innerText = '--';
-         document.getElementById('friendStatDays').innerText = '--';
-         document.getElementById('friendStatEvents').innerText = '--';
-         document.getElementById('friendStatCountries').innerText = '--';
+         const cleanNick = (friendNick || '').replace(/^@/, '').trim();
+         const titleNick = `@${cleanNick}`;
          
+         // Set loading states
+         const nameHeaderEl = document.getElementById('friendDetailName');
+         if (nameHeaderEl) nameHeaderEl.innerText = titleNick;
+         const connEl = document.getElementById('friendDetailConnection');
+         if (connEl) connEl.innerText = 'Cargando...';
+         const setStat = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+         setStat('friendStatTrips', '--');
+         setStat('friendStatDestinations', '--');
+         setStat('friendStatDays', '--');
+         setStat('friendStatEvents', '--');
+         setStat('friendStatCountries', '--');
+         
+         const infoCard = document.getElementById('friend-personal-info-card');
+         if (infoCard) infoCard.style.display = 'none';
+
          if (!db) {
              showToast('Base de datos no disponible', 'error');
              return;
          }
          
          try {
-             const userDoc = await db.collection('plux_usuarios').doc(friendNick).get();
-             if (!userDoc.exists) {
-                 showToast('No se encontró información del usuario', 'error');
-                 cerrarDetalleAmigo();
+             let data = null;
+             // 1. Try finding doc directly by cleanNick in plux_usuarios
+             const userDoc = await db.collection('plux_usuarios').doc(cleanNick).get();
+             if (userDoc.exists) {
+                 data = userDoc.data();
+             } else {
+                 // 2. Query where nickname == cleanNick in plux_usuarios
+                 const qSnap = await db.collection('plux_usuarios').where('nickname', '==', cleanNick).limit(1).get();
+                 if (!qSnap.empty) {
+                     data = qSnap.docs[0].data();
+                 } else {
+                     // 3. Query in users collection by id or nickname
+                     const uDoc = await db.collection('users').doc(cleanNick).get();
+                     if (uDoc.exists) {
+                         data = uDoc.data();
+                     } else {
+                         const qUsers = await db.collection('users').where('nickname', '==', cleanNick).limit(1).get();
+                         if (!qUsers.empty) {
+                             data = qUsers.docs[0].data();
+                         }
+                     }
+                 }
+             }
+
+             if (!data) {
+                 if (connEl) connEl.innerText = 'Última conexión: No disponible';
+                 setStat('friendStatTrips', '0');
+                 setStat('friendStatDestinations', '0');
+                 setStat('friendStatDays', '0');
+                 setStat('friendStatEvents', '0');
+                 setStat('friendStatCountries', '0');
                  return;
              }
-             
-const data = userDoc.data();
+
              const trips = data.viajes_guardados || [];
              let totalDestinations = 0;
              let totalDays = 0;
              let totalEvents = 0;
              let countries = new Set();
              
+             // Format Last Connection safely
+             let connStr = 'Reciente';
+             if (data.ultimaConexion) {
+               try {
+                 let connDate;
+                 if (data.ultimaConexion && typeof data.ultimaConexion.toDate === 'function') {
+                   connDate = data.ultimaConexion.toDate();
+                 } else {
+                   connDate = new Date(data.ultimaConexion);
+                 }
+                 if (!isNaN(connDate.getTime())) {
+                   connStr = connDate.toLocaleDateString() + ' ' + connDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                 }
+               } catch(e) {}
+             }
+             if (connEl) connEl.innerText = `Última conexión: ${connStr}`;
+
+             // Render Friend Personal Info (from nested or flat fields)
+             const rawPersonal = data.info_personal || data.infoPersonal || data.personalInfo || data.info || {};
+             const personalInfo = {
+               fullname: rawPersonal.fullname || data.nombreCompleto || data.fullname || data.nombre || '',
+               location: rawPersonal.location || data.residencia || data.location || data.ciudad || data.origen || '',
+               travelStyle: rawPersonal.travelStyle || data.estiloViaje || data.travelStyle || data.style || '',
+               bio: rawPersonal.bio || data.descripcion || data.bio || data.sobreMi || ''
+             };
+
+             let hasAnyInfo = false;
+
+             const nameEl = document.getElementById('friendDetailFullName');
+             const nameRow = document.getElementById('friendDetailFullNameRow');
+             if (personalInfo.fullname && personalInfo.fullname.trim()) {
+               if (nameEl) nameEl.innerText = personalInfo.fullname.trim();
+               if (nameRow) nameRow.style.display = 'block';
+               hasAnyInfo = true;
+             } else if (nameRow) {
+               nameRow.style.display = 'none';
+             }
+
+             const locEl = document.getElementById('friendDetailLocation');
+             const locRow = document.getElementById('friendDetailLocationRow');
+             if (personalInfo.location && personalInfo.location.trim()) {
+               if (locEl) locEl.innerText = personalInfo.location.trim();
+               if (locRow) locRow.style.display = 'block';
+               hasAnyInfo = true;
+             } else if (locRow) {
+               locRow.style.display = 'none';
+             }
+
+             const styleEl = document.getElementById('friendDetailStyle');
+             const styleRow = document.getElementById('friendDetailStyleRow');
+             if (personalInfo.travelStyle) {
+               const styleMap = {
+                 'mochilero': 'Mochilero y Aventura',
+                 'relax': 'Relax y Playa',
+                 'cultural': 'Cultural y Museos',
+                 'gastronomico': 'Gastronómico',
+                 'urbano': 'Urbano y Noche',
+                 'lujo': 'Lujo y Confort'
+               };
+               if (styleEl) styleEl.innerText = styleMap[personalInfo.travelStyle] || personalInfo.travelStyle;
+               if (styleRow) styleRow.style.display = 'block';
+               hasAnyInfo = true;
+             } else if (styleRow) {
+               styleRow.style.display = 'none';
+             }
+
+             const bioEl = document.getElementById('friendDetailBio');
+             const bioRow = document.getElementById('friendDetailBioRow');
+             if (personalInfo.bio && personalInfo.bio.trim()) {
+               if (bioEl) bioEl.innerText = `"${personalInfo.bio.trim()}"`;
+               if (bioRow) bioRow.style.display = 'block';
+               hasAnyInfo = true;
+             } else if (bioRow) {
+               bioRow.style.display = 'none';
+             }
+
+             if (infoCard) {
+               infoCard.style.display = hasAnyInfo ? 'flex' : 'none';
+             }
+             
+             // Set friend avatar if custom photo exists
+             const friendAvatarEl = document.getElementById('friendDetailAvatar');
+             if (friendAvatarEl) {
+               if (data.photoUrl) {
+                 friendAvatarEl.innerHTML = `<img src="${data.photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+               } else {
+                 friendAvatarEl.innerHTML = `<div style="font-weight:bold; font-size:1.4rem;">${cleanNick.substring(0, 2).toUpperCase()}</div>`;
+               }
+             }
+
              trips.forEach(trip => {
                  const dests = trip.destinos || [];
                  totalDestinations += dests.length;
@@ -7246,26 +7568,9 @@ const data = userDoc.data();
              document.getElementById('friendStatEvents').innerText = totalEvents;
              document.getElementById('friendStatCountries').innerText = countries.size;
              
-             let connStr = 'Nunca';
-             if (data.ultimaConexion) {
-                 const connDate = new Date(data.ultimaConexion);
-                 connStr = connDate.toLocaleString();
-             }
-             document.getElementById('friendDetailConnection').innerText = `Última conexión: ${connStr}`;
-             
-             // Set friend avatar if custom photo exists
-              const friendAvatarEl = document.getElementById('friendDetailAvatar');
-              if (friendAvatarEl) {
-                if (data.photoUrl) {
-                  friendAvatarEl.innerHTML = `<img src="${data.photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
-                } else {
-                  friendAvatarEl.innerHTML = `<div style="font-weight:bold; font-size:1.4rem;">${friendNick.substring(0, 2).toUpperCase()}</div>`;
-                }
-              }
-
               // Set click handlers for profile actions
               const shareBtn = document.getElementById('friendDetailShareBtn');
-              if (shareBtn) shareBtn.onclick = () => compartirViajeConAmigo(friendNick);
+              if (shareBtn) shareBtn.onclick = () => compartirViajeConAmigo(cleanNick);
 
               const chatBtn = document.getElementById('friendDetailChatBtn');
               if (chatBtn) {
@@ -7322,9 +7627,9 @@ const data = userDoc.data();
         container.innerHTML = Array.from(friendSet).filter(Boolean).map(f => {
           const isChecked = cleanPreselected && f === cleanPreselected;
           return `
-            <label style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,0.03); cursor:pointer; color:white; font-size:0.9rem;">
-              <input type="checkbox" value="${escapeHtml(f)}" class="group-member-checkbox" ${isChecked ? 'checked' : ''} style="accent-color:var(--verde); width:18px; height:18px;">
-              <span>@${escapeHtml(f)}</span>
+            <label class="group-member-item" style="display:flex !important; flex-direction:row !important; align-items:center !important; justify-content:flex-start !important; gap:12px !important; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,0.04); cursor:pointer; color:white; font-size:0.92rem; width:100%; box-sizing:border-box;">
+              <input type="checkbox" value="${escapeHtml(f)}" class="group-member-checkbox" ${isChecked ? 'checked' : ''} style="accent-color:var(--verde); width:18px !important; height:18px !important; min-width:18px !important; max-width:18px !important; flex:0 0 18px !important; margin:0 !important; cursor:pointer;">
+              <span style="flex:1; text-align:left; font-weight:600;">@${escapeHtml(f)}</span>
             </label>
           `;
         }).join('');
@@ -7868,15 +8173,122 @@ const data = userDoc.data();
     }
     window.guardarNuevaContrasena = guardarNuevaContrasena;
 
-    function abrirInfo() {
-      const modal = document.getElementById('modal-info');
-      if (modal) modal.style.display = 'flex';
+    function selectTravelStyle(styleKey) {
+      const input = document.getElementById('info-travel-style');
+      if (input) input.value = styleKey;
+      document.querySelectorAll('.travel-style-chip').forEach(chip => {
+        const isSelected = (chip.dataset.style === styleKey);
+        chip.classList.toggle('active', isSelected);
+        chip.style.borderColor = isSelected ? 'var(--verde)' : 'var(--border)';
+        chip.style.background = isSelected ? 'rgba(52,211,153,0.18)' : 'rgba(255,255,255,0.04)';
+        chip.style.color = isSelected ? 'var(--verde)' : 'white';
+      });
     }
+    window.selectTravelStyle = selectTravelStyle;
 
-    function cerrarInfo() {
-      const modal = document.getElementById('modal-info');
+    function abrirInfoPersonal() {
+      const modal = document.getElementById('modal-info-personal');
+      if (!modal) return;
+      
+      // Cargar datos previos
+      let info = {};
+      try {
+        const raw = localStorage.getItem('Plux_PersonalInfo');
+        if (raw) info = JSON.parse(raw);
+      } catch(e) {}
+      
+      const elName = document.getElementById('info-fullname');
+      const elAge = document.getElementById('info-age');
+      const elGender = document.getElementById('info-gender');
+      const elLoc = document.getElementById('info-location');
+      const elBio = document.getElementById('info-bio');
+      
+      if (elName) elName.value = info.fullname || (firebaseUser && firebaseUser.displayName) || '';
+      if (elAge) elAge.value = info.age || '';
+      if (elGender) elGender.value = info.gender || '';
+      if (elLoc) elLoc.value = info.location || '';
+      if (elBio) elBio.value = info.bio || '';
+
+      selectTravelStyle(info.travelStyle || 'mochilero');
+      
+      modal.style.display = 'flex';
+    }
+    window.abrirInfoPersonal = abrirInfoPersonal;
+
+    function cerrarInfoPersonal() {
+      const modal = document.getElementById('modal-info-personal');
       if (modal) modal.style.display = 'none';
     }
+    window.cerrarInfoPersonal = cerrarInfoPersonal;
+
+    async function guardarInfoPersonal() {
+      const elName = document.getElementById('info-fullname');
+      const elAge = document.getElementById('info-age');
+      const elGender = document.getElementById('info-gender');
+      const elLoc = document.getElementById('info-location');
+      const elStyle = document.getElementById('info-travel-style');
+      const elBio = document.getElementById('info-bio');
+      
+      const locVal = elLoc ? elLoc.value.trim() : '';
+      const info = {
+        fullname: elName ? elName.value.trim() : '',
+        age: elAge ? elAge.value.trim() : '',
+        gender: elGender ? elGender.value : '',
+        location: locVal,
+        travelStyle: elStyle ? elStyle.value : 'mochilero',
+        bio: elBio ? elBio.value.trim() : '',
+        updatedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('Plux_PersonalInfo', JSON.stringify(info));
+
+      // Si el viaje actual no tiene origen asignado, usar la residencia como origen por defecto
+      if (locVal && (!lugarSalida || !lugarSalida.trim())) {
+        lugarSalida = locVal;
+        const fSal = document.getElementById('lugarSalida');
+        if (fSal) fSal.value = lugarSalida;
+        autoSave();
+      }
+      
+      // Sincronizar con Firestore si está conectado
+      try {
+        if (typeof db !== 'undefined' && db) {
+          const docData = {
+            info_personal: info,
+            nombreCompleto: info.fullname,
+            residencia: info.location,
+            estiloViaje: info.travelStyle,
+            bio: info.bio,
+            ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          if (currentNickname) {
+            db.collection('plux_usuarios').doc(currentNickname).set(docData, { merge: true }).catch(console.error);
+          }
+          if (currentUserUid && currentUserUid !== currentNickname) {
+            db.collection('plux_usuarios').doc(currentUserUid).set(docData, { merge: true }).catch(console.error);
+          }
+          if (firebaseUser && firebaseUser.uid) {
+            db.collection('users').doc(firebaseUser.uid).set(docData, { merge: true }).catch(console.error);
+          }
+        }
+      } catch (e) {
+        console.error("Error guardando info personal en Firestore:", e);
+      }
+      
+      cerrarInfoPersonal();
+      showToast('Información personal guardada con éxito ✨', 'success');
+    }
+    window.guardarInfoPersonal = guardarInfoPersonal;
+
+    function abrirInfo() {
+      abrirInfoPersonal();
+    }
+    window.abrirInfo = abrirInfo;
+
+    function cerrarInfo() {
+      cerrarInfoPersonal();
+    }
+    window.cerrarInfo = cerrarInfo;
 
     function empezarDeCero() {
       if (destinos.length > 0 && !confirm(t('confirm_scratch'))) return;
@@ -7927,7 +8339,17 @@ const data = userDoc.data();
     }
 
     function empezarDeCeroSinPrompt() {
-      lugarSalida = '';
+      // Usar residencia de Info Personal por defecto si existe
+      let defaultOrigin = '';
+      try {
+        const raw = localStorage.getItem('Plux_PersonalInfo');
+        if (raw) {
+          const info = JSON.parse(raw);
+          if (info && info.location && info.location.trim()) defaultOrigin = info.location.trim();
+        }
+      } catch(e) {}
+
+      lugarSalida = defaultOrigin;
       numPersonas = 1;
       destinos = [];
       vueltaGlobal = '';
@@ -7956,7 +8378,7 @@ const data = userDoc.data();
       }
 
       // Reset inputs
-      const fSal = document.getElementById('lugarSalida'); if (fSal) fSal.value = '';
+      const fSal = document.getElementById('lugarSalida'); if (fSal) fSal.value = defaultOrigin;
       const fPer = document.getElementById('numPersonas'); if (fPer) fPer.value = 1;
       const fFecha = document.getElementById('fechaInicio'); if (fFecha) fFecha.value = '';
       const fVue = document.getElementById('vuelta'); if (fVue) fVue.value = '';
@@ -8158,6 +8580,9 @@ const data = userDoc.data();
   window.cerrarSeguridad = cerrarSeguridad;
   window.guardarNuevaContrasena = guardarNuevaContrasena;
   window.abrirInfo = abrirInfo;
+  window.abrirInfoPersonal = abrirInfoPersonal;
+  window.cerrarInfoPersonal = cerrarInfoPersonal;
+  window.guardarInfoPersonal = guardarInfoPersonal;
   window.mostrarGuiaComoEmpezar = mostrarGuiaComoEmpezar;
   window.selectCityFromDropdown = selectCityFromDropdown;
   window.cerrarInfo = cerrarInfo;
@@ -8563,6 +8988,25 @@ const data = userDoc.data();
   }
   window.migrarChatALocalACodigo = migrarChatALocalACodigo;
 
+  function pushMessageToRealtimeDb(roomKey, messageData) {
+    if (!roomKey || roomKey.startsWith('trip_local_')) return;
+    const dbInst = getRealtimeDb();
+    if (!dbInst) return;
+    try {
+      const serverTs = (typeof firebase !== 'undefined' && firebase.database && firebase.database.ServerValue)
+        ? firebase.database.ServerValue.TIMESTAMP
+        : Date.now();
+
+      dbInst.ref(`plux_chats/${roomKey}/messages`).push({
+        ...messageData,
+        timestamp: serverTs
+      }).catch(e => console.log('RTDB push message error:', e));
+    } catch(e) {
+      console.log('Error enviando mensaje a RTDB:', e);
+    }
+  }
+  window.pushMessageToRealtimeDb = pushMessageToRealtimeDb;
+
   function sumarUsuarioAlChatDelViaje(nickname, motivo = 'invitado') {
     if (!nickname) return;
     const cleanNick = nickname.trim().replace(/^@/, '');
@@ -8612,24 +9056,14 @@ const data = userDoc.data();
         chat.messages.push(sysMsg);
         localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
 
-        if (typeof db !== 'undefined' && db) {
-          const roomKey = getActiveChatRoomKey();
-          if (!roomKey.startsWith('trip_local_')) {
-            try {
-              const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
-                ? firebase.firestore.FieldValue.serverTimestamp()
-                : Date.now();
-              db.collection('plux_chat_rooms').doc(roomKey).collection('mensajes').add({
-                sender: 'Plux',
-                text: actionText,
-                time: timeStr,
-                color: 'emerald',
-                isSystem: true,
-                timestamp: serverTs
-              }).catch(e => console.log('Firestore sys message error:', e));
-            } catch(e) {}
-          }
-        }
+        const roomKey = getActiveChatRoomKey();
+        pushMessageToRealtimeDb(roomKey, {
+          sender: 'Plux',
+          text: actionText,
+          time: timeStr,
+          color: 'emerald',
+          isSystem: true
+        });
       }
     }
 
@@ -8666,7 +9100,7 @@ const data = userDoc.data();
 
   function getParticipantInitial(name) {
     if (!name) return '👤';
-    if (name.toLowerCase().includes('pluxy')) return '🐾';
+    if (name.toLowerCase().includes('pluxy')) return '<img src="/plux/pet.png" alt="Pluxy" style="width:22px; height:22px; object-fit:contain; display:block;">';
     return name.trim().charAt(0).toUpperCase();
   }
 
@@ -8724,42 +9158,52 @@ const data = userDoc.data();
     localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
   }
 
-  function setupFirestoreRealtimeChat() {
+  function setupRealtimeChat() {
     if (pluxChatUnsubscribe) {
-      pluxChatUnsubscribe();
+      try { pluxChatUnsubscribe(); } catch(e){}
       pluxChatUnsubscribe = null;
     }
 
-    if (typeof db !== 'undefined' && db) {
-      const roomKey = getActiveChatRoomKey();
-      if (roomKey.startsWith('trip_local_')) {
-        return;
-      }
+    const roomKey = getActiveChatRoomKey();
+    if (!roomKey || roomKey.startsWith('trip_local_')) {
+      return;
+    }
+
+    const dbInst = getRealtimeDb();
+    if (dbInst) {
       try {
-        pluxChatUnsubscribe = db.collection('plux_chat_rooms')
-          .doc(roomKey)
-          .collection('mensajes')
-          .orderBy('timestamp', 'asc')
-          .onSnapshot((snapshot) => {
-            if (!snapshot.empty) {
-              const remoteMsgs = [];
-              snapshot.forEach(doc => {
-                const data = doc.data();
-                remoteMsgs.push({ id: doc.id, ...data });
-              });
-              ensureChatChannel();
+        const chatRef = dbInst.ref(`plux_chats/${roomKey}/messages`).limitToLast(150);
+        const onValueCallback = (snapshot) => {
+          const val = snapshot.val();
+          if (val && typeof val === 'object') {
+            const remoteMsgs = Object.entries(val).map(([id, m]) => ({
+              id: id,
+              ...m
+            })).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+            ensureChatChannel();
+            if (pluxSocialChats[pluxActiveChatId]) {
               pluxSocialChats[pluxActiveChatId].messages = remoteMsgs;
               localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
               renderChatMessages();
             }
-          }, (err) => {
-            console.log('Chat Firestore fallback to local:', err.message);
-          });
+          }
+        };
+
+        chatRef.on('value', onValueCallback, (err) => {
+          console.log('Chat RTDB listener fallback to local:', err.message);
+        });
+
+        pluxChatUnsubscribe = () => {
+          try { chatRef.off('value', onValueCallback); } catch(e){}
+        };
       } catch (err) {
-        console.log('Error conectando realtime chat:', err);
+        console.log('Error conectando realtime chat RTDB:', err);
       }
     }
   }
+  window.setupRealtimeChat = setupRealtimeChat;
+  window.setupFirestoreRealtimeChat = setupRealtimeChat; // Alias para compatibilidad
 
   function abrirChatSocial(chatId) {
     if (chatId) {
@@ -8784,7 +9228,7 @@ const data = userDoc.data();
     renderActiveChatHeader();
     renderChatMessages();
     renderChannelsList();
-    setupFirestoreRealtimeChat();
+    setupRealtimeChat();
     
     setTimeout(() => {
       const input = document.getElementById('plux-social-input');
@@ -9039,7 +9483,7 @@ const data = userDoc.data();
       directChannels.unshift({
         id: 'dm_pluxy',
         type: 'direct',
-        name: '🐾 Pluxy IA',
+        name: 'Pluxy ✨',
         targetUser: 'Pluxy',
         messages: []
       });
@@ -9055,10 +9499,10 @@ const data = userDoc.data();
       const isActive = c.id === pluxActiveChatId;
       const lastMsg = c.messages && c.messages.length > 0 ? (c.messages[c.messages.length - 1].text || 'Tarjeta adjunta') : 'Sin mensajes aún';
       const isPluxy = c.id === 'dm_pluxy';
-      const icon = isPluxy ? '🐾' : '👤';
+      const icon = isPluxy ? '<img src="/plux/pet.png" alt="Pluxy" style="width:22px; height:22px; object-fit:contain; display:block;">' : '👤';
       html += `
         <div class="plux-channel-item ${isActive ? 'active' : ''}" onclick="window.cambiarCanalSocial('${c.id}')">
-          <div style="font-size:1.2rem;">${icon}</div>
+          <div style="font-size:1.2rem; display:flex; align-items:center; justify-content:center; width:28px;">${icon}</div>
           <div style="flex:1; min-width:0;">
             <div style="font-weight:700; font-size:0.85rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
             <div style="font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lastMsg)}</div>
@@ -9076,7 +9520,7 @@ const data = userDoc.data();
     renderActiveChatHeader();
     renderChatMessages();
     renderChannelsList();
-    setupFirestoreRealtimeChat();
+    setupRealtimeChat();
     const drawer = document.getElementById('plux-chat-channels-drawer');
     if (drawer) drawer.style.display = 'none';
   }
@@ -9146,31 +9590,14 @@ const data = userDoc.data();
     renderChatMessages();
     renderChannelsList();
 
-    // Send to Firestore in real-time if connected
-    if (typeof db !== 'undefined' && db) {
-      const roomKey = getActiveChatRoomKey();
-      if (!roomKey.startsWith('trip_local_')) {
-        try {
-        const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
-          ? firebase.firestore.FieldValue.serverTimestamp()
-          : Date.now();
-
-        db.collection('plux_chat_rooms')
-          .doc(roomKey)
-          .collection('mensajes')
-          .add({
-            sender: myName,
-            text: text,
-            time: timeStr,
-            color: getParticipantColor(myName),
-            timestamp: serverTs
-          })
-          .catch(e => console.log('Firestore add message error:', e));
-        } catch (e) {
-          console.log('Error enviando mensaje a Firestore:', e);
-        }
-      }
-    }
+    // Send to Firebase Realtime Database
+    const roomKey = getActiveChatRoomKey();
+    pushMessageToRealtimeDb(roomKey, {
+      sender: myName,
+      text: text,
+      time: timeStr,
+      color: getParticipantColor(myName)
+    });
 
     // Trigger Pluxy AI companion if mentioned or in direct chat with Pluxy
     const isPluxyTrigger = text.toLowerCase().includes('@pluxy') || text.toLowerCase().includes('pluxy') || pluxActiveChatId === 'dm_pluxy';
@@ -9178,7 +9605,7 @@ const data = userDoc.data();
       const thinkingMsg = {
         id: 'msg_thinking_' + Date.now(),
         sender: 'Pluxy',
-        text: '🐾 Pluxy está escribiendo...',
+        text: '✨ Pluxy está escribiendo...',
         time: timeStr,
         color: 'pluxy'
       };
@@ -9191,14 +9618,17 @@ const data = userDoc.data();
           ? `Destinos actuales: ${destinos.map(d => `${d.nombre}${d.pais ? ' ('+d.pais+')' : ''} (${d.dias?.length || 0} días, ${d.dias?.reduce((s,d)=>s+(d.eventos?.length||0),0)||0} eventos)`).join(', ')}.`
           : 'Sin destinos aún.';
 
-        const weatherCtx = (typeof getWeatherContextForTrip === 'function') ? await getWeatherContextForTrip() : '';
+        const isWeatherQuery = /clima|temperatura|tiempo|lluvia|llover|frio|calor|viento|pronostico|ropa/i.test(cleanQuery);
+        const weatherCtx = (isWeatherQuery && typeof getWeatherContextForTrip === 'function')
+          ? await Promise.race([getWeatherContextForTrip(), new Promise(res => setTimeout(() => res(''), 1000))])
+          : '';
 
         const systemPrompt = `${CHAT_SYSTEM}
-Estás en el chat colaborativo de Plux respondiendo a los viajeros.
+Estás en el chat de Plux respondiendo a los viajeros como Pluxy, el asistente de viajes inteligente y compañero de rutas.
 Contexto del viaje actual: ${destContext}
 Personas: ${numPersonas}. Salida: ${lugarSalida || 'No especificada'}.${weatherCtx}
 IMPORTANTE: Tienes capacidades agenticas completas para modificar el viaje si los viajeros te lo piden. Puedes agregar destinos, actividades, itinerarios, transporte, etc., usando los comandos [ACCION:...].
-Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
+Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️.`;
 
         // Gather recent conversation history from this chat channel
         const recentHistory = chat.messages
@@ -9243,31 +9673,19 @@ Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
         renderChatMessages();
         renderChannelsList();
 
-        // Also push AI answer to Firestore
-        if (typeof db !== 'undefined' && db) {
-          const roomKey = getActiveChatRoomKey();
-          const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
-            ? firebase.firestore.FieldValue.serverTimestamp()
-            : Date.now();
-
-          db.collection('plux_chat_rooms')
-            .doc(roomKey)
-            .collection('mensajes')
-            .add({
-              sender: 'Pluxy',
-              text: aiMsg.text,
-              time: replyTimeStr,
-              color: 'pluxy',
-              timestamp: serverTs
-            })
-            .catch(e => console.log('Firestore add AI message error:', e));
-        }
+        // Push AI answer to Firebase Realtime Database
+        pushMessageToRealtimeDb(roomKey, {
+          sender: 'Pluxy',
+          text: aiMsg.text,
+          time: replyTimeStr,
+          color: 'pluxy'
+        });
       } catch (err) {
         chat.messages = chat.messages.filter(m => m.id !== thinkingMsg.id);
         chat.messages.push({
           id: 'msg_ai_err_' + Date.now(),
           sender: 'Pluxy',
-          text: '¡Guau! 🐾 Tuve un pequeño problema de conexión, pero estoy listo para ayudarte.',
+          text: 'Tuve un pequeño problema de conexión, pero estoy listo para ayudarte ✨.',
           time: timeStr,
           color: 'pluxy'
         });
@@ -9303,30 +9721,15 @@ Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
     renderChatMessages();
     renderChannelsList();
 
-    if (typeof db !== 'undefined' && db) {
-      const roomKey = getActiveChatRoomKey();
-      try {
-        const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
-          ? firebase.firestore.FieldValue.serverTimestamp()
-          : Date.now();
-
-        db.collection('plux_chat_rooms')
-          .doc(roomKey)
-          .collection('mensajes')
-          .add({
-            sender: myName,
-            text: newMsg.text,
-            cardType: newMsg.cardType,
-            cardData: newMsg.cardData,
-            time: timeStr,
-            color: getParticipantColor(myName),
-            timestamp: serverTs
-          })
-          .catch(e => console.log('Firestore add card error:', e));
-      } catch (e) {
-        console.log('Error enviando tarjeta a Firestore:', e);
-      }
-    }
+    const roomKey = getActiveChatRoomKey();
+    pushMessageToRealtimeDb(roomKey, {
+      sender: myName,
+      text: newMsg.text,
+      cardType: newMsg.cardType,
+      cardData: newMsg.cardData,
+      time: timeStr,
+      color: getParticipantColor(myName)
+    });
   }
 
   function toggleChecklistItemInChat(msgId, itemIdx) {
@@ -9362,45 +9765,89 @@ Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
     const container = document.getElementById('lista-contactos-amigos');
     if (!container) return;
 
-    const friends = (typeof getStoredFriends === 'function') ? getStoredFriends() : [];
-    const tripParticipants = (typeof getTripParticipants === 'function') ? getTripParticipants() : [];
-
     const currentNorm = (currentNickname || '').toLowerCase();
-    const contactSet = new Set();
-    
-    [...friends, ...tripParticipants].forEach(c => {
+    const rawFriends = (typeof getStoredFriends === 'function') ? getStoredFriends() : [];
+    const rawTripParticipants = (typeof getTripParticipants === 'function') ? getTripParticipants() : [];
+
+    const tripParticipants = [];
+    const tripSet = new Set();
+    rawTripParticipants.forEach(c => {
       if (typeof c === 'string' && c.trim()) {
         const clean = c.trim().replace(/^@/, '');
-        if (clean.toLowerCase() !== currentNorm && clean.toLowerCase() !== 'vos') contactSet.add(clean);
+        if (clean.toLowerCase() !== currentNorm && clean.toLowerCase() !== 'vos' && !tripSet.has(clean.toLowerCase())) {
+          tripSet.add(clean.toLowerCase());
+          tripParticipants.push(clean);
+        }
       }
     });
 
-    const contactList = Array.from(contactSet);
+    const friends = [];
+    rawFriends.forEach(c => {
+      if (typeof c === 'string' && c.trim()) {
+        const clean = c.trim().replace(/^@/, '');
+        if (clean.toLowerCase() !== currentNorm && clean.toLowerCase() !== 'vos' && !tripSet.has(clean.toLowerCase())) {
+          friends.push(clean);
+        }
+      }
+    });
 
-    if (contactList.length === 0) {
+    if (tripParticipants.length === 0 && friends.length === 0) {
       container.innerHTML = `
         <div style="background:rgba(255,255,255,0.03); border:1px dashed var(--border); border-radius:14px; padding:14px; text-align:center; color:#94a3b8; font-size:0.82rem;">
-          No tienes amigos o colaboradores agregados todavía.<br>
-          <span style="color:#38bdf8;">Escribe su @nickname arriba para chatear directamente.</span>
+          No tienes otros amigos o compañeros agregados todavía.<br>
+          <span style="color:#38bdf8;">Escribe el @nickname arriba para iniciar una conversación.</span>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = contactList.map(nick => {
-      const color = getParticipantColor(nick);
-      const initial = getParticipantInitial(nick);
-      return `
-        <div class="plux-contact-item" onclick="window.iniciarChatConUsuario('${escapeHtml(nick)}')">
-          <div class="plux-chat-avatar plux-avatar-${color}" style="width:38px; height:38px;">${initial}</div>
-          <div style="flex:1; min-width:0;">
-            <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">@${escapeHtml(nick)}</div>
-            <div style="color:#94a3b8; font-size:0.75rem;">Amigo / Compañero de viaje</div>
-          </div>
-          <button class="plux-contact-start-btn">Chatear</button>
+    let html = '';
+
+    if (tripParticipants.length > 0) {
+      html += `
+        <div style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; margin-bottom:6px;">
+          ✈️ Compañeros de este viaje
         </div>
       `;
-    }).join('');
+      tripParticipants.forEach(nick => {
+        const color = getParticipantColor(nick);
+        const initial = getParticipantInitial(nick);
+        html += `
+          <div class="plux-contact-item" onclick="window.iniciarChatConUsuario('${escapeHtml(nick)}')">
+            <div class="plux-chat-avatar plux-avatar-${color}" style="width:38px; height:38px; display:flex; align-items:center; justify-content:center;">${initial}</div>
+            <div style="flex:1; min-width:0;">
+              <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">@${escapeHtml(nick)}</div>
+              <div style="color:#38bdf8; font-size:0.75rem;">Compañero de viaje</div>
+            </div>
+            <button class="plux-contact-start-btn">Chatear</button>
+          </div>
+        `;
+      });
+    }
+
+    if (friends.length > 0) {
+      html += `
+        <div style="font-size:0.75rem; font-weight:700; color:#a855f7; text-transform:uppercase; letter-spacing:0.5px; margin-top:10px; margin-bottom:6px;">
+          👥 Tus Amigos
+        </div>
+      `;
+      friends.forEach(nick => {
+        const color = getParticipantColor(nick);
+        const initial = getParticipantInitial(nick);
+        html += `
+          <div class="plux-contact-item" onclick="window.iniciarChatConUsuario('${escapeHtml(nick)}')">
+            <div class="plux-chat-avatar plux-avatar-${color}" style="width:38px; height:38px; display:flex; align-items:center; justify-content:center;">${initial}</div>
+            <div style="flex:1; min-width:0;">
+              <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">@${escapeHtml(nick)}</div>
+              <div style="color:#a855f7; font-size:0.75rem;">Amigo guardado</div>
+            </div>
+            <button class="plux-contact-start-btn">Chatear</button>
+          </div>
+        `;
+      });
+    }
+
+    container.innerHTML = html;
   }
 
   async function iniciarChatConUsuario(nick) {
@@ -9420,7 +9867,7 @@ Responde siempre con tono alegre, amigable, canino y emojis 🐾✈️.`;
         pluxSocialChats[chatId] = {
           id: chatId,
           type: 'direct',
-          name: '🐾 Pluxy IA',
+          name: 'Pluxy ✨',
           targetUser: 'Pluxy',
           messages: []
         };

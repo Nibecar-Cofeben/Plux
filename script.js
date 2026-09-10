@@ -686,30 +686,106 @@
     }
 
     function applyGlobalI18n() {
+      const lang = currentLang || 'es';
+      localStorage.setItem('pluxUserLanguage', lang);
+      localStorage.setItem('Plux_Lang', lang);
+      document.body.className = document.body.className.replace(/lang-\w+/, `lang-${lang}`);
+      if (!document.body.className.includes(`lang-${lang}`)) document.body.classList.add(`lang-${lang}`);
+      
+      const langBtn = document.getElementById('langButton');
+      if (langBtn) langBtn.textContent = lang.toUpperCase();
+      
+      document.querySelectorAll('.lang-option').forEach(opt => {
+        const optLang = opt.getAttribute('data-lang') || opt.dataset.lang;
+        opt.classList.toggle('active', optLang === lang);
+      });
+
       const el = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = t(key); };
-      
-      // PLUXY elements
-      el('pluxyBtnText', 'pluxy_name');
-      el('pluxyAssistant', 'pluxy_assistant');
-      el('pluxyHint', 'pluxy_hint');
-      
-      // Export/Import buttons
-      el('importarBtn', 'importar_btn');
-      el('exportarBtn', 'exportar_btn');
-      
-      // Action buttons
-      el('pdfBtn', 'pdf_btn'); el('settHeaderLabel', 'settings_header');
-      el('shareCardBtn', 'share_social_card_btn');
-      el('calendarBtn', 'calendar_btn');
-      el('compartirBtn', 'compartir_btn');
-      el('mapaResumenBtn', 'mapa_btn');
-      
-      // Welcome Page & Decision Modal
+      const ph = (id, key) => { const n = document.getElementById(id); if (n) n.placeholder = t(key); };
+
+      // Welcome Screen & Decision Modal
       el('startBtn', 'welcome_start');
+      el('tripsBtn', 'trips_btn');
+      el('toolsBtn', 'tools_btn');
+      el('discoverBtn', 'discover_btn');
+      el('inspoTitle', 'inspo_title');
       el('decisionModalTitle', 'choose_trip_option_title');
       el('decisionModalDesc', 'choose_trip_option_desc');
       el('decisionNewBtn', 'choose_trip_new');
       el('decisionContinueBtn', 'choose_trip_continue');
+
+      // Main Trip Editor
+      el('appTitle', 'app_title');
+      el('lugarSalidaLabel', 'lugar_salida');
+      el('personasLabel', 'personas_label');
+      el('fechaInicioLabel', 'fecha_inicio_label');
+      el('settHeaderLabel', 'settings_header');
+      el('addDestBtn', 'add_dest_button');
+      ph('nuevoDestino', 'add_dest_placeholder');
+      el('btn-resumen', 'view_summary');
+
+      // Saved Trips & Templates Modals
+      el('modalTitle', 'modal_title');
+      el('tabGuardadosBtn', 'tab_saved');
+      el('tabPlantillasBtn', 'tab_templates');
+      ph('nombreViaje', 'save_trip_placeholder');
+      ph('nombrePlantilla', 'nombre_plantilla');
+      el('guardarViajeBtn', 'save_trip_button');
+      el('guardarPlantillaBtn', 'guardar_plantilla');
+      el('importarBtn', 'importar_btn');
+      el('exportarBtn', 'exportar_btn');
+      el('sharedTripsTitle', 'shared_trips_title');
+      el('joinHintViajes', 'join_invite');
+      el('joinBtnViajes', 'join_btn');
+      ph('join-code-input-viajes', 'join_placeholder');
+
+      // Summary (Resumen)
+      el('summaryTitle', 'summary_title');
+      el('pdfBtn', 'pdf_btn');
+      el('shareCardBtn', 'share_social_card_btn');
+      el('calendarBtn', 'calendar_btn');
+      el('compartirBtn', 'compartir_btn');
+      el('mapaResumenBtn', 'mapa_btn');
+
+      // Tools Panel & Modals
+      el('herramientasTitle', 'herramientas_title');
+      el('calendarioTitle', 'calendario_title');
+      el('btnCalendario', 'calendario_title');
+      el('btnMapa', 'mapa_btn');
+      el('btnClima', 'clima_btn');
+      el('climaTitle', 'clima_title');
+      el('climaSearchBtn', 'clima_search');
+      ph('clima-search-input', 'clima_placeholder');
+      el('btnConversor', 'conversor_title');
+      el('conversorTitle', 'conversor_title');
+      el('conversorBtn', 'conversor_btn');
+      el('btnPreferencias', 'preferencias_btn');
+      el('btnViajeActivo', 'viaje_activo_btn');
+      el('joinHintHerramientas', 'join_invite');
+      el('joinBtnHerramientas', 'join_btn');
+      ph('join-code-input-herramientas', 'join_placeholder');
+
+      // Collaborators
+      el('colabTitle', 'colab_title');
+      el('colabInviteLabel', 'colab_invite_nick');
+      el('colabInviteBtn', 'colab_invite_btn');
+      ph('invite-nickname-input', 'colab_nick_ph');
+      el('colabAccessLabel', 'colab_access_code');
+      el('colabGenBtn', 'colab_gen_code');
+
+      // Presentation & Misc
+      el('presentacionTitle', 'present_title');
+      el('anteriorBtn', 'present_prev');
+      el('siguienteBtn', 'present_next');
+      el('mapTitle', 'map_title');
+      el('descubrirTitle', 'descubrir_title');
+      el('eventosDiaTitle', 'eventos_dia_title');
+      el('ares-esc-banner', 'ares_esc');
+
+      // Pluxy AI Assistant
+      el('pluxyBtnText', 'pluxy_name');
+      el('pluxyAssistant', 'pluxy_assistant');
+      el('pluxyHint', 'pluxy_hint');
 
       // Mobile bottom drawer
       el('mobileMenuTitle', 'mobile_menu_title');
@@ -720,6 +796,10 @@
       el('mobileMenuMap', 'mobile_menu_map');
       el('mobileMenuSupport', 'mobile_menu_support');
       el('mobileMenuClose', 'mobile_menu_close');
+
+      // Sub-modules
+      if (typeof applyCuentaModalI18n === 'function') applyCuentaModalI18n();
+      if (typeof actualizarIdiomaSupport === 'function') actualizarIdiomaSupport();
     }
 
     function onFirebaseUserSignedIn(user) {
@@ -3478,111 +3558,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         }
       }, 300);
     }
-    function applyGlobalI18n() {
-      const lang = currentLang;
-      localStorage.setItem('pluxUserLanguage', lang);
-      localStorage.setItem('Plux_Lang', lang);
-      document.body.className = document.body.className.replace(/lang-\w+/, `lang-${lang}`);
-      if (!document.body.className.includes(`lang-${lang}`)) document.body.classList.add(`lang-${lang}`);
-      
-      const langBtn = document.getElementById('langButton');
-      if (langBtn) langBtn.textContent = lang.toUpperCase();
-      
-      document.querySelectorAll('.lang-option').forEach(opt => {
-        const optLang = opt.getAttribute('data-lang') || opt.dataset.lang;
-        opt.classList.toggle('active', optLang === lang);
-      });
-
-      const setElText = (id, txt) => {
-        const el = document.getElementById(id);
-        if (el && txt != null) el.textContent = txt;
-      };
-      const setElPlaceholder = (id, txt) => {
-        const el = document.getElementById(id);
-        if (el && txt != null) el.placeholder = txt;
-      };
-
-      setElText('startBtn', t('welcome_start'));
-      setElText('tripsBtn', t('trips_btn'));
-      setElText('toolsBtn', t('tools_btn'));
-      setElText('discoverBtn', t('discover_btn'));
-      setElText('modalTitle', t('modal_title'));
-      setElPlaceholder('nombreViaje', t('save_trip_placeholder'));
-
-      const saveBtn = document.querySelector('#tab-guardados .save-trip button');
-      if (saveBtn) saveBtn.textContent = t('save_trip_button');
-      const importBtn = document.querySelector('#tab-guardados .import-export button:first-child');
-      if (importBtn) importBtn.textContent = t('importar');
-      const exportBtn = document.querySelector('#tab-guardados .import-export button:last-child');
-      if (exportBtn) exportBtn.textContent = t('exportar');
-
-      setElText('appTitle', t('app_title'));
-      setElPlaceholder('nuevoDestino', t('add_dest_placeholder'));
-      setElText('addDestBtn', t('add_dest_button'));
-      setElText('btn-resumen', t('view_summary'));
-      setElText('summaryTitle', t('summary_title'));
-
-      const savePlantillaBtn = document.querySelector('#tab-plantillas .save-trip button');
-      if (savePlantillaBtn) savePlantillaBtn.textContent = t('guardar_plantilla');
-      setElPlaceholder('nombrePlantilla', t('nombre_plantilla'));
-      setElText('herramientasTitle', t('herramientas_title'));
-      setElText('calendarioTitle', t('calendario_title'));
-      setElText('btnCalendario', t('calendario_title'));
-      setElText('btnMapa', t('mapa_btn'));
-      setElText('btnClima', t('clima_btn') || 'Clima');
-      setElText('climaTitle', t('clima_title') || 'Clima');
-      setElText('climaSearchBtn', t('clima_search') || 'Buscar');
-      setElPlaceholder('clima-search-input', t('clima_placeholder'));
-      setElText('eventosDiaTitle', t('eventos_dia_title'));
-      setElText('lugarSalidaLabel', t('lugar_salida'));
-      setElText('personasLabel', t('personas_label'));
-      setElText('fechaInicioLabel', t('fecha_inicio_label'));
-
-      if (typeof applyCuentaModalI18n === 'function') applyCuentaModalI18n();
-
-      setElText('joinHintHerramientas', t('join_invite'));
-      setElText('joinHintViajes', t('join_invite'));
-      setElText('joinBtnHerramientas', t('join_btn'));
-      setElText('joinBtnViajes', t('join_btn'));
-      setElPlaceholder('join-code-input-herramientas', t('join_placeholder'));
-      setElPlaceholder('join-code-input-viajes', t('join_placeholder'));
-      setElText('inspoTitle', t('inspo_title'));
-      setElText('tabGuardadosBtn', t('tab_saved'));
-      setElText('tabPlantillasBtn', t('tab_templates'));
-      setElText('sharedTripsTitle', t('shared_trips_title'));
-      setElText('colabTitle', t('colab_title'));
-      setElText('colabInviteLabel', t('colab_invite_nick'));
-      setElText('colabInviteBtn', t('colab_invite_btn'));
-      setElPlaceholder('invite-nickname-input', t('colab_nick_ph'));
-      setElText('colabAccessLabel', t('colab_access_code'));
-      setElText('colabGenBtn', t('colab_gen_code'));
-      setElText('mapTitle', t('map_title'));
-      setElText('conversorTitle', t('conversor_title'));
-      setElText('conversorBtn', t('conversor_btn'));
-      setElText('descubrirTitle', t('descubrir_title'));
-      setElText('presentacionTitle', t('present_title'));
-      setElText('anteriorBtn', t('present_prev'));
-      setElText('siguienteBtn', t('present_next'));
-      setElText('ares-esc-banner', t('ares_esc'));
-      setElText('btnPreferencias', t('preferencias_btn'));
-      setElText('btnViajeActivo', t('viaje_activo_btn'));
-      
-      const cuentaBtn = document.getElementById('cuentaButton');
-      if (cuentaBtn && !currentNickname) cuentaBtn.title = t('cuenta_btn_title');
-
-      if (typeof renderThemeDropdown === 'function') renderThemeDropdown();
-
-      const pantallaResumen = document.getElementById('pantalla-resumen');
-      if (pantallaResumen && pantallaResumen.style.display === 'flex') {
-        const btnView = document.querySelector('.view-toggle');
-        if (btnView && t('view_modes')) btnView.textContent = t('view_modes')[modos[(modoVista + 1) % 3]];
-        if (typeof renderResumen === 'function') renderResumen();
-      }
-      if (typeof renderTripLists === 'function') renderTripLists();
-      const modalCal = document.getElementById('modal-calendario');
-      if (modalCal && modalCal.style.display === 'flex' && typeof renderCalendario === 'function') renderCalendario();
-      if (typeof renderDestinos === 'function') renderDestinos();
-    }
+    window.applyGlobalI18n = applyGlobalI18n;
 
     // ================== NOTIFICACIONES ==================
     if (typeof Notification !== 'undefined' && Notification.requestPermission) {

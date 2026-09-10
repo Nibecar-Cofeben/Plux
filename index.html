@@ -104,7 +104,7 @@
   <script src="/plux/firebase/firebase-database-compat.js"></script>
   <script src="/plux/firebase/firebase-firestore-compat.js"></script>
   <script src="/plux/firebase/firebase-analytics-compat.js"></script>
-  <script defer src="/plux/script.js?v=1788902500000"></script>
+  <script defer src="/plux/script.js?v=1789080000000"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -309,7 +309,7 @@
       <div class="descubrir-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <button class="mobile-back-btn" onclick="cerrarDescubrir()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          <span>Volver</span>
+          <span class="txt-volver">Volver</span>
         </button>
         <h2 id="descubrirTitle" style="margin:0;">Descubrir (Feed de Inspiración)</h2>
       </div>
@@ -486,7 +486,7 @@
       </div>
       <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
         <span id="checklist-count" style="color:var(--gris);font-size:0.85rem;">0 de 0 completados</span>
-        <button onclick="generarChecklistIA()" style="padding:6px 14px;font-size:0.8rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white;border-radius:8px;cursor:pointer;margin-left:auto;">Regenerar con IA</button>
+        <button id="btnChecklistIA" onclick="generarChecklistIA()" style="padding:6px 14px;font-size:0.8rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white;border-radius:8px;cursor:pointer;margin-left:auto;">Regenerar con IA</button>
       </div>
       <div id="checklist-body"></div>
       <div style="display:flex;gap:10px;margin-top:20px;">
@@ -504,9 +504,9 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap:10px;">
         <h1 id="appTitle" style="margin:0;">Plux · Organiza tu aventura</h1>
         <div style="display:flex; gap:10px; align-items:center;">
-          <button onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:6px; box-shadow:0 0 12px rgba(16,185,129,0.35);">💬 Chat Grupal</button>
+          <button id="chatGrupalHeaderBtn" onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:6px; box-shadow:0 0 12px rgba(16,185,129,0.35);">💬 Chat Grupal</button>
           <button id="scratchBtnEditor" onclick="window.empezarDeCero()" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none;">Viaje desde cero 🆕</button>
-          <button onclick="document.getElementById('modal-colaboradores').style.display='flex'" style="background:var(--verde); color:black; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:8px;">Invitar</button>
+          <button id="invitarHeaderBtn" onclick="document.getElementById('modal-colaboradores').style.display='flex'" style="background:var(--verde); color:black; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:8px;">Invitar</button>
         </div>
       </div>
     </div>
@@ -553,7 +553,7 @@
           </div>
         </div>
         <div id="vuelta-costos-adicionales"></div>
-        <button onclick="agregarCostoVuelta()" style="margin-top:8px;">+ Costo adicional vuelta</button>
+        <button id="btnAgregarCostoVuelta" onclick="agregarCostoVuelta()" style="margin-top:8px;">+ Costo adicional vuelta</button>
       </div>
     </details>
 
@@ -915,8 +915,8 @@
   <div id="modal-confirmar-logout" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:2100; align-items:center; justify-content:center; backdrop-filter:blur(8px);" onclick="if(event.target===this) window.cancelarCerrarSesion()">
     <div class="modal-content" style="max-width:440px; width:92%; text-align:center; padding:28px; background:var(--card); border:1px solid var(--border); border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.7); position:relative;">
       <div style="font-size:2.8rem; margin-bottom:12px;">🔒</div>
-      <h3 style="color:var(--texto); margin:0 0 10px 0; font-size:1.3rem; font-weight:700;">¿Cerrar sesión?</h3>
-      <p style="color:var(--gris); font-size:0.92rem; line-height:1.5; margin-bottom:24px;">
+      <h3 id="logoutConfirmTitle" style="color:var(--texto); margin:0 0 10px 0; font-size:1.3rem; font-weight:700;">¿Cerrar sesión?</h3>
+      <p id="logoutConfirmDesc" style="color:var(--gris); font-size:0.92rem; line-height:1.5; margin-bottom:24px;">
         Podés cerrar sesión y borrar todos tus chats y viajes de este dispositivo, o conservarlos guardados localmente.
       </p>
       <div style="display:flex; flex-direction:column; gap:10px;">
@@ -941,7 +941,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <button class="mobile-back-btn" onclick="window.cerrarAmigos()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          <span>Volver</span>
+          <span class="txt-volver">Volver</span>
         </button>
         <h2 style="margin:0; font-size:1.4rem; color:var(--verde); font-weight:700;">Familia y amigos</h2>
         <span class="modal-close-btn" onclick="window.cerrarAmigos()">×</span>
@@ -978,7 +978,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <button class="mobile-back-btn" onclick="window.cerrarDetalleAmigo()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          <span>Volver</span>
+          <span class="txt-volver">Volver</span>
         </button>
         <h2 id="detalleAmigoTitle" style="margin:0; font-size:1.3rem; color:var(--texto); font-weight:700;">Perfil de Amigo</h2>
         <span class="modal-close-btn" onclick="window.cerrarDetalleAmigo()">×</span>
@@ -1077,7 +1077,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <button onclick="window.cerrarModalCrearGrupo()" style="background:none; border:none; color:var(--verde); font-size:0.95rem; display:flex; align-items:center; gap:4px; cursor:pointer; padding:6px 8px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          <span>Volver</span>
+          <span class="txt-volver">Volver</span>
         </button>
         <h2 style="margin:0; font-size:1.2rem; color:white; font-weight:700; text-align:center;">Crear Grupo</h2>
         <span class="modal-close-btn" onclick="window.cerrarModalCrearGrupo()">×</span>
@@ -1106,7 +1106,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <button onclick="window.cerrarSeguridad()" style="background:none; border:none; color:var(--verde); font-size:0.95rem; display:flex; align-items:center; gap:4px; cursor:pointer; padding:6px 8px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          <span>Volver</span>
+          <span class="txt-volver">Volver</span>
         </button>
         <h2 id="seguridadTitle" style="margin:0; font-size:1.2rem; color:var(--verde); font-weight:700;">Seguridad y Cuenta</h2>
         <span class="modal-close-btn" onclick="window.cerrarSeguridad()">×</span>
@@ -1141,7 +1141,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <button onclick="window.cerrarInfoPersonal()" style="background:none; border:none; color:var(--verde); font-size:0.95rem; display:flex; align-items:center; gap:4px; cursor:pointer; padding:6px 8px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          <span>Volver</span>
+          <span class="txt-volver">Volver</span>
         </button>
         <h2 id="infoPersonalTitle" style="margin:0; font-size:1.2rem; color:white; font-weight:700; text-align:center;">Información Personal</h2>
         <span class="modal-close-btn" onclick="window.cerrarInfoPersonal()">×</span>

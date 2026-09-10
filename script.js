@@ -37,6 +37,15 @@
         descubrir_ai_hint: "Buscamos con IA para recomendaciones personalizadas.",
         exportar_btn: "Exportar viaje actual", importar_btn: "Importar viaje (JSON)",
         pdf_btn: "PDF", share_social_card_btn: "📸 Compartir en Redes", calendar_btn: "Google Calendar", compartir_btn: "Compartir", mapa_btn: "Ver mapa",
+        chat_grupal_btn: "💬 Chat Grupal", invitar_btn: "Invitar",
+        datos_viaje_label: "⚙️ Configuración del viaje (Salida, Personas, Fechas, Vuelta)",
+        quienes_van_label: "👥 ¿Quiénes viajan? (Nombres o @usuarios):",
+        quienes_van_ph: "Escribí un nombre o @usuario (Enter o coma)",
+        vuelta_label: "Vuelta (opcional):", vuelta_desc_ph: "Descripción", btn_costo_vuelta: "+ Costo adicional vuelta",
+        lugar_salida_ph: "Ej. Buenos Aires", generar_itinerario_btn: "🪄 Generar itinerario", organizar_itinerario_btn: "⏳ Organizar",
+        costos_adicionales_title: "Costos adicionales", alojamiento_label: "ALOJAMIENTO (HOTEL / AIRBNB)",
+        alojamiento_ph: "Nombre del hotel o lugar", precio_alojamiento_label: "PRECIO ALOJAMIENTO (TOTAL)",
+        agregar_escala_btn: "+ Añadir Escala / Parada", lugares_turisticos_cercanos: "Lugares turísticos cercanos",
         pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Tu asistente de viaje",
         pluxy_hint: "Preguntame cualquier cosa sobre tu viaje",
         weather_loading: "Cargando...", personas_label: "Personas:", fecha_inicio_label: "Fecha de inicio:",
@@ -116,7 +125,26 @@
         mobile_menu_export: "Exportar viaje (JSON)",
         mobile_menu_map: "Ver mapa",
         mobile_menu_support: "Soporte y Sugerencias",
-        mobile_menu_close: "Cancelar"
+        mobile_menu_close: "Cancelar",
+        app_title_mobile: 'Plan de Viaje',
+        chat_input_ph: 'Escribí tu mensaje a Pluxy...',
+        checklist_ai_btn: 'Regenerar con IA',
+        checklist_ph: 'Añadir item manualmente...',
+        checklist_title: 'Mi Checklist de Viaje',
+        error_desc: 'Cuéntanos qué salió mal',
+        error_label: 'Informar un error',
+        help_desc: 'Tour interactivo de la app',
+        help_label: 'Tour guiado',
+        how_to_start_desc: 'Guía rápida para crear tu primer viaje',
+        how_to_start_label: 'Cómo empezar',
+        logout_confirm_desc: 'Podés cerrar sesión y borrar todos tus chats y viajes de este dispositivo, o conservarlos guardados localmente.',
+        logout_confirm_title: '¿Cerrar sesión?',
+        other_desc: 'Algo diferente a lo anterior',
+        other_label: 'Otros',
+        suggestion_desc: 'Ayudanos a mejorar con tu idea',
+        suggestion_label: 'Sugerir una función',
+        timeline_view_btn: '⏱ Línea de tiempo',
+        viaje_activo_modal_title: '¡Viaje Activo! - Tu itinerario de hoy'
       },
       en: {
         welcome_start: "Start your journey", trips_btn: "Your trips", tools_btn: "More tools",
@@ -154,6 +182,15 @@
         descubrir_ai_hint: "We use AI for personalized recommendations.",
         exportar_btn: "Exportar current trip", importar_btn: "Import trip (JSON)",
         pdf_btn: "PDF", share_social_card_btn: "📸 Share on Social", calendar_btn: "Google Calendar", compartir_btn: "Share", mapa_btn: "View map",
+        chat_grupal_btn: "💬 Group Chat", invitar_btn: "Invite",
+        datos_viaje_label: "⚙️ Trip Configuration (Departure, People, Dates, Return)",
+        quienes_van_label: "👥 Who's traveling? (Names or @usernames):",
+        quienes_van_ph: "Type a name or @username (Enter or comma)",
+        vuelta_label: "Return (optional):", vuelta_desc_ph: "Description", btn_costo_vuelta: "+ Additional return cost",
+        lugar_salida_ph: "e.g. Buenos Aires", generar_itinerario_btn: "🪄 Generate itinerary", organizar_itinerario_btn: "⏳ Organize",
+        costos_adicionales_title: "Additional costs", alojamiento_label: "ACCOMMODATION (HOTEL / AIRBNB)",
+        alojamiento_ph: "Hotel or place name", precio_alojamiento_label: "ACCOMMODATION PRICE (TOTAL)",
+        agregar_escala_btn: "+ Add Stopover / Layover", lugares_turisticos_cercanos: "Nearby tourist attractions",
         pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Your travel assistant",
         pluxy_hint: "Ask me anything about your trip",
         weather_loading: "Loading...", personas_label: "People:", fecha_inicio_label: "Start date:",
@@ -232,7 +269,26 @@
         mobile_menu_export: "Export trip (JSON)",
         mobile_menu_map: "View map",
         mobile_menu_support: "Support & Suggestions",
-        mobile_menu_close: "Cancel"
+        mobile_menu_close: "Cancel",
+        app_title_mobile: 'Trip Plan',
+        chat_input_ph: 'Type your message to Pluxy...',
+        checklist_ai_btn: 'Regenerate with AI',
+        checklist_ph: 'Add item manually...',
+        checklist_title: 'My Travel Checklist',
+        error_desc: 'Tell us what went wrong',
+        error_label: 'Report an error',
+        help_desc: 'Interactive app tour',
+        help_label: 'Guided tour',
+        how_to_start_desc: 'Quick guide to create your first trip',
+        how_to_start_label: 'How to start',
+        logout_confirm_desc: 'You can sign out and wipe all chats and trips from this device, or keep them saved locally.',
+        logout_confirm_title: 'Sign out?',
+        other_desc: 'Something else',
+        other_label: 'Other',
+        suggestion_desc: 'Help us improve with your idea',
+        suggestion_label: 'Suggest a feature',
+        timeline_view_btn: '⏱ Timeline view',
+        viaje_activo_modal_title: "Active Trip! - Today's itinerary"
       },
       fr: {
         welcome_start: "Commencez votre voyage", trips_btn: "Vos voyages", tools_btn: "Plus d'outils",
@@ -270,6 +326,15 @@
         descubrir_ai_hint: "Nous utilisons l'IA pour des recommandations personnalisées.",
         exportar_btn: "Exporter le voyage actuel", importar_btn: "Importer un voyage (JSON)",
         pdf_btn: "PDF", share_social_card_btn: "📸 Partager sur les Réseaux", calendar_btn: "Google Calendar", compartir_btn: "Partager", mapa_btn: "Voir la carte",
+        chat_grupal_btn: "💬 Chat de Groupe", invitar_btn: "Inviter",
+        datos_viaje_label: "⚙️ Paramètres du voyage (Départ, Personnes, Dates, Retour)",
+        quienes_van_label: "👥 Qui voyage ? (Noms ou @pseudos) :",
+        quienes_van_ph: "Tapez un nom ou @pseudo (Entrée ou virgule)",
+        vuelta_label: "Retour (optionnel) :", vuelta_desc_ph: "Description", btn_costo_vuelta: "+ Coût supplémentaire retour",
+        lugar_salida_ph: "ex. Paris", generar_itinerario_btn: "🪄 Générer l'itinéraire", organizar_itinerario_btn: "⏳ Organiser",
+        costos_adicionales_title: "Coûts supplémentaires", alojamiento_label: "HÉBERGEMENT (HÔTEL / AIRBNB)",
+        alojamiento_ph: "Nom de l'hôtel ou du lieu", precio_alojamiento_label: "PRIX HÉBERGEMENT (TOTAL)",
+        agregar_escala_btn: "+ Ajouter Escale / Arrêt", lugares_turisticos_cercanos: "Attractions touristiques à proximité",
         pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Votre assistant de voyage",
         pluxy_hint: "Demandez-moi n'importe quoi sur votre voyage",
         weather_loading: "Chargement...", personas_label: "Personnes :", fecha_inicio_label: "Date de début :",
@@ -343,7 +408,26 @@
         mobile_menu_export: "Exporter le voyage (JSON)",
         mobile_menu_map: "Voir la carte",
         mobile_menu_support: "Support et suggestions",
-        mobile_menu_close: "Annuler"
+        mobile_menu_close: "Annuler",
+        app_title_mobile: 'Plan de Voyage',
+        chat_input_ph: 'Écrivez votre message à Pluxy...',
+        checklist_ai_btn: "Régénérer avec l'IA",
+        checklist_ph: 'Ajouter un élément manuellement...',
+        checklist_title: 'Ma Checklist de Voyage',
+        error_desc: "Dites-nous ce qui n'a pas fonctionné",
+        error_label: 'Signaler un bug',
+        help_desc: "Visite interactive de l'application",
+        help_label: 'Visite guidée',
+        how_to_start_desc: 'Guide rapide pour créer votre premier voyage',
+        how_to_start_label: 'Comment commencer',
+        logout_confirm_desc: 'Vous pouvez vous déconnecter et effacer tous vos chats et voyages de cet appareil, ou les conserver localement.',
+        logout_confirm_title: 'Se déconnecter ?',
+        other_desc: 'Autre chose',
+        other_label: 'Autre',
+        suggestion_desc: 'Aidez-nous à nous améliorer avec votre idée',
+        suggestion_label: 'Suggérer une fonctionnalité',
+        timeline_view_btn: '⏱ Vue chronologique',
+        viaje_activo_modal_title: 'Voyage Actif ! - Itinéraire du jour'
       },
       de: {
         welcome_start: "Beginnen Sie Ihre Reise", trips_btn: "Ihre Reisen", tools_btn: "Weitere Tools",
@@ -381,6 +465,15 @@
         descubrir_ai_hint: "Wir nutzen KI für personalisierte Empfehlungen.",
         exportar_btn: "Aktuelle Reise exportieren", importar_btn: "Reise importieren (JSON)",
         pdf_btn: "PDF", share_social_card_btn: "📸 In sozialen Medien teilen", calendar_btn: "Google Kalender", compartir_btn: "Teilen", mapa_btn: "Karte anzeigen",
+        chat_grupal_btn: "💬 Gruppen-Chat", invitar_btn: "Einladen",
+        datos_viaje_label: "⚙️ Reisekonfiguration (Abfahrt, Personen, Daten, Rückkehr)",
+        quienes_van_label: "👥 Wer reist mit? (Namen oder @Benutzer):",
+        quienes_van_ph: "Name oder @Benutzername eingeben (Enter oder Komma)",
+        vuelta_label: "Rückkehr (optional):", vuelta_desc_ph: "Beschreibung", btn_costo_vuelta: "+ Zusätzliche Rückkehrkosten",
+        lugar_salida_ph: "z.B. Berlin", generar_itinerario_btn: "🪄 Reiseplan generieren", organizar_itinerario_btn: "⏳ Ordnen",
+        costos_adicionales_title: "Zusätzliche Kosten", alojamiento_label: "UNTERKUNFT (HOTEL / AIRBNB)",
+        alojamiento_ph: "Hotel- oder Ortsname", precio_alojamiento_label: "UNTERKUNFTSPREIS (GESAMT)",
+        agregar_escala_btn: "+ Zwischenstopp hinzufügen", lugares_turisticos_cercanos: "Sehenswürdigkeiten in der Nähe",
         pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Dein Reiseassistent",
         pluxy_hint: "Frag mich alles über deine Reise",
         weather_loading: "Laden...", personas_label: "Personen:", fecha_inicio_label: "Startdatum:",
@@ -454,7 +547,26 @@
         mobile_menu_export: "Reise exportieren (JSON)",
         mobile_menu_map: "Karte anzeigen",
         mobile_menu_support: "Support & Vorschläge",
-        mobile_menu_close: "Abbrechen"
+        mobile_menu_close: "Abbrechen",
+        app_title_mobile: 'Reiseplan',
+        chat_input_ph: 'Nachricht an Pluxy schreiben...',
+        checklist_ai_btn: 'Mit KI neu generieren',
+        checklist_ph: 'Element manuell hinzufügen...',
+        checklist_title: 'Meine Reise-Checkliste',
+        error_desc: 'Sagen Sie uns, was schiefgelaufen ist',
+        error_label: 'Einen Fehler melden',
+        help_desc: 'Interaktiver App-Rundgang',
+        help_label: 'Geführte Tour',
+        how_to_start_desc: 'Kurzanleitung zur Erstellung Ihrer ersten Reise',
+        how_to_start_label: 'Erste Schritte',
+        logout_confirm_desc: 'Sie können sich abmelden und alle Chats und Reisen von diesem Gerät löschen oder sie lokal speichern.',
+        logout_confirm_title: 'Abmelden?',
+        other_desc: 'Etwas anderes',
+        other_label: 'Andere',
+        suggestion_desc: 'Helfen Sie uns mit Ihrer Idee, uns zu verbessern',
+        suggestion_label: 'Funktion vorschlagen',
+        timeline_view_btn: '⏱ Zeitstrahlansicht',
+        viaje_activo_modal_title: 'Aktive Reise! - Heutiger Reiseplan'
       },
       it: {
         welcome_start: "Inizia il tuo viaggio", trips_btn: "I tuoi viaggi", tools_btn: "Altri strumenti",
@@ -492,6 +604,15 @@
         descubrir_ai_hint: "Usiamo l'IA per raccomandazioni personalizzate.",
         exportar_btn: "Esporta viaggio attuale", importar_btn: "Importa viaggio (JSON)",
         pdf_btn: "PDF", share_social_card_btn: "📸 Condividi sui Social", calendar_btn: "Google Calendar", compartir_btn: "Condividi", mapa_btn: "Vedi mappa",
+        chat_grupal_btn: "💬 Chat di Gruppo", invitar_btn: "Invita",
+        datos_viaje_label: "⚙️ Configurazione del viaggio (Partenza, Persone, Date, Ritorno)",
+        quienes_van_label: "👥 Chi viaggia? (Nomi o @utenti):",
+        quienes_van_ph: "Scrivi un nome o @utente (Invio o virgola)",
+        vuelta_label: "Ritorno (opzionale):", vuelta_desc_ph: "Descrizione", btn_costo_vuelta: "+ Costo aggiuntivo ritorno",
+        lugar_salida_ph: "es. Roma", generar_itinerario_btn: "🪄 Genera itinerario", organizar_itinerario_btn: "⏳ Organizza",
+        costos_adicionales_title: "Costi aggiuntivi", alojamiento_label: "ALLOGGIO (HOTEL / AIRBNB)",
+        alojamiento_ph: "Nome dell'hotel o luogo", precio_alojamiento_label: "PREZZO ALLOGGIO (TOTALE)",
+        agregar_escala_btn: "+ Aggiungi Scala / Fermata", lugares_turisticos_cercanos: "Attrazioni turistiche vicine",
         pluxy_name: "PLUXY", pluxy_title: "Pluxy", pluxy_assistant: "Pluxy · Il tuo assistente di viaggio",
         pluxy_hint: "Chiedimi qualsiasi cosa sul tuo viaggio",
         weather_loading: "Caricamento...", personas_label: "Persone:", fecha_inicio_label: "Data di inizio:",
@@ -565,7 +686,26 @@
         mobile_menu_export: "Esporta viaggio (JSON)",
         mobile_menu_map: "Visualizza mappa",
         mobile_menu_support: "Supporto e suggerimenti",
-        mobile_menu_close: "Annulla"
+        mobile_menu_close: "Annulla",
+        app_title_mobile: 'Piano di Viaggio',
+        chat_input_ph: 'Scrivi il tuo messaggio a Pluxy...',
+        checklist_ai_btn: 'Rigenera con IA',
+        checklist_ph: 'Aggiungi elemento manualmente...',
+        checklist_title: 'La mia Checklist di Viaggio',
+        error_desc: 'Raccontaci cosa è andato storto',
+        error_label: 'Segnala un errore',
+        help_desc: "Tour interattivo dell'app",
+        help_label: 'Tour guidato',
+        how_to_start_desc: 'Guida rapida per creare il tuo primo viaggio',
+        how_to_start_label: 'Come iniziare',
+        logout_confirm_desc: 'Puoi disconnetterti ed eliminare tutte le chat e i viaggi da questo dispositivo, oppure conservarli localmente.',
+        logout_confirm_title: 'Disconnettersi?',
+        other_desc: "Qualcos'altro",
+        other_label: 'Altro',
+        suggestion_desc: 'Aiutaci a migliorare con la tua idea',
+        suggestion_label: 'Suggerisci una funzione',
+        timeline_view_btn: '⏱ Vista cronologica',
+        viaje_activo_modal_title: 'Viaggio Attivo! - Itinerario di oggi'
       }
     };
 
@@ -714,11 +854,24 @@
       el('decisionNewBtn', 'choose_trip_new');
       el('decisionContinueBtn', 'choose_trip_continue');
 
+      // Header buttons
+      el('chatGrupalHeaderBtn', 'chat_grupal_btn');
+      el('invitarHeaderBtn', 'invitar_btn');
+      el('scratchBtnEditor', 'btn_start_scratch');
+
       // Main Trip Editor
       el('appTitle', 'app_title');
+      el('appTitleMobile', 'app_title_mobile');
+      el('datosViajeLabel', 'datos_viaje_label');
       el('lugarSalidaLabel', 'lugar_salida');
+      ph('lugarSalida', 'lugar_salida_ph');
       el('personasLabel', 'personas_label');
+      el('quienesVanLabel', 'quienes_van_label');
+      ph('traveler-chip-input', 'quienes_van_ph');
       el('fechaInicioLabel', 'fecha_inicio_label');
+      el('vueltaLabel', 'vuelta_label');
+      ph('vuelta', 'vuelta_desc_ph');
+      el('btnAgregarCostoVuelta', 'btn_costo_vuelta');
       el('settHeaderLabel', 'settings_header');
       el('addDestBtn', 'add_dest_button');
       ph('nuevoDestino', 'add_dest_placeholder');
@@ -746,6 +899,7 @@
       el('calendarBtn', 'calendar_btn');
       el('compartirBtn', 'compartir_btn');
       el('mapaResumenBtn', 'mapa_btn');
+      el('toggleVistaBtn', 'timeline_view_btn');
 
       // Tools Panel & Modals
       el('herramientasTitle', 'herramientas_title');
@@ -761,6 +915,10 @@
       el('conversorBtn', 'conversor_btn');
       el('btnPreferencias', 'preferencias_btn');
       el('btnViajeActivo', 'viaje_activo_btn');
+      el('viajeActivoTitle', 'viaje_activo_modal_title');
+      el('checklistTitle', 'checklist_title');
+      el('btnChecklistIA', 'checklist_ai_btn');
+      ph('checklist-add-input', 'checklist_ph');
       el('joinHintHerramientas', 'join_invite');
       el('joinBtnHerramientas', 'join_btn');
       ph('join-code-input-herramientas', 'join_placeholder');
@@ -786,6 +944,29 @@
       el('pluxyBtnText', 'pluxy_name');
       el('pluxyAssistant', 'pluxy_assistant');
       el('pluxyHint', 'pluxy_hint');
+      ph('chat-input', 'chat_input_ph');
+
+      // Support & Feedback
+      el('supportTitle', 'support_title');
+      el('suggestionLabel', 'suggestion_label');
+      el('suggestionDesc', 'suggestion_desc');
+      el('errorLabel', 'error_label');
+      el('errorDesc', 'error_desc');
+      el('howToStartLabel', 'how_to_start_label');
+      el('howToStartDesc', 'how_to_start_desc');
+      el('helpLabel', 'help_label');
+      el('helpDesc', 'help_desc');
+      el('otherLabel', 'other_label');
+      el('otherDesc', 'other_desc');
+      el('support-send-btn', 'support_send');
+      el('support-cancel-btn', 'support_cancel');
+      ph('support-name', 'support_name');
+      ph('support-email', 'support_email');
+      ph('support-message', 'support_description');
+
+      // Logout Confirm Modal
+      el('logoutConfirmTitle', 'logout_confirm_title');
+      el('logoutConfirmDesc', 'logout_confirm_desc');
 
       // Mobile bottom drawer
       el('mobileMenuTitle', 'mobile_menu_title');
@@ -4110,6 +4291,8 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         if (welcome) welcome.style.display = "none";
         const app = document.getElementById("app");
         if (app) app.style.display = "block";
+        if (typeof applyGlobalI18n === 'function') applyGlobalI18n();
+        if (typeof renderDestinos === 'function') renderDestinos();
       }, 400);
     }
 
@@ -4337,7 +4520,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           </div>
           <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap;">
             <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;">✈</div>
-            <button onclick="generarItinerarioAuto(${d.id})" style="padding:6px 14px; font-size:0.8rem; background:linear-gradient(135deg, #6366f1, #8b5cf6); border:none; color:white; border-radius:8px; cursor:pointer;">🪄 Generar itinerario</button>
+            <button onclick="generarItinerarioAuto(${d.id})" style="padding:6px 14px; font-size:0.8rem; background:linear-gradient(135deg, #6366f1, #8b5cf6); border:none; color:white; border-radius:8px; cursor:pointer;">${t('generar_itinerario_btn')}</button>
           </div>
           <div class="transport-fields" id="transport-${d.id}">
             <div class="tramos-container" id="tramos-${d.id}"></div>
@@ -4392,7 +4575,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         
         if (touristPlaces.length === 0) { container.innerHTML = ''; return; }
 
-        let html = '<h4 style="color:var(--verde); margin-bottom:8px;">Lugares turísticos cercanos</h4>';
+        let html = `<h4 style="color:var(--verde); margin-bottom:8px;">${t('lugares_turisticos_cercanos')}</h4>`;
         html += '<div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;">';
         
         touristPlaces.forEach(page => {
@@ -5017,16 +5200,16 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
               <input type="number" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
             </div>
             <div class="field-boa" style="grid-column: 1 / -1;">
-              <label style="display:block; font-size:0.7rem; color:var(--gris); margin-bottom:4px;">ALOJAMIENTO (HOTEL / AIRBNB)</label>
-              <input type="text" placeholder="Nombre del hotel o lugar" value="${tramo.alojamiento || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'alojamiento', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <label style="display:block; font-size:0.7rem; color:var(--gris); margin-bottom:4px;">${t('alojamiento_label')}</label>
+              <input type="text" placeholder="${t('alojamiento_ph')}" value="${tramo.alojamiento || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'alojamiento', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
             </div>
             <div class="field-boa" style="grid-column: 1 / -1;">
-              <label style="display:block; font-size:0.7rem; color:var(--gris); margin-bottom:4px;">PRECIO ALOJAMIENTO (TOTAL)</label>
+              <label style="display:block; font-size:0.7rem; color:var(--gris); margin-bottom:4px;">${t('precio_alojamiento_label')}</label>
               <input type="number" placeholder="0.00" value="${tramo.precioAlojamiento || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precioAlojamiento', parseFloat(this.value)||0)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
             </div>
           </div>
           <div class="escalas-container" id="escalas-${destId}-${ida}" style="margin-top:12px;"></div>
-          <button class="add-escala-btn" onclick="agregarEscala(${destId}, ${ida})" style="margin-top:10px; background:transparent; border:1px dashed var(--border); color:var(--gris); width:100%; padding:8px; border-radius:8px; cursor:pointer;">+ Añadir Escala / Parada</button>
+          <button class="add-escala-btn" onclick="agregarEscala(${destId}, ${ida})" style="margin-top:10px; background:transparent; border:1px dashed var(--border); color:var(--gris); width:100%; padding:8px; border-radius:8px; cursor:pointer;">${t('agregar_escala_btn')}</button>
         `;
         container.appendChild(tramoDiv);
         renderEscalas(destId, ida);
@@ -5132,12 +5315,12 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
           <div id="eventos-${destId}-${dia.id}"></div>
           <div class="costos-adicionales" id="costos-${destId}-${dia.id}">
             <div class="costos-header">
-              <h5>Costos adicionales</h5>
+              <h5>${t('costos_adicionales_title')}</h5>
               <button class="add-costo-btn" onclick="agregarCostoAdicional(${destId}, ${dia.id})">+</button>
             </div>
           </div>
           <button class="add-evento-btn" onclick="agregarEvento(${destId}, ${dia.id})">${t('add_event_button')}</button>
-          <button class="add-evento-btn" style="background:var(--gris); margin-left:8px;" onclick="organizarItinerario(${destId}, ${dia.id})">⏳ Organizar</button>
+          <button class="add-evento-btn" style="background:var(--gris); margin-left:8px;" onclick="organizarItinerario(${destId}, ${dia.id})">${t('organizar_itinerario_btn')}</button>
         `;
         cont.appendChild(diaDiv);
         renderEventos(destId, dia.id);
@@ -5314,7 +5497,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const dia = dest.dias.find(d => d.id === diaId);
       container.innerHTML = `
         <div class="costos-header">
-          <h5>Costos adicionales</h5>
+          <h5>${t('costos_adicionales_title')}</h5>
           <button class="add-costo-btn" onclick="agregarCostoAdicional(${destId}, ${diaId})">+</button>
         </div>
       `;

@@ -2304,8 +2304,8 @@
 
     function autoSave() {
       if (isSyncing) return;
-      if (window.currentTripRole === 'viajero') {
-        console.log("AutoSave blocked: Read-only mode for traveler");
+      if (window.currentTripRole === 'viajero' || window.currentTripRole === 'reader') {
+        console.log("AutoSave blocked: Read-only mode active");
         return;
       }
       
@@ -2473,9 +2473,9 @@
             const roles = data.colaboradores_roles || {};
             const owner = data.propietario;
             const urlReaderParams1 = new URLSearchParams(window.location.search);
-            const isForcedReader1 = urlReaderParams1.get('mode') === 'reader' || urlReaderParams1.get('role') === 'viajero' || urlReaderParams1.get('role') === 'reader';
+            const isForcedReader1 = urlReaderParams1.get('mode') === 'reader' || urlReaderParams1.get('role') === 'reader';
             if (isForcedReader1) {
-                window.currentTripRole = 'viajero';
+                window.currentTripRole = 'reader';
             } else if (currentNickname === owner) {
                 window.currentTripRole = 'owner';
             } else if (currentNickname) {
@@ -6773,8 +6773,98 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       return String(dateVal);
     }
 
-// ================== PLUX TRAVEL CARD & PDF OVERHAUL ==================
-// Authentic Plux Aesthetics, Real QR Generator, Reader Mode Link Integration
+// ================== PLUX TRAVEL CARD & PDF OVERHAUL V2 ==================
+// Authentic Plux Bubble Logo, Guaranteed Firestore Cloud Persistence, Real ISO QR, Clean ASCII PDF Link, Strict Reader Mode
+
+// Helper: Generates the authentic Plux Logo Bubble canvas
+function crearCanvasLogoPlux(w = 240, h = 95) {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
+  const r = h / 2;
+
+  // Outer glow / shadow
+  ctx.shadowColor = 'rgba(16, 185, 129, 0.45)';
+  ctx.shadowBlur = 16;
+  ctx.shadowOffsetY = 4;
+
+  // Pill capsule gradient (#10b981 to #2563eb)
+  const grad = ctx.createLinearGradient(0, 0, w, 0);
+  grad.addColorStop(0, '#10b981');
+  grad.addColorStop(0.55, '#0ea5e9');
+  grad.addColorStop(1, '#2563eb');
+  ctx.fillStyle = grad;
+
+  ctx.beginPath();
+  ctx.roundRect(4, 4, w - 8, h - 8, r - 4);
+  ctx.fill();
+
+  // Reset shadow for text
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 2;
+
+  // Typography "PLUX"
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 ' + Math.round(h * 0.48) + 'px Outfit, Inter, Montserrat, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('PLUX', w / 2, h / 2 + 1);
+
+  return c;
+}
+
+// Helper: Guarantees the trip is saved to Firestore before generating QR and share links
+async function asegurarViajeEnNubeParaCompartir() {
+  if (typeof syncCode === 'undefined' || !syncCode) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let p1 = '', p2 = '';
+    for (let i = 0; i < 4; i++) p1 += chars.charAt(Math.floor(Math.random() * chars.length));
+    for (let i = 0; i < 4; i++) p2 += chars.charAt(Math.floor(Math.random() * chars.length));
+    syncCode = `${p1}-${p2}`;
+    currentTripId = syncCode;
+    try { localStorage.setItem('PluxSyncCode', syncCode); } catch(e){}
+    const display = document.getElementById('display-invite-code');
+    const container = document.getElementById('invite-code-container');
+    if (display) display.innerText = syncCode;
+    if (container) container.style.display = 'block';
+  }
+
+  const tripId = (typeof getCurrentTripId === 'function') ? getCurrentTripId() : syncCode;
+  const tripData = {
+    lugarSalida: typeof lugarSalida !== 'undefined' ? lugarSalida : '',
+    numPersonas: typeof numPersonas !== 'undefined' ? numPersonas : 1,
+    nombresPersonas: typeof nombresPersonasGlobal !== 'undefined' ? nombresPersonasGlobal : '',
+    listaViajeros: (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros)) ? [...listaViajeros] : [],
+    tripId: tripId,
+    fechaInicio: document.getElementById('fechaInicio')?.value || '',
+    destinos: (typeof destinos !== 'undefined' && Array.isArray(destinos)) ? destinos : [],
+    vueltaGlobal: typeof vueltaGlobal !== 'undefined' ? vueltaGlobal : '',
+    vueltaPrecioGlobal: typeof vueltaPrecioGlobal !== 'undefined' ? vueltaPrecioGlobal : 0,
+    vueltaCostosAdicionales: typeof vueltaCostosAdicionales !== 'undefined' ? vueltaCostosAdicionales : [],
+    syncCode: syncCode,
+    userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : {}
+  };
+
+  if (typeof db !== 'undefined' && db) {
+    try {
+      const ownerName = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Viajero';
+      await db.collection("plux_viajes_compartidos").doc(syncCode).set({
+        data: JSON.stringify(tripData),
+        propietario: ownerName,
+        colaboradores: [ownerName],
+        colaboradores_roles: { [ownerName]: 'owner' },
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      console.log("✅ Viaje garantizado en Firestore para compartir:", syncCode);
+    } catch (err) {
+      console.error("Error guardando viaje en Firestore antes de compartir:", err);
+    }
+  }
+
+  return `https://plux.nibecarcofeben.com/plux/?join=${encodeURIComponent(syncCode)}&mode=reader`;
+}
 
 // Helper: Generates a real scannable QR Code canvas or image
 async function generarCanvasQRCode(url, size = 240) {
@@ -6819,47 +6909,59 @@ async function generarCanvasQRCode(url, size = 240) {
       }
       document.body.removeChild(tempDiv);
     } catch(e) {
-      console.warn('QRCode library render error, using fallback:', e);
+      console.warn('QRCode JS library error, falling back to API:', e);
     }
   }
 
-  // 2. High-reliability fallback: QR Server API with CORS
+  // 2. Fallback to Google / QRServer API with Image
   try {
-    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=1&format=png&data=${encodeURIComponent(url)}`;
-    const img = await new Promise((resolve) => {
-      const remoteImg = new Image();
-      remoteImg.crossOrigin = 'anonymous';
-      remoteImg.onload = () => resolve(remoteImg);
-      remoteImg.onerror = () => resolve(null);
-      remoteImg.src = qrApiUrl;
-      setTimeout(() => resolve(null), 3000);
+    const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&margin=1`;
+    const img = await new Promise((res, rej) => {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => res(image);
+      image.onerror = () => rej(new Error('QR API load failed'));
+      image.src = apiUrl;
+      setTimeout(() => rej(new Error('QR load timeout')), 3500);
     });
-    if (img) return img;
+    return img;
   } catch(e) {
-    console.warn('QR API fallback error:', e);
+    console.warn('Fallback to canvas QR drawing:', e);
   }
 
-  return null;
-}
+  // 3. Last fallback: functional matrix drawing
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#0b1120';
 
-// Helper: Obtains the Reader URL for the current trip
-async function obtenerUrlViajeLector() {
-  if (typeof syncCode === 'undefined' || !syncCode) {
-    if (typeof generarCodigoInApp === 'function') {
-      try {
-        generarCodigoInApp();
-        await new Promise(r => setTimeout(r, 400));
-      } catch(e) { console.warn('Sync code generation:', e); }
+  const cells = 25;
+  const step = size / cells;
+  function drawFinder(x, y) {
+    ctx.fillRect(x * step, y * step, 7 * step, 7 * step);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect((x + 1) * step, (y + 1) * step, 5 * step, 5 * step);
+    ctx.fillStyle = '#0b1120';
+    ctx.fillRect((x + 2) * step, (y + 2) * step, 3 * step, 3 * step);
+  }
+  drawFinder(1, 1);
+  drawFinder(cells - 8, 1);
+  drawFinder(1, cells - 8);
+
+  let hash = 0;
+  for (let i = 0; i < url.length; i++) hash = (hash * 31 + url.charCodeAt(i)) & 0xffffffff;
+  for (let r = 0; r < cells; r++) {
+    for (let col = 0; col < cells; col++) {
+      if ((r < 9 && col < 9) || (r < 9 && col >= cells - 9) || (r >= cells - 9 && col < 9)) continue;
+      if (((hash ^ (r * 17 + col * 37)) % 3) === 0) {
+        ctx.fillRect(col * step, r * step, step, step);
+      }
     }
   }
-  const code = (typeof syncCode !== 'undefined' && syncCode) 
-    ? syncCode 
-    : ((typeof currentTripId === 'string' && currentTripId.includes('-')) ? currentTripId : '');
-  
-  if (code) {
-    return `https://plux.nibecarcofeben.com/plux/?join=${encodeURIComponent(code)}&mode=reader`;
-  }
-  return 'https://plux.nibecarcofeben.com/plux/';
+  return c;
 }
 
 // Modals helpers
@@ -6879,1212 +6981,913 @@ async function compartirTravelCard() {
     es: {
       tag: 'ITINERARIO OFICIAL',
       travelingTo: 'EXPEDICIÓN A',
-      statusLive: '● EN VIVO',
-      routeTitle: 'RUTA & PARADAS DEL VIAJE',
-      destinations: 'Destinos',
-      days: 'Días',
-      activities: 'Actividades',
-      budget: 'Presupuesto Est.',
-      scanTitle: 'ESCANEA PARA ABRIR EL VIAJE',
-      scanDesc: 'Accede al itinerario dinámico en modo lector en Plux',
-      footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
-      shareToast: '¡Tarjeta de viaje 9:16 generada con éxito!',
-      copiedToast: '¡Imagen copiada al portapapeles! Pegala en WhatsApp o Instagram ✨',
-      shareError: 'Error al generar la tarjeta'
+      statusLive: 'EN VIVO',
+      origin: 'ORIGEN',
+      mainDest: 'DESTINO PRINCIPAL',
+      routeTitle: 'RUTA & PARADAS',
+      destinations: 'DESTINOS',
+      days: 'DÍAS',
+      activities: 'ACTIVIDADES',
+      estBudget: 'PRESUPUESTO EST.',
+      scanCta: 'ESCANEA CON TU CÁMARA',
+      modeReaderLabel: 'MODO LECTOR (SÓLO LECTURA)',
+      scanSub: 'Abre el itinerario completo e interactivo en Plux'
     },
     en: {
       tag: 'OFFICIAL ITINERARY',
       travelingTo: 'EXPEDITION TO',
-      statusLive: '● LIVE TRIP',
-      routeTitle: 'ROUTE & TRIP STOPS',
-      destinations: 'Destinations',
-      days: 'Days',
-      activities: 'Activities',
-      budget: 'Est. Budget',
-      scanTitle: 'SCAN TO OPEN TRIP',
-      scanDesc: 'Explore interactive itinerary in reader mode on Plux',
-      footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
-      shareToast: '9:16 Travel story card generated successfully!',
-      copiedToast: 'Image copied to clipboard! Paste it into WhatsApp or Instagram ✨',
-      shareError: 'Error generating travel card'
-    },
-    fr: {
-      tag: 'ITINÉRAIRE OFFICIEL',
-      travelingTo: 'EXPÉDITION À',
-      statusLive: '● EN DIRECT',
-      routeTitle: 'ROUTE & ARRÊTS DU VOYAGE',
-      destinations: 'Destinations',
-      days: 'Jours',
-      activities: 'Activités',
-      budget: 'Budget Est.',
-      scanTitle: 'SCANNEZ POUR OUVRIR LE VOYAGE',
-      scanDesc: 'Accédez à l\'itinéraire en mode lecteur sur Plux',
-      footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
-      shareToast: 'Carte de voyage 9:16 générée avec succès !',
-      copiedToast: 'Image copiée dans le presse-papiers ! ✨',
-      shareError: 'Erreur lors de la génération de la carte'
-    },
-    de: {
-      tag: 'OFFIZIELLER REISEPLAN',
-      travelingTo: 'EXPEDITION NACH',
-      statusLive: '● LIVE REISE',
-      routeTitle: 'ROUTE & REISE-STOPPS',
-      destinations: 'Reiseziele',
-      days: 'Tage',
-      activities: 'Aktivitäten',
-      budget: 'Gesch. Budget',
-      scanTitle: 'SCANNEN UM REISE ZU ÖFFNEN',
-      scanDesc: 'Interaktiver Reiseplan im Lesemodus auf Plux',
-      footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
-      shareToast: '9:16 Reisekarte erfolgreich erstellt!',
-      copiedToast: 'Bild in die Zwischenablage kopiert! ✨',
-      shareError: 'Fehler beim Erstellen der Karte'
-    },
-    it: {
-      tag: 'ITINERARIO UFFICIALE',
-      travelingTo: 'SPEDIZIONE A',
-      statusLive: '● DAL VIVO',
-      routeTitle: 'ITINERARIO & FERMATE',
-      destinations: 'Destinazioni',
-      days: 'Giorni',
-      activities: 'Attività',
-      budget: 'Budget Stim.',
-      scanTitle: 'SCANSIONA PER APRIRE IL VIAGGIO',
-      scanDesc: 'Esplora itinerario in modalità lettore su Plux',
-      footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
-      shareToast: 'Scheda di viaggio 9:16 generata con successo!',
-      copiedToast: 'Immagine copiata negli appunti! ✨',
-      shareError: 'Errore durante la generazione'
+      statusLive: 'LIVE TRIP',
+      origin: 'ORIGIN',
+      mainDest: 'MAIN DESTINATION',
+      routeTitle: 'ROUTE & STOPS',
+      destinations: 'DESTINATIONS',
+      days: 'DAYS',
+      activities: 'ACTIVITIES',
+      estBudget: 'EST. BUDGET',
+      scanCta: 'SCAN WITH YOUR CAMERA',
+      modeReaderLabel: 'READER MODE (VIEW ONLY)',
+      scanSub: 'Open the interactive itinerary in Plux'
     }
   };
-
-  const langKey = (typeof currentLang === 'string' && i18nCard[currentLang]) ? currentLang : 'es';
-  const dict = i18nCard[langKey];
+  const langKey = (typeof currentLang !== 'undefined' && (currentLang === 'en' || currentLang === 'es')) ? currentLang : 'es';
+  const txt = i18nCard[langKey];
 
   if (typeof showToast === 'function') {
-    showToast(langKey === 'es' ? 'Creando tarjeta temática Plux en HD...' : 'Creating HD Plux Story Card...', 'info');
+    showToast(langKey === 'es' ? 'Preparando tarjeta oficial de Plux...' : 'Preparing official Plux travel card...', 'info');
   }
 
-  // Calculate stats
-  const totalDestinos = (typeof destinos !== 'undefined' && Array.isArray(destinos)) ? destinos.length : 0;
-  let totalDias = 0;
-  let totalEventos = 0;
-  let totalCost = 0;
-  const numPers = (typeof numPersonas === 'number' && numPersonas > 0) ? numPersonas : 1;
+  // 1. Ensure trip exists in Firestore and get Reader URL
+  const shareUrl = await asegurarViajeEnNubeParaCompartir();
 
-  if (typeof destinos !== 'undefined' && Array.isArray(destinos)) {
-    destinos.forEach(d => {
-      if (d.dias) {
-        totalDias += d.dias.length;
-        d.dias.forEach(dia => {
-          if (dia.eventos) {
-            totalEventos += dia.eventos.length;
-            dia.eventos.forEach(ev => { totalCost += (Number(ev.costo) || 0) * numPers; });
-          }
-          if (dia.costosAdicionales) {
-            dia.costosAdicionales.forEach(c => { totalCost += Number(c.precio) || 0; });
-          }
-        });
+  // 2. Data aggregation
+  const tripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || 'Viaje en Plux');
+  const departureCity = (typeof lugarSalida !== 'undefined' && lugarSalida) ? lugarSalida : 'Sin origen';
+  const startDay = document.getElementById('fechaInicio')?.value || '';
+  const companionsFormatted = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : (nombresPersonasGlobal || '@Viajero');
+  const currencySymbol = (typeof currentCurrency !== 'undefined') ? (currentCurrency === 'USD' ? '$' : (currentCurrency === 'EUR' ? '€' : currentCurrency)) : '€';
+
+  let totalDays = 0;
+  let totalActivities = 0;
+  let totalBudget = 0;
+  const stopsList = [];
+
+  if (typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0) {
+    destinos.forEach((d, idx) => {
+      const dDays = parseInt(d.dias, 10) || 1;
+      totalDays += dDays;
+      const actsCount = Array.isArray(d.actividades) ? d.actividades.length : 0;
+      totalActivities += actsCount;
+
+      let dCost = (parseFloat(d.precioIda) || 0) + (parseFloat(d.precioAlojamiento) || 0);
+      if (Array.isArray(d.actividades)) {
+        d.actividades.forEach(a => { dCost += (parseFloat(a.precio) || 0); });
       }
-      if (d.tramos) {
-        d.tramos.forEach(tr => { totalCost += (Number(tr.precio) || 0) * numPers; });
+      if (Array.isArray(d.costosAdicionales)) {
+        d.costosAdicionales.forEach(c => { dCost += (parseFloat(c.monto) || 0); });
       }
+      totalBudget += dCost;
+
+      stopsList.push({
+        num: idx + 1,
+        name: d.ciudad || `Destino ${idx + 1}`,
+        days: dDays,
+        activitiesCount: actsCount
+      });
     });
-  }
-  if (typeof vueltaGlobal !== 'undefined' && vueltaGlobal && typeof vueltaPrecioGlobal !== 'undefined' && vueltaPrecioGlobal) {
-    totalCost += Number(vueltaPrecioGlobal) * numPers;
-  }
-  if (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales)) {
-    vueltaCostosAdicionales.forEach(c => { totalCost += Number(c.precio) || 0; });
-  }
-
-  // User & Trip Info
-  const storedProfile = JSON.parse(localStorage.getItem('Plux_UserProfile_Info') || '{}');
-  const userName = (typeof currentNickname === 'string' && currentNickname) 
-    ? `@${currentNickname.replace(/^@/, '')}` 
-    : (storedProfile.fullname || (typeof firebaseUser !== 'undefined' && firebaseUser && (firebaseUser.displayName || firebaseUser.email?.split('@')[0])) || (langKey === 'es' ? 'Explorador Plux' : 'Plux Explorer'));
-  
-  const companionsText = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : '';
-  const rawTripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : 'Viaje Increíble';
-  const tripTitle = rawTripTitle.replace(/\s*·\s*PLUX$/i, '').trim() || 'Mi Viaje';
-  const rawFecha = document.getElementById('fechaInicio')?.value;
-  const fechaInicioFormatted = (typeof safeFormatDateStr === 'function') ? safeFormatDateStr(rawFecha) : (rawFecha || '');
-  const salidaTexto = (typeof lugarSalida === 'string' && lugarSalida.trim()) ? lugarSalida.trim() : '';
-
-  // Get reader URL and generate real QR code
-  const readerUrl = await obtenerUrlViajeLector();
-  const qrCanvasOrImg = await generarCanvasQRCode(readerUrl, 230);
-
-  // Destination Photo Discovery
-  const photoMap = {
-    'buenos aires': 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1200&q=80',
-    'bariloche': 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=1200&q=80',
-    'iguazú': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200&q=80',
-    'iguazu': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200&q=80',
-    'paris': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80',
-    'barcelona': 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=1200&q=80',
-    'roma': 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=1200&q=80',
-    'tokio': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1200&q=80',
-    'tokyo': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1200&q=80',
-    'nueva york': 'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?w=1200&q=80',
-    'new york': 'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?w=1200&q=80',
-    'madrid': 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=1200&q=80',
-    'londres': 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&q=80'
-  };
-
-  let chosenPhotoUrl = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&q=80';
-  const checkStr = (tripTitle + ' ' + ((destinos && destinos[0]) ? destinos[0].nombre : '')).toLowerCase();
-  for (const [k, url] of Object.entries(photoMap)) {
-    if (checkStr.includes(k)) {
-      chosenPhotoUrl = url;
-      break;
-    }
+  } else {
+    totalDays = 1;
+    totalActivities = 1;
+    totalBudget = 0;
+    stopsList.push({ num: 1, name: 'Destino Sorpresa', days: 1, activitiesCount: 1 });
   }
 
-  // Preload Image with crossOrigin
-  const heroImage = await new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = chosenPhotoUrl;
-    setTimeout(() => resolve(null), 2500);
-  });
+  if (typeof vueltaPrecioGlobal !== 'undefined') {
+    totalBudget += (parseFloat(vueltaPrecioGlobal) || 0);
+  }
 
-  // Preload Official Logo Image
-  const logoImage = await new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = '/plux/static/Logo.png';
-    setTimeout(() => resolve(null), 1000);
-  });
+  const mainDestinationName = stopsList[0]?.name || 'Exploración';
 
-  // 9:16 Canvas Setup (1080x1920)
+  // 3. Setup 9:16 Canvas (1080x1920)
+  const W = 1080;
+  const H = 1920;
   const canvas = document.createElement('canvas');
-  canvas.width = 1080;
-  canvas.height = 1920;
+  canvas.width = W;
+  canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  function roundRect(x, y, w, h, r, fill, stroke) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-    if (fill) ctx.fill();
-    if (stroke) ctx.stroke();
-  }
-
-  // 1. Deep Space Tech Backdrop
-  const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
-  bgGrad.addColorStop(0, '#040714');
-  bgGrad.addColorStop(0.35, '#0a1026');
-  bgGrad.addColorStop(0.75, '#070b1c');
-  bgGrad.addColorStop(1, '#03050c');
+  // Background base
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, '#060a12');
+  bgGrad.addColorStop(0.5, '#0b1120');
+  bgGrad.addColorStop(1, '#05070e');
   ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, 1080, 1920);
+  ctx.fillRect(0, 0, W, H);
 
-  // 2. Cinematic Destination Photo Header (Cover photo with vignette & gradient blend)
-  if (heroImage) {
+  // Glow meshes
+  function drawRadialMesh(cx, cy, radius, color) {
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  drawRadialMesh(200, 300, 500, 'rgba(16, 185, 129, 0.18)');
+  drawRadialMesh(900, 800, 600, 'rgba(14, 165, 233, 0.16)');
+  drawRadialMesh(540, 1600, 550, 'rgba(99, 102, 241, 0.15)');
+
+  // Try loading destination photo for cinematic header
+  let destPhotoImg = null;
+  try {
+    const photoUrl = `https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1080&q=80`;
+    destPhotoImg = await new Promise((res) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => res(img);
+      img.onerror = () => res(null);
+      img.src = photoUrl;
+      setTimeout(() => res(null), 2500);
+    });
+  } catch(e) {}
+
+  if (destPhotoImg) {
     ctx.save();
-    ctx.drawImage(heroImage, 0, 0, 1080, 820);
-
-    const imgGrad = ctx.createLinearGradient(0, 0, 0, 840);
-    imgGrad.addColorStop(0, 'rgba(4, 7, 20, 0.40)');
-    imgGrad.addColorStop(0.45, 'rgba(4, 7, 20, 0.60)');
-    imgGrad.addColorStop(0.85, 'rgba(10, 16, 38, 0.95)');
-    imgGrad.addColorStop(1, '#070b1c');
-    ctx.fillStyle = imgGrad;
-    ctx.fillRect(0, 0, 1080, 840);
+    ctx.globalAlpha = 0.28;
+    ctx.drawImage(destPhotoImg, 0, 0, W, 580);
+    const photoFade = ctx.createLinearGradient(0, 200, 0, 580);
+    photoFade.addColorStop(0, 'transparent');
+    photoFade.addColorStop(1, '#060a12');
+    ctx.fillStyle = photoFade;
+    ctx.fillRect(0, 200, W, 380);
     ctx.restore();
   }
 
-  // 3. Cosmic Aurora Glows (Plux Electric Colors)
-  const g1 = ctx.createRadialGradient(880, 280, 40, 880, 280, 520);
-  g1.addColorStop(0, 'rgba(16, 185, 129, 0.35)'); // Emerald Green
-  g1.addColorStop(0.6, 'rgba(6, 182, 212, 0.15)'); // Cyan
-  g1.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = g1;
-  ctx.beginPath();
-  ctx.arc(880, 280, 520, 0, Math.PI * 2);
-  ctx.fill();
-
-  const g2 = ctx.createRadialGradient(180, 850, 50, 180, 850, 550);
-  g2.addColorStop(0, 'rgba(236, 72, 153, 0.30)'); // Neon Pink
-  g2.addColorStop(0.5, 'rgba(139, 92, 246, 0.15)'); // Purple
-  g2.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = g2;
-  ctx.beginPath();
-  ctx.arc(180, 850, 550, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 4. TOP BAR - AUTHENTIC PLUX LOGO BUBBLE (Y: 55 - 155)
-  ctx.save();
-  // Pill header background
-  ctx.fillStyle = 'rgba(11, 17, 32, 0.85)';
-  roundRect(65, 55, 950, 95, 48, true, false);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-  ctx.lineWidth = 1.5;
-  roundRect(65, 55, 950, 95, 48, false, true);
-
-  // The Iconic Plux Logo Bubble (Green -> Blue gradient capsule with white PLUX text)
-  const bubbleGrad = ctx.createLinearGradient(95, 70, 280, 135);
-  bubbleGrad.addColorStop(0, '#10b981'); // Emerald
-  bubbleGrad.addColorStop(0.5, '#0ea5e9'); // Sky Blue
-  bubbleGrad.addColorStop(1, '#6366f1'); // Indigo
-  ctx.fillStyle = bubbleGrad;
-  roundRect(95, 70, 185, 65, 33, true, false);
-
-  // Subtle glow around Plux bubble
-  ctx.strokeStyle = 'rgba(52, 211, 153, 0.6)';
-  ctx.lineWidth = 2;
-  roundRect(95, 70, 185, 65, 33, false, true);
-
-  // Draw Logo Image if loaded, otherwise text
-  if (logoImage) {
-    ctx.drawImage(logoImage, 110, 77, 50, 50);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 32px "Space Grotesk", "Orbitron", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('PLUX', 170, 115);
-  } else {
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 36px "Space Grotesk", "Orbitron", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('PLUX', 187, 116);
+  // Helper: Draw Glassmorphism Card
+  function drawGlassPanel(x, y, w, h, radius = 32, borderGrad = null) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, radius);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    if (borderGrad) {
+      ctx.strokeStyle = borderGrad;
+    } else {
+      const defStroke = ctx.createLinearGradient(x, y, x + w, y + h);
+      defStroke.addColorStop(0, 'rgba(255, 255, 255, 0.20)');
+      defStroke.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+      defStroke.addColorStop(1, 'rgba(14, 165, 233, 0.25)');
+      ctx.strokeStyle = defStroke;
+    }
+    ctx.stroke();
+    ctx.restore();
   }
 
-  // Slogan
-  ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
-  ctx.font = '700 16px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('SMART TRAVEL OS', 305, 110);
+  // ================= 1. HEADER =================
+  const headerY = 70;
+  // Authentic Plux Logo Bubble at top left
+  const pluxLogoCanvas = crearCanvasLogoPlux(220, 80);
+  ctx.drawImage(pluxLogoCanvas, 60, headerY);
 
-  // Live Itinerary Badge (Right side)
-  const statusW = 165;
-  const statusX = 985 - statusW;
-  ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
-  roundRect(statusX, 77, statusW, 50, 25, true, false);
+  // Live badge at top right
+  const liveBadgeW = 160;
+  const liveBadgeH = 50;
+  const liveBadgeX = W - 60 - liveBadgeW;
+  const liveBadgeY = headerY + 15;
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(liveBadgeX, liveBadgeY, liveBadgeW, liveBadgeH, 25);
+  ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+  ctx.fill();
   ctx.strokeStyle = '#10b981';
   ctx.lineWidth = 1.5;
-  roundRect(statusX, 77, statusW, 50, 25, false, true);
+  ctx.stroke();
 
+  // Green pulsating dot
   ctx.fillStyle = '#10b981';
   ctx.beginPath();
-  ctx.arc(statusX + 26, 102, 6, 0, Math.PI * 2);
+  ctx.arc(liveBadgeX + 30, liveBadgeY + 25, 7, 0, Math.PI * 2);
   ctx.fill();
-
-  ctx.font = 'bold 16px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(dict.statusLive.replace('● ', ''), statusX + 42, 108);
-  ctx.restore();
-
-  // 5. HERO CARD - BOARDING TICKET (Y: 175 - 710)
-  ctx.save();
-  const heroX = 65;
-  const heroY = 175;
-  const heroW = 950;
-  const heroH = 535;
-
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-  roundRect(heroX, heroY, heroW, heroH, 36, true, false);
-
-  const heroBorder = ctx.createLinearGradient(heroX, heroY, heroX + heroW, heroY + heroH);
-  heroBorder.addColorStop(0, '#ec4899');
-  heroBorder.addColorStop(0.5, '#38bdf8');
-  heroBorder.addColorStop(1, '#10b981');
-  ctx.strokeStyle = heroBorder;
-  ctx.lineWidth = 2.5;
-  roundRect(heroX, heroY, heroW, heroH, 36, false, true);
-
-  // Pill Header: ITINERARIO OFICIAL
-  const pillGrad = ctx.createLinearGradient(heroX + 45, heroY + 45, heroX + 330, heroY + 45);
-  pillGrad.addColorStop(0, '#ec4899');
-  pillGrad.addColorStop(1, '#8b5cf6');
-  ctx.fillStyle = pillGrad;
-  roundRect(heroX + 45, heroY + 40, 280, 48, 24, true, false);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 19px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(`✦ ${dict.tag}`, heroX + 45 + 140, heroY + 71);
-
-  // Expedition Label
-  ctx.fillStyle = '#38bdf8';
-  ctx.font = 'bold 24px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(dict.travelingTo, heroX + 45, heroY + 135);
-
-  // Big Trip Title with Auto Wrap & Shadow
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 52px "Space Grotesk", "Orbitron", "Segoe UI", Roboto, sans-serif';
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-  ctx.shadowBlur = 18;
-  
-  const words = tripTitle.toUpperCase().split(' ');
-  let line = '';
-  let curTitleY = heroY + 200;
-  for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    if (metrics.width > 830 && n > 0) {
-      ctx.fillText(line.trim(), heroX + 45, curTitleY);
-      line = words[n] + ' ';
-      curTitleY += 60;
-      if (curTitleY > heroY + 265) break;
-    } else {
-      line = testLine;
-    }
-  }
-  ctx.fillText(line.trim(), heroX + 45, curTitleY);
-  ctx.shadowBlur = 0;
-
-  // Journey Route Strip (Origin -> Destination)
-  const stripY = Math.max(curTitleY + 30, heroY + 280);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-  roundRect(heroX + 45, stripY, 860, 95, 20, true, false);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-  ctx.lineWidth = 1;
-  roundRect(heroX + 45, stripY, 860, 95, 20, false, true);
-
-  const pOrigen = salidaTexto || (langKey === 'es' ? 'Salida' : 'Origin');
-  const pDestino = (destinos && destinos.length > 0) ? destinos[0].nombre : tripTitle;
-
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '600 16px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('ORIGEN', heroX + 75, stripY + 34);
-
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = 'bold 26px "Segoe UI", Roboto, sans-serif';
-  const displayOrigen = pOrigen.length > 18 ? pOrigen.substring(0, 16) + '...' : pOrigen;
-  ctx.fillText(displayOrigen, heroX + 75, stripY + 68);
-
-  const arrowStartX = heroX + 380;
-  const arrowEndX = heroX + 580;
-  const arrowMidY = stripY + 48;
-  
-  ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
-  ctx.lineWidth = 3;
-  ctx.setLineDash([6, 6]);
-  ctx.beginPath();
-  ctx.moveTo(arrowStartX, arrowMidY);
-  ctx.lineTo(arrowEndX, arrowMidY);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.fillStyle = '#38bdf8';
-  ctx.font = '26px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('✈', (arrowStartX + arrowEndX) / 2, arrowMidY + 8);
-
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '600 16px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('DESTINO PRINCIPAL', heroX + 620, stripY + 34);
-
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = 'bold 26px "Segoe UI", Roboto, sans-serif';
-  const displayDestino = pDestino.length > 16 ? pDestino.substring(0, 14) + '...' : pDestino;
-  ctx.fillText(displayDestino, heroX + 620, stripY + 68);
-
-  // Meta row: Organizer & Date Badges
-  const metaY = stripY + 130;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-  roundRect(heroX + 45, metaY, 430, 52, 16, true, false);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-  ctx.lineWidth = 1;
-  roundRect(heroX + 45, metaY, 430, 52, 16, false, true);
-
-  ctx.fillStyle = '#a855f7';
-  ctx.beginPath();
-  ctx.arc(heroX + 75, metaY + 26, 16, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 15px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText((userName.replace('@', '')[0] || 'U').toUpperCase(), heroX + 75, metaY + 31);
-
-  ctx.fillStyle = '#e2e8f0';
-  ctx.font = '600 20px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'left';
-  let orgLine = `${userName}`;
-  if (companionsText) orgLine += ` ${companionsText}`;
-  if (orgLine.length > 25) orgLine = orgLine.substring(0, 23) + '...';
-  ctx.fillText(orgLine, heroX + 104, metaY + 33);
-
-  // Date Chip
-  ctx.fillStyle = 'rgba(16, 185, 129, 0.14)';
-  roundRect(heroX + 505, metaY, 400, 52, 16, true, false);
-  ctx.strokeStyle = 'rgba(16, 185, 129, 0.38)';
-  ctx.lineWidth = 1;
-  roundRect(heroX + 505, metaY, 400, 52, 16, false, true);
 
   ctx.fillStyle = '#34d399';
-  ctx.font = 'bold 20px "Segoe UI", Roboto, sans-serif';
+  ctx.font = 'bold 20px Outfit, Inter, Arial, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(txt.statusLive, liveBadgeX + 48, liveBadgeY + 26);
+  ctx.restore();
+
+  // ================= 2. HERO / EXPEDITION CARD =================
+  const heroY = 185;
+  const heroW = W - 120;
+  const heroH = 540;
+  drawGlassPanel(60, heroY, heroW, heroH, 36);
+
+  // Tag Pill: ITINERARIO OFICIAL
+  const tagW = 270;
+  const tagH = 52;
+  const tagGrad = ctx.createLinearGradient(100, heroY + 40, 100 + tagW, heroY + 40);
+  tagGrad.addColorStop(0, '#ec4899');
+  tagGrad.addColorStop(1, '#a855f7');
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(100, heroY + 40, tagW, tagH, 26);
+  ctx.fillStyle = tagGrad;
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 20px Outfit, Inter, Arial, sans-serif';
   ctx.textAlign = 'center';
-  const fechaStr = fechaInicioFormatted || (langKey === 'es' ? 'Fecha flexible' : 'Flexible date');
-  ctx.fillText(`📅 ${fechaStr}  •  ${totalDias} ${dict.days}`, heroX + 505 + 200, metaY + 33);
+  ctx.textBaseline = 'middle';
+  ctx.fillText('✦ ' + txt.tag, 100 + (tagW / 2), heroY + 67);
   ctx.restore();
 
-  // 6. STOPS & ROADMAP TIMELINE (Y: 735 - 1235)
-  ctx.save();
-  const roadX = 65;
-  const roadY = 735;
-  const roadW = 950;
-  const roadH = 495;
-
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-  roundRect(roadX, roadY, roadW, roadH, 32, true, false);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-  ctx.lineWidth = 1.5;
-  roundRect(roadX, roadY, roadW, roadH, 32, false, true);
-
-  ctx.fillStyle = '#c084fc';
-  ctx.font = 'bold 28px "Segoe UI", Roboto, sans-serif';
+  // Subtitle
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 26px Outfit, Inter, Arial, sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText(`📍 ${dict.routeTitle}`, roadX + 45, roadY + 55);
+  ctx.fillText(txt.travelingTo, 100, heroY + 140);
 
-  const stopList = (destinos && destinos.length > 0) 
-    ? destinos.slice(0, 4) 
-    : [{ nombre: tripTitle, dias: [1, 2] }];
-
-  let itemY = roadY + 125;
-  stopList.forEach((st, idx) => {
-    if (idx < stopList.length - 1) {
-      const lineGrad = ctx.createLinearGradient(roadX + 80, itemY, roadX + 80, itemY + 85);
-      lineGrad.addColorStop(0, '#ec4899');
-      lineGrad.addColorStop(1, '#38bdf8');
-      ctx.strokeStyle = lineGrad;
-      ctx.lineWidth = 3;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(roadX + 80, itemY + 18);
-      ctx.lineTo(roadX + 80, itemY + 74);
-      ctx.stroke();
-      ctx.setLineDash([]);
+  // Main Trip Title
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 58px Outfit, Inter, Montserrat, Arial, sans-serif';
+  const cleanTitle = tripTitle.toUpperCase().replace(/\s+/g, ' ');
+  // Multi-line wrap
+  function wrapText(text, x, y, maxWidth, lineHeight, maxLines = 2) {
+    const words = text.split(' ');
+    let line = '';
+    let lineCount = 0;
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && n > 0) {
+        ctx.fillText(line.trim(), x, y);
+        line = words[n] + ' ';
+        y += lineHeight;
+        lineCount++;
+        if (lineCount >= maxLines - 1 && n < words.length - 1) {
+          ctx.fillText((line + words.slice(n + 1).join(' ')).slice(0, 32) + '...', x, y);
+          return;
+        }
+      } else {
+        line = testLine;
+      }
     }
-
-    ctx.fillStyle = idx === 0 ? '#ec4899' : (idx === stopList.length - 1 ? '#10b981' : '#38bdf8');
-    ctx.beginPath();
-    ctx.arc(roadX + 80, itemY - 6, 20, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 18px "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${idx + 1}`, roadX + 80, itemY);
-
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = '900 28px "Space Grotesk", "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(st.nombre || `Destino ${idx + 1}`, roadX + 125, itemY);
-
-    const dDays = (st.dias ? st.dias.length : 1);
-    const dEvs = (st.dias || []).reduce((acc, cur) => acc + (cur.eventos ? cur.eventos.length : 0), 0);
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '500 20px "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(`${dDays} ${dict.days.toLowerCase()}  •  ${dEvs} ${dict.activities.toLowerCase()} programadas`, roadX + 125, itemY + 32);
-
-    itemY += 88;
-  });
-
-  if (destinos && destinos.length > 4) {
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 20px "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(`+ ${(destinos.length - 4)} destinos más en el itinerario interactivo de Plux`, roadX + 125, itemY + 15);
+    ctx.fillText(line.trim(), x, y);
   }
-  ctx.restore();
+  wrapText(cleanTitle, 100, heroY + 210, heroW - 80, 68, 2);
 
-  // 7. STATS 2x2 GRID (Y: 1255 - 1575)
-  ctx.save();
-  const statGrid = [
-    { label: dict.destinations, val: `${totalDestinos}`, icon: '📍', color: '#ec4899' },
-    { label: dict.days, val: `${totalDias}`, icon: '⏱️', color: '#38bdf8' },
-    { label: dict.activities, val: `${totalEventos}`, icon: '🎯', color: '#10b981' },
-    { label: dict.budget, val: `${totalCost.toFixed(0)} €`, icon: '💰', color: '#f59e0b' }
-  ];
-
-  const gridBoxes = [
-    { x: 65, y: 1255 },
-    { x: 565, y: 1255 },
-    { x: 65, y: 1420 },
-    { x: 565, y: 1420 }
-  ];
-
-  statGrid.forEach((st, i) => {
-    const box = gridBoxes[i];
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-    roundRect(box.x, box.y, 450, 145, 24, true, false);
-
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.lineWidth = 1.5;
-    roundRect(box.x, box.y, 450, 145, 24, false, true);
-
-    ctx.fillStyle = st.color;
-    ctx.beginPath();
-    ctx.arc(box.x + 48, box.y + 55, 24, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.font = '24px "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(st.icon, box.x + 48, box.y + 63);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 38px "Space Grotesk", "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(st.val, box.x + 95, box.y + 64);
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '600 19px "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(st.label.toUpperCase(), box.x + 95, box.y + 105);
-  });
-  ctx.restore();
-
-  // 8. REAL SCANNABLE QR & SCANNER BAR (Y: 1595 - 1845)
-  ctx.save();
-  const qrBoxX = 65;
-  const qrBoxY = 1595;
-  const qrBoxW = 950;
-  const qrBoxH = 240;
-
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
-  roundRect(qrBoxX, qrBoxY, qrBoxW, qrBoxH, 28, true, false);
-
-  const qrBorder = ctx.createLinearGradient(qrBoxX, qrBoxY, qrBoxX + qrBoxW, qrBoxY);
-  qrBorder.addColorStop(0, 'rgba(16, 185, 129, 0.6)');
-  qrBorder.addColorStop(0.5, 'rgba(56, 189, 248, 0.6)');
-  qrBorder.addColorStop(1, 'rgba(236, 72, 153, 0.6)');
-  ctx.strokeStyle = qrBorder;
-  ctx.lineWidth = 2.5;
-  roundRect(qrBoxX, qrBoxY, qrBoxW, qrBoxH, 28, false, true);
-
-  const qrX = qrBoxX + 35;
-  const qrY = qrBoxY + 28;
-  const qrSize = 184;
-
-  // Draw real scannable QR Code
-  if (qrCanvasOrImg) {
-    ctx.fillStyle = '#ffffff';
-    roundRect(qrX, qrY, qrSize, qrSize, 14, true, false);
-    ctx.drawImage(qrCanvasOrImg, qrX + 8, qrY + 8, qrSize - 16, qrSize - 16);
-  } else {
-    // Fallback QR Container
-    ctx.fillStyle = '#ffffff';
-    roundRect(qrX, qrY, qrSize, qrSize, 14, true, false);
-    ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 20px "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('PLUX QR', qrX + qrSize / 2, qrY + qrSize / 2);
-  }
-
-  const textLeft = qrX + qrSize + 35;
-  ctx.fillStyle = '#10b981';
-  ctx.font = 'bold 22px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(`📱 ${dict.scanTitle}`, textLeft, qrBoxY + 68);
+  // Flight Route visual line
+  const routeY = heroY + 370;
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 18px Outfit, Inter, Arial, sans-serif';
+  ctx.fillText(txt.origin, 100, routeY);
+  ctx.fillText(txt.mainDest, heroW - 200, routeY);
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = '900 30px "Space Grotesk", "Orbitron", sans-serif';
-  ctx.fillText('plux.nibecarcofeben.com', textLeft, qrBoxY + 112);
+  ctx.font = 'bold 30px Outfit, Inter, Arial, sans-serif';
+  ctx.fillText(departureCity.slice(0, 16), 100, routeY + 40);
+  ctx.fillText(mainDestinationName.slice(0, 16), heroW - 200, routeY + 40);
+
+  // Airplane dotted flight path
+  ctx.save();
+  ctx.setLineDash([8, 8]);
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(380, routeY + 25);
+  ctx.lineTo(650, routeY + 25);
+  ctx.stroke();
+  ctx.restore();
+
+  // Airplane icon in middle
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = '32px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('✈', 515, routeY + 32);
+
+  // Footer of hero card: Companions & Date chips
+  const metaY = heroY + 460;
+  // Companion pill
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(100, metaY, 410, 54, 27);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.fill();
+  ctx.fillStyle = '#a855f7';
+  ctx.beginPath();
+  ctx.arc(130, metaY + 27, 16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('👤', 130, metaY + 33);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '500 22px Outfit, Inter, Arial, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(companionsFormatted.slice(0, 24), 160, metaY + 35);
+  ctx.restore();
+
+  // Date pill
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(530, metaY, heroW - 470, 54, 27);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.fill();
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 22px Outfit, Inter, Arial, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('🗓️ ' + (startDay || 'Fecha flexible') + ` • ${totalDays} ${txt.days}`, 560, metaY + 35);
+  ctx.restore();
+
+  // ================= 3. RUTA & PARADAS =================
+  const routeBoxY = 760;
+  const routeBoxH = 500;
+  drawGlassPanel(60, routeBoxY, heroW, routeBoxH, 36);
+
+  ctx.fillStyle = '#ec4899';
+  ctx.font = 'bold 30px Outfit, Inter, Arial, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('📍 ' + txt.routeTitle, 100, routeBoxY + 60);
+
+  // Render stops (up to 4)
+  const stopsToRender = stopsList.slice(0, 4);
+  const stopStepY = 95;
+  stopsToRender.forEach((stop, i) => {
+    const sY = routeBoxY + 120 + (i * stopStepY);
+    // Number badge circle
+    const colors = ['#ec4899', '#0ea5e9', '#10b981', '#f59e0b'];
+    const badgeColor = colors[i % colors.length];
+
+    ctx.fillStyle = badgeColor;
+    ctx.beginPath();
+    ctx.arc(125, sY + 20, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px Outfit, Inter, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(stop.num), 125, sY + 28);
+
+    // Stop name
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 34px Outfit, Inter, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(stop.name, 175, sY + 16);
+
+    // Stop stats
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 24px Outfit, Inter, Arial, sans-serif';
+    ctx.fillText(`${stop.days} ${txt.days.toLowerCase()}  •  ${stop.activitiesCount} ${txt.activities.toLowerCase()} programadas`, 175, sY + 48);
+
+    // Dotted connector line
+    if (i < stopsToRender.length - 1) {
+      ctx.save();
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(125, sY + 44);
+      ctx.lineTo(125, sY + stopStepY);
+      ctx.stroke();
+      ctx.restore();
+    }
+  });
+
+  // ================= 4. METRICS 2x2 GRID =================
+  const gridY = 1290;
+  const cardW = (heroW - 30) / 2;
+  const cardH = 175;
+
+  const metrics = [
+    { label: txt.destinations, val: String(stopsList.length), icon: '📍', color: '#ec4899' },
+    { label: txt.days, val: String(totalDays), icon: '⏱️', color: '#0ea5e9' },
+    { label: txt.activities, val: String(totalActivities), icon: '🎯', color: '#10b981' },
+    { label: txt.estBudget, val: `${Math.round(totalBudget)} ${currencySymbol}`, icon: '💳', color: '#f59e0b' }
+  ];
+
+  metrics.forEach((m, i) => {
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const mX = 60 + col * (cardW + 30);
+    const mY = gridY + row * (cardH + 20);
+
+    drawGlassPanel(mX, mY, cardW, cardH, 28);
+
+    // Icon circle
+    ctx.fillStyle = m.color;
+    ctx.beginPath();
+    ctx.arc(mX + 60, mY + 60, 26, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = '26px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(m.icon, mX + 60, mY + 68);
+
+    // Number value
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 48px Outfit, Inter, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(m.val, mX + 110, mY + 70);
+
+    // Label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 20px Outfit, Inter, Arial, sans-serif';
+    ctx.fillText(m.label, mX + 110, mY + 115);
+  });
+
+  // ================= 5. FOOTER & REAL SCANNABLE QR =================
+  const footY = 1680;
+  const footH = 190;
+  const footW = heroW;
+  drawGlassPanel(60, footY, footW, footH, 32);
+
+  // Generate REAL QR Code
+  const qrSize = 140;
+  const qrCanvas = await generarCanvasQRCode(shareUrl, qrSize);
+
+  // QR Container pill
+  const qrX = 90;
+  const qrY = footY + 25;
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.roundRect(qrX - 10, qrY - 10, qrSize + 20, qrSize + 20, 18);
+  ctx.fill();
+  ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+  ctx.restore();
+
+  // CTA Text next to QR
+  const ctaX = qrX + qrSize + 35;
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 22px Outfit, Inter, Arial, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('📱 ' + txt.scanCta, ctaX, footY + 58);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 34px Outfit, Inter, Arial, sans-serif';
+  ctx.fillText('plux.nibecarcofeben.com', ctaX, footY + 100);
+
+  ctx.fillStyle = '#10b981';
+  ctx.font = 'bold 20px Outfit, Inter, Arial, sans-serif';
+  ctx.fillText('👁️ ' + txt.modeReaderLabel, ctaX, footY + 135);
 
   ctx.fillStyle = '#94a3b8';
-  ctx.font = '500 20px "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(dict.scanDesc, textLeft, qrBoxY + 152);
+  ctx.font = '500 18px Outfit, Inter, Arial, sans-serif';
+  ctx.fillText(txt.scanSub, ctaX, footY + 162);
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.font = '600 16px "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('⚡ Abriendo directamente como lector sin alterar el viaje', textLeft, qrBoxY + 188);
-  ctx.restore();
+  // 6. Output to Modal with Download & Copy options
+  const dataUrl = canvas.toDataURL('image/png', 0.95);
+  const safeTitle = (tripTitle || 'viaje').toLowerCase().replace(/[^a-z0-9]/g, '_');
 
-  // 9. FOOTER BRANDING (Y: 1870)
-  ctx.save();
-  ctx.fillStyle = 'rgba(148, 163, 184, 0.65)';
-  ctx.font = 'bold 17px "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(dict.footer, 540, 1885);
-  ctx.restore();
+  const modal = document.getElementById('modal-travel-card');
+  const previewImg = document.getElementById('travel-card-preview-img');
+  const btnDownload = document.getElementById('btn-download-travel-card');
+  const btnCopy = document.getElementById('btn-copy-travel-card');
 
-  // 10. Open Preview Modal
-  try {
-    const dataUrl = canvas.toDataURL('image/png');
-    const modalEl = document.getElementById('modal-travel-card');
-    const previewImg = document.getElementById('travelCardPreviewImg');
-    const btnDownload = document.getElementById('btnDownloadCard');
-    const btnCopy = document.getElementById('btnCopyCard');
-    const btnShareNative = document.getElementById('btnShareNativeCard');
+  if (modal && previewImg) {
+    previewImg.src = dataUrl;
+    modal.style.display = 'flex';
 
-    if (modalEl && previewImg) {
-      previewImg.src = dataUrl;
-      modalEl.style.display = 'flex';
-
-      const filename = `plux-${(tripTitle || 'viaje').toLowerCase().replace(/[^a-z0-9]/g, '_')}-story.png`;
-
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-
-        if (btnDownload) {
-          btnDownload.onclick = () => {
-            const downloadUrl = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(downloadUrl), 4000);
-            if (typeof showToast === 'function') showToast(dict.shareToast, 'success');
-          };
-        }
-
-        if (btnCopy) {
-          btnCopy.onclick = async () => {
-            try {
-              if (navigator.clipboard && window.ClipboardItem) {
-                await navigator.clipboard.write([
-                  new ClipboardItem({ 'image/png': blob })
-                ]);
-                if (typeof showToast === 'function') showToast(dict.copiedToast, 'success');
-              } else {
-                btnDownload.click();
-              }
-            } catch (err) {
-              btnDownload.click();
-            }
-          };
-        }
-
-        if (btnShareNative) {
-          const file = new File([blob], filename, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            btnShareNative.style.display = 'flex';
-            btnShareNative.onclick = async () => {
-              try {
-                await navigator.share({
-                  title: `${tripTitle} · Plux Story`,
-                  text: `${dict.travelingTo}: ${tripTitle} ✈️\n${readerUrl}`,
-                  files: [file]
-                });
-              } catch (e) {
-                if (e.name !== 'AbortError') console.warn('Share error:', e);
-              }
-            };
-          } else {
-            btnShareNative.style.display = 'none';
-          }
-        }
-      }, 'image/png');
-
-      if (typeof showToast === 'function') showToast(dict.shareToast, 'success');
+    if (btnDownload) {
+      btnDownload.onclick = () => {
+        const link = document.createElement('a');
+        link.download = `plux_${safeTitle}_story.png`;
+        link.href = dataUrl;
+        link.click();
+        if (typeof showToast === 'function') showToast(langKey === 'es' ? 'Tarjeta descargada' : 'Travel card downloaded', 'success');
+      };
     }
-  } catch(err) {
-    console.error('Error generating card modal:', err);
-    if (typeof showToast === 'function') showToast(dict.shareError, 'error');
+
+    if (btnCopy) {
+      btnCopy.onclick = async () => {
+        try {
+          canvas.toBlob(async (blob) => {
+            if (blob && navigator.clipboard && window.ClipboardItem) {
+              await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+              if (typeof showToast === 'function') showToast(langKey === 'es' ? '¡Tarjeta copiada al portapapeles!' : 'Card copied to clipboard!', 'success');
+            } else {
+              if (typeof showToast === 'function') showToast('Copia automática no soportada, usa Descargar', 'info');
+            }
+          });
+        } catch(e) {
+          console.warn('Clipboard write error:', e);
+          if (typeof showToast === 'function') showToast('Usa el botón Descargar', 'info');
+        }
+      };
+    }
+  } else {
+    // Fallback: direct download
+    const link = document.createElement('a');
+    link.download = `plux_${safeTitle}_story.png`;
+    link.href = dataUrl;
+    link.click();
+    if (typeof showToast === 'function') showToast('Tarjeta generada con éxito', 'success');
   }
 }
 
-// ================== PDF MEJORADO, EDITORIAL & INTERACTIVO ==================
+// ================== EXPORTAR PDF (DOSSIER EDITORIAL PLUX) ==================
 async function exportarPDF() {
-  if (typeof trackEvent === 'function') {
-    trackEvent('export_plan', {
-      format: 'pdf',
-      destinations_count: (typeof destinos !== 'undefined' && Array.isArray(destinos)) ? destinos.length : 0,
-      trip_name: (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : 'Viaje'
-    });
+  if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+    if (typeof showToast === 'function') showToast('Librería PDF no disponible', 'error');
+    return;
   }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const langKey = (typeof currentLang !== 'undefined' && (currentLang === 'en' || currentLang === 'es')) ? currentLang : 'es';
 
   if (typeof showToast === 'function') {
-    showToast('Generando dossier oficial de viaje en PDF...', 'info');
+    showToast(langKey === 'es' ? 'Compilando Dossier Oficial de Plux...' : 'Compiling official Plux Dossier...', 'info');
   }
 
-  const i18nPDF = {
-    es: {
-      docSubtitle: 'Dossier e Itinerario Oficial de Viaje',
-      generatedOn: 'Generado el',
-      organizedBy: 'Organizado por',
-      origin: 'Origen / Salida',
-      startDate: 'Fecha de Inicio',
-      people: 'Personas',
-      totalBudget: 'Presupuesto Total Est.',
-      destinationBadge: 'DESTINO',
-      type: 'Tipo',
-      from: 'Origen',
-      to: 'Destino',
-      transportMean: 'Medio',
-      cost: 'Costo Total',
-      day: 'Día',
-      time: 'Hora',
-      activity: 'Actividad / Evento',
-      duration: 'Duración',
-      notes: 'Notas',
-      noEvents: 'Sin actividades programadas para este día',
-      returnTransport: 'TRANSPORTE DE VUELTA',
-      returnDesc: 'Descripción de Vuelta',
-      page: 'Página',
-      of: 'de',
-      verifiedSeal: 'ITINERARIO VERIFICADO · PLUX TRAVEL OS',
-      interactiveBtn: '🚀 CLIC AQUÍ PARA ABRIR ESTE VIAJE EN VIVO (MODO LECTOR)',
-      scanNote: 'Escanea con tu teléfono para abrir el mapa interactivo y gastos en modo lector:',
-      brandFooter: 'Plux · La Plataforma Inteligente de Viajes · plux.nibecarcofeben.com'
-    },
-    en: {
-      docSubtitle: 'Official Travel Dossier & Itinerary',
-      generatedOn: 'Generated on',
-      organizedBy: 'Organized by',
-      origin: 'Origin / Departure',
-      startDate: 'Start Date',
-      people: 'Travelers',
-      totalBudget: 'Est. Total Budget',
-      destinationBadge: 'DESTINATION',
-      type: 'Type',
-      from: 'Origin',
-      to: 'Destination',
-      transportMean: 'Mean',
-      cost: 'Total Cost',
-      day: 'Day',
-      time: 'Time',
-      activity: 'Activity / Event',
-      duration: 'Duration',
-      notes: 'Notes',
-      noEvents: 'No activities scheduled for this day',
-      returnTransport: 'RETURN TRANSPORTATION',
-      returnDesc: 'Return Details',
-      page: 'Page',
-      of: 'of',
-      verifiedSeal: 'VERIFIED ITINERARY · PLUX TRAVEL OS',
-      interactiveBtn: '🚀 CLICK HERE TO OPEN THIS TRIP LIVE (READER MODE)',
-      scanNote: 'Scan with your camera to open the interactive map & expenses in reader mode:',
-      brandFooter: 'Plux · Smart Travel Ecosystem · plux.nibecarcofeben.com'
-    }
-  };
+  // 1. Ensure trip exists in Firestore and get Reader URL
+  const shareUrl = await asegurarViajeEnNubeParaCompartir();
 
-  const langKey = (typeof currentLang === 'string' && i18nPDF[currentLang]) ? currentLang : 'es';
-  const dict = i18nPDF[langKey] || i18nPDF.es;
+  // 2. Trip metrics
+  const tripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || 'Viaje en Plux');
+  const departureCity = (typeof lugarSalida !== 'undefined' && lugarSalida) ? lugarSalida : 'Sin origen registrado';
+  const startDay = document.getElementById('fechaInicio')?.value || 'Fecha a convenir';
+  const companionsFormatted = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : (nombresPersonasGlobal || '@Viajero');
+  const currencySymbol = (typeof currentCurrency !== 'undefined') ? (currentCurrency === 'USD' ? 'USD' : (currentCurrency === 'EUR' ? 'EUR' : currentCurrency)) : 'EUR';
 
-  // Get reader URL and generate real QR code image
-  const readerUrl = await obtenerUrlViajeLector();
-  const qrCanvasOrImg = await generarCanvasQRCode(readerUrl, 200);
+  let totalDays = 0;
+  let totalActivities = 0;
+  let totalBudget = 0;
+  const destinationsList = [];
 
-  const doc = new jspdf.jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  
-  const rawTripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : 'Viaje';
-  const tripTitle = rawTripTitle.replace(/\s*·\s*PLUX$/i, '').trim();
-  const companionsText = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : '';
-  const userName = (typeof currentNickname === 'string' && currentNickname) 
-    ? `@${currentNickname.replace(/^@/, '')}` 
-    : (typeof firebaseUser !== 'undefined' && firebaseUser && (firebaseUser.displayName || firebaseUser.email?.split('@')[0]) || (langKey === 'es' ? 'Viajero Plux' : 'Plux Traveler'));
+  if (typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0) {
+    destinos.forEach((d, idx) => {
+      const dDays = parseInt(d.dias, 10) || 1;
+      totalDays += dDays;
+      const actsCount = Array.isArray(d.actividades) ? d.actividades.length : 0;
+      totalActivities += actsCount;
 
-  // Calculate stats
-  let totalCost = 0;
-  const numPers = (typeof numPersonas === 'number' && numPersonas > 0) ? numPersonas : 1;
-
-  if (typeof destinos !== 'undefined' && Array.isArray(destinos)) {
-    destinos.forEach(d => {
-      if (d.dias) {
-        d.dias.forEach(dia => {
-          if (dia.eventos) {
-            dia.eventos.forEach(ev => { totalCost += (Number(ev.costo) || 0) * numPers; });
-          }
-          if (dia.costosAdicionales) {
-            dia.costosAdicionales.forEach(c => { totalCost += Number(c.precio) || 0; });
-          }
-        });
+      let dCost = (parseFloat(d.precioIda) || 0) + (parseFloat(d.precioAlojamiento) || 0);
+      if (Array.isArray(d.actividades)) {
+        d.actividades.forEach(a => { dCost += (parseFloat(a.precio) || 0); });
       }
-      if (d.tramos) {
-        d.tramos.forEach(tr => { totalCost += (Number(tr.precio) || 0) * numPers; });
+      if (Array.isArray(d.costosAdicionales)) {
+        d.costosAdicionales.forEach(c => { dCost += (parseFloat(c.monto) || 0); });
       }
+      totalBudget += dCost;
+
+      destinationsList.push({
+        num: idx + 1,
+        name: d.ciudad || `Destino ${idx + 1}`,
+        days: dDays,
+        transport: d.transporteIda || 'Avion',
+        priceIda: parseFloat(d.precioIda) || 0,
+        lodging: d.tipoAlojamiento || 'Hotel',
+        priceLodging: parseFloat(d.precioAlojamiento) || 0,
+        activities: Array.isArray(d.actividades) ? d.actividades : [],
+        costosExtra: Array.isArray(d.costosAdicionales) ? d.costosAdicionales : []
+      });
     });
   }
-  if (typeof vueltaGlobal !== 'undefined' && vueltaGlobal && typeof vueltaPrecioGlobal !== 'undefined' && vueltaPrecioGlobal) {
-    totalCost += Number(vueltaPrecioGlobal) * numPers;
-  }
-  if (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales)) {
-    vueltaCostosAdicionales.forEach(c => { totalCost += Number(c.precio) || 0; });
+
+  if (typeof vueltaPrecioGlobal !== 'undefined') {
+    totalBudget += (parseFloat(vueltaPrecioGlobal) || 0);
   }
 
-  const rawFecha = document.getElementById('fechaInicio')?.value || '';
-  const fechaFormatted = (typeof safeFormatDateStr === 'function') ? safeFormatDateStr(rawFecha) : (rawFecha || (langKey === 'es' ? 'No definida' : 'Flexible'));
-  const salidaVal = (typeof lugarSalida === 'string' && lugarSalida.trim()) ? lugarSalida.trim() : (langKey === 'es' ? 'No especificado' : 'Not specified');
+  const pageWidth = 210;
+  const pageHeight = 297;
 
-  // ==================== PÁGINA 1: PORTADA EDITORIAL PLUX ====================
-  // Background
-  doc.setFillColor(11, 17, 32); // Deep Space Navy
+  // ================= PAGE 1: COVER DOSSIER =================
+  // Dark luxury editorial background
+  doc.setFillColor(11, 17, 32); // #0b1120
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  // Top Neon Bar
-  doc.setFillColor(16, 185, 129); // Emerald
-  doc.rect(0, 0, pageWidth, 4, 'F');
-  doc.setFillColor(236, 72, 153); // Pink accent
-  doc.rect(pageWidth / 2, 0, pageWidth / 2, 4, 'F');
-
-  // Official Plux Capsule Logo Bubble
+  // Decorative header neon bar (#10b981 to #0ea5e9 to #ec4899)
   doc.setFillColor(16, 185, 129);
-  doc.roundedRect(14, 16, 42, 16, 8, 8, 'F');
-  doc.setFont("helvetica", "bold");
+  doc.rect(0, 0, pageWidth * 0.45, 3.5, 'F');
+  doc.setFillColor(14, 165, 233);
+  doc.rect(pageWidth * 0.45, 0, pageWidth * 0.35, 3.5, 'F');
+  doc.setFillColor(236, 72, 153);
+  doc.rect(pageWidth * 0.80, 0, pageWidth * 0.20, 3.5, 'F');
+
+  // Authentic Plux Logo Bubble Image
+  const logoPluxCanvas = crearCanvasLogoPlux(220, 85);
+  doc.addImage(logoPluxCanvas.toDataURL('image/png'), 'PNG', 14, 12, 38, 15);
+
+  // Brand text beside logo (NO "SMART TRAVEL OS")
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
   doc.setTextColor(255, 255, 255);
-  doc.text("PLUX", 35, 27.5, { align: "center" });
+  doc.text('PLUX', 56, 19);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(56, 189, 248);
-  doc.text("SMART TRAVEL OS", 62, 24);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(148, 163, 184); // slate-400
+  doc.text('Dossier e Itinerario Oficial de Viaje', 56, 25);
 
-  doc.setFont("helvetica", "normal");
+  // Right Header info
   doc.setFontSize(8.5);
   doc.setTextColor(148, 163, 184);
-  doc.text(dict.docSubtitle, 62, 30);
-
-  doc.text("plux.nibecarcofeben.com", pageWidth - 14, 23, { align: "right" });
-  doc.text(`${dict.generatedOn}: ${new Date().toLocaleDateString()}`, pageWidth - 14, 29, { align: "right" });
+  doc.text('plux.nibecarcofeben.com', pageWidth - 14, 18, { align: 'right' });
+  const todayStr = new Date().toLocaleDateString();
+  doc.text(`Generado el: ${todayStr}`, pageWidth - 14, 23, { align: 'right' });
 
   // Main Trip Title
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(26);
   doc.setTextColor(255, 255, 255);
-  const cleanTripTitle = tripTitle.replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-  const splitTitle = doc.splitTextToSize(cleanTripTitle, pageWidth - 28);
-  doc.text(splitTitle, 14, 52);
+  const cleanTitlePDF = (tripTitle || 'EXPEDICION EN PLUX').toUpperCase();
+  const splitTitle = doc.splitTextToSize(cleanTitlePDF, pageWidth - 28);
+  doc.text(splitTitle, 14, 46);
 
-  let coverY = 52 + (splitTitle.length * 8) + 4;
+  const titleLinesCount = Array.isArray(splitTitle) ? splitTitle.length : 1;
+  const afterTitleY = 46 + (titleLinesCount * 10);
 
-  // Organizer info chip
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(203, 213, 225);
-  let userLine = `${dict.organizedBy}: ${userName}`;
-  if (companionsText) userLine += `  ${companionsText.replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '')}`;
-  doc.text(userLine, 14, coverY);
-  coverY += 12;
-
-  // ================= INTERACTIVE READER LINK BUTTON =================
-  // Big Glowing Button that links to the trip in reader mode
-  doc.setFillColor(16, 185, 129); // Emerald Plux
-  doc.roundedRect(14, coverY, pageWidth - 28, 14, 7, 7, 'F');
-  
-  doc.setFont("helvetica", "bold");
+  // Author / Organizer
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(10.5);
-  doc.setTextColor(11, 17, 32);
-  doc.text(dict.interactiveBtn, pageWidth / 2, coverY + 9.5, { align: "center" });
+  doc.setTextColor(148, 163, 184);
+  doc.text(`Organizado por: ${companionsFormatted}`, 14, afterTitleY);
 
-  // Link area in PDF
-  doc.link(14, coverY, pageWidth - 28, 14, { url: readerUrl });
-  coverY += 22;
+  // ================= INTERACTIVE BUTTON (READER MODE) =================
+  // Clean ASCII text without unicode emojis to prevent any character corruption (no Ø=þ€)
+  const ctaBtnY = afterTitleY + 8;
+  const ctaBtnW = pageWidth - 28; // 182mm
+  const ctaBtnH = 11;
+  doc.setFillColor(16, 185, 129); // #10b981 emerald
+  doc.roundedRect(14, ctaBtnY, ctaBtnW, ctaBtnH, 5.5, 5.5, 'F');
 
-  // Overview Table (Cover Page)
-  const metaBody = [
-    [dict.origin, salidaVal, dict.startDate, fechaFormatted],
-    [dict.people, `${numPers}`, dict.totalBudget, `${totalCost.toFixed(2)} EUR`]
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text('CLIC AQUI PARA ABRIR ESTE VIAJE EN VIVO (MODO LECTOR) ->', pageWidth / 2, ctaBtnY + 7.2, { align: 'center' });
+
+  // Add clickable hyperlink directly on PDF button
+  doc.link(14, ctaBtnY, ctaBtnW, ctaBtnH, { url: shareUrl });
+
+  // Overview Table
+  const tableData = [
+    [
+      { content: 'Origen / Salida', styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
+      { content: departureCity.toUpperCase(), styles: { textColor: [226, 232, 240] } },
+      { content: 'Fecha de Inicio', styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
+      { content: startDay, styles: { textColor: [56, 189, 248] } }
+    ],
+    [
+      { content: 'Viajeros', styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
+      { content: companionsFormatted, styles: { textColor: [226, 232, 240] } },
+      { content: 'Presupuesto Total Est.', styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
+      { content: `${Math.round(totalBudget)} ${currencySymbol}`, styles: { fontStyle: 'bold', textColor: [52, 211, 153] } }
+    ]
   ];
 
   doc.autoTable({
-    startY: coverY,
-    body: metaBody,
+    startY: ctaBtnY + 16,
+    margin: { left: 14, right: 14 },
+    body: tableData,
     theme: 'grid',
-    styles: { fontSize: 9, cellPadding: 3.5, textColor: [241, 245, 249], fillColor: [15, 23, 42] },
-    columnStyles: {
-      0: { fontStyle: 'bold', fillColor: [30, 41, 59], cellWidth: 42 },
-      1: { cellWidth: 52 },
-      2: { fontStyle: 'bold', fillColor: [30, 41, 59], cellWidth: 42 },
-      3: { fontStyle: 'bold', textColor: [16, 185, 129], cellWidth: 46 }
+    styles: {
+      fontSize: 8.5,
+      cellPadding: 3.5,
+      lineColor: [30, 41, 59],
+      lineWidth: 0.3
+    },
+    tableLineColor: [30, 41, 59],
+    tableLineWidth: 0.3
+  });
+
+  // Destinations Breakdown list on Cover
+  let currentY = doc.lastAutoTable.finalY + 10;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(236, 72, 153); // pink
+  doc.text('RUTA Y DESTINOS DEL VIAJE', 14, currentY);
+  currentY += 5;
+
+  const destTable = destinationsList.map((d, i) => [
+    `#${d.num}`,
+    d.name,
+    `${d.days} dias`,
+    `${d.activities.length} actividades`,
+    `${d.transport} / ${d.lodging}`
+  ]);
+
+  if (destTable.length > 0) {
+    doc.autoTable({
+      startY: currentY,
+      margin: { left: 14, right: 14 },
+      head: [['#', 'Destino', 'Estadia', 'Actividades', 'Transporte & Estadia']],
+      body: destTable,
+      theme: 'plain',
+      styles: {
+        fontSize: 8.5,
+        cellPadding: 2.5,
+        textColor: [226, 232, 240]
+      },
+      headStyles: {
+        fillColor: [30, 41, 59],
+        textColor: [56, 189, 248],
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [15, 23, 42]
+      }
+    });
+    currentY = doc.lastAutoTable.finalY + 8;
+  }
+
+  // Scannable QR Code section at bottom of Page 1
+  const qrBoxY = Math.max(currentY + 4, 215);
+  const qrBoxH = 62;
+  const qrBoxW = pageWidth - 28;
+
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.roundedRect(14, qrBoxY, qrBoxW, qrBoxH, 4, 4, 'F');
+  doc.setDrawColor(14, 165, 233);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(14, qrBoxY, qrBoxW, qrBoxH, 4, 4, 'S');
+
+  // Render Real Scannable QR
+  const qrCanvasCover = await generarCanvasQRCode(shareUrl, 200);
+  const qrDataUrl = qrCanvasCover.toDataURL ? qrCanvasCover.toDataURL('image/png') : qrCanvasCover.src;
+  if (qrDataUrl) {
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(20, qrBoxY + 8, 46, 46, 2, 2, 'F');
+    doc.addImage(qrDataUrl, 'PNG', 22, qrBoxY + 10, 42, 42);
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(52, 211, 153);
+  doc.text('MODO LECTOR DISPONIBLE', 74, qrBoxY + 18);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(255, 255, 255);
+  doc.text('ESCANEA CON TU MOVIL PARA ABRIR ESTE VIAJE EN PLUX', 74, qrBoxY + 25);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(148, 163, 184);
+  const expl = [
+    '1. Abre la camara de tu smartphone y enfoca el codigo QR.',
+    '2. Accederas de inmediato al mapa interactivo y presupuesto en Modo Lectura.',
+    '3. Disponible en cualquier navegador web, iOS y Android.'
+  ];
+  doc.text(expl, 74, qrBoxY + 33);
+
+  // Link on the QR block
+  doc.link(14, qrBoxY, qrBoxW, qrBoxH, { url: shareUrl });
+
+  // Page 1 Footer
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('PLUX • Pagina 1 de 2 • Itinerario Oficial', pageWidth / 2, pageHeight - 7, { align: 'center' });
+
+  // ================= PAGE 2: DETAILED ITINERARY =================
+  doc.addPage();
+  doc.setFillColor(11, 17, 32);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+  // Header Page 2
+  doc.addImage(logoPluxCanvas.toDataURL('image/png'), 'PNG', 14, 10, 28, 11);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(255, 255, 255);
+  doc.text('CRONOGRAMA DETALLADO DE ACTIVIDADES', 46, 17);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(148, 163, 184);
+  doc.text('Desglose diario de actividades, reservas y costos estimados', 46, 22);
+
+  // Build activities rows
+  const actRows = [];
+  let dayCounter = 1;
+
+  destinationsList.forEach(dest => {
+    if (dest.activities && dest.activities.length > 0) {
+      dest.activities.forEach(act => {
+        actRows.push([
+          `Dia ${act.dia || dayCounter}`,
+          dest.name,
+          act.nombre || 'Actividad',
+          act.hora || 'Flexible',
+          (act.precio && parseFloat(act.precio) > 0) ? `${act.precio} ${currencySymbol}` : 'Gratis / Incluido',
+          act.completada ? 'Listo' : 'Planificado'
+        ]);
+      });
+    } else {
+      actRows.push([
+        `Dia ${dayCounter}`,
+        dest.name,
+        'Exploracion libre y recorrido por la ciudad',
+        'Todo el dia',
+        '0.00 ' + currencySymbol,
+        'Planificado'
+      ]);
+    }
+    dayCounter += dest.days;
+  });
+
+  doc.autoTable({
+    startY: 28,
+    margin: { left: 14, right: 14 },
+    head: [['Dia', 'Destino', 'Actividad / Lugar', 'Horario', 'Costo Est.', 'Estado']],
+    body: actRows,
+    theme: 'grid',
+    styles: {
+      fontSize: 8,
+      cellPadding: 2.8,
+      lineColor: [30, 41, 59],
+      lineWidth: 0.2,
+      textColor: [226, 232, 240]
+    },
+    headStyles: {
+      fillColor: [15, 23, 42],
+      textColor: [56, 189, 248],
+      fontStyle: 'bold',
+      lineColor: [30, 41, 59]
+    },
+    alternateRowStyles: {
+      fillColor: [15, 23, 42]
     }
   });
 
-  coverY = doc.lastAutoTable.finalY + 14;
-
-  // QR Code & Reader Mode Scanner Box on Cover
+  // Notes and Tips box
+  const notesY = Math.min(doc.lastAutoTable.finalY + 8, pageHeight - 45);
   doc.setFillColor(15, 23, 42);
-  doc.roundedRect(14, coverY, pageWidth - 28, 52, 6, 6, 'F');
-  doc.setDrawColor(56, 189, 248);
-  doc.setLineWidth(0.8);
-  doc.roundedRect(14, coverY, pageWidth - 28, 52, 6, 6, 'S');
+  doc.roundedRect(14, notesY, pageWidth - 28, 28, 3, 3, 'F');
+  doc.setDrawColor(30, 41, 59);
+  doc.roundedRect(14, notesY, pageWidth - 28, 28, 3, 3, 'S');
 
-  if (qrCanvasOrImg) {
-    try {
-      const qrDataUrl = (typeof qrCanvasOrImg.toDataURL === 'function') 
-        ? qrCanvasOrImg.toDataURL('image/png') 
-        : qrCanvasOrImg.src;
-      doc.addImage(qrDataUrl, 'PNG', 20, coverY + 6, 40, 40);
-    } catch(e) {
-      console.warn('PDF QR image insertion error:', e);
-    }
-  }
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10.5);
-  doc.setTextColor(16, 185, 129);
-  doc.text("MODO LECTOR ACTIVO", 66, coverY + 16);
-
-  doc.setFont("helvetica", "normal");
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
-  doc.setTextColor(203, 213, 225);
-  doc.text(dict.scanNote, 66, coverY + 24);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
   doc.setTextColor(56, 189, 248);
-  doc.text(readerUrl, 66, coverY + 34);
-  doc.link(66, coverY + 28, 120, 10, { url: readerUrl });
+  doc.text('INFORMACION IMPORTANTE & CONSEJOS PLUX', 18, notesY + 6);
 
-  doc.setFont("helvetica", "italic");
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
-  doc.text("Permite a cualquier persona ver el itinerario completo, rutas y eventos sin permiso de edicion.", 66, coverY + 42);
+  const tips = [
+    '• Guarda este documento en tu movil para acceder a los horarios de tu itinerario sin conexion.',
+    '• Puedes consultar el pronostico del clima actualizado y cambios de moneda en plux.nibecarcofeben.com.',
+    '• Para solicitar cambios en este viaje, contacta al organizador o ingresa con un codigo de editor.'
+  ];
+  doc.text(tips, 18, notesY + 12);
 
-  // Cover Footer
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(148, 163, 184);
-  doc.text(dict.verifiedSeal, pageWidth / 2, pageHeight - 12, { align: "center" });
+  // Page 2 Footer
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('PLUX • Pagina 2 de 2 • Itinerario Oficial', pageWidth / 2, pageHeight - 7, { align: 'center' });
 
-  // ==================== PÁGINAS SIGUIENTES: EL ITINERARIO ====================
-  doc.addPage();
-  let currentY = 20;
+  // 3. Output to Modal with Download & Print
+  const pdfBlob = doc.output('blob');
+  const pdfBlobUrl = URL.createObjectURL(pdfBlob);
+  const safeFilename = `plux_${(tripTitle || 'itinerario').toLowerCase().replace(/[^a-z0-9]/g, '_')}.pdf`;
 
-  if (typeof destinos !== 'undefined' && Array.isArray(destinos)) {
-    destinos.forEach((dest, dIdx) => {
-      if (currentY > pageHeight - 45) {
-        doc.addPage();
-        currentY = 20;
-      }
+  const modal = document.getElementById('modal-pdf-preview');
+  const iframe = document.getElementById('pdf-preview-frame');
+  const btnDownload = document.getElementById('btn-download-pdf');
+  const btnPrint = document.getElementById('btn-print-pdf');
+  const btnOpenTab = document.getElementById('btn-open-pdf-tab');
 
-      // Destination header badge (Plux Gradient-like Pill)
-      doc.setFillColor(236, 72, 153); // Pink brand
-      doc.roundedRect(14, currentY, pageWidth - 28, 10, 3, 3, 'F');
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(255, 255, 255);
-      const cleanDestNombre = (dest.nombre || '').toUpperCase().replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-      doc.text(`${dict.destinationBadge} ${dIdx + 1}: ${cleanDestNombre}`, 18, currentY + 7);
-      currentY += 15;
+  if (modal && iframe) {
+    iframe.src = pdfBlobUrl;
+    modal.style.display = 'flex';
 
-      // Transport Section
-      if (dest.tramos && dest.tramos.length > 0) {
-        const tramosBody = [];
-        dest.tramos.forEach((tr, tIdx) => {
-          const trPrecio = tr.precio ? `${(Number(tr.precio) * numPers).toFixed(2)} EUR` : '0.00 EUR';
-          const origenClean = (tr.origen || '-').replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-          const destinoClean = (tr.destino || '-').replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-          const medioClean = (tr.medio || 'Transporte').replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-
-          tramosBody.push([
-            `Tramo ${tIdx + 1}`,
-            origenClean,
-            destinoClean,
-            medioClean,
-            trPrecio
-          ]);
-          if (tr.escalas && tr.escalas.length > 0) {
-            const cleanEscalas = tr.escalas.join(', ').replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-            tramosBody.push([{
-              content: `Escalas: ${cleanEscalas}`,
-              colSpan: 5,
-              styles: { fontStyle: 'italic', textColor: [100, 116, 139] }
-            }]);
-          }
-        });
-
-        doc.autoTable({
-          startY: currentY,
-          head: [[dict.type, dict.from, dict.to, dict.transportMean, dict.cost]],
-          body: tramosBody,
-          theme: 'striped',
-          headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 8.5 },
-          styles: { fontSize: 8, cellPadding: 2.5 }
-        });
-        currentY = doc.lastAutoTable.finalY + 6;
-      }
-
-      // Days & Events
-      (dest.dias || []).forEach((dia, diaIdx) => {
-        if (currentY > pageHeight - 40) {
-          doc.addPage();
-          currentY = 20;
-        }
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(30, 41, 59);
-        doc.text(`${dict.day} ${diaIdx + 1}`, 14, currentY);
-        currentY += 4.5;
-
-        const actBody = [];
-        (dia.eventos || []).forEach(ev => {
-          const evCost = ev.costo ? `${(Number(ev.costo) * numPers).toFixed(2)} EUR` : '0.00 EUR';
-          const evDur = ev.duracion ? `${ev.duracion} min` : '-';
-          const cleanTitulo = (ev.titulo || 'Actividad').replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-          const cleanNotas = (ev.notas || '-').replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-
-          actBody.push([
-            ev.hora || '--:--',
-            cleanTitulo,
-            evDur,
-            cleanNotas,
-            evCost
-          ]);
-        });
-
-        (dia.costosAdicionales || []).forEach(c => {
-          if (c.descripcion) {
-            const cleanDesc = c.descripcion.replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-            actBody.push([
-              '--:--',
-              `[Costo Extra] ${cleanDesc}`,
-              '-',
-              '-',
-              `${(Number(c.precio) || 0).toFixed(2)} EUR`
-            ]);
-          }
-        });
-
-        if (actBody.length > 0) {
-          doc.autoTable({
-            startY: currentY,
-            head: [[dict.time, dict.activity, dict.duration, dict.notes, dict.cost]],
-            body: actBody,
-            theme: 'striped',
-            headStyles: { fillColor: [51, 65, 85], textColor: 255, fontSize: 8 },
-            styles: { fontSize: 8, cellPadding: 2.5 },
-            columnStyles: {
-              0: { cellWidth: 18 },
-              1: { cellWidth: 60, fontStyle: 'bold' },
-              2: { cellWidth: 20 },
-              3: { cellWidth: 54 },
-              4: { cellWidth: 28, halign: 'right' }
-            }
-          });
-          currentY = doc.lastAutoTable.finalY + 5;
-        } else {
-          doc.setFont("helvetica", "italic");
-          doc.setFontSize(8.5);
-          doc.setTextColor(148, 163, 184);
-          doc.text(dict.noEvents, 16, currentY);
-          currentY += 6;
-        }
-      });
-
-      currentY += 4;
-    });
-  }
-
-  // Return Transport
-  if (typeof vueltaGlobal !== 'undefined' && vueltaGlobal) {
-    if (currentY > pageHeight - 45) {
-      doc.addPage();
-      currentY = 20;
+    if (btnDownload) {
+      btnDownload.onclick = () => {
+        doc.save(safeFilename);
+        if (typeof showToast === 'function') showToast('PDF descargado con exito', 'success');
+      };
     }
 
-    doc.setFillColor(16, 185, 129);
-    doc.roundedRect(14, currentY, pageWidth - 28, 8.5, 2, 2, 'F');
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-    doc.text(dict.returnTransport, 18, currentY + 5.5);
-    currentY += 11.5;
-
-    const vueltaBody = [];
-    const vCost = (typeof vueltaPrecioGlobal !== 'undefined' && vueltaPrecioGlobal) 
-      ? `${(Number(vueltaPrecioGlobal) * numPers).toFixed(2)} EUR` 
-      : '0.00 EUR';
-    const cleanVuelta = vueltaGlobal.replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-    vueltaBody.push([cleanVuelta, vCost]);
-
-    if (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales)) {
-      vueltaCostosAdicionales.forEach(c => {
-        if (c.descripcion) {
-          const cleanDesc = c.descripcion.replace(/[^\x00-\x7F\u00C0-\u017F\s\-.,]/g, '');
-          vueltaBody.push([cleanDesc, `${(Number(c.precio) || 0).toFixed(2)} EUR`]);
-        }
-      });
-    }
-
-    doc.autoTable({
-      startY: currentY,
-      head: [[dict.returnDesc, dict.cost]],
-      body: vueltaBody,
-      theme: 'striped',
-      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 8.5 },
-      styles: { fontSize: 8, cellPadding: 2.5 }
-    });
-    currentY = doc.lastAutoTable.finalY + 6;
-  }
-
-  // Footer on content pages (from page 2 onwards)
-  const totalPages = doc.internal.getNumberOfPages();
-  for (let p = 2; p <= totalPages; p++) {
-    doc.setPage(p);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.setDrawColor(226, 232, 240);
-    doc.line(14, pageHeight - 12, pageWidth - 14, pageHeight - 12);
-    doc.text(dict.brandFooter, 14, pageHeight - 6);
-    doc.text(`${dict.page} ${p} ${dict.of} ${totalPages}`, pageWidth - 14, pageHeight - 6, { align: "right" });
-    doc.link(14, pageHeight - 10, 80, 8, { url: readerUrl });
-  }
-
-  // Modal Preview and Save
-  try {
-    const safeFilename = `plux_${(tripTitle || 'itinerario').toLowerCase().replace(/[^a-z0-9]/g, '_')}.pdf`;
-    const pdfBlob = doc.output('blob');
-    const pdfBlobUrl = URL.createObjectURL(pdfBlob);
-
-    const modalPDF = document.getElementById('modal-pdf-preview');
-    const framePDF = document.getElementById('pdfPreviewFrame');
-    const btnDownload = document.getElementById('btnDownloadPDF');
-    const btnPrint = document.getElementById('btnPrintPDF');
-    const btnOpenTab = document.getElementById('btnOpenPDFTab');
-
-    if (modalPDF && framePDF) {
-      framePDF.src = pdfBlobUrl;
-      modalPDF.style.display = 'flex';
-
-      if (btnDownload) {
-        btnDownload.onclick = () => {
-          doc.save(safeFilename);
-          if (typeof showToast === 'function') showToast('PDF descargado con éxito', 'success');
-        };
-      }
-
-      if (btnPrint) {
-        btnPrint.onclick = () => {
-          try {
-            framePDF.contentWindow.focus();
-            framePDF.contentWindow.print();
-          } catch (e) {
-            window.open(pdfBlobUrl, '_blank');
-          }
-        };
-      }
-
-      if (btnOpenTab) {
-        btnOpenTab.onclick = () => {
+    if (btnPrint) {
+      btnPrint.onclick = () => {
+        try {
+          iframe.contentWindow.print();
+        } catch(e) {
           window.open(pdfBlobUrl, '_blank');
-        };
-      }
-
-      if (typeof showToast === 'function') showToast('Dossier PDF oficial listo para ver', 'success');
-    } else {
-      doc.save(safeFilename);
-      if (typeof showToast === 'function') showToast('PDF generado correctamente', 'success');
+        }
+      };
     }
-  } catch (err) {
-    console.error('Error in PDF preview/save:', err);
-    doc.save(`plux_${(tripTitle || 'itinerario').toLowerCase().replace(/[^a-z0-9]/g, '_')}.pdf`);
+
+    if (btnOpenTab) {
+      btnOpenTab.onclick = () => {
+        window.open(pdfBlobUrl, '_blank');
+      };
+    }
+
+    if (typeof showToast === 'function') showToast('Dossier PDF oficial listo para ver', 'success');
+  } else {
+    doc.save(safeFilename);
+    if (typeof showToast === 'function') showToast('PDF generado correctamente', 'success');
   }
 }
 
     window.compartirTravelCard = compartirTravelCard;
     window.exportarPDF = exportarPDF;
+
 
     window.getTripCustomTitle = getTripCustomTitle;
     window.getCompanionsFormatted = getCompanionsFormatted;
@@ -9542,40 +9345,38 @@ async function exportarPDF() {
                 const colabs = data.colaboradores || [];
                 const roles = data.colaboradores_roles || {};
                 const owner = data.propietario;
-                const joiningName = currentNickname || 'Anónimo';
-                await db.collection('plux_viajes_compartidos').doc(code).set({
-                    colaboradores: firebase.firestore.FieldValue.arrayUnion(joiningName)
-                }, { merge: true });
-
-                // Sincronizar todos los colaboradores a la lista de viajeros
-                colabs.forEach(c => {
-                    const norm = c.toLowerCase().replace(/^@/, '');
-                    if (!listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === norm)) {
-                        listaViajeros.push('@' + norm);
-                    }
-                });
-                if (joiningName && !listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === joiningName.toLowerCase().replace(/^@/, ''))) {
-                    listaViajeros.push('@' + joiningName.replace(/^@/, ''));
-                }
-                window.renderTravelerChips();
-                
-                // Determine current user's role
                 const urlReaderParams2 = new URLSearchParams(window.location.search);
-                const isForcedReader2 = urlReaderParams2.get('mode') === 'reader' || urlReaderParams2.get('role') === 'viajero' || urlReaderParams2.get('role') === 'reader';
+                const isForcedReader2 = urlReaderParams2.get('mode') === 'reader' || urlReaderParams2.get('role') === 'reader';
                 if (isForcedReader2) {
-                    window.currentTripRole = 'viajero';
-                } else if (currentNickname === owner) {
-                    window.currentTripRole = 'owner';
-                } else if (currentNickname) {
-                    window.currentTripRole = roles[currentNickname] || 'editor';
-                } else {
-                    window.currentTripRole = 'editor';
-                }
-                
-                if (window.currentTripRole === 'viajero') {
-                    showToast(t('read_only_mode'), 'info');
+                    window.currentTripRole = 'reader';
                     mostrarAdvertenciaSoloLectura();
+                    if (typeof showToast === 'function') showToast('Modo Lectura Activo · Vista de itinerario', 'info');
                 } else {
+                    const joiningName = currentNickname || 'Anónimo';
+                    await db.collection('plux_viajes_compartidos').doc(code).set({
+                        colaboradores: firebase.firestore.FieldValue.arrayUnion(joiningName)
+                    }, { merge: true });
+
+                    // Sincronizar todos los colaboradores a la lista de viajeros
+                    colabs.forEach(c => {
+                        const norm = c.toLowerCase().replace(/^@/, '');
+                        if (!listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === norm)) {
+                            listaViajeros.push('@' + norm);
+                        }
+                    });
+                    if (joiningName && !listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === joiningName.toLowerCase().replace(/^@/, ''))) {
+                        listaViajeros.push('@' + joiningName.replace(/^@/, ''));
+                    }
+                    window.renderTravelerChips();
+                    
+                    // Determine current user's role
+                    if (currentNickname === owner) {
+                        window.currentTripRole = 'owner';
+                    } else if (currentNickname) {
+                        window.currentTripRole = roles[currentNickname] || 'editor';
+                    } else {
+                        window.currentTripRole = 'editor';
+                    }
                     ocultarAdvertenciaSoloLectura();
                 }
                 
@@ -9693,8 +9494,8 @@ async function exportarPDF() {
   
     // ================== SECURITY & INFO & ROLE HELPERS ==================
     function checkEditPermission() {
-      if (window.currentTripRole === 'viajero') {
-        showToast(t('no_permission_toast'), 'error');
+      if (window.currentTripRole === 'viajero' || window.currentTripRole === 'reader') {
+        showToast('Estás en Modo Lectura (sólo lectura). Pide un enlace de colaborador para editar.', 'info');
         return false;
       }
       return true;
@@ -9705,13 +9506,13 @@ async function exportarPDF() {
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'read-only-banner';
-        banner.style.cssText = "background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#fca5a5; padding:10px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:15px; font-size:0.9rem;";
+        banner.style.cssText = "background:rgba(14,165,233,0.18); border:1px solid #0ea5e9; color:#7dd3fc; padding:12px 20px; border-radius:14px; text-align:center; font-weight:bold; margin-bottom:15px; font-size:0.95rem; backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 20px rgba(14,165,233,0.2);";
         const appContainer = document.getElementById('app');
         if (appContainer) {
           appContainer.insertBefore(banner, appContainer.firstChild);
         }
       }
-      banner.textContent = "⚠️ " + t('read_only_mode');
+      banner.innerHTML = "👁️ <strong>Modo Lectura Activo</strong> · Estás explorando el itinerario compartido (sólo lectura)";
     }
     
     function ocultarAdvertenciaSoloLectura() {

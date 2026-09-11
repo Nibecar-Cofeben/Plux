@@ -2789,7 +2789,8 @@ VISTAS Y HERRAMIENTAS:
 
 Tenés acceso al clima actual del viaje (OpenWeather) en el contexto del mensaje. Usalo para recomendar ropa, actividades o cambios de plan.
 
-Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes además de explicar brevemente. Sos un agente que actúa, no solo habla.`;
+REGLA CRÍTICA DE IDIOMA: Respondé SIEMPRE en el MISMO IDIOMA en el que te hable o escriba el usuario. Si el usuario te habla en inglés, respondé 100% en inglés. Si te habla en francés, respondé en francés. Si te habla en alemán, italiano o portugués, respondé en ese idioma respectivo. Si te habla en español, respondé en español de forma amigable y concisa (podés usar tono cercano o rioplatense si el usuario lo utiliza).
+Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes además de explicar brevemente. Sos un agente que actúa, no solo habla.`;
 
     function abrirChatIA() {
       document.getElementById('modal-chat-ia').style.display = 'flex';
@@ -3664,8 +3665,9 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
 
       chatHistory.push({ role: 'user', content: texto });
       const weatherCtx = await getWeatherContextForTrip();
+      const appLang = (typeof currentLang === 'string' && currentLang) ? currentLang : 'es';
       const messages = [
-        { role: 'system', content: `${CHAT_SYSTEM} Contexto del viaje: ${destContext} Personas: ${numPersonas}. Presupuesto: no especificado.${weatherCtx}` },
+        { role: 'system', content: `${CHAT_SYSTEM}\n\nContexto del viaje: ${destContext} Personas: ${numPersonas}. Presupuesto: no especificado.${weatherCtx}\nIdioma preferido de la app: ${appLang}. RECORDATORIO: Si el mensaje del usuario está en inglés o cualquier otro idioma, responde en ese mismo idioma.` },
         ...chatHistory.slice(-8)
       ];
 
@@ -4950,7 +4952,13 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         console.warn('⚠️ Cloudflare Worker pluxy fallback to direct keys:', e);
       }
 
-      const chatPromptSystem = "Sos Pluxy, el agente inteligente y asistente de viajes experto de Plux con capacidades agénticas reales. Ayudás con recomendaciones turísticas, itinerarios, presupuestos y consejos prácticos en español rioplatense.";
+      const appLang = (typeof currentLang === 'string' && currentLang) ? currentLang : 'es';
+      const chatPromptSystem = `Sos Pluxy, el agente inteligente y copiloto de viajes experto de Plux con capacidades agénticas reales. REGLA FUNDAMENTAL DE IDIOMA: Respondé SIEMPRE en el MISMO IDIOMA en el que te escribe el usuario (si el usuario escribe en inglés, respondé 100% en inglés; si escribe en francés, alemán, italiano, portugués, etc., en ese idioma respectivo). Si te escribe en español, usá un tono amigable y cercano. Idioma de la interfaz: ${appLang}.`;
+
+      // Use incoming system message if present, otherwise inject chatPromptSystem
+      const finalMessages = (Array.isArray(messages) && messages.length > 0 && messages[0].role === 'system')
+        ? messages
+        : [{ role: "system", content: chatPromptSystem }, ...(messages || [])];
 
       // 1. Try Groq chat models
       if (GROQ_API_KEY) {
@@ -4962,10 +4970,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
               body: JSON.stringify({ 
                 model, 
-                messages: [
-                  { role: "system", content: chatPromptSystem },
-                  ...messages
-                ], 
+                messages: finalMessages, 
                 temperature: 0.7, 
                 max_tokens: 1500 
               })
@@ -4989,7 +4994,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
         for (const gModel of geminiModels) {
           try {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${GEMINI_API_KEY}`;
-            const geminiContents = messages.map(msg => ({
+            const geminiContents = finalMessages.map(msg => ({
               role: msg.role === 'assistant' || msg.role === 'system' ? 'model' : 'user',
               parts: [{ text: msg.content }]
             }));
@@ -5018,10 +5023,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_API_KEY}` },
             body: JSON.stringify({
               model: 'deepseek-chat',
-              messages: [
-                { role: 'system', content: chatPromptSystem },
-                ...messages
-              ],
+              messages: finalMessages,
               temperature: 0.7,
               max_tokens: 1500
             })
@@ -5044,10 +5046,7 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
             body: JSON.stringify({
               model: 'gpt-4o-mini',
-              messages: [
-                { role: 'system', content: chatPromptSystem },
-                ...messages
-              ],
+              messages: finalMessages,
               temperature: 0.7,
               max_tokens: 1500
             })
@@ -5063,7 +5062,13 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       }
 
       // 5. Intelligent Fallback
-      const destNames = destinos.map(d => d.nombre).join(', ') || 'tus destinos';
+      const destNames = (Array.isArray(destinos) && destinos.length > 0) 
+        ? destinos.map(d => d.nombre).join(', ') 
+        : (appLang === 'en' ? 'your destinations' : 'tus destinos');
+
+      if (appLang === 'en') {
+        return `Hello! I'm your Pluxy travel assistant ✨. For ${destNames}: I recommend planning visits to top landmarks early in the morning to skip the lines, using 24/48h transit passes, and booking tickets in advance. Feel free to ask me for custom recommendations or use the quick action buttons above! ✨`;
+      }
       return `¡Hola! Como tu asistente Pluxy ✨, para ${destNames}: te recomiendo planificar siempre las visitas a los monumentos principales por la mañana temprano para evitar filas, usar pases de transporte público de 24/48hs para ahorrar, y reservar actividades con antelación. ¡Podés pedirme sugerencias específicas para cualquier ciudad o usar los botones de acceso rápido arriba! ✨`;
     }
 
@@ -6765,86 +6770,92 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
     }
 
     // ================== COMPARTIR EN REDES SOCIALES (VERTICAL 9:16 STORY CARD) ==================
+    // Enhanced Travel Card with Destination Photo, Cinematic Visuals and Live Modal Preview
+    window.cerrarModalTravelCard = function() {
+      const m = document.getElementById('modal-travel-card');
+      if (m) m.style.display = 'none';
+    };
+
     async function compartirTravelCard() {
       const i18nCard = {
         es: {
-          tag: 'STORY DE VIAJE',
-          travelingTo: 'VIAJO A',
-          organizedBy: 'Organizado por',
-          with: 'con',
-          stops: 'Itinerario de Paradas',
+          tag: '✦ ITINERARIO OFICIAL',
+          travelingTo: 'EXPEDICIÓN A',
+          statusLive: '● EN VIVO',
+          routeTitle: 'RUTA & PARADAS',
           destinations: 'Destinos',
           days: 'Días',
           activities: 'Actividades',
-          budget: 'Presupuesto',
-          cost: 'Costo Est.',
-          weather: 'Clima',
-          footer: 'plux.nibecarcofeben.com · Planificador Inteligente de Viajes',
-          shareToast: '¡Imagen de viaje generada con éxito!',
-          shareError: 'Error al generar o compartir la imagen'
+          budget: 'Presupuesto Est.',
+          scanTitle: 'ESCANEA CON TU CÁMARA',
+          scanDesc: 'Explora mapa interactivo, clima y gastos en Plux',
+          footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
+          shareToast: '¡Tarjeta de viaje 9:16 generada con éxito!',
+          copiedToast: '¡Imagen copiada al portapapeles! Pegala en WhatsApp o Instagram ✨',
+          shareError: 'Error al generar o compartir la tarjeta'
         },
         en: {
-          tag: 'TRIP STORY',
-          travelingTo: 'TRAVELING TO',
-          organizedBy: 'Organized by',
-          with: 'with',
-          stops: 'Trip Route & Stops',
+          tag: '✦ OFFICIAL ITINERARY',
+          travelingTo: 'EXPEDITION TO',
+          statusLive: '● LIVE TRIP',
+          routeTitle: 'ROUTE & STOPS',
           destinations: 'Destinations',
           days: 'Days',
           activities: 'Activities',
-          budget: 'Budget',
-          cost: 'Est. Cost',
-          weather: 'Weather',
-          footer: 'plux.nibecarcofeben.com · Smart Travel Planner',
-          shareToast: 'Trip story card generated successfully!',
+          budget: 'Est. Budget',
+          scanTitle: 'SCAN WITH CAMERA',
+          scanDesc: 'Explore interactive map, weather & expenses on Plux',
+          footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
+          shareToast: '9:16 Travel story card generated successfully!',
+          copiedToast: 'Image copied to clipboard! Paste it into WhatsApp or Instagram ✨',
           shareError: 'Error generating or sharing card'
         },
         fr: {
-          tag: 'STORY DE VOYAGE',
-          travelingTo: 'JE VOYAGE À',
-          organizedBy: 'Organisé par',
-          with: 'avec',
-          stops: 'Itinéraire & Arrêts',
+          tag: '✦ ITINÉRAIRE OFFICIEL',
+          travelingTo: 'EXPÉDITION À',
+          statusLive: '● EN DIRECT',
+          routeTitle: 'ROUTE & ARRÊTS',
           destinations: 'Destinations',
           days: 'Jours',
           activities: 'Activités',
-          budget: 'Budget',
-          cost: 'Coût Est.',
-          weather: 'Météo',
-          footer: 'plux.nibecarcofeben.com · Planificateur Intelligent',
-          shareToast: 'Image de voyage générée avec succès !',
-          shareError: 'Erreur lors de la génération de l\'image'
+          budget: 'Budget Est.',
+          scanTitle: 'SCANNEZ AVEC L\'APPAREIL',
+          scanDesc: 'Explorez la carte interactive, la météo et le budget sur Plux',
+          footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
+          shareToast: 'Carte de voyage 9:16 générée avec succès !',
+          copiedToast: 'Image copiée dans le presse-papiers ! Collez-la sur WhatsApp ou Instagram ✨',
+          shareError: 'Erreur lors de la génération de la carte'
         },
         de: {
-          tag: 'REISE-STORY',
-          travelingTo: 'REISE NACH',
-          organizedBy: 'Organisiert von',
-          with: 'mit',
-          stops: 'Reiseroute & Stopps',
+          tag: '✦ OFFIZIELLER REISEPLAN',
+          travelingTo: 'EXPEDITION NACH',
+          statusLive: '● LIVE REISE',
+          routeTitle: 'ROUTE & STOPPS',
           destinations: 'Reiseziele',
           days: 'Tage',
           activities: 'Aktivitäten',
-          budget: 'Budget',
-          cost: 'Gesch. Kosten',
-          weather: 'Wetter',
-          footer: 'plux.nibecarcofeben.com · Smarter Reiseplaner',
-          shareToast: 'Reise-Story-Card erfolgreich erstellt!',
+          budget: 'Gesch. Budget',
+          scanTitle: 'MIT KAMERA SCANNEN',
+          scanDesc: 'Interaktive Karte, Wetter und Budget auf Plux entdecken',
+          footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
+          shareToast: '9:16 Reisekarte erfolgreich erstellt!',
+          copiedToast: 'Bild in die Zwischenablage kopiert! ✨',
           shareError: 'Fehler beim Erstellen der Karte'
         },
         it: {
-          tag: 'STORIA DI VIAGGIO',
-          travelingTo: 'VIAGGIO A',
-          organizedBy: 'Organizzato da',
-          with: 'con',
-          stops: 'Itinerario & Fermate',
+          tag: '✦ ITINERARIO UFFICIALE',
+          travelingTo: 'SPEDIZIONE A',
+          statusLive: '● DAL VIVO',
+          routeTitle: 'ITINERARIO & FERMATE',
           destinations: 'Destinazioni',
           days: 'Giorni',
           activities: 'Attività',
-          budget: 'Budget',
-          cost: 'Costo Stim.',
-          weather: 'Meteo',
-          footer: 'plux.nibecarcofeben.com · Pianificatore Intelligente',
-          shareToast: 'Scheda di viaggio generata con successo!',
+          budget: 'Budget Stim.',
+          scanTitle: 'SCANSIONA CON LA FOTOCAMERA',
+          scanDesc: 'Esplora mappa interattiva, meteo e spese su Plux',
+          footer: 'PLUX · THE INTELLIGENT TRAVEL ECOSYSTEM · NIBECAR COFEBEN',
+          shareToast: 'Scheda di viaje 9:16 generata con successo!',
+          copiedToast: 'Immagine copiata negli appunti! Incollala su WhatsApp o Instagram ✨',
           shareError: 'Errore durante la generazione della scheda'
         }
       };
@@ -6852,346 +6863,683 @@ Respondé en español rioplatense, de forma concisa. Cuando el usuario pide hace
       const langKey = (typeof currentLang === 'string' && i18nCard[currentLang]) ? currentLang : 'es';
       const dict = i18nCard[langKey];
 
+      if (typeof showToast === 'function') {
+        showToast((langKey === 'es' ? 'Generando tarjeta para redes sociales en HD...' : 'Generating HD Social Story Card...'), 'info');
+      }
+
       // Calculate stats
-      const totalDestinos = destinos ? destinos.length : 0;
+      const totalDestinos = (typeof destinos !== 'undefined' && Array.isArray(destinos)) ? destinos.length : 0;
       let totalDias = 0;
       let totalEventos = 0;
       let totalCost = 0;
+      const numPers = (typeof numPersonas === 'number' && numPersonas > 0) ? numPersonas : 1;
 
-      (destinos || []).forEach(d => {
-        if (d.dias) {
-          totalDias += d.dias.length;
-          d.dias.forEach(dia => {
-            if (dia.eventos) {
-              totalEventos += dia.eventos.length;
-              dia.eventos.forEach(ev => { totalCost += (Number(ev.costo) || 0) * numPersonas; });
-            }
-            if (dia.costosAdicionales) {
-              dia.costosAdicionales.forEach(c => { totalCost += Number(c.precio) || 0; });
-            }
-          });
-        }
-        if (d.tramos) {
-          d.tramos.forEach(tr => { totalCost += (Number(tr.precio) || 0) * numPersonas; });
-        }
-      });
-      if (vueltaGlobal && vueltaPrecioGlobal) totalCost += Number(vueltaPrecioGlobal) * numPersonas;
-      if (vueltaCostosAdicionales) {
+      if (typeof destinos !== 'undefined' && Array.isArray(destinos)) {
+        destinos.forEach(d => {
+          if (d.dias) {
+            totalDias += d.dias.length;
+            d.dias.forEach(dia => {
+              if (dia.eventos) {
+                totalEventos += dia.eventos.length;
+                dia.eventos.forEach(ev => { totalCost += (Number(ev.costo) || 0) * numPers; });
+              }
+              if (dia.costosAdicionales) {
+                dia.costosAdicionales.forEach(c => { totalCost += Number(c.precio) || 0; });
+              }
+            });
+          }
+          if (d.tramos) {
+            d.tramos.forEach(tr => { totalCost += (Number(tr.precio) || 0) * numPers; });
+          }
+        });
+      }
+      if (typeof vueltaGlobal !== 'undefined' && vueltaGlobal && typeof vueltaPrecioGlobal !== 'undefined' && vueltaPrecioGlobal) {
+        totalCost += Number(vueltaPrecioGlobal) * numPers;
+      }
+      if (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales)) {
         vueltaCostosAdicionales.forEach(c => { totalCost += Number(c.precio) || 0; });
       }
 
-      // User info
+      // User & Trip Details
       const storedProfile = JSON.parse(localStorage.getItem('Plux_UserProfile_Info') || '{}');
       const userName = (typeof currentNickname === 'string' && currentNickname) 
         ? `@${currentNickname.replace(/^@/, '')}` 
-        : (storedProfile.fullname || (firebaseUser && (firebaseUser.displayName || firebaseUser.email?.split('@')[0])) || (langKey === 'es' ? 'Yo' : 'Me'));
-      
-      const companionsText = getCompanionsFormatted();
-      const tripTitle = getTripCustomTitle().replace(/\s*·\s*PLUX$/i, '');
-      const rawFecha = document.getElementById('fechaInicio')?.value;
-      const fechaInicioFormatted = safeFormatDateStr(rawFecha);
+        : (storedProfile.fullname || (typeof firebaseUser !== 'undefined' && firebaseUser && (firebaseUser.displayName || firebaseUser.email?.split('@')[0])) || (langKey === 'es' ? 'Explorador Plux' : 'Plux Explorer'));
 
-      // Create high-res 9:16 vertical canvas (1080x1920)
+      const companionsText = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : '';
+      const rawTripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : 'Viaje Increíble';
+      const tripTitle = rawTripTitle.replace(/\s*·\s*PLUX$/i, '').trim() || 'Mi Viaje';
+      const rawFecha = document.getElementById('fechaInicio')?.value;
+      const fechaInicioFormatted = (typeof safeFormatDateStr === 'function') ? safeFormatDateStr(rawFecha) : (rawFecha || '');
+      const salidaTexto = (typeof lugarSalida === 'string' && lugarSalida.trim()) ? lugarSalida.trim() : '';
+
+      // Destination Photo Discovery
+      const photoMap = {
+        'paris': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80',
+        'barcelona': 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=1200&q=80',
+        'roma': 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=1200&q=80',
+        'tokio': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1200&q=80',
+        'tokyo': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1200&q=80',
+        'nueva york': 'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?w=1200&q=80',
+        'new york': 'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?w=1200&q=80',
+        'buenos aires': 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1200&q=80',
+        'madrid': 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=1200&q=80',
+        'londres': 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&q=80',
+        'london': 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&q=80'
+      };
+
+      let chosenPhotoUrl = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&q=80';
+      const checkStr = (tripTitle + ' ' + ((destinos && destinos[0]) ? destinos[0].nombre : '')).toLowerCase();
+      for (const [k, url] of Object.entries(photoMap)) {
+        if (checkStr.includes(k)) {
+          chosenPhotoUrl = url;
+          break;
+        }
+      }
+
+      // Preload Image with crossOrigin
+      const heroImage = await new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = chosenPhotoUrl;
+        setTimeout(() => resolve(null), 2500); // 2.5s timeout max
+      });
+
+      // 9:16 Canvas Setup (1080x1920)
       const canvas = document.createElement('canvas');
       canvas.width = 1080;
       canvas.height = 1920;
       const ctx = canvas.getContext('2d');
 
-      // Helper function for rounded rectangles
-      function roundRect(x, y, w, h, radius, fill, stroke) {
+      function roundRect(x, y, w, h, r, fill, stroke) {
         ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + w - radius, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-        ctx.lineTo(x + w, y + h - radius);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-        ctx.lineTo(x + radius, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
         ctx.closePath();
         if (fill) ctx.fill();
         if (stroke) ctx.stroke();
       }
 
-      // 1. Dark modern backdrop with rich gradient
+      // 1. Base Background
       const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
-      bgGrad.addColorStop(0, '#0a0d18');
-      bgGrad.addColorStop(0.5, '#0f172a');
-      bgGrad.addColorStop(1, '#070a12');
+      bgGrad.addColorStop(0, '#040714');
+      bgGrad.addColorStop(0.35, '#0a1026');
+      bgGrad.addColorStop(0.75, '#070b1c');
+      bgGrad.addColorStop(1, '#03050c');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, 1080, 1920);
 
-      // 2. Glowing atmospheric circles
-      const g1 = ctx.createRadialGradient(250, 350, 50, 250, 350, 450);
-      g1.addColorStop(0, 'rgba(236, 72, 153, 0.28)');
-      g1.addColorStop(1, 'rgba(236, 72, 153, 0)');
+      // 2. Cinematic Destination Photo Header (Cover photo with vignette & gradient blend)
+      if (heroImage) {
+        ctx.save();
+        ctx.drawImage(heroImage, 0, 0, 1080, 780);
+
+        // Dark cinematic overlay & fade to plux dark theme
+        const imgGrad = ctx.createLinearGradient(0, 0, 0, 800);
+        imgGrad.addColorStop(0, 'rgba(4, 7, 20, 0.45)');
+        imgGrad.addColorStop(0.4, 'rgba(4, 7, 20, 0.65)');
+        imgGrad.addColorStop(0.85, 'rgba(10, 16, 38, 0.95)');
+        imgGrad.addColorStop(1, '#070b1c');
+        ctx.fillStyle = imgGrad;
+        ctx.fillRect(0, 0, 1080, 800);
+        ctx.restore();
+      }
+
+      // 3. Cosmic Aurora Glows
+      const g1 = ctx.createRadialGradient(880, 260, 40, 880, 260, 520);
+      g1.addColorStop(0, 'rgba(6, 182, 212, 0.32)');
+      g1.addColorStop(0.6, 'rgba(59, 130, 246, 0.14)');
+      g1.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = g1;
       ctx.beginPath();
-      ctx.arc(250, 350, 450, 0, Math.PI * 2);
+      ctx.arc(880, 260, 520, 0, Math.PI * 2);
       ctx.fill();
 
-      const g2 = ctx.createRadialGradient(850, 850, 50, 850, 850, 500);
-      g2.addColorStop(0, 'rgba(59, 130, 246, 0.25)');
-      g2.addColorStop(1, 'rgba(59, 130, 246, 0)');
+      const g2 = ctx.createRadialGradient(180, 850, 50, 180, 850, 550);
+      g2.addColorStop(0, 'rgba(236, 72, 153, 0.26)');
+      g2.addColorStop(0.5, 'rgba(168, 85, 247, 0.12)');
+      g2.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = g2;
       ctx.beginPath();
-      ctx.arc(850, 850, 500, 0, Math.PI * 2);
+      ctx.arc(180, 850, 550, 0, Math.PI * 2);
       ctx.fill();
 
-      const g3 = ctx.createRadialGradient(540, 1550, 50, 540, 1550, 550);
-      g3.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
-      g3.addColorStop(1, 'rgba(16, 185, 129, 0)');
+      const g3 = ctx.createRadialGradient(540, 1620, 60, 540, 1620, 600);
+      g3.addColorStop(0, 'rgba(16, 185, 129, 0.20)');
+      g3.addColorStop(0.7, 'rgba(6, 182, 212, 0.08)');
+      g3.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = g3;
       ctx.beginPath();
-      ctx.arc(540, 1550, 550, 0, Math.PI * 2);
+      ctx.arc(540, 1620, 600, 0, Math.PI * 2);
       ctx.fill();
 
-      // 3. Top Branding Header
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-      roundRect(80, 70, 920, 90, 45, true, false);
+      // 4. Subtle Cyber-Grid Pattern
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+      ctx.lineWidth = 1;
+      for (let x = 60; x < 1080; x += 120) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 1920);
+        ctx.stroke();
+      }
+      for (let y = 60; y < 1920; y += 120) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(1080, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 5. TOP BAR - PLUX SMART OS (Y: 60 - 150)
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+      roundRect(70, 60, 940, 90, 28, true, false);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 2;
-      roundRect(80, 70, 920, 90, 45, false, true);
+      ctx.lineWidth = 1.5;
+      roundRect(70, 60, 940, 90, 28, false, true);
 
-      // Logo icon in top header
-      ctx.fillStyle = '#ec4899';
-      ctx.font = 'bold 36px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+      // Sparkle Icon & Brand Logo
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 32px "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('✨ PLUX', 120, 128);
+      ctx.fillText('✦', 105, 116);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.font = '600 24px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText('plux.nibecarcofeben.com', 950, 125);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 34px "Space Grotesk", "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('PLUX', 140, 117);
 
-      // 4. Main Hero Card (Glassmorphism Container)
-      ctx.fillStyle = 'rgba(30, 41, 59, 0.72)';
-      roundRect(80, 190, 920, 500, 36, true, false);
-      ctx.strokeStyle = 'rgba(236, 72, 153, 0.4)';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.85)';
+      ctx.font = '700 15px "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('SMART TRAVEL OS', 245, 116);
+
+      // Status Live Badge (Right side)
+      const statusW = 160;
+      const statusX = 975 - statusW;
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
+      roundRect(statusX, 83, statusW, 44, 22, true, false);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.5)';
+      ctx.lineWidth = 1.5;
+      roundRect(statusX, 83, statusW, 44, 22, false, true);
+
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(statusX + 26, 105, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = 'bold 16px "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(dict.statusLive.replace('● ', ''), statusX + 40, 111);
+      ctx.restore();
+
+      // 6. HERO CARD - VIP BOARDING PASS (Y: 175 - 710)
+      ctx.save();
+      const heroX = 70;
+      const heroY = 175;
+      const heroW = 940;
+      const heroH = 535;
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
+      roundRect(heroX, heroY, heroW, heroH, 36, true, false);
+
+      const heroBorder = ctx.createLinearGradient(heroX, heroY, heroX + heroW, heroY + heroH);
+      heroBorder.addColorStop(0, 'rgba(236, 72, 153, 0.7)');
+      heroBorder.addColorStop(0.5, 'rgba(56, 189, 248, 0.6)');
+      heroBorder.addColorStop(1, 'rgba(139, 92, 246, 0.7)');
+      ctx.strokeStyle = heroBorder;
       ctx.lineWidth = 2.5;
-      roundRect(80, 190, 920, 500, 36, false, true);
+      roundRect(heroX, heroY, heroW, heroH, 36, false, true);
 
-      // Tag pill
-      ctx.fillStyle = 'linear-gradient(135deg, #ec4899, #8b5cf6)';
-      const pillGrad = ctx.createLinearGradient(130, 240, 360, 290);
+      // Pill Header: ITINERARIO OFICIAL
+      const pillGrad = ctx.createLinearGradient(heroX + 45, heroY + 45, heroX + 320, heroY + 45);
       pillGrad.addColorStop(0, '#ec4899');
       pillGrad.addColorStop(1, '#8b5cf6');
       ctx.fillStyle = pillGrad;
-      roundRect(130, 240, 240, 50, 25, true, false);
+      roundRect(heroX + 45, heroY + 40, 270, 48, 24, true, false);
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 22px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+      ctx.font = 'bold 20px "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(dict.tag, 250, 274);
+      ctx.fillText(dict.tag, heroX + 45 + 135, heroY + 71);
 
-      // Traveling to badge
+      // Expedition Label
       ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 28px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+      ctx.font = 'bold 24px "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`${dict.travelingTo}:`, 130, 345);
+      ctx.fillText(dict.travelingTo, heroX + 45, heroY + 135);
 
-      // Big Trip Title
+      // Big Trip Title with Auto Wrap & Shadow
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 54px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-      
-      // Multi-line wrap for long trip title
-      let titleWords = tripTitle.split(' ');
-      let currentLine = '';
-      let titleY = 415;
-      for (let w = 0; w < titleWords.length; w++) {
-        let testLine = currentLine ? `${currentLine} ${titleWords[w]}` : titleWords[w];
-        if (ctx.measureText(testLine).width > 820 && currentLine) {
-          ctx.fillText(currentLine, 130, titleY);
-          currentLine = titleWords[w];
-          titleY += 64;
-          if (titleY > 480) break; // Limit lines
+      ctx.font = '900 52px "Space Grotesk", "Segoe UI", Roboto, sans-serif';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      ctx.shadowBlur = 18;
+
+      const words = tripTitle.toUpperCase().split(' ');
+      let line = '';
+      let curTitleY = heroY + 200;
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > 830 && n > 0) {
+          ctx.fillText(line.trim(), heroX + 45, curTitleY);
+          line = words[n] + ' ';
+          curTitleY += 60;
+          if (curTitleY > heroY + 265) break;
         } else {
-          currentLine = testLine;
+          line = testLine;
         }
       }
-      if (currentLine) ctx.fillText(currentLine, 130, titleY);
+      ctx.fillText(line.trim(), heroX + 45, curTitleY);
+      ctx.shadowBlur = 0;
 
-      // Organizer & Companions info
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.font = '500 26px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-      let creatorLine = `👤 ${dict.organizedBy} ${userName}`;
-      if (companionsText) creatorLine += ` ${companionsText}`;
-      ctx.fillText(creatorLine, 130, 555);
+      // Journey Route Strip (Origin -> Destination)
+      const stripY = Math.max(curTitleY + 30, heroY + 280);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      roundRect(heroX + 45, stripY, 850, 95, 20, true, false);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.lineWidth = 1;
+      roundRect(heroX + 45, stripY, 850, 95, 20, false, true);
 
-      // Date badge inside hero card
-      if (fechaInicioFormatted) {
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
-        roundRect(130, 595, 420, 54, 14, true, false);
-        ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
-        ctx.lineWidth = 1.5;
-        roundRect(130, 595, 420, 54, 14, false, true);
+      const pOrigen = salidaTexto || (langKey === 'es' ? 'Salida' : 'Origin');
+      const pDestino = (destinos && destinos.length > 0) ? destinos[0].nombre : tripTitle;
 
-        ctx.fillStyle = '#34d399';
-        ctx.font = 'bold 23px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(`📅 ${fechaInicioFormatted} · ${totalDias} ${dict.days.toLowerCase()}`, 155, 631);
-      }
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '600 16px "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('ORIGEN', heroX + 75, stripY + 34);
 
-      // 5. Stops & Route Card
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-      roundRect(80, 720, 920, 480, 32, true, false);
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 26px "Segoe UI", Roboto, sans-serif';
+      const displayOrigen = pOrigen.length > 18 ? pOrigen.substring(0, 16) + '...' : pOrigen;
+      ctx.fillText(displayOrigen, heroX + 75, stripY + 68);
+
+      const arrowStartX = heroX + 380;
+      const arrowEndX = heroX + 570;
+      const arrowMidY = stripY + 48;
+
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(arrowStartX, arrowMidY);
+      ctx.lineTo(arrowEndX, arrowMidY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '26px "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('✈', (arrowStartX + arrowEndX) / 2, arrowMidY + 8);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '600 16px "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('DESTINO PRINCIPAL', heroX + 610, stripY + 34);
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 26px "Segoe UI", Roboto, sans-serif';
+      const displayDestino = pDestino.length > 16 ? pDestino.substring(0, 14) + '...' : pDestino;
+      ctx.fillText(displayDestino, heroX + 610, stripY + 68);
+
+      // Meta row: Organizer & Date Badges
+      const metaY = stripY + 130;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      roundRect(heroX + 45, metaY, 430, 52, 16, true, false);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-      ctx.lineWidth = 2;
-      roundRect(80, 720, 920, 480, 32, false, true);
+      ctx.lineWidth = 1;
+      roundRect(heroX + 45, metaY, 430, 52, 16, false, true);
 
       ctx.fillStyle = '#a855f7';
-      ctx.font = 'bold 30px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+      ctx.beginPath();
+      ctx.arc(heroX + 75, metaY + 26, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 15px "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText((userName.replace('@', '')[0] || 'U').toUpperCase(), heroX + 75, metaY + 31);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '600 20px "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`📍 ${dict.stops}`, 130, 780);
+      let orgLine = `${userName}`;
+      if (companionsText) orgLine += ` ${companionsText}`;
+      if (orgLine.length > 25) orgLine = orgLine.substring(0, 23) + '...';
+      ctx.fillText(orgLine, heroX + 104, metaY + 33);
 
-      // Destination list with timeline pins
-      let destY = 850;
-      const visibleDestinos = (destinos || []).slice(0, 4);
-      visibleDestinos.forEach((d, idx) => {
-        // Timeline circle
-        ctx.fillStyle = '#ec4899';
-        ctx.beginPath();
-        ctx.arc(150, destY - 10, 16, 0, Math.PI * 2);
-        ctx.fill();
+      // Date Chip
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.14)';
+      roundRect(heroX + 495, metaY, 400, 52, 16, true, false);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.38)';
+      ctx.lineWidth = 1;
+      roundRect(heroX + 495, metaY, 400, 52, 16, false, true);
 
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 18px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${idx + 1}`, 150, destY - 4);
+      ctx.fillStyle = '#34d399';
+      ctx.font = 'bold 20px "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      const fechaStr = fechaInicioFormatted || (langKey === 'es' ? 'Fecha flexible' : 'Flexible date');
+      ctx.fillText(`📅 ${fechaStr}  •  ${totalDias} ${dict.days}`, heroX + 495 + 200, metaY + 33);
+      ctx.restore();
 
-        // Destination name
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 32px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(d.nombre || `Destino ${idx + 1}`, 190, destY);
+      // 7. STOPS & ROADMAP TIMELINE (Y: 735 - 1235)
+      ctx.save();
+      const roadX = 70;
+      const roadY = 735;
+      const roadW = 940;
+      const roadH = 495;
 
-        // Days & Activities count
-        const dEvents = (d.dias || []).reduce((acc, cur) => acc + (cur.eventos ? cur.eventos.length : 0), 0);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.font = '500 22px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-        ctx.fillText(`${(d.dias || []).length} ${dict.days.toLowerCase()} · ${dEvents} ${dict.activities.toLowerCase()}`, 190, destY + 34);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
+      roundRect(roadX, roadY, roadW, roadH, 32, true, false);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.lineWidth = 1.5;
+      roundRect(roadX, roadY, roadW, roadH, 32, false, true);
 
-        if (idx < visibleDestinos.length - 1) {
-          ctx.strokeStyle = 'rgba(236, 72, 153, 0.4)';
+      ctx.fillStyle = '#c084fc';
+      ctx.font = 'bold 28px "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`📍 ${dict.routeTitle}`, roadX + 45, roadY + 55);
+
+      const stopList = (destinos && destinos.length > 0) 
+        ? destinos.slice(0, 4) 
+        : [{ nombre: tripTitle, dias: [1, 2] }];
+
+      let itemY = roadY + 125;
+      stopList.forEach((st, idx) => {
+        if (idx < stopList.length - 1) {
+          const lineGrad = ctx.createLinearGradient(roadX + 80, itemY, roadX + 80, itemY + 85);
+          lineGrad.addColorStop(0, '#ec4899');
+          lineGrad.addColorStop(1, '#38bdf8');
+          ctx.strokeStyle = lineGrad;
           ctx.lineWidth = 3;
           ctx.setLineDash([4, 4]);
           ctx.beginPath();
-          ctx.moveTo(150, destY + 12);
-          ctx.lineTo(150, destY + 54);
+          ctx.moveTo(roadX + 80, itemY + 18);
+          ctx.lineTo(roadX + 80, itemY + 74);
           ctx.stroke();
           ctx.setLineDash([]);
         }
 
-        destY += 92;
+        ctx.fillStyle = idx === 0 ? '#ec4899' : (idx === stopList.length - 1 ? '#10b981' : '#38bdf8');
+        ctx.beginPath();
+        ctx.arc(roadX + 80, itemY - 6, 20, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 18px "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${idx + 1}`, roadX + 80, itemY);
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '900 28px "Space Grotesk", "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(st.nombre || `Destino ${idx + 1}`, roadX + 125, itemY);
+
+        const dDays = (st.dias ? st.dias.length : 1);
+        const dEvs = (st.dias || []).reduce((acc, cur) => acc + (cur.eventos ? cur.eventos.length : 0), 0);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 20px "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(`${dDays} ${dict.days.toLowerCase()}  •  ${dEvs} ${dict.activities.toLowerCase()} programadas`, roadX + 125, itemY + 32);
+
+        itemY += 88;
       });
 
-      if ((destinos || []).length > 4) {
+      if (destinos && destinos.length > 4) {
         ctx.fillStyle = '#38bdf8';
-        ctx.font = '600 22px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-        ctx.fillText(`+ ${(destinos.length - 4)} destinos más en el itinerario completo`, 190, destY);
+        ctx.font = 'bold 20px "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(`+ ${(destinos.length - 4)} destinos más en el itinerario completo de Plux`, roadX + 125, itemY + 15);
       }
+      ctx.restore();
 
-      // 6. Stats 2x2 Grid (1230 - 1570)
-      const stats = [
+      // 8. STATS 2x2 GRID (Y: 1255 - 1575)
+      ctx.save();
+      const statGrid = [
         { label: dict.destinations, val: `${totalDestinos}`, icon: '📍', color: '#ec4899' },
-        { label: dict.days, val: `${totalDias}`, icon: '📅', color: '#3b82f6' },
+        { label: dict.days, val: `${totalDias}`, icon: '⏱️', color: '#38bdf8' },
         { label: dict.activities, val: `${totalEventos}`, icon: '🎯', color: '#10b981' },
-        { label: dict.budget, val: `${totalCost.toFixed(2)} €`, icon: '💰', color: '#f59e0b' }
+        { label: dict.budget, val: `${totalCost.toFixed(0)} €`, icon: '💰', color: '#f59e0b' }
       ];
 
-      const gridPositions = [
-        { x: 80, y: 1230 },
-        { x: 560, y: 1230 },
-        { x: 80, y: 1410 },
-        { x: 560, y: 1410 }
+      const gridBoxes = [
+        { x: 70, y: 1255 },
+        { x: 560, y: 1255 },
+        { x: 70, y: 1420 },
+        { x: 560, y: 1420 }
       ];
 
-      stats.forEach((st, i) => {
-        const pos = gridPositions[i];
-        ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
-        roundRect(pos.x, pos.y, 440, 150, 24, true, false);
+      statGrid.forEach((st, i) => {
+        const box = gridBoxes[i];
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        roundRect(box.x, box.y, 450, 145, 24, true, false);
+
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
         ctx.lineWidth = 1.5;
-        roundRect(pos.x, pos.y, 440, 150, 24, false, true);
+        roundRect(box.x, box.y, 450, 145, 24, false, true);
 
-        // Icon
-        ctx.font = '36px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(st.icon, pos.x + 30, pos.y + 65);
-
-        // Value
         ctx.fillStyle = st.color;
-        ctx.font = 'bold 40px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-        ctx.fillText(st.val, pos.x + 90, pos.y + 70);
+        ctx.beginPath();
+        ctx.arc(box.x + 48, box.y + 55, 24, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Label
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.font = '600 22px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-        ctx.fillText(st.label, pos.x + 90, pos.y + 115);
+        ctx.font = '24px "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(st.icon, box.x + 48, box.y + 63);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 38px "Space Grotesk", "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(st.val, box.x + 95, box.y + 64);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '600 19px "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(st.label.toUpperCase(), box.x + 95, box.y + 105);
       });
+      ctx.restore();
 
-      // 7. Weather / Tip Highlight Pill (1610 - 1710)
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.15)';
-      roundRect(80, 1600, 920, 100, 24, true, false);
-      ctx.strokeStyle = 'rgba(59, 130, 246, 0.35)';
-      ctx.lineWidth = 1.5;
-      roundRect(80, 1600, 920, 100, 24, false, true);
+      // 9. SMART QR & SCANNER BAR (Y: 1595 - 1845)
+      ctx.save();
+      const qrBoxX = 70;
+      const qrBoxY = 1595;
+      const qrBoxW = 940;
+      const qrBoxH = 240;
 
-      ctx.fillStyle = '#60a5fa';
-      ctx.font = 'bold 26px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('🌤️ ' + (langKey === 'es' ? 'Planificado con Plux IA & Clima en vivo' : 'Planned with Plux AI & Live Weather'), 120, 1660);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      roundRect(qrBoxX, qrBoxY, qrBoxW, qrBoxH, 28, true, false);
 
-      // 8. Footer Brand & Link (1740 - 1880)
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.font = 'bold 26px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+      const qrBorder = ctx.createLinearGradient(qrBoxX, qrBoxY, qrBoxX + qrBoxW, qrBoxY);
+      qrBorder.addColorStop(0, 'rgba(56, 189, 248, 0.5)');
+      qrBorder.addColorStop(1, 'rgba(236, 72, 153, 0.5)');
+      ctx.strokeStyle = qrBorder;
+      ctx.lineWidth = 2;
+      roundRect(qrBoxX, qrBoxY, qrBoxW, qrBoxH, 28, false, true);
+
+      const qrX = qrBoxX + 45;
+      const qrY = qrBoxY + 35;
+      const qrSize = 170;
+
+      ctx.fillStyle = '#ffffff';
+      roundRect(qrX, qrY, qrSize, qrSize, 16, true, false);
+
+      function drawFinderPattern(fx, fy, fSize) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(fx, fy, fSize, fSize);
+        ctx.fillStyle = '#ffffff';
+        const inset = fSize * (1 / 7);
+        ctx.fillRect(fx + inset, fy + inset, fSize - inset * 2, fSize - inset * 2);
+        ctx.fillStyle = '#0f172a';
+        const centerInset = fSize * (2 / 7);
+        ctx.fillRect(fx + centerInset, fy + centerInset, fSize - centerInset * 2, fSize - centerInset * 2);
+      }
+
+      const eyeSize = 42;
+      const pad = 14;
+      drawFinderPattern(qrX + pad, qrY + pad, eyeSize);
+      drawFinderPattern(qrX + qrSize - pad - eyeSize, qrY + pad, eyeSize);
+      drawFinderPattern(qrX + pad, qrY + qrSize - pad - eyeSize, eyeSize);
+
+      ctx.fillStyle = '#0f172a';
+      for (let s = qrX + pad + eyeSize + 6; s < qrX + qrSize - pad - eyeSize; s += 8) {
+        ctx.fillRect(s, qrY + pad + 16, 5, 5);
+        ctx.fillRect(qrX + pad + 16, s, 5, 5);
+      }
+
+      const matrixSeed = [
+        [1,0,1,1,0,1,1,0],
+        [0,1,0,0,1,0,0,1],
+        [1,1,0,1,0,1,1,0],
+        [0,0,1,1,1,0,1,1],
+        [1,0,1,0,0,1,0,0],
+        [0,1,1,0,1,1,1,0],
+        [1,1,0,1,0,0,1,1],
+        [0,0,1,0,1,1,0,1]
+      ];
+      const modSize = 6.5;
+      const dataStartX = qrX + 66;
+      const dataStartY = qrY + 66;
+      for (let r = 0; r < matrixSeed.length; r++) {
+        for (let c = 0; c < matrixSeed[r].length; c++) {
+          if (matrixSeed[r][c] === 1) {
+            ctx.fillRect(dataStartX + c * modSize, dataStartY + r * modSize, modSize - 1, modSize - 1);
+          }
+        }
+      }
+
+      ctx.fillStyle = '#ec4899';
+      roundRect(qrX + (qrSize / 2) - 16, qrY + (qrSize / 2) - 16, 32, 32, 8, true, false);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('plux.nibecarcofeben.com', 540, 1780);
+      ctx.fillText('✦', qrX + (qrSize / 2), qrY + (qrSize / 2) + 6);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-      ctx.font = '500 20px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-      ctx.fillText(dict.footer, 540, 1825);
+      const textLeft = qrX + qrSize + 40;
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 22px "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`📱 ${dict.scanTitle}`, textLeft, qrBoxY + 70);
 
-      // 9. Process Export / Share
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 30px "Space Grotesk", "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('plux.nibecarcofeben.com', textLeft, qrBoxY + 115);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 20px "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(dict.scanDesc, textLeft, qrBoxY + 155);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.font = '600 16px "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('Disponible en Web, iOS & Android', textLeft, qrBoxY + 190);
+      ctx.restore();
+
+      // 10. FOOTER BRANDING (Y: 1870)
+      ctx.save();
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+      ctx.font = 'bold 17px "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(dict.footer, 540, 1885);
+      ctx.restore();
+
+      // 11. Render to Image & Open Interactive Preview Modal
       try {
-        canvas.toBlob(async (blob) => {
-          if (!blob) throw new Error('No blob created');
-          const file = new File([blob], 'plux-viaje.png', { type: 'image/png' });
+        const dataUrl = canvas.toDataURL('image/png');
+        const modalEl = document.getElementById('modal-travel-card');
+        const previewImg = document.getElementById('travelCardPreviewImg');
+        const btnDownload = document.getElementById('btnDownloadCard');
+        const btnCopy = document.getElementById('btnCopyCard');
+        const btnShareNative = document.getElementById('btnShareNativeCard');
 
-          // Try native navigator.share with files
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({
-                title: `${tripTitle} - Plux`,
-                text: `${dict.travelingTo}: ${tripTitle} ✈️\n${dict.footer}\nhttps://plux.nibecarcofeben.com/plux/`,
-                files: [file]
-              });
-              showToast(dict.shareToast, 'success');
-              return;
-            } catch (err) {
-              if (err.name !== 'AbortError') {
-                console.warn('Share file fallback to download:', err);
+        if (modalEl && previewImg) {
+          previewImg.src = dataUrl;
+          modalEl.style.display = 'flex';
+
+          const filename = `plux-${(tripTitle || 'viaje').toLowerCase().replace(/[^a-z0-9]/g, '_')}-story.png`;
+
+          canvas.toBlob((blob) => {
+            if (!blob) return;
+
+            // Download Action
+            if (btnDownload) {
+              btnDownload.onclick = () => {
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(downloadUrl), 4000);
+                if (typeof showToast === 'function') showToast(dict.shareToast, 'success');
+              };
+            }
+
+            // Copy Image Action
+            if (btnCopy) {
+              btnCopy.onclick = async () => {
+                try {
+                  if (navigator.clipboard && window.ClipboardItem) {
+                    await navigator.clipboard.write([
+                      new ClipboardItem({ 'image/png': blob })
+                    ]);
+                    if (typeof showToast === 'function') showToast(dict.copiedToast, 'success');
+                  } else {
+                    // Fallback: trigger download
+                    btnDownload.click();
+                  }
+                } catch (err) {
+                  console.warn('Clipboard write failed, triggering download:', err);
+                  btnDownload.click();
+                }
+              };
+            }
+
+            // Native Share (Mobile)
+            if (btnShareNative) {
+              const file = new File([blob], filename, { type: 'image/png' });
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                btnShareNative.style.display = 'flex';
+                btnShareNative.onclick = async () => {
+                  try {
+                    await navigator.share({
+                      title: `${tripTitle} · Plux Story`,
+                      text: `${dict.travelingTo}: ${tripTitle} ✈️\n${dict.scanDesc}\nhttps://plux.nibecarcofeben.com/plux/`,
+                      files: [file]
+                    });
+                  } catch (e) {
+                    if (e.name !== 'AbortError') console.warn('Share error:', e);
+                  }
+                };
               } else {
-                return;
+                btnShareNative.style.display = 'none';
               }
             }
-          }
+          }, 'image/png');
 
-          // Fallback: direct download link
-          const downloadUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = downloadUrl;
-          a.download = `plux-${(tripTitle || 'viaje').toLowerCase().replace(/[^a-z0-9]/g, '_')}.png`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(downloadUrl), 4000);
-          showToast(dict.shareToast, 'success');
-        }, 'image/png');
+          if (typeof showToast === 'function') showToast(dict.shareToast, 'success');
+        } else {
+          // Direct Download Fallback if modal not present
+          canvas.toBlob((blob) => {
+            if (!blob) return;
+            const filename = `plux-${(tripTitle || 'viaje').toLowerCase().replace(/[^a-z0-9]/g, '_')}-story.png`;
+            const downloadUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(downloadUrl), 4000);
+            if (typeof showToast === 'function') showToast(dict.shareToast, 'success');
+          }, 'image/png');
+        }
       } catch (err) {
-        console.error('Error sharing travel card:', err);
-        showToast(dict.shareError, 'error');
+        console.error('Error in travel card generation:', err);
+        if (typeof showToast === 'function') showToast(dict.shareError, 'error');
       }
     }
     window.compartirTravelCard = compartirTravelCard;

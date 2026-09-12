@@ -1425,7 +1425,17 @@
       try {
         if (!firebase.apps || !firebase.apps.length) await initFirebaseAuth();
         const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
-        showToast('¡Cuenta creada con éxito!', 'success');
+        if (cred.user) {
+          const nick = await generarNicknameUnico(cred.user);
+          currentNickname = nick;
+          currentUserUid = cred.user.uid;
+          localStorage.setItem('Plux_Nickname', nick);
+          localStorage.setItem('Plux_Uid', cred.user.uid);
+          sincronizarPerfil();
+          showToast('¡Cuenta creada! Tu nickname es @' + nick, 'success');
+        } else {
+          showToast('¡Cuenta creada con éxito!', 'success');
+        }
         if (typeof cerrarCuenta === 'function') cerrarCuenta();
         if (typeof onFirebaseUserSignedIn === 'function') onFirebaseUserSignedIn(cred.user);
       } catch (err) {
@@ -1445,7 +1455,18 @@
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         const res = await firebase.auth().signInWithPopup(provider);
-        const displayName = res.user?.displayName || res.user?.email || '';
+        if (res.user) {
+          const nick = await generarNicknameUnico(res.user);
+          currentNickname = nick;
+          currentUserUid = res.user.uid;
+          localStorage.setItem('Plux_Nickname', nick);
+          localStorage.setItem('Plux_Uid', res.user.uid);
+          if (res.user.photoURL) {
+            localStorage.setItem('Plux_UserProfile_Photo', res.user.photoURL);
+          }
+          sincronizarPerfil();
+        }
+        const displayName = currentNickname ? `@${currentNickname}` : (res.user?.displayName || res.user?.email || '');
         showToast('¡Bienvenido ' + displayName + '!', 'success');
         if (typeof cerrarCuenta === 'function') cerrarCuenta();
         if (typeof onFirebaseUserSignedIn === 'function') onFirebaseUserSignedIn(res.user);
@@ -1682,27 +1703,84 @@
       }
     }
 
+    async function generarNicknameUnico(user) {
+      if (!user) return 'viajero_' + Math.floor(100 + Math.random() * 900);
+      
+      let raw = '';
+      if (user.displayName) {
+        raw = user.displayName;
+      } else if (user.email) {
+        raw = user.email.split('@')[0];
+      } else if (user.uid) {
+        raw = 'viajero_' + user.uid.substring(0, 5);
+      }
+      
+      let base = raw
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9_]/g, '')
+        .slice(0, 15);
+        
+      if (!base || base.length < 3) {
+        base = 'viajero';
+      }
+
+      if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
+        db = firebase.firestore();
+      }
+      
+      if (!db) {
+        return base;
+      }
+
+      try {
+        let candidate = base;
+        let counter = 1;
+        let isFree = false;
+
+        while (!isFree && counter <= 20) {
+          const docSnap = await db.collection('plux_usuarios').doc(candidate).get();
+          if (!docSnap.exists) {
+            isFree = true;
+          } else {
+            const data = docSnap.data();
+            if (data && (data.uid === user.uid || (user.email && data.email === user.email))) {
+              return candidate;
+            }
+            candidate = `${base}${Math.floor(10 + Math.random() * 90)}`;
+            counter++;
+          }
+        }
+        return candidate;
+      } catch (e) {
+        console.warn('Error verificando nickname único:', e);
+        return base;
+      }
+    }
+    window.generarNicknameUnico = generarNicknameUnico;
+
     function sincronizarPerfil() {
       const ref = getPluxProfileRef();
-      if (!ref) return;
+      if (!ref && !currentNickname) return;
       const trips = getStoredTrips();
       const templates = getStoredTemplates();
       const friends = getStoredFriends();
-      const photo = localStorage.getItem('Plux_UserProfile_Photo') || null;
+      const photo = localStorage.getItem('Plux_UserProfile_Photo') || (firebaseUser && firebaseUser.photoURL) || null;
       let personalInfo = {};
       try {
         personalInfo = JSON.parse(localStorage.getItem('Plux_PersonalInfo') || '{}');
       } catch(e){}
 
       const payload = {
-        uid: currentUserUid,
+        uid: currentUserUid || currentNickname,
         email: firebaseUser?.email || null,
         nickname: currentNickname,
         photoUrl: photo,
         idioma: currentLang,
         tema: currentTheme,
         info_personal: personalInfo,
-        nombreCompleto: personalInfo.fullname || null,
+        nombreCompleto: personalInfo.fullname || (firebaseUser ? firebaseUser.displayName : null) || null,
         residencia: personalInfo.location || null,
         estiloViaje: personalInfo.travelStyle || null,
         bio: personalInfo.bio || null,
@@ -1713,21 +1791,34 @@
         ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      ref.set(payload, { merge: true }).catch(e => console.error("Error sincronizando perfil:", e));
+      if (ref) {
+        ref.set(payload, { merge: true }).catch(e => console.error("Error sincronizando perfil por uid:", e));
+      }
       if (currentNickname && db && currentUserUid !== currentNickname) {
         db.collection('plux_usuarios').doc(currentNickname).set(payload, { merge: true }).catch(e => console.error("Error sincronizando perfil por nick:", e));
       }
     }
 
-    function cargarPerfilUsuario() {
+    async function cargarPerfilUsuario() {
       const ref = getPluxProfileRef();
-      if (!ref) return;
-      ref.get().then(doc => {
-        if (doc.exists) {
+      if (!ref && !currentNickname && !firebaseUser) return;
+      if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
+        db = firebase.firestore();
+      }
+
+      try {
+        let doc = ref ? await ref.get() : null;
+        if (doc && doc.exists) {
           const data = doc.data();
-          currentNickname = data.nickname || firebaseUser.displayName || firebaseUser.email.split('@')[0];
+          let nick = data.nickname;
+          if (!nick && firebaseUser) {
+            nick = await generarNicknameUnico(firebaseUser);
+          } else if (!nick) {
+            nick = currentNickname || 'viajero';
+          }
+          currentNickname = String(nick).toLowerCase().replace(/[^a-z0-9_]/g, '');
           localStorage.setItem('Plux_Nickname', currentNickname);
-          localStorage.setItem('Plux_Uid', currentUserUid);
+          localStorage.setItem('Plux_Uid', currentUserUid || currentNickname);
           if (data.photoUrl) {
             localStorage.setItem('Plux_UserProfile_Photo', data.photoUrl);
           }
@@ -1752,18 +1843,30 @@
           if (data.amigos) saveFriends(data.amigos, false);
           updateUserButtonDisplay();
           renderTripLists();
-        } else {
-          currentNickname = (firebaseUser.displayName || firebaseUser.email.split('@')[0]).replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20) || 'viajero';
           sincronizarPerfil();
+        } else {
+          if (firebaseUser) {
+            const nick = await generarNicknameUnico(firebaseUser);
+            currentNickname = nick;
+            localStorage.setItem('Plux_Nickname', currentNickname);
+            localStorage.setItem('Plux_Uid', currentUserUid || nick);
+            if (firebaseUser.photoURL) {
+              localStorage.setItem('Plux_UserProfile_Photo', firebaseUser.photoURL);
+            }
+            sincronizarPerfil();
+            updateUserButtonDisplay();
+            renderTripLists();
+          } else if (currentNickname) {
+            sincronizarPerfil();
+          }
         }
-      }).catch(e => {
+      } catch (e) {
         if (e.code === 'permission-denied') {
           console.log("Permission denied - user not authenticated or no profile access");
-          // Don't show error or trigger prompt for permission denied
           return;
         }
         console.error("Error cargando perfil:", e);
-      });
+      }
     }
 
     // ================== VARIABLES GLOBALES ==================

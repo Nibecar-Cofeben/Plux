@@ -3939,5 +3939,52 @@
   box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
 }
 
+/* ================== MODO LECTOR (STRICT READ-ONLY) ================== */
+body.mode-reader input:not(#clima-search-input):not(#chat-input):not(#input-nueva-conversacion-nick):not(#share-modal-nick):not(#travel-card-search):not(#plux-social-input):not(#feedSearchInput):not(#join-code-input-herramientas):not(#join-code-input-viajes):not(#fileImport):not(#login-nickname):not(#login-password):not(#register-password):not(#seguridad-new-nickname):not(#seguridad-new-pass):not(#seguridad-confirm-pass),
+body.mode-reader textarea:not(#support-message):not(#chat-input),
+body.mode-reader select:not(#pref-pace):not(#colab-role-select):not(#modal-chat-selector) {
+  pointer-events: none !important;
+  opacity: 0.85 !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  cursor: not-allowed !important;
+}
 
+body.mode-reader .close-icon,
+body.mode-reader .copy-ev,
+body.mode-reader .copy-icon,
+body.mode-reader #add-dest-btn,
+body.mode-reader #addDestBtn,
+body.mode-reader .add-destino,
+body.mode-reader .destino > button,
+body.mode-reader .transport-fields button,
+body.mode-reader button[onclick*="generarItinerarioAuto"],
+body.mode-reader button[onclick*="agregarTramo"],
+body.mode-reader button[onclick*="agregarDia"],
+body.mode-reader button[onclick*="agregarEvento"],
+body.mode-reader button[onclick*="agregarCostoAdicional"],
+body.mode-reader button[onclick*="agregarCostoVuelta"],
+body.mode-reader button[onclick*="organizarItinerario"],
+body.mode-reader button[onclick*="agregarEscala"],
+body.mode-reader button[onclick*="empezarDeCero"],
+body.mode-reader #btnAgregarCostoVuelta,
+body.mode-reader .add-costo-btn,
+body.mode-reader .add-evento-btn,
+body.mode-reader .add-escala-btn,
+body.mode-reader .traveler-chip-remove,
+body.mode-reader #traveler-chip-input,
+body.mode-reader #scratchBtnEditor,
+body.mode-reader #btn-add-dest,
+body.mode-reader #btn-guardar-viaje,
+body.mode-reader [id^="wiki-"] button,
+body.mode-reader .mobile-drawer-item:has(#mobileMenuScratch) {
+  display: none !important;
+}
+
+body.mode-reader #btnClonarHeader,
+body.mode-reader #btnClonarViaje,
+body.mode-reader #btnClonarResumen,
+body.mode-reader #mobileMenuCloneBtn {
+  display: inline-flex !important;
+}
 

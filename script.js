@@ -9562,6 +9562,13 @@ async function exportarPDF() {
     }
 
     // ================== PLANTILLAS OFICIALES & COMUNIDAD ==================
+    function getHeartSvg(isLiked) {
+      if (isLiked) {
+        return `<svg width="15" height="15" viewBox="0 0 24 24" fill="#f472b6" stroke="#f472b6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+      }
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+    }
+
     const PLUX_OFICIAL_TEMPLATES = [
       {
         id: 'oficial_roma',
@@ -9569,6 +9576,7 @@ async function exportarPDF() {
         descripcion: 'Coliseo, Trastevere, Vaticano, Panteón y Fontana di Trevi con itinerario optimizado.',
         tags: ['3 Días', 'Historia & Arte', 'Europa'],
         presupuestoAprox: '180€',
+        likes: 384,
         destinos: [
           {
             nombre: 'Roma',
@@ -9604,6 +9612,7 @@ async function exportarPDF() {
         descripcion: 'Torre Eiffel, Louvre, Sena, Montmartre, Sacré-Cœur y gastronomía parisina.',
         tags: ['3 Días', 'Romántico & Cultura', 'Europa'],
         presupuestoAprox: '220€',
+        likes: 420,
         destinos: [
           {
             nombre: 'París',
@@ -9638,6 +9647,7 @@ async function exportarPDF() {
         descripcion: 'Shibuya Sky, templos sagrados de Asakusa, cultura anime en Akihabara y noche en Shinjuku.',
         tags: ['3 Días', 'Tecnología & Tradición', 'Asia'],
         presupuestoAprox: '150€',
+        likes: 512,
         destinos: [
           {
             nombre: 'Tokio',
@@ -9673,6 +9683,7 @@ async function exportarPDF() {
         descripcion: 'Times Square, Central Park, Broadway, Estatua de la Libertad, Brooklyn Bridge y High Line.',
         tags: ['3 Días', 'Urbano & Skyline', 'América'],
         presupuestoAprox: '290€',
+        likes: 367,
         destinos: [
           {
             nombre: 'Nueva York',
@@ -9708,6 +9719,7 @@ async function exportarPDF() {
         descripcion: 'Sagrada Familia, Park Güell, Barrio Gótico, tapas en El Born y playa de la Barceloneta.',
         tags: ['3 Días', 'Arquitectura & Playa', 'Europa'],
         presupuestoAprox: '160€',
+        likes: 295,
         destinos: [
           {
             nombre: 'Barcelona',
@@ -9737,11 +9749,47 @@ async function exportarPDF() {
         ]
       },
       {
+        id: 'oficial_londres',
+        nombre: 'Londres Real, Museos & Támesis',
+        descripcion: 'Big Ben, London Eye, British Museum, Camden Town, Tower Bridge y Covent Garden.',
+        tags: ['3 Días', 'Monarquía & Museos', 'Europa'],
+        presupuestoAprox: '240€',
+        likes: 310,
+        destinos: [
+          {
+            nombre: 'Londres',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Big Ben, Palacio de Westminster & London Eye', notas: 'Paseo por Westminster Bridge y fotos icónicas', costo: '35', duracion: 150 },
+                  { hora: '13:30', titulo: 'Almuerzo en Covent Garden', notas: 'Mercado histórico y artistas callejeros', costo: '22', duracion: 90 },
+                  { hora: '16:00', titulo: 'Museo Británico (British Museum)', notas: 'Piedra de Rosetta y momias egipcias', costo: '0', duracion: 150 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Tower Bridge & Torre de Londres', notas: 'Joyas de la corona y puente levadizo', costo: '33', duracion: 180 },
+                  { hora: '14:00', titulo: 'Borough Market', notas: 'Street food internacional y quesos británicos', costo: '18', duracion: 90 },
+                  { hora: '17:00', titulo: 'Tate Modern & Paseo Millennium Bridge', notas: 'Arte moderno con vistas a St. Paul', costo: '0', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Cambio de Guardia en Buckingham Palace', notas: 'Ceremonia militar real', costo: '0', duracion: 120 },
+                  { hora: '14:30', titulo: 'Camden Market & Regent\'s Canal', notas: 'Tiendas vintage, música y comida alternativa', costo: '15', duracion: 180 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
         id: 'oficial_bariloche',
         nombre: 'Bariloche & Lagos Andinos',
         descripcion: 'Circuito Chico, Cerro Campanario, Colonia Suiza, chocolaterías y Lago Nahuel Huapi.',
         tags: ['3 Días', 'Naturaleza & Montaña', 'Patagonia'],
         presupuestoAprox: '140€',
+        likes: 275,
         destinos: [
           {
             nombre: 'San Carlos de Bariloche',
@@ -9769,11 +9817,45 @@ async function exportarPDF() {
         ]
       },
       {
+        id: 'oficial_amsterdam',
+        nombre: 'Ámsterdam Canales & Molinos',
+        descripcion: 'Rijksmuseum, Casa de Ana Frank, crucero por canales, Barrio Jordaan y Zaanse Schans.',
+        tags: ['3 Días', 'Canales & Cultura', 'Europa'],
+        presupuestoAprox: '190€',
+        likes: 248,
+        destinos: [
+          {
+            nombre: 'Ámsterdam',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Museo Van Gogh & Museumplein', notas: 'Los Girasoles y autorretratos de Van Gogh', costo: '22', duracion: 120 },
+                  { hora: '13:00', titulo: 'Paseo en barco por los canales', notas: 'Patrimonio de la Humanidad UNESCO', costo: '18', duracion: 75 },
+                  { hora: '16:00', titulo: 'Barrio Jordaan & Casa de Ana Frank', notas: 'Calles pintorescas y memoria histórica', costo: '16', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Rijksmuseum & La Ronda de Noche', notas: 'Obras maestras de Rembrandt y Vermeer', costo: '25', duracion: 150 },
+                  { hora: '14:00', titulo: 'Vondelpark & Alquiler de bicicleta', notas: 'Paseo en dos ruedas por el parque central', costo: '12', duracion: 90 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Excursión a Zaanse Schans', notas: 'Molinos de viento de madera y queserías', costo: '15', duracion: 210 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
         id: 'oficial_madrid',
         nombre: 'Madrid Histórico & Tapas',
         descripcion: 'Plaza Mayor, Museo del Prado, Parque del Retiro, Gran Vía y La Latina.',
         tags: ['3 Días', 'Cultura & Tapas', 'Europa'],
         presupuestoAprox: '130€',
+        likes: 285,
         destinos: [
           {
             nombre: 'Madrid',
@@ -9797,6 +9879,144 @@ async function exportarPDF() {
                   { hora: '11:00', titulo: 'Barrio de las Letras & Casa de Cervantes', notas: 'Calles con citas literarias doradas', costo: '0', duracion: 90 },
                   { hora: '17:30', titulo: 'Templo de Debod al atardecer', notas: 'Monumento egipcio original con vistas a la sierra', costo: '0', duracion: 90 },
                   { hora: '20:30', titulo: 'Ruta de Tapas en La Latina', notas: 'Cena de tapas en la calle Cava Baja', costo: '25', duracion: 120 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_cancun',
+        nombre: 'Cancún, Cenotes & Riviera Maya',
+        descripcion: 'Playas caribeñas de arena blanca, zona arqueológica de Tulum, Chichén Itzá y cenotes sagrados.',
+        tags: ['4 Días', 'Caribe & Historia Maya', 'México'],
+        presupuestoAprox: '210€',
+        likes: 345,
+        destinos: [
+          {
+            nombre: 'Cancún',
+            dias: [
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Playa Delfines & Mirador de Cancún', notas: 'Foto icónica en las letras y playa turquesa', costo: '0', duracion: 120 },
+                  { hora: '14:00', titulo: 'Almuerzo Mariscos en Puerto Juárez', notas: 'Tacos de pescado y ceviche caribeño', costo: '18', duracion: 90 },
+                  { hora: '18:00', titulo: 'Paseo en Catamarán a Isla Mujeres', notas: 'Navegación al atardecer por aguas cristalinas', costo: '45', duracion: 180 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '08:00', titulo: 'Excursión a Chichén Itzá & Pirámide de Kukulcán', notas: 'Maravilla del Mundo Moderno y templo maya', costo: '35', duracion: 240 },
+                  { hora: '14:30', titulo: 'Nado en Cenote Ik Kil', notas: 'Cenote sagrado subterráneo con aguas turquesas', costo: '15', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Ruinas de Tulum sobre el Acantilado', notas: 'Zona arqueológica maya frente al mar Caribe', costo: '12', duracion: 180 },
+                  { hora: '15:00', titulo: 'Playa Paraíso & Snorkel en Arrecife', notas: 'Tortugas marinas y arrecife de coral', costo: '25', duracion: 150 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_miami',
+        nombre: 'Miami Art Deco & South Beach',
+        descripcion: 'Ocean Drive, Wynwood Walls, Little Havana, compras en Lincoln Road y paseo por Biscayne Bay.',
+        tags: ['3 Días', 'Playa & Arte Urbano', 'Estados Unidos'],
+        presupuestoAprox: '270€',
+        likes: 290,
+        destinos: [
+          {
+            nombre: 'Miami',
+            dias: [
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Paseo Art Deco en Ocean Drive & South Beach', notas: 'Arquitectura neón icónica de los años 30', costo: '0', duracion: 120 },
+                  { hora: '13:30', titulo: 'Almuerzo en Lincoln Road Mall', notas: 'Paseo peatonal y terrazas al aire libre', costo: '30', duracion: 90 },
+                  { hora: '17:00', titulo: 'South Pointe Park Pier al atardecer', notas: 'Mirador de cruceros y skyline de Miami Beach', costo: '0', duracion: 90 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:30', titulo: 'Wynwood Walls & Distrito de Arte', notas: 'Murales gigantes de graffiti y galerías urbanas', costo: '12', duracion: 150 },
+                  { hora: '14:00', titulo: 'Little Havana & Calle Ocho', notas: 'Café cubano, sándwich cubano y música en vivo', costo: '18', duracion: 120 },
+                  { hora: '18:00', titulo: 'Paseo en barco por las Mansiones de Biscayne', notas: 'Star Island y vistas a Downtown Miami', costo: '32', duracion: 90 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Parque Nacional de los Everglades', notas: 'Paseo en hidrodeslizador y avistamiento de caimanes', costo: '38', duracion: 210 },
+                  { hora: '16:00', titulo: 'Bayside Marketplace & Noria Skyviews', notas: 'Compras y vistas panorámicas de la bahía', costo: '20', duracion: 120 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_santiago',
+        nombre: 'Santiago & Cordillera de los Andes',
+        descripcion: 'Cerro San Cristóbal, Sky Costanera, Palacio de La Moneda y escapada a Valparaíso y Viña del Mar.',
+        tags: ['3 Días', 'Montaña & Costa Pacífica', 'Chile'],
+        presupuestoAprox: '140€',
+        likes: 215,
+        destinos: [
+          {
+            nombre: 'Santiago de Chile',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Plaza de Armas & Palacio de La Moneda', notas: 'Centro cívico e histórico de Santiago', costo: '0', duracion: 120 },
+                  { hora: '13:00', titulo: 'Almuerzo en Barrio Lastarria', notas: 'Cafés gourmet y gastronomía chilena', costo: '20', duracion: 90 },
+                  { hora: '16:30', titulo: 'Cerro San Cristóbal & Teleférico', notas: 'Vistas panorámicas hacia la Cordillera de los Andes', costo: '8', duracion: 120 },
+                  { hora: '19:30', titulo: 'Mirador Sky Costanera', notas: 'Piso 62 del rascacielos más alto de Sudamérica', costo: '18', duracion: 90 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Excursión a Valparaíso & Cerros Alegre y Concepción', notas: 'Funiculares históricos, casas multicolor y arte callejero', costo: '25', duracion: 240 },
+                  { hora: '15:00', titulo: 'Paseo por Viña del Mar & Reloj de Flores', notas: 'Costanera pacífica y playas', costo: '0', duracion: 150 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Tour de Vinos en Valle del Maipo (Concha y Toro)', notas: 'Cata y leyenda del Casillero del Diablo', costo: '30', duracion: 180 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_berlin',
+        nombre: 'Berlín Histórico & Vanguardista',
+        descripcion: 'Puerta de Brandeburgo, Muro de Berlín (East Side Gallery), Isla de los Museos y Alexanderplatz.',
+        tags: ['3 Días', 'Historia Moderna & Underground', 'Alemania'],
+        presupuestoAprox: '170€',
+        likes: 260,
+        destinos: [
+          {
+            nombre: 'Berlín',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Puerta de Brandeburgo & Edificio del Reichstag', notas: 'Cúpula de cristal de Norman Foster', costo: '0', duracion: 150 },
+                  { hora: '13:00', titulo: 'Monumento al Holocausto & Checkpoint Charlie', notas: 'Puntos emblemáticos de la Guerra Fría', costo: '0', duracion: 120 },
+                  { hora: '17:00', titulo: 'Potsdamer Platz & Sony Center', notas: 'Arquitectura futurista y cúpula iluminada', costo: '0', duracion: 90 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'East Side Gallery & Muro de Berlín', notas: 'El tramo más largo del muro conservado con graffitis', costo: '0', duracion: 120 },
+                  { hora: '13:30', titulo: 'Currywurst tradicional en Kreuzberg', notas: 'Gastronomía callejera berlinesa', costo: '8', duracion: 60 },
+                  { hora: '15:30', titulo: 'Isla de los Museos & Museo de Pérgamo', notas: 'Patrimonio de la Humanidad UNESCO', costo: '19', duracion: 180 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:30', titulo: 'Alexanderplatz & Torre de Televisión (Fernsehturm)', notas: 'Mirador 360° sobre toda la ciudad', costo: '24', duracion: 120 },
+                  { hora: '15:00', titulo: 'Barrio Hackescher Markt & Patios Secretos', notas: 'Tiendas de diseño, galerías y cafés', costo: '0', duracion: 150 }
                 ]
               }
             ]
@@ -9864,12 +10084,12 @@ async function exportarPDF() {
       },
       {
         id: 'com_cusco',
-        nombre: 'Cusco Mágico & Valle Sagrado',
+        nombre: 'Cusco Mágico & Machu Picchu',
         autor: 'carla_nomad',
         isExperienced: true,
         likes: 115,
         destacada: true,
-        descripcion: 'Plaza de Armas de Cusco, Sacsayhuamán, Mercado de Pisac y tren a Aguas Calientes.',
+        descripcion: 'Plaza de Armas de Cusco, Sacsayhuamán, Mercado de Pisac y tren a la ciudadela de Machu Picchu.',
         tags: ['3 Días', 'Historia Inca & Montaña', 'Perú'],
         destinos: [
           {
@@ -9922,7 +10142,7 @@ async function exportarPDF() {
       {
         id: 'com_sansebastian',
         nombre: 'Escapada Gastronómica a San Sebastián',
-        autor: null, // Anónimo
+        autor: null,
         isExperienced: false,
         likes: 36,
         destacada: false,
@@ -9963,7 +10183,6 @@ async function exportarPDF() {
       const clean = autorNick.toLowerCase().replace('@', '').trim();
       const verifiedList = ['mateo_viajes', 'sofia_globetrotter', 'carla_nomad', 'plux_team', 'admin'];
       if (verifiedList.includes(clean)) return true;
-      // Also check local templates created by user
       const myTemplates = getStoredTemplates();
       if (clean === (currentNickname || '').toLowerCase() && myTemplates.length >= 2) return true;
       return false;
@@ -10007,6 +10226,7 @@ async function exportarPDF() {
         card.className = 'plantilla-card-premium';
         const daysCount = (tpl.destinos[0]?.dias || []).length;
         const eventsCount = (tpl.destinos[0]?.dias || []).reduce((acc, d) => acc + (d.eventos?.length || 0), 0);
+        const votes = (tpl.likes || 0) + (isLiked ? 1 : 0);
 
         card.innerHTML = `
           <div>
@@ -10021,14 +10241,20 @@ async function exportarPDF() {
               <span class="plantilla-tag" style="background:rgba(52,211,153,0.1); color:#34d399; border-color:rgba(52,211,153,0.2);">${eventsCount} actividades</span>
             </div>
           </div>
-          <div class="plantilla-footer">
-            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)">
-              <span>${isLiked ? '❤️' : '🤍'}</span>
-              <span id="like-count-${tpl.id}">Oficial</span>
+          <div class="plantilla-footer" style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)" title="Votar plantilla">
+              <span class="heart-icon-wrap">${getHeartSvg(isLiked)}</span>
+              <span id="like-count-${tpl.id}" style="font-weight:700;">${votes}</span> <span style="font-size:0.75rem; color:var(--gris);">votos</span>
             </button>
-            <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', 'oficial')">
-              Clonar plantilla
-            </button>
+            <div style="display:flex; gap:6px;">
+              <button class="plantilla-save-btn" onclick="window.guardarPlantillaEnMisPlantillas('${tpl.id}', 'oficial', event)" title="Guardar copia en Mis Plantillas" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span>Guardar</span>
+              </button>
+              <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', 'oficial')">
+                Clonar
+              </button>
+            </div>
           </div>
         `;
         container.appendChild(card);
@@ -10042,10 +10268,8 @@ async function exportarPDF() {
 
       const likedSet = getLikedTemplatesSet();
 
-      // Combine seed community templates with local published / firestore items
       let list = [...PLUX_COMUNIDAD_SEEDS];
 
-      // Filter
       if (filtroComunidadActual === 'destacadas') {
         list = list.filter(t => t.destacada);
       } else if (filtroComunidadActual === 'populares') {
@@ -10078,14 +10302,20 @@ async function exportarPDF() {
               <span class="plantilla-tag" style="background:rgba(52,211,153,0.08); color:#34d399; border-color:rgba(52,211,153,0.2);">${eventsCount} actividades</span>
             </div>
           </div>
-          <div class="plantilla-footer">
-            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)">
-              <span>${isLiked ? '❤️' : '🤍'}</span>
-              <span id="like-count-${tpl.id}">${tpl.likes || 0}</span>
+          <div class="plantilla-footer" style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)" title="Votar plantilla">
+              <span class="heart-icon-wrap">${getHeartSvg(isLiked)}</span>
+              <span id="like-count-${tpl.id}" style="font-weight:700;">${tpl.likes || 0}</span> <span style="font-size:0.75rem; color:var(--gris);">votos</span>
             </button>
-            <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', 'comunidad')">
-              Clonar plantilla
-            </button>
+            <div style="display:flex; gap:6px;">
+              <button class="plantilla-save-btn" onclick="window.guardarPlantillaEnMisPlantillas('${tpl.id}', 'comunidad', event)" title="Guardar copia en Mis Plantillas" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span>Guardar</span>
+              </button>
+              <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', 'comunidad')">
+                Clonar
+              </button>
+            </div>
           </div>
         `;
         container.appendChild(card);
@@ -10106,32 +10336,61 @@ async function exportarPDF() {
       const isLiked = likedSet.has(tplId);
       
       const comItem = PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplId);
+      const ofItem = PLUX_OFICIAL_TEMPLATES.find(t => t.id === tplId);
+      const item = comItem || ofItem;
       const countEl = document.getElementById(`like-count-${tplId}`);
       const btn = event?.currentTarget || event?.target?.closest('.plantilla-like-btn');
 
       if (isLiked) {
         likedSet.delete(tplId);
-        if (comItem && comItem.likes > 0) comItem.likes -= 1;
+        if (item && item.likes > 0) item.likes -= 1;
         if (btn) {
           btn.classList.remove('liked');
-          const heart = btn.querySelector('span');
-          if (heart) heart.textContent = '🤍';
+          const heart = btn.querySelector('.heart-icon-wrap');
+          if (heart) heart.innerHTML = getHeartSvg(false);
         }
       } else {
         likedSet.add(tplId);
-        if (comItem) comItem.likes = (comItem.likes || 0) + 1;
+        if (item) item.likes = (item.likes || 0) + 1;
         if (btn) {
           btn.classList.add('liked');
-          const heart = btn.querySelector('span');
-          if (heart) heart.textContent = '❤️';
+          const heart = btn.querySelector('.heart-icon-wrap');
+          if (heart) heart.innerHTML = getHeartSvg(true);
         }
       }
       saveLikedTemplatesSet(likedSet);
-      if (countEl && comItem) {
-        countEl.textContent = comItem.likes;
+      if (countEl && item) {
+        countEl.textContent = item.likes;
       }
     }
     window.toggleLikePlantilla = toggleLikePlantilla;
+
+    function guardarPlantillaEnMisPlantillas(tplId, origin, event) {
+      if (event) event.stopPropagation();
+      let tpl = null;
+      if (origin === 'oficial') {
+        tpl = PLUX_OFICIAL_TEMPLATES.find(t => t.id === tplId);
+      } else if (origin === 'comunidad') {
+        tpl = PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplId);
+      }
+      if (!tpl) return;
+      const templates = getStoredTemplates();
+      const copy = {
+        id: 'tpl_' + Date.now().toString(36),
+        nombre: tpl.nombre,
+        fecha: new Date().toISOString(),
+        autor: tpl.autor || 'Plux Oficial',
+        destinos: JSON.parse(JSON.stringify(tpl.destinos || [])),
+        vueltaGlobal: tpl.vueltaGlobal || '',
+        vueltaPrecioGlobal: tpl.vueltaPrecioGlobal || 0,
+        vueltaCostosAdicionales: tpl.vueltaCostosAdicionales || []
+      };
+      templates.push(copy);
+      saveTemplates(templates);
+      renderMisPlantillas();
+      showToast(`Plantilla "${tpl.nombre}" guardada en Mis Plantillas ✨`, 'success');
+    }
+    window.guardarPlantillaEnMisPlantillas = guardarPlantillaEnMisPlantillas;
 
     function renderMisPlantillas() {
       const plantillasList = document.getElementById('plantillasList');
@@ -12391,6 +12650,34 @@ async function exportarPDF() {
   function cargarPlantillaCiudad(ciudadRaw) {
     if (!ciudadRaw) return;
     const cClean = ciudadRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "").trim();
+
+    // 1. Check all registered official templates first
+    let matchedTemplate = null;
+    if (typeof PLUX_OFICIAL_TEMPLATES !== 'undefined') {
+      matchedTemplate = PLUX_OFICIAL_TEMPLATES.find(t => {
+        const tplName = (t.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
+        const tplId = (t.id || '').toLowerCase().replace('oficial_', '').replace(/[\s\-_]/g, "");
+        const destName = (t.destinos && t.destinos[0]?.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
+        return tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
+      });
+    }
+
+    // 2. Check community seeds
+    if (!matchedTemplate && typeof PLUX_COMUNIDAD_SEEDS !== 'undefined') {
+      matchedTemplate = PLUX_COMUNIDAD_SEEDS.find(t => {
+        const tplName = (t.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
+        const tplId = (t.id || '').toLowerCase().replace('com_', '').replace(/[\s\-_]/g, "");
+        const destName = (t.destinos && t.destinos[0]?.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
+        return tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
+      });
+    }
+
+    if (matchedTemplate) {
+      if (typeof clonarPlantillaCompleta === 'function') {
+        clonarPlantillaCompleta(matchedTemplate.id, matchedTemplate.id.startsWith('com_') ? 'comunidad' : 'oficial');
+        return;
+      }
+    }
 
     const cityDataMap = {
       'buenosaires': {

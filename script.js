@@ -4859,6 +4859,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       input.value = "";
       renderDestinos();
       generarSelloPasaporte(nombre);
+      autoSave();
       trackEvent('create_itinerary', {
         action: 'add_destination',
         destination_name: nombre
@@ -4999,6 +5000,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const dia = dest.dias[0];
         dia.eventos.push({ id: Date.now(), hora: "", titulo: titulo, notas: "Sugerencia de Wikipedia", costo: 0, duracion: 0 });
         renderDias(destId);
+        autoSave();
         showToast(`${titulo} añadido al Día 1 de ${dest.nombre}`, 'success');
     };
 
@@ -5565,6 +5567,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           dest.dias.push(dia);
         }
         renderDias(destId);
+        autoSave();
         showToast(`Itinerario generado con ${allPlaces.length} lugares`, 'success');
       } catch(e) {
         showToast('Error al generar itinerario', 'error');
@@ -5702,15 +5705,18 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (!checkEditPermission()) return;
       destinos = destinos.filter(d => d.id !== id);
       renderDestinos();
+      autoSave();
     }
 
     // ================== FUNCIONES DE DÍAS Y EVENTOS ==================
     function agregarDia(destId) {
       if (!checkEditPermission()) return;
       const dest = destinos.find(d => d.id === destId);
+      if (!dest) return;
       const diaId = dest.dias.length;
       dest.dias.push({ id: diaId, eventos: [], costosAdicionales: [] });
       renderDias(destId);
+      autoSave();
     }
 
     function renderDias(destId) {
@@ -5775,10 +5781,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function organizarItinerario(destId, diaId) {
         if (!checkEditPermission()) return;
         const dest = destinos.find(d => d.id === destId);
-        const dia = dest.dias.find(d => d.id === diaId);
+        const dia = dest?.dias?.find(d => d.id === diaId);
         if(!dia) return;
         dia.eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
         renderDias(destId);
+        autoSave();
         showToast('Itinerario organizado por hora', 'success');
     }
 
@@ -6245,7 +6252,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function agregarEvento(destId, diaId) {
       if (!checkEditPermission()) return;
       const dest = destinos.find(d => d.id === destId);
-      const dia = dest.dias.find(d => d.id === diaId);
+      const dia = dest?.dias?.find(d => d.id === diaId);
+      if (!dia) return;
       dia.eventos.push({
         hora: '',
         titulo: '',
@@ -6254,12 +6262,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         duracion: 0
       });
       renderDias(destId);
+      autoSave();
     }
 
     function actualizarEvento(destId, diaId, evId, campo, valor) {
       if (!checkEditPermission()) return;
       const dest = destinos.find(d => d.id === destId);
-      const dia = dest.dias.find(d => d.id === diaId);
+      const dia = dest?.dias?.find(d => d.id === diaId);
+      if (!dia || !dia.eventos[evId]) return;
       dia.eventos[evId][campo] = valor;
       autoSave();
     }
@@ -6267,18 +6277,22 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function eliminarEvento(destId, diaId, evId) {
       if (!checkEditPermission()) return;
       const dest = destinos.find(d => d.id === destId);
-      const dia = dest.dias.find(d => d.id === diaId);
+      const dia = dest?.dias?.find(d => d.id === diaId);
+      if (!dia) return;
       dia.eventos.splice(evId, 1);
       renderDias(destId);
+      autoSave();
     }
 
     function duplicarEvento(destId, diaId, evId) {
       if (!checkEditPermission()) return;
       const dest = destinos.find(d => d.id === destId);
-      const dia = dest.dias.find(d => d.id === diaId);
+      const dia = dest?.dias?.find(d => d.id === diaId);
+      if (!dia || !dia.eventos[evId]) return;
       const ev = { ...dia.eventos[evId] };
       dia.eventos.push(ev);
       renderDias(destId);
+      autoSave();
     }
 
     function reindexarDias(dest) {
@@ -6295,12 +6309,15 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       dest.dias.splice(diaId, 1);
       reindexarDias(dest);
       renderDias(destId);
+      autoSave();
     }
 
     function duplicarDia(destId, diaId) {
       if (!checkEditPermission()) return;
       const dest = destinos.find(d => d.id === destId);
+      if (!dest) return;
       const dia = dest.dias.find(d => d.id === diaId);
+      if (!dia) return;
       const nuevoDia = { 
         id: dest.dias.length, 
         eventos: dia.eventos.map(e => ({ ...e })), 
@@ -6309,6 +6326,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       dest.dias.push(nuevoDia);
       reindexarDias(dest);
       renderDias(destId);
+      autoSave();
     }
 
     function agregarCostoAdicional(destId, diaId) {

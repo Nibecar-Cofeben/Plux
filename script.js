@@ -1876,6 +1876,7 @@
     let openTransportDestIds = new Set();
     let collapsedEditorDestinos = new Set();
     let collapsedEditorDias = new Set();
+    let collapsedEditorEventos = new Set();
     let collapsedResumenDestinos = new Set();
     let collapsedResumenDias = new Set();
     let isAllCollapsedResumen = false;
@@ -1936,6 +1937,26 @@
     }
     window.toggleEditorDia = toggleEditorDia;
 
+    function toggleEditorEvento(destId, diaId, ida, e) {
+      if (e) {
+        if (e.target.closest('input') || e.target.closest('button')) return;
+      }
+      const key = `${destId}_${diaId}_${ida}`;
+      if (collapsedEditorEventos.has(key)) {
+        collapsedEditorEventos.delete(key);
+      } else {
+        collapsedEditorEventos.add(key);
+      }
+      const body = document.getElementById(`editor-ev-body-${destId}-${diaId}-${ida}`);
+      const chev = document.getElementById(`editor-ev-chev-${destId}-${diaId}-${ida}`);
+      if (body) {
+        const isHidden = collapsedEditorEventos.has(key);
+        body.style.display = isHidden ? 'none' : 'block';
+        if (chev) chev.style.transform = isHidden ? 'rotate(-90deg)' : 'rotate(0deg)';
+      }
+    }
+    window.toggleEditorEvento = toggleEditorEvento;
+
     function toggleAllCollapseEditor() {
       isAllCollapsedEditor = !isAllCollapsedEditor;
       const txt = document.getElementById('editorCollapseTxt');
@@ -1946,10 +1967,16 @@
       destinos.forEach(d => {
         if (isAllCollapsedEditor) {
           collapsedEditorDestinos.add(d.id);
-          (d.dias || []).forEach(dia => collapsedEditorDias.add(`${d.id}_${dia.id}`));
+          (d.dias || []).forEach(dia => {
+            collapsedEditorDias.add(`${d.id}_${dia.id}`);
+            (dia.eventos || []).forEach((ev, ida) => collapsedEditorEventos.add(`${d.id}_${dia.id}_${ida}`));
+          });
         } else {
           collapsedEditorDestinos.delete(d.id);
-          (d.dias || []).forEach(dia => collapsedEditorDias.delete(`${d.id}_${dia.id}`));
+          (d.dias || []).forEach(dia => {
+            collapsedEditorDias.delete(`${d.id}_${dia.id}`);
+            (dia.eventos || []).forEach((ev, ida) => collapsedEditorEventos.delete(`${d.id}_${dia.id}_${ida}`));
+          });
         }
         const destBody = document.getElementById(`editor-dest-body-${d.id}`);
         const destChev = document.getElementById(`editor-dest-chev-${d.id}`);
@@ -1964,6 +1991,14 @@
             diaBody.style.display = isAllCollapsedEditor ? 'none' : 'block';
             if (diaChev) diaChev.style.transform = isAllCollapsedEditor ? 'rotate(-90deg)' : 'rotate(0deg)';
           }
+          (dia.eventos || []).forEach((ev, ida) => {
+            const evBody = document.getElementById(`editor-ev-body-${d.id}-${dia.id}-${ida}`);
+            const evChev = document.getElementById(`editor-ev-chev-${d.id}-${dia.id}-${ida}`);
+            if (evBody) {
+              evBody.style.display = isAllCollapsedEditor ? 'none' : 'block';
+              if (evChev) evChev.style.transform = isAllCollapsedEditor ? 'rotate(-90deg)' : 'rotate(0deg)';
+            }
+          });
         });
       });
     }
@@ -4854,12 +4889,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const div = document.createElement("div");
         div.className = "destino";
         const isTransportOpen = openTransportDestIds.has(d.id);
+        const numDiasDest = (d.dias || []).length;
         div.innerHTML = `
           <div class="destino-header" onclick="toggleEditorDestino(${d.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
               <span id="editor-dest-chev-${d.id}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.85rem;">▼</span>
               <div class="bubble-name">${d.nombre.slice(0,3).toUpperCase()}</div>
-              <h2 style="margin:0;">${d.nombre}</h2>
+              <h2 style="margin:0; font-size:1.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.nombre}</h2>
+              <span style="font-size:0.75rem; font-weight:600; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:999px; white-space:nowrap;">${numDiasDest} ${numDiasDest === 1 ? 'día' : 'días'}</span>
             </div>
             <button class="close-icon" onclick="eliminarDestino(${d.id})">×</button>
           </div>
@@ -5683,20 +5720,24 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const daySched = schedule.find(s => s.destId === destId && s.diaId === dia.id);
         const dateStr = daySched?.dateStr || '';
         const fidx = daySched?.forecastIndex ?? '';
+        const evCount = (dia.eventos || []).length;
         const diaDiv = document.createElement("div");
         diaDiv.className = "dia";
         diaDiv.innerHTML = `
-          <div class="dia-header" onclick="toggleEditorDia(${destId}, ${dia.id}, event)" style="cursor:pointer; user-select:none;">
-            <div style="display:flex; align-items:center; gap:8px;">
+          <div class="dia-header" onclick="toggleEditorDia(${destId}, ${dia.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
               <span id="editor-dia-chev-${destId}-${dia.id}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.8rem;">▼</span>
-              <h4 style="margin:0;">${t('day_prefix')} ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris);font-weight:normal">(${daySched.dateLabel})</small>` : ''}</h4>
+              <h4 style="margin:0; white-space:nowrap;">${t('day_prefix')} ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris);font-weight:normal">(${daySched.dateLabel})</small>` : ''}</h4>
+              <span id="editor-dia-ev-badge-${destId}-${dia.id}" style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:999px; white-space:nowrap;">${evCount} ${evCount === 1 ? 'actividad' : 'actividades'}</span>
             </div>
-            <div id="weather-day-${destId}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-day-${destId}-${dia.id}')" title="Clima del día">
-              <div class="weather-chip-row"><span class="weather-chip-icon">🌤️</span><span class="weather-chip-temp">...</span></div>
-            </div>
-            <div class="dia-actions">
-              <span class="copy-icon" onclick="duplicarDia(${destId}, ${dia.id})" title="${t('copy_button')}">⎘</span>
-              <button class="close-icon" onclick="eliminarDia(${destId}, ${dia.id})">×</button>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div id="weather-day-${destId}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-day-${destId}-${dia.id}')" title="Clima del día">
+                <div class="weather-chip-row"><span class="weather-chip-icon">🌤️</span><span class="weather-chip-temp">...</span></div>
+              </div>
+              <div class="dia-actions">
+                <span class="copy-icon" onclick="duplicarDia(${destId}, ${dia.id})" title="${t('copy_button')}">⎘</span>
+                <button class="close-icon" onclick="eliminarDia(${destId}, ${dia.id})">×</button>
+              </div>
             </div>
           </div>
           <div id="editor-dia-body-${destId}-${dia.id}" style="display:${isCollapsed ? 'none' : 'block'};">
@@ -5747,6 +5788,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       sortedEvents.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
 
       dia.eventos.forEach((ev, ida) => {
+        const evKey = `${destId}_${diaId}_${ida}`;
+        const isEvCollapsed = collapsedEditorEventos.has(evKey);
         const evDiv = document.createElement("div");
         evDiv.className = "evento";
         
@@ -5758,7 +5801,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const currentStart = h * 60 + m;
           
           sortedEvents.forEach(other => {
-            if (other.originalIda=== ida|| !other.hora) return;
+            if (other.originalIda === ida || !other.hora) return;
             const [oh, om] = other.hora.split(':').map(Number);
             const otherStart = oh * 60 + om;
             const durCurrent = parseInt(ev.duracion) || 0;
@@ -5787,24 +5830,27 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         }
 
         evDiv.innerHTML = `
-          <div class="fila-hora-titulo">
-            <input type="time" value="${ev.hora || ''}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'hora', this.value)">
-            <input type="text" value="${ev.titulo || ''}" placeholder="${t('event_title_placeholder')}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'titulo', this.value)">
+          <div class="fila-hora-titulo" style="display:flex; align-items:center; gap:8px;">
+            <span id="editor-ev-chev-${destId}-${diaId}-${ida}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isEvCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.75rem; cursor:pointer;" onclick="toggleEditorEvento(${destId}, ${diaId}, ${ida}, event)" title="Plegar / Expandir detalles">▼</span>
+            <input type="time" value="${ev.hora || ''}" style="width:105px; min-width:95px;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'hora', this.value)" title="Hora del evento">
+            <input type="text" value="${ev.titulo || ''}" placeholder="${t('event_title_placeholder')}" style="flex:1;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'titulo', this.value)">
+            <button class="close-icon" onclick="eliminarEvento(${destId}, ${diaId}, ${ida})" style="margin-left:auto;">×</button>
           </div>
-          <input type="text" class="notas-input" value="${ev.notas || ''}" placeholder="${t('event_notes_placeholder')}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'notas', this.value)">
-          <div class="detalles-evento">
-            <div class="detalle-field">
-              <label>${t('event_cost_placeholder')}</label>
-              <input type="number" value="${ev.costo || 0}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'costo', parseFloat(this.value)||0)">
+          <div id="editor-ev-body-${destId}-${diaId}-${ida}" style="display:${isEvCollapsed ? 'none' : 'block'}; margin-top:8px;">
+            <input type="text" class="notas-input" value="${ev.notas || ''}" placeholder="${t('event_notes_placeholder')}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'notas', this.value)">
+            <div class="detalles-evento">
+              <div class="detalle-field">
+                <label>${t('event_cost_placeholder')}</label>
+                <input type="number" value="${ev.costo || 0}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'costo', parseFloat(this.value)||0)">
+              </div>
+              <div class="detalle-field">
+                <label>${t('event_duration_placeholder')} (min)</label>
+                <input type="number" value="${ev.duracion || 0}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'duracion', parseInt(this.value)||0)">
+              </div>
             </div>
-            <div class="detalle-field">
-              <label>${t('event_duration_placeholder')} (min)</label>
-              <input type="number" value="${ev.duracion || 0}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'duracion', parseInt(this.value)||0)">
+            <div class="evento-actions">
+              <button class="copy-ev" onclick="duplicarEvento(${destId}, ${diaId}, ${ida})">${t('copy_button')}</button>
             </div>
-          </div>
-          <div class="evento-actions">
-            <button class="copy-ev" onclick="duplicarEvento(${destId}, ${diaId}, ${ida})">${t('copy_button')}</button>
-            <button class="close-icon" onclick="eliminarEvento(${destId}, ${diaId}, ${ida})">×</button>
           </div>
         `;
         cont.appendChild(evDiv);

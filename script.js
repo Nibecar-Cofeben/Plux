@@ -1938,6 +1938,11 @@
 
     function toggleAllCollapseEditor() {
       isAllCollapsedEditor = !isAllCollapsedEditor;
+      const txt = document.getElementById('editorCollapseTxt');
+      const icon = document.getElementById('editorCollapseIcon');
+      if (txt) txt.textContent = isAllCollapsedEditor ? 'Expandir todo' : 'Plegar todo';
+      if (icon) icon.textContent = isAllCollapsedEditor ? '⇱' : '⇲';
+
       destinos.forEach(d => {
         if (isAllCollapsedEditor) {
           collapsedEditorDestinos.add(d.id);
@@ -9501,31 +9506,697 @@ async function exportarPDF() {
         });
       }
 
+      // Render Plantillas Sections
+      renderPlantillasOficiales();
+      renderPlantillasComunidad();
+      renderMisPlantillas();
+
+      // Load shared trips if user is logged in
+      renderSharedTripsList();
+    }
+
+    // ================== PLANTILLAS OFICIALES & COMUNIDAD ==================
+    const PLUX_OFICIAL_TEMPLATES = [
+      {
+        id: 'oficial_roma',
+        nombre: 'Roma Imperial & Vaticano',
+        descripcion: 'Coliseo, Trastevere, Vaticano, Panteón y Fontana di Trevi con itinerario optimizado.',
+        tags: ['3 Días', 'Historia & Arte', 'Europa'],
+        presupuestoAprox: '180€',
+        destinos: [
+          {
+            nombre: 'Roma',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Coliseo Romano & Foro Romano', notas: 'Visita arqueológica imperial y ruinas', costo: '18', duracion: 180 },
+                  { hora: '13:30', titulo: 'Almuerzo tradicional en Trastevere', notas: 'Pasta carbonara artesanal en trattoria romana', costo: '25', duracion: 90 },
+                  { hora: '16:30', titulo: 'Panteón de Agripa', notas: 'El templo romano mejor conservado', costo: '5', duracion: 60 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '08:30', titulo: 'Museos Vaticanos & Basílica de San Pedro', notas: 'Cúpula panorámica y arte sacro', costo: '25', duracion: 210 },
+                  { hora: '12:30', titulo: 'Capilla Sixtina', notas: 'Frescos de Miguel Ángel', costo: '0', duracion: 60 },
+                  { hora: '18:00', titulo: 'Fontana di Trevi al atardecer', notas: 'Tradición de lanzar la moneda a la fuente', costo: '0', duracion: 60 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Plaza de España & Villa Borghese', notas: 'Paseo por los jardines renacentistas', costo: '0', duracion: 120 },
+                  { hora: '15:00', titulo: 'Castillo de Sant\'Angelo', notas: 'Vistas panorámicas sobre el río Tíber', costo: '15', duracion: 90 },
+                  { hora: '20:30', titulo: 'Cena en Campo de\' Fiori', notas: 'Pizza romana y ambiente nocturno', costo: '22', duracion: 120 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_paris',
+        nombre: 'París Clásico & Bohemio',
+        descripcion: 'Torre Eiffel, Louvre, Sena, Montmartre, Sacré-Cœur y gastronomía parisina.',
+        tags: ['3 Días', 'Romántico & Cultura', 'Europa'],
+        presupuestoAprox: '220€',
+        destinos: [
+          {
+            nombre: 'París',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Torre Eiffel & Jardines del Trocadero', notas: 'Mirador panorámico y sesión de fotos', costo: '30', duracion: 120 },
+                  { hora: '13:00', titulo: 'Almuerzo en Café de Flore', notas: 'Gastronomía tradicional en Saint-Germain', costo: '35', duracion: 90 },
+                  { hora: '16:30', titulo: 'Paseo en barco por el Río Sena', notas: 'Navegación al atardecer frente a Notre-Dame', costo: '18', duracion: 75 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Museo del Louvre & Pirámide de Cristal', notas: 'La Gioconda, Venus de Milo y antigüedades', costo: '22', duracion: 180 },
+                  { hora: '14:00', titulo: 'Jardín de las Tullerías', notas: 'Caminata relajante y café al aire libre', costo: '0', duracion: 60 },
+                  { hora: '19:30', titulo: 'Montmartre & Basílica del Sacré-Cœur', notas: 'Barrio de pintores y vistas nocturnas', costo: '0', duracion: 150 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:30', titulo: 'Arco del Triunfo y Campos Elíseos', notas: 'Subida al mirador superior', costo: '16', duracion: 120 },
+                  { hora: '15:00', titulo: 'Sainte-Chapelle & Barrio Latino', notas: 'Vitrales góticos deslumbrantes', costo: '13', duracion: 90 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_tokio',
+        nombre: 'Tokio Tradicional & Futurista',
+        descripcion: 'Shibuya Sky, templos sagrados de Asakusa, cultura anime en Akihabara y noche en Shinjuku.',
+        tags: ['3 Días', 'Tecnología & Tradición', 'Asia'],
+        presupuestoAprox: '150€',
+        destinos: [
+          {
+            nombre: 'Tokio',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Cruce de Shibuya & Estatua de Hachiko', notas: 'El paso peatonal más concurrido del mundo', costo: '0', duracion: 90 },
+                  { hora: '13:00', titulo: 'Ramen artesanal en Ichiran', notas: 'Fideos tonkotsu auténticos en cabinas individuales', costo: '12', duracion: 60 },
+                  { hora: '17:00', titulo: 'Mirador Shibuya Sky', notas: 'Puesta de sol y skyline futurista 360°', costo: '20', duracion: 90 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Templo Senso-ji & Calle Nakamise', notas: 'El templo budista más antiguo de Tokio', costo: '0', duracion: 120 },
+                  { hora: '13:30', titulo: 'Parque Ueno', notas: 'Naturaleza y santuarios históricos', costo: '0', duracion: 90 },
+                  { hora: '16:00', titulo: 'Akihabara Electric Town', notas: 'Electrónica, manga y videojuegos retro', costo: '0', duracion: 180 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Santuario Meiji Jingu en Harajuku', notas: 'Bosque sagrado y puertas Torii gigantes', costo: '0', duracion: 90 },
+                  { hora: '12:30', titulo: 'Calle Takeshita', notas: 'Moda urbana y crepes japoneses', costo: '8', duracion: 90 },
+                  { hora: '19:30', titulo: 'Omoide Yokocho & Callejones de Shinjuku', notas: 'Yakitori y neones de Tokio nocturno', costo: '30', duracion: 150 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_nuevayork',
+        nombre: 'Nueva York Iconos de Manhattan',
+        descripcion: 'Times Square, Central Park, Broadway, Estatua de la Libertad, Brooklyn Bridge y High Line.',
+        tags: ['3 Días', 'Urbano & Skyline', 'América'],
+        presupuestoAprox: '290€',
+        destinos: [
+          {
+            nombre: 'Nueva York',
+            dias: [
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Times Square & Midtown', notas: 'Paseo entre rascacielos y teatros', costo: '0', duracion: 90 },
+                  { hora: '14:00', titulo: 'Central Park & Bethesda Terrace', notas: 'Caminata por el parque y fotos icónicas', costo: '0', duracion: 120 },
+                  { hora: '19:30', titulo: 'Musical de Broadway', notas: 'Espectáculo teatral en vivo', costo: '95', duracion: 150 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Estatua de la Libertad & Ellis Island', notas: 'Ferry histórico y monumento nacional', costo: '25', duracion: 210 },
+                  { hora: '14:00', titulo: 'Wall Street & 9/11 Memorial', notas: 'Distrito financiero y monumento conmemorativo', costo: '0', duracion: 120 },
+                  { hora: '17:30', titulo: 'Mirador One World Observatory', notas: 'Vistas panorámicas del atardecer', costo: '44', duracion: 90 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:30', titulo: 'Puente de Brooklyn & DUMBO', notas: 'Cruce a pie con vistas al skyline', costo: '0', duracion: 120 },
+                  { hora: '13:30', titulo: 'Almuerzo en Time Out Market', notas: 'Puestos gastronómicos en Brooklyn', costo: '25', duracion: 90 },
+                  { hora: '16:30', titulo: 'High Line & Hudson Yards', notas: 'Parque elevado sobre antiguas vías de tren', costo: '0', duracion: 90 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_barcelona',
+        nombre: 'Barcelona Modernista & Mediterráneo',
+        descripcion: 'Sagrada Familia, Park Güell, Barrio Gótico, tapas en El Born y playa de la Barceloneta.',
+        tags: ['3 Días', 'Arquitectura & Playa', 'Europa'],
+        presupuestoAprox: '160€',
+        destinos: [
+          {
+            nombre: 'Barcelona',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Basílica de la Sagrada Familia', notas: 'Obra cumbre de Antoni Gaudí', costo: '26', duracion: 150 },
+                  { hora: '13:00', titulo: 'Passeig de Gràcia & Casa Batlló', notas: 'Fachadas modernistas emblemáticas', costo: '30', duracion: 90 },
+                  { hora: '20:00', titulo: 'Ruta de Tapas en El Born', notas: 'Tapas tradicionales catalanas y vino', costo: '25', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Park Güell & Banco Ondulante', notas: 'Vistas panorámicas hacia el mar', costo: '10', duracion: 120 },
+                  { hora: '14:30', titulo: 'Barrio Gótico & Catedral', notas: 'Calles medievales y plazas históricas', costo: '0', duracion: 120 },
+                  { hora: '17:00', titulo: 'Mercado de la Boquería', notas: 'Frutas frescas y gastronomía local', costo: '10', duracion: 60 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '11:00', titulo: 'Playa de la Barceloneta', notas: 'Paseo marítimo y brisa mediterránea', costo: '0', duracion: 120 },
+                  { hora: '16:30', titulo: 'Mirador de Montjuïc', notas: 'Vistas panorámicas sobre el puerto', costo: '0', duracion: 120 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_bariloche',
+        nombre: 'Bariloche & Lagos Andinos',
+        descripcion: 'Circuito Chico, Cerro Campanario, Colonia Suiza, chocolaterías y Lago Nahuel Huapi.',
+        tags: ['3 Días', 'Naturaleza & Montaña', 'Patagonia'],
+        presupuestoAprox: '140€',
+        destinos: [
+          {
+            nombre: 'San Carlos de Bariloche',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Circuito Chico & Punto Panorámico', notas: 'Recorrido por bosques y lagos patagónicos', costo: '0', duracion: 150 },
+                  { hora: '13:00', titulo: 'Cerro Campanario', notas: 'Ascenso en aerosilla con las 7 mejores vistas del mundo', costo: '12', duracion: 90 },
+                  { hora: '17:00', titulo: 'Chocolaterías en Centro Cívico', notas: 'Degustación de chocolate en rama artesanal', costo: '15', duracion: 90 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Cerro Catedral & Villa Catedral', notas: 'Centro de esquí y caminatas de montaña', costo: '18', duracion: 180 },
+                  { hora: '14:30', titulo: 'Colonia Suiza & Curanto Tradicional', notas: 'Feria de artesanos y comida cocida bajo tierra', costo: '22', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Navegación Puerto Blest & Cascada de los Cántaros', notas: 'Excursión lacustre en el Lago Nahuel Huapi', costo: '45', duracion: 240 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_madrid',
+        nombre: 'Madrid Histórico & Tapas',
+        descripcion: 'Plaza Mayor, Museo del Prado, Parque del Retiro, Gran Vía y La Latina.',
+        tags: ['3 Días', 'Cultura & Tapas', 'Europa'],
+        presupuestoAprox: '130€',
+        destinos: [
+          {
+            nombre: 'Madrid',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Puerta del Sol & Plaza Mayor', notas: 'Bocadillo de calamares y centro histórico', costo: '8', duracion: 120 },
+                  { hora: '13:00', titulo: 'Mercado de San Miguel', notas: 'Pinchos gourmet y tapeo madrileño', costo: '20', duracion: 90 },
+                  { hora: '16:00', titulo: 'Palacio Real & Jardines de Sabatini', notas: 'Visita a los salones reales', costo: '14', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Museo Nacional del Prado', notas: 'Obras maestras de Velázquez y Goya', costo: '15', duracion: 150 },
+                  { hora: '14:00', titulo: 'Parque de El Retiro & Palacio de Cristal', notas: 'Paseo en barca por el estanque', costo: '6', duracion: 120 },
+                  { hora: '18:30', titulo: 'Gran Vía & Barrio de Malasaña', notas: 'Teatros, arquitectura y cafés bohemios', costo: '0', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '11:00', titulo: 'Barrio de las Letras & Casa de Cervantes', notas: 'Calles con citas literarias doradas', costo: '0', duracion: 90 },
+                  { hora: '17:30', titulo: 'Templo de Debod al atardecer', notas: 'Monumento egipcio original con vistas a la sierra', costo: '0', duracion: 90 },
+                  { hora: '20:30', titulo: 'Ruta de Tapas en La Latina', notas: 'Cena de tapas en la calle Cava Baja', costo: '25', duracion: 120 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    const PLUX_COMUNIDAD_SEEDS = [
+      {
+        id: 'com_mendoza',
+        nombre: 'Ruta del Vino y Montañas en Mendoza',
+        autor: 'mateo_viajes',
+        isExperienced: true,
+        likes: 98,
+        destacada: true,
+        descripcion: 'Bodegas de Luján de Cuyo, degustaciones de Malbec y trekking en Cordillera de los Andes.',
+        tags: ['4 Días', 'Enoturismo & Montaña', 'Argentina'],
+        destinos: [
+          {
+            nombre: 'Mendoza',
+            dias: [
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Bodega Catena Zapata & Degustación', notas: 'Tour guiado por viñedos y cata premium', costo: '35', duracion: 150 },
+                  { hora: '13:30', titulo: 'Almuerzo de 5 pasos en bodega', notas: 'Maridaje con vinos de autor', costo: '50', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Excursión Alta Montaña & Puente del Inca', notas: 'Vistas panorámicas del Cerro Aconcagua', costo: '30', duracion: 300 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'com_amalfi',
+        nombre: 'Costa Amalfitana & Capri Express',
+        autor: 'sofia_globetrotter',
+        isExperienced: true,
+        likes: 142,
+        destacada: true,
+        descripcion: 'Positano, Amalfi, senderos sobre el mar y excursión en barco a la Gruta Azul de Capri.',
+        tags: ['3 Días', 'Costa & Vistas', 'Italia'],
+        destinos: [
+          {
+            nombre: 'Positano',
+            dias: [
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Playa Grande & Casas Colgantes de Positano', notas: 'Vistas panorámicas de la costa', costo: '0', duracion: 120 },
+                  { hora: '14:00', titulo: 'Ferry a Amalfi & Catedral de San Andrés', notas: 'Plaza medieval y limoncello artesanal', costo: '12', duracion: 150 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Excursión en Barco a la Isla de Capri', notas: 'Gruta Azul y Farallones de Capri', costo: '45', duracion: 240 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'com_cusco',
+        nombre: 'Cusco Mágico & Valle Sagrado',
+        autor: 'carla_nomad',
+        isExperienced: true,
+        likes: 115,
+        destacada: true,
+        descripcion: 'Plaza de Armas de Cusco, Sacsayhuamán, Mercado de Pisac y tren a Aguas Calientes.',
+        tags: ['3 Días', 'Historia Inca & Montaña', 'Perú'],
+        destinos: [
+          {
+            nombre: 'Cusco',
+            dias: [
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Plaza de Armas & Barrio San Blas', notas: 'Calles empedradas y talleres de artesanos', costo: '0', duracion: 120 },
+                  { hora: '14:30', titulo: 'Fortaleza de Sacsayhuamán', notas: 'Muros megalíticos incas', costo: '18', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Valle Sagrado & Mercado de Pisac', notas: 'Ruinas y textiles andinos', costo: '20', duracion: 210 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'com_rio',
+        nombre: 'Fin de Semana en Río & Copacabana',
+        autor: 'lucas_viajero',
+        isExperienced: false,
+        likes: 54,
+        destacada: false,
+        descripcion: 'Cristo Redentor, Pan de Azúcar, paseo por Ipanema y atardecer en Arpoador.',
+        tags: ['3 Días', 'Playas & Samba', 'Brasil'],
+        destinos: [
+          {
+            nombre: 'Río de Janeiro',
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Cristo Redentor en el Cerro del Corcovado', notas: 'Tren del Corcovado y mirador', costo: '22', duracion: 150 },
+                  { hora: '15:30', titulo: 'Teleférico del Pan de Azúcar', notas: 'Vistas de la Bahía de Guanabara al atardecer', costo: '25', duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '11:00', titulo: 'Playa de Ipanema & Puesto 9', notas: 'Paseo en bicicleta y agua de coco', costo: '5', duracion: 120 },
+                  { hora: '18:00', titulo: 'Atardecer en la Piedra de Arpoador', notas: 'Aplauso tradicional al sol cayendo en el mar', costo: '0', duracion: 60 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'com_sansebastian',
+        nombre: 'Escapada Gastronómica a San Sebastián',
+        autor: null, // Anónimo
+        isExperienced: false,
+        likes: 36,
+        destacada: false,
+        descripcion: 'Ruta de pintxos por la Parte Vieja, Playa de la Concha y Monte Igueldo.',
+        tags: ['2 Días', 'Gastronomía & Mar', 'España'],
+        destinos: [
+          {
+            nombre: 'San Sebastián',
+            dias: [
+              {
+                eventos: [
+                  { hora: '12:00', titulo: 'Paseo por la Playa de La Concha', notas: 'Bahía emblemática y paseo marítimo', costo: '0', duracion: 90 },
+                  { hora: '20:00', titulo: 'Ruta de Pintxos en la Parte Vieja', notas: 'Gilda, txangurro y tarta de queso de La Viña', costo: '30', duracion: 150 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    let filtroComunidadActual = 'todas';
+
+    function getLikedTemplatesSet() {
+      try {
+        return new Set(JSON.parse(localStorage.getItem('Plux_Template_Likes') || '[]'));
+      } catch (e) {
+        return new Set();
+      }
+    }
+
+    function saveLikedTemplatesSet(set) {
+      localStorage.setItem('Plux_Template_Likes', JSON.stringify(Array.from(set)));
+    }
+
+    function isExperiencedCreator(autorNick) {
+      if (!autorNick) return false;
+      const clean = autorNick.toLowerCase().replace('@', '').trim();
+      const verifiedList = ['mateo_viajes', 'sofia_globetrotter', 'carla_nomad', 'plux_team', 'admin'];
+      if (verifiedList.includes(clean)) return true;
+      // Also check local templates created by user
+      const myTemplates = getStoredTemplates();
+      if (clean === (currentNickname || '').toLowerCase() && myTemplates.length >= 2) return true;
+      return false;
+    }
+
+    function getCreatorBadgeHtml(autor, isExperienced = false) {
+      if (!autor || autor === 'Viajero Anónimo') {
+        return `<span class="tpl-author" style="color:var(--gris);">Viajero Anónimo</span>`;
+      }
+      const clean = autor.replace('@', '');
+      const hasStar = isExperienced || isExperiencedCreator(clean);
+      return `<span class="tpl-author">@${escapeHtml(clean)} ${hasStar ? '<span class="star-badge" title="Creador experimentado de Plux (múltiples plantillas)">⭐</span>' : ''}</span>`;
+    }
+
+    function switchPlantillasSubtab(subtabName) {
+      const subtabs = ['oficiales', 'comunidad', 'mias'];
+      subtabs.forEach(name => {
+        const btn = document.getElementById(`btnSubtab${name.charAt(0).toUpperCase() + name.slice(1)}`);
+        const pane = document.getElementById(`subtab-plantillas-${name}`);
+        if (btn) btn.classList.toggle('active', name === subtabName);
+        if (pane) {
+          pane.style.display = (name === subtabName) ? 'block' : 'none';
+        }
+      });
+      if (subtabName === 'oficiales') renderPlantillasOficiales();
+      else if (subtabName === 'comunidad') renderPlantillasComunidad();
+      else if (subtabName === 'mias') renderMisPlantillas();
+    }
+    window.switchPlantillasSubtab = switchPlantillasSubtab;
+
+    function renderPlantillasOficiales() {
+      const container = document.getElementById('plantillasOficialesList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const likedSet = getLikedTemplatesSet();
+
+      PLUX_OFICIAL_TEMPLATES.forEach(tpl => {
+        const isLiked = likedSet.has(tpl.id);
+        const card = document.createElement('div');
+        card.className = 'plantilla-card-premium';
+        const daysCount = (tpl.destinos[0]?.dias || []).length;
+        const eventsCount = (tpl.destinos[0]?.dias || []).reduce((acc, d) => acc + (d.eventos?.length || 0), 0);
+
+        card.innerHTML = `
+          <div>
+            <div class="tpl-header">
+              <span class="plantilla-badge-oficial">Plux Oficial</span>
+              <span style="font-size:0.75rem; color:var(--gris);">${tpl.presupuestoAprox ? 'Aprox. ' + tpl.presupuestoAprox : ''}</span>
+            </div>
+            <h4 class="tpl-title" style="margin-top:8px;">${escapeHtml(tpl.nombre)}</h4>
+            <p style="font-size:0.82rem; color:var(--gris); margin:4px 0 8px; line-height:1.4;">${escapeHtml(tpl.descripcion)}</p>
+            <div class="plantilla-tags">
+              ${(tpl.tags || []).map(t => `<span class="plantilla-tag">${escapeHtml(t)}</span>`).join('')}
+              <span class="plantilla-tag" style="background:rgba(52,211,153,0.1); color:#34d399; border-color:rgba(52,211,153,0.2);">${eventsCount} actividades</span>
+            </div>
+          </div>
+          <div class="plantilla-footer">
+            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)">
+              <span>${isLiked ? '❤️' : '🤍'}</span>
+              <span id="like-count-${tpl.id}">Oficial</span>
+            </button>
+            <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', 'oficial')">
+              Clonar plantilla
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderPlantillasComunidad() {
+      const container = document.getElementById('plantillasComunidadList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const likedSet = getLikedTemplatesSet();
+
+      // Combine seed community templates with local published / firestore items
+      let list = [...PLUX_COMUNIDAD_SEEDS];
+
+      // Filter
+      if (filtroComunidadActual === 'destacadas') {
+        list = list.filter(t => t.destacada);
+      } else if (filtroComunidadActual === 'populares') {
+        list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = '<p style="color:var(--gris); grid-column:1/-1; text-align:center; padding:20px;">No se encontraron plantillas en esta categoría.</p>';
+        return;
+      }
+
+      list.forEach(tpl => {
+        const isLiked = likedSet.has(tpl.id);
+        const card = document.createElement('div');
+        card.className = 'plantilla-card-premium';
+        const daysCount = (tpl.destinos[0]?.dias || []).length;
+        const eventsCount = (tpl.destinos[0]?.dias || []).reduce((acc, d) => acc + (d.eventos?.length || 0), 0);
+
+        card.innerHTML = `
+          <div>
+            <div class="tpl-header">
+              ${getCreatorBadgeHtml(tpl.autor, tpl.isExperienced)}
+              ${tpl.destacada ? '<span class="plantilla-badge-destacada">Destacada ⭐</span>' : ''}
+            </div>
+            <h4 class="tpl-title" style="margin-top:8px;">${escapeHtml(tpl.nombre)}</h4>
+            <p style="font-size:0.82rem; color:var(--gris); margin:4px 0 8px; line-height:1.4;">${escapeHtml(tpl.descripcion || '')}</p>
+            <div class="plantilla-tags">
+              ${(tpl.tags || []).map(t => `<span class="plantilla-tag">${escapeHtml(t)}</span>`).join('')}
+              <span class="plantilla-tag" style="background:rgba(56,189,248,0.08); color:#38bdf8; border-color:rgba(56,189,248,0.2);">${daysCount} días</span>
+              <span class="plantilla-tag" style="background:rgba(52,211,153,0.08); color:#34d399; border-color:rgba(52,211,153,0.2);">${eventsCount} actividades</span>
+            </div>
+          </div>
+          <div class="plantilla-footer">
+            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)">
+              <span>${isLiked ? '❤️' : '🤍'}</span>
+              <span id="like-count-${tpl.id}">${tpl.likes || 0}</span>
+            </button>
+            <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', 'comunidad')">
+              Clonar plantilla
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function filtrarComunidad(filtro, btnEl) {
+      filtroComunidadActual = filtro;
+      document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      renderPlantillasComunidad();
+    }
+    window.filtrarComunidad = filtrarComunidad;
+
+    function toggleLikePlantilla(tplId, event) {
+      if (event) event.stopPropagation();
+      const likedSet = getLikedTemplatesSet();
+      const isLiked = likedSet.has(tplId);
+      
+      const comItem = PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplId);
+      const countEl = document.getElementById(`like-count-${tplId}`);
+      const btn = event?.currentTarget || event?.target?.closest('.plantilla-like-btn');
+
+      if (isLiked) {
+        likedSet.delete(tplId);
+        if (comItem && comItem.likes > 0) comItem.likes -= 1;
+        if (btn) {
+          btn.classList.remove('liked');
+          const heart = btn.querySelector('span');
+          if (heart) heart.textContent = '🤍';
+        }
+      } else {
+        likedSet.add(tplId);
+        if (comItem) comItem.likes = (comItem.likes || 0) + 1;
+        if (btn) {
+          btn.classList.add('liked');
+          const heart = btn.querySelector('span');
+          if (heart) heart.textContent = '❤️';
+        }
+      }
+      saveLikedTemplatesSet(likedSet);
+      if (countEl && comItem) {
+        countEl.textContent = comItem.likes;
+      }
+    }
+    window.toggleLikePlantilla = toggleLikePlantilla;
+
+    function renderMisPlantillas() {
       const plantillasList = document.getElementById('plantillasList');
+      if (!plantillasList) return;
       plantillasList.innerHTML = '';
+      const templates = getStoredTemplates();
+
+      const notice = document.getElementById('creatorBadgeNotice');
+      if (notice) {
+        const isExp = isExperiencedCreator(currentNickname);
+        if (currentNickname) {
+          notice.innerHTML = `Publicando como: <strong style="color:var(--verde);">@${escapeHtml(currentNickname)}</strong> ${isExp ? '<span style="color:#fbbf24;" title="Creador experimentado">⭐</span>' : ''}`;
+        } else {
+          notice.innerHTML = `Publicando como: <span style="color:var(--gris);">Viajero Anónimo (sin sesión)</span>`;
+        }
+      }
+
       if (templates.length === 0) {
-        plantillasList.innerHTML = `<p style="color:var(--gris);">${t('no_plantillas')}</p>`;
+        plantillasList.innerHTML = `<p style="color:var(--gris); text-align:center; padding:15px;">${t('no_plantillas')}</p>`;
       } else {
         templates.forEach((tpl, index) => {
           const item = document.createElement('div');
           item.className = 'trip-item';
-          item.style.cursor = 'pointer';
+          const dests = (tpl.destinos || []).map(d => d.nombre).join(', ') || 'Destino';
+          const daysTotal = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias?.length || 0), 0);
           item.innerHTML = `
-            <div class="trip-info" onclick="cargarPlantilla(${index})" style="cursor:pointer;flex:1;">
-              <h4>${escapeHtml(tpl.nombre)}</h4>
-              <small>Plantilla · Click para cargar</small>
+            <div class="trip-info" onclick="window.clonarPlantillaCompleta(${index}, 'mia')" style="cursor:pointer;flex:1;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h4 style="margin:0;">${escapeHtml(tpl.nombre)}</h4>
+                <span class="plantilla-tag" style="font-size:0.7rem;">${daysTotal} días</span>
+              </div>
+              <small style="color:var(--gris);">${escapeHtml(dests)} · Click para cargar al editor</small>
             </div>
             <div class="trip-actions">
-              <button onclick="event.stopPropagation();eliminarPlantilla(${index})" style="background:#dc2626;">×</button>
+              <button onclick="event.stopPropagation(); window.clonarPlantillaCompleta(${index}, 'mia')" style="background:var(--verde); color:#030712; font-weight:600; font-size:0.75rem; padding:4px 10px; border-radius:6px; border:none; cursor:pointer;">Cargar</button>
+              <button onclick="event.stopPropagation(); eliminarPlantilla(${index})" style="background:#dc2626;" title="Eliminar">×</button>
             </div>
           `;
           plantillasList.appendChild(item);
         });
       }
-
-      // Load shared trips if user is logged in
-      renderSharedTripsList();
     }
+
+    function clonarPlantillaCompleta(tplIdOrIndex, origin = 'oficial') {
+      let tpl = null;
+      if (origin === 'oficial') {
+        tpl = PLUX_OFICIAL_TEMPLATES.find(t => t.id === tplIdOrIndex);
+      } else if (origin === 'comunidad') {
+        tpl = PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplIdOrIndex);
+      } else if (origin === 'mia') {
+        const templates = getStoredTemplates();
+        tpl = templates[tplIdOrIndex];
+      }
+
+      if (!tpl) {
+        showToast('No se encontró la plantilla', 'error');
+        return;
+      }
+
+      const idBase = Date.now();
+      const clonedDestinos = JSON.parse(JSON.stringify(tpl.destinos || [])).map((dest, dIdx) => ({
+        id: idBase + dIdx * 1000,
+        nombre: dest.nombre,
+        tramos: (dest.tramos || []).map((tr, trIdx) => ({
+          id: idBase + dIdx * 1000 + trIdx + 50,
+          medio: tr.medio || '',
+          precio: tr.precio || 0,
+          alojamiento: tr.alojamiento || '',
+          precioAlojamiento: tr.precioAlojamiento || 0
+        })),
+        dias: (dest.dias || []).map((dia, diaIdx) => ({
+          id: diaIdx,
+          eventos: (dia.eventos || []).map((ev, evIdx) => ({
+            id: idBase + dIdx * 1000 + (diaIdx + 1) * 100 + evIdx + 1,
+            hora: ev.hora || '10:00',
+            titulo: ev.titulo || 'Actividad',
+            notas: ev.notas || '',
+            costo: ev.costo || 0,
+            duracion: ev.duracion || 60
+          })),
+          costosAdicionales: (dia.costosAdicionales || []).map((c, cIdx) => ({
+            id: idBase + dIdx * 1000 + (diaIdx + 1) * 100 + cIdx + 50,
+            concepto: c.concepto || '',
+            precio: c.precio || 0
+          }))
+        }))
+      }));
+
+      destinos = clonedDestinos;
+      vueltaGlobal = tpl.vueltaGlobal || '';
+      vueltaPrecioGlobal = tpl.vueltaPrecioGlobal || 0;
+      vueltaCostosAdicionales = tpl.vueltaCostosAdicionales || [];
+
+      renderDestinos();
+      renderVueltaCostos();
+      cerrarModalViajes();
+      empezar();
+
+      if (typeof generarSelloPasaporte === 'function' && destinos[0]?.nombre) {
+        generarSelloPasaporte(destinos[0].nombre);
+      }
+
+      autoSave();
+      showToast(`¡Plantilla "${tpl.nombre}" clonada a tu viaje!`, 'success');
+      trackEvent('clone_template', {
+        template_id: String(tplIdOrIndex),
+        template_name: tpl.nombre,
+        origin
+      });
+    }
+    window.clonarPlantillaCompleta = clonarPlantillaCompleta;
 
     function guardarViaje() {
       if (!checkEditPermission()) return;
@@ -9603,7 +10274,7 @@ async function exportarPDF() {
       vueltaGlobal = viaje.vueltaGlobal || '';
       vueltaPrecioGlobal = viaje.vueltaPrecioGlobal || 0;
       vueltaCostosAdicionales = viaje.vueltaCostosAdicionales || [];
-      loadedTripIndex = index; // Track which trip is loaded for autosave
+      loadedTripIndex = index;
 
       syncCode = viaje.syncCode || null;
       if (syncCode) {
@@ -9628,7 +10299,7 @@ async function exportarPDF() {
       renderDestinos();
       renderVueltaCostos();
       cerrarModalViajes();
-      empezar(); // Auto-navigate to editor
+      empezar();
       showToast(`Viaje "${viaje.nombre}" cargado`, 'success');
     }
 
@@ -9648,10 +10319,18 @@ async function exportarPDF() {
       const nombre = document.getElementById('nombrePlantilla').value.trim();
       if (!nombre) { showToast('Escribe un nombre para la plantilla', 'error'); return; }
 
+      const publicarComunidad = document.getElementById('chkPublicarComunidad')?.checked ?? true;
+      const autor = currentNickname || null;
+      const isExp = isExperiencedCreator(autor);
+
       const plantilla = {
+        id: 'tpl_' + Date.now().toString(36),
         nombre,
         fecha: new Date().toISOString(),
-        destinos,
+        autor: autor || 'Viajero Anónimo',
+        isExperienced: isExp,
+        likes: 1,
+        destinos: JSON.parse(JSON.stringify(destinos || [])),
         vueltaGlobal,
         vueltaPrecioGlobal,
         vueltaCostosAdicionales
@@ -9660,28 +10339,39 @@ async function exportarPDF() {
       const templates = getStoredTemplates();
       templates.push(plantilla);
       saveTemplates(templates);
+
+      if (publicarComunidad) {
+        PLUX_COMUNIDAD_SEEDS.unshift({
+          id: plantilla.id,
+          nombre: plantilla.nombre,
+          autor: autor,
+          isExperienced: isExp,
+          likes: 1,
+          destacada: false,
+          descripcion: (destinos || []).map(d => d.nombre).join(' → ') + ' planificado en Plux.',
+          tags: [`${destinos.reduce((a, d) => a + (d.dias?.length || 0), 0)} Días`, 'Comunidad Plux'],
+          destinos: JSON.parse(JSON.stringify(destinos || []))
+        });
+
+        // Sync to Firestore collection if available
+        try {
+          const fsInstance = (typeof db !== 'undefined' && db) ? db : (typeof firebase !== 'undefined' && firebase.apps.length ? firebase.firestore() : null);
+          if (fsInstance) {
+            fsInstance.collection('plux_plantillas_comunidad').doc(plantilla.id).set({
+              ...plantilla,
+              timestamp: (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString()
+            }).catch(e => console.warn('No se pudo guardar plantilla en Firestore:', e));
+          }
+        } catch (e) {}
+      }
+
       renderTripLists();
       document.getElementById('nombrePlantilla').value = '';
-      showToast('Plantilla guardada correctamente', 'success');
+      showToast(publicarComunidad ? '¡Plantilla guardada y publicada en la Comunidad!' : 'Plantilla guardada en Mis Plantillas', 'success');
     }
 
     function cargarPlantilla(index) {
-      const templates = getStoredTemplates();
-      const plantilla = templates[index];
-      if (!plantilla) return;
-
-      destinos = plantilla.destinos || [];
-      vueltaGlobal = plantilla.vueltaGlobal || '';
-      vueltaPrecioGlobal = plantilla.vueltaPrecioGlobal || 0;
-      vueltaCostosAdicionales = plantilla.vueltaCostosAdicionales || [];
-
-      renderDestinos();
-      renderVueltaCostos();
-      cerrarModalViajes();
-      trackEvent('clone_template', {
-        template_name: plantilla.nombre || `Plantilla ${index}`,
-        template_index: index
-      });
+      clonarPlantillaCompleta(index, 'mia');
     }
 
     function eliminarPlantilla(index) {

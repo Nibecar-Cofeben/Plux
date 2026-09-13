@@ -268,11 +268,56 @@
         </div>
       </div>
       <div class="tab-content" id="tab-plantillas">
-        <div class="save-trip">
-          <input type="text" id="nombrePlantilla" placeholder="Nombre">
-          <button onclick="guardarComoPlantilla()" id="guardarPlantillaBtn">Guardar como plantilla</button>
+        <!-- Subtabs de Plantillas -->
+        <div class="plantillas-subtabs">
+          <button type="button" class="plantillas-subtab-btn active" id="btnSubtabOficiales" onclick="window.switchPlantillasSubtab('oficiales')">Oficiales Plux</button>
+          <button type="button" class="plantillas-subtab-btn" id="btnSubtabComunidad" onclick="window.switchPlantillasSubtab('comunidad')">Comunidad</button>
+          <button type="button" class="plantillas-subtab-btn" id="btnSubtabMias" onclick="window.switchPlantillasSubtab('mias')">Mis Plantillas</button>
         </div>
-        <div class="trip-list" id="plantillasList"></div>
+
+        <!-- Panel Oficiales Plux -->
+        <div id="subtab-plantillas-oficiales" class="plantillas-subtab-pane">
+          <div style="margin-bottom:14px; color:var(--gris); font-size:0.85rem;">
+            Itinerarios curados oficialmente por Plux listos para clonar y adaptar a tu viaje.
+          </div>
+          <div class="trip-list plantillas-grid" id="plantillasOficialesList"></div>
+        </div>
+
+        <!-- Panel Comunidad -->
+        <div id="subtab-plantillas-comunidad" class="plantillas-subtab-pane" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+            <div style="color:var(--gris); font-size:0.85rem;">
+              Itinerarios compartidos por la comunidad de viajeros.
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="filter-pill active" id="pill-todas" onclick="window.filtrarComunidad('todas', this)">Todas</button>
+              <button type="button" class="filter-pill" id="pill-destacadas" onclick="window.filtrarComunidad('destacadas', this)">Destacadas ⭐</button>
+              <button type="button" class="filter-pill" id="pill-populares" onclick="window.filtrarComunidad('populares', this)">Más votadas ❤️</button>
+            </div>
+          </div>
+          <div class="trip-list plantillas-grid" id="plantillasComunidadList"></div>
+        </div>
+
+        <!-- Panel Mis Plantillas -->
+        <div id="subtab-plantillas-mias" class="plantillas-subtab-pane" style="display:none;">
+          <div class="save-trip" style="flex-direction:column; align-items:stretch; gap:10px; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:18px;">
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <input type="text" id="nombrePlantilla" placeholder="Nombre de tu plantilla (ej. Escapada a Bariloche)" style="flex:1;">
+              <button type="button" onclick="guardarComoPlantilla()" id="guardarPlantillaBtn" style="background:var(--verde); color:#030712; font-weight:700;">Guardar plantilla</button>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--texto); cursor:pointer;">
+                <input type="checkbox" id="chkPublicarComunidad" checked>
+                Publicar también en la galería de la Comunidad
+              </label>
+              <span id="creatorBadgeNotice" style="font-size:0.75rem; color:var(--gris);"></span>
+            </div>
+            <p style="font-size:0.75rem; color:var(--gris); margin:0;">
+              Si tenés cuenta, tu plantilla llevará tu @usuario (los creadores experimentados reciben una estrella <strong style="color:#fbbf24;">⭐</strong>). Si no tenés sesión, se publica de forma anónima.
+            </p>
+          </div>
+          <div class="trip-list" id="plantillasList"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -668,6 +713,14 @@
       <button id="addDestBtn">+ Añadir</button>
       <div id="city-autocomplete-dropdown" class="city-autocomplete-dropdown" style="display:none;"></div>
     </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin: 16px 0 10px;">
+      <span style="font-size:0.85rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:0.05em;">Destinos e Itinerario</span>
+      <button type="button" id="btnToggleCollapseEditor" onclick="window.toggleAllCollapseEditor()" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--texto); font-size:0.8rem; padding:5px 12px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;">
+        <span id="editorCollapseIcon">⇲</span> <span id="editorCollapseTxt">Plegar todo</span>
+      </button>
+    </div>
+
     <div class="destinos" id="destinos"></div>
 
     <button id="btn-resumen">Ver Resumen del Viaje</button>

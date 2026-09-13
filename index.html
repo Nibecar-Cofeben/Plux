@@ -685,10 +685,11 @@
 
       <!-- ACTION BUTTONS -->
       <div class="resumen-actions" style="margin-bottom:24px;">
-        <button class="view-toggle" onclick="toggleVistaResumen()" id="toggleVistaBtn">⏱ Línea de tiempo</button>
+        <button class="view-toggle" onclick="toggleVistaResumen()" id="toggleVistaBtn">Línea de tiempo</button>
+        <button class="view-toggle" onclick="toggleAllCollapseResumen()" id="btnToggleCollapseResumen" style="background:rgba(255,255,255,0.08) !important; border:1px solid var(--border) !important;">Plegar todo</button>
         <button onclick="exportarPDF()" id="pdfBtn">PDF</button>
-        <button onclick="compartirTravelCard()" id="shareCardBtn" style="background:linear-gradient(135deg, #ec4899, #8b5cf6); color:white; font-weight:600; border:none;">📸 Compartir en Redes</button>
-        <button onclick="window.clonarViajeActual()" id="btnClonarResumen" class="btn-clonar-action" style="background:linear-gradient(135deg, #10b981, #0ea5e9); color:#030712; font-weight:700; border:none;"><span id="btnClonarResumenTxt">📋 Clonar Viaje</span></button>
+        <button onclick="compartirTravelCard()" id="shareCardBtn" style="background:linear-gradient(135deg, #ec4899, #8b5cf6); color:white; font-weight:600; border:none;">Historia 9:16</button>
+        <button onclick="window.clonarViajeActual()" id="btnClonarResumen" class="btn-clonar-action" style="background:linear-gradient(135deg, #10b981, #0ea5e9); color:#030712; font-weight:700; border:none;"><span id="btnClonarResumenTxt">Clonar</span></button>
         <button onclick="exportarGoogleCalendar()" id="calendarBtn">Google Calendar</button>
         <button onclick="compartirViaje()" id="compartirBtn">Compartir</button>
         <button onclick="abrirMapaResumen()" id="mapaResumenBtn">Ver mapa</button>
@@ -702,6 +703,15 @@
         <div class="chart-box">
           <h4>Ruta del viaje</h4>
           <div id="resumen-map-mini"></div>
+        </div>
+        <div class="chart-box" id="resumen-gastos-box">
+          <h4>Distribución de gastos</h4>
+          <div style="display:flex; flex-direction:column; gap:16px; height:100%; justify-content:center;">
+            <div style="position:relative; height:170px; max-height:170px;">
+              <canvas id="chart-distribucion"></canvas>
+            </div>
+            <div id="resumen-gastos-breakdown" class="resumen-breakdown-bars"></div>
+          </div>
         </div>
       </div>
 

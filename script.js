@@ -4884,15 +4884,19 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       });
       const cont = document.getElementById("destinos");
       cont.innerHTML = "";
-      destinos.forEach(d => {
+      destinos.forEach((d, destIdx) => {
         const isCollapsed = collapsedEditorDestinos.has(d.id);
         const div = document.createElement("div");
         div.className = "destino";
+        div.dataset.destId = d.id;
+        div.dataset.destIdx = destIdx;
+        div.draggable = true;
         const isTransportOpen = openTransportDestIds.has(d.id);
         const numDiasDest = (d.dias || []).length;
         div.innerHTML = `
           <div class="destino-header" onclick="toggleEditorDestino(${d.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+              <span class="drag-handle drag-handle-dest" data-drag-type="dest" data-dest-id="${d.id}" data-dest-idx="${destIdx}" title="Arrastra o mantén presionado para reordenar destino" onclick="event.stopPropagation()">⠿</span>
               <span id="editor-dest-chev-${d.id}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.85rem;">▼</span>
               <div class="bubble-name">${d.nombre.slice(0,3).toUpperCase()}</div>
               <h2 style="margin:0; font-size:1.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.nombre}</h2>
@@ -4919,6 +4923,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         renderDias(d.id);
         cargarSugerenciasWiki(d.id);
       });
+      setupReorderDragListeners();
       if (typeof aplicarRestriccionesInputs === 'function') {
         aplicarRestriccionesInputs();
       }
@@ -5723,9 +5728,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const evCount = (dia.eventos || []).length;
         const diaDiv = document.createElement("div");
         diaDiv.className = "dia";
+        diaDiv.dataset.destId = destId;
+        diaDiv.dataset.diaId = dia.id;
+        diaDiv.dataset.diaIdx = diaIdx;
+        diaDiv.draggable = true;
         diaDiv.innerHTML = `
           <div class="dia-header" onclick="toggleEditorDia(${destId}, ${dia.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;">
             <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+              <span class="drag-handle drag-handle-dia" data-drag-type="dia" data-dest-id="${destId}" data-dia-id="${dia.id}" data-dia-idx="${diaIdx}" title="Arrastra o mantén presionado para reordenar día" onclick="event.stopPropagation()">⠿</span>
               <span id="editor-dia-chev-${destId}-${dia.id}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.8rem;">▼</span>
               <h4 style="margin:0; white-space:nowrap;">${t('day_prefix')} ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris);font-weight:normal">(${daySched.dateLabel})</small>` : ''}</h4>
               <span id="editor-dia-ev-badge-${destId}-${dia.id}" style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:999px; white-space:nowrap;">${evCount} ${evCount === 1 ? 'actividad' : 'actividades'}</span>
@@ -5792,6 +5802,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const isEvCollapsed = collapsedEditorEventos.has(evKey);
         const evDiv = document.createElement("div");
         evDiv.className = "evento";
+        evDiv.dataset.destId = destId;
+        evDiv.dataset.diaId = diaId;
+        evDiv.dataset.evIdx = ida;
+        evDiv.draggable = true;
         
         // Conflict detection logic
         let hasConflict = false;
@@ -5830,7 +5844,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         }
 
         evDiv.innerHTML = `
-          <div class="fila-hora-titulo" style="display:flex; align-items:center; gap:8px;">
+          <div class="fila-hora-titulo" style="display:flex; align-items:center; gap:6px;">
+            <span class="drag-handle drag-handle-ev" data-drag-type="evento" data-dest-id="${destId}" data-dia-id="${diaId}" data-ev-idx="${ida}" title="Arrastra o mantén presionado para reordenar actividad" onclick="event.stopPropagation()">⠿</span>
             <span id="editor-ev-chev-${destId}-${diaId}-${ida}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isEvCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.75rem; cursor:pointer;" onclick="toggleEditorEvento(${destId}, ${diaId}, ${ida}, event)" title="Plegar / Expandir detalles">▼</span>
             <input type="time" value="${ev.hora || ''}" style="width:105px; min-width:95px;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'hora', this.value)" title="Hora del evento">
             <input type="text" value="${ev.titulo || ''}" placeholder="${t('event_title_placeholder')}" style="flex:1;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'titulo', this.value)">
@@ -5856,6 +5871,376 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         cont.appendChild(evDiv);
       });
     }
+
+    // ================== REORDER ENGINE (DRAG & DROP + TOUCH AND HOLD) ==================
+    let activeDragItem = null;
+    let touchHoldTimer = null;
+    let isTouchDragging = false;
+    let touchCurrentTarget = null;
+    let touchDropPosition = null;
+
+    function moverDestino(fromIdx, toIdx) {
+      if (!checkEditPermission()) return;
+      if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= destinos.length || toIdx >= destinos.length) return;
+      const [moved] = destinos.splice(fromIdx, 1);
+      destinos.splice(toIdx, 0, moved);
+      renderDestinos();
+      autoSave();
+      showToast(`Destino "${moved.nombre}" reordenado`, 'info');
+      trackEvent('reorder_item', { item_type: 'destination', name: moved.nombre });
+    }
+    window.moverDestino = moverDestino;
+
+    function moverDia(fromDestId, fromDiaIdx, toDestId, toDiaIdx) {
+      if (!checkEditPermission()) return;
+      const srcDest = destinos.find(d => d.id === fromDestId);
+      const tgtDest = destinos.find(d => d.id === toDestId);
+      if (!srcDest || !tgtDest) return;
+      if (fromDestId === toDestId && fromDiaIdx === toDiaIdx) return;
+      
+      const [movedDay] = srcDest.dias.splice(fromDiaIdx, 1);
+      if (!movedDay) return;
+      
+      if (fromDestId === toDestId) {
+        srcDest.dias.splice(toDiaIdx, 0, movedDay);
+        reindexarDias(srcDest);
+        renderDias(fromDestId);
+      } else {
+        tgtDest.dias.splice(toDiaIdx, 0, movedDay);
+        reindexarDias(srcDest);
+        reindexarDias(tgtDest);
+        renderDestinos();
+      }
+      autoSave();
+      showToast(`Día reordenado correctamente`, 'info');
+      trackEvent('reorder_item', { item_type: 'day' });
+    }
+    window.moverDia = moverDia;
+
+    function moverEvento(fromDestId, fromDiaId, fromEvIdx, toDestId, toDiaId, toEvIdx) {
+      if (!checkEditPermission()) return;
+      const srcDest = destinos.find(d => d.id === fromDestId);
+      const tgtDest = destinos.find(d => d.id === toDestId);
+      if (!srcDest || !tgtDest) return;
+      const srcDia = srcDest.dias.find(d => d.id === fromDiaId);
+      const tgtDia = tgtDest.dias.find(d => d.id === toDiaId);
+      if (!srcDia || !tgtDia) return;
+      
+      if (fromDestId === toDestId && fromDiaId === toDiaId && fromEvIdx === toEvIdx) return;
+      
+      const [movedEv] = srcDia.eventos.splice(fromEvIdx, 1);
+      if (!movedEv) return;
+      
+      tgtDia.eventos.splice(toEvIdx, 0, movedEv);
+      if (fromDestId === toDestId && fromDiaId === toDiaId) {
+        renderEventos(fromDestId, fromDiaId);
+      } else {
+        renderDias(fromDestId);
+        if (fromDestId !== toDestId) renderDias(toDestId);
+      }
+      autoSave();
+      showToast(`Actividad "${movedEv.titulo || 'actividad'}" reordenada`, 'info');
+      trackEvent('reorder_item', { item_type: 'event', title: movedEv.titulo || '' });
+    }
+    window.moverEvento = moverEvento;
+
+    function cleanDragState() {
+      activeDragItem = null;
+      document.querySelectorAll('.is-dragging, .drop-target-before, .drop-target-after').forEach(el => {
+        el.classList.remove('is-dragging', 'drop-target-before', 'drop-target-after');
+      });
+    }
+
+    function setupReorderDragListeners() {
+      const container = document.getElementById('destinos');
+      if (!container || container._reorderListenersAttached) return;
+      container._reorderListenersAttached = true;
+
+      // --- HTML5 Desktop Drag and Drop ---
+      container.addEventListener('dragstart', (e) => {
+        const handle = e.target.closest('.drag-handle');
+        const targetItem = e.target.closest('.evento, .dia, .destino');
+        if (!targetItem) return;
+
+        const dragType = handle ? handle.dataset.dragType : (
+          targetItem.classList.contains('evento') ? 'evento' :
+          targetItem.classList.contains('dia') ? 'dia' : 'dest'
+        );
+
+        activeDragItem = {
+          type: dragType,
+          el: targetItem,
+          destId: Number(targetItem.dataset.destId),
+          destIdx: Number(targetItem.dataset.destIdx),
+          diaId: targetItem.dataset.diaId !== undefined ? Number(targetItem.dataset.diaId) : undefined,
+          diaIdx: targetItem.dataset.diaIdx !== undefined ? Number(targetItem.dataset.diaIdx) : undefined,
+          evIdx: targetItem.dataset.evIdx !== undefined ? Number(targetItem.dataset.evIdx) : undefined
+        };
+
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify({
+          type: dragType,
+          destId: activeDragItem.destId,
+          destIdx: activeDragItem.destIdx,
+          diaId: activeDragItem.diaId,
+          diaIdx: activeDragItem.diaIdx,
+          evIdx: activeDragItem.evIdx
+        }));
+
+        setTimeout(() => {
+          if (targetItem) targetItem.classList.add('is-dragging');
+        }, 10);
+      });
+
+      container.addEventListener('dragover', (e) => {
+        if (!activeDragItem) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        let targetEl = null;
+        if (activeDragItem.type === 'dest') {
+          targetEl = e.target.closest('.destino');
+        } else if (activeDragItem.type === 'dia') {
+          targetEl = e.target.closest('.dia');
+        } else if (activeDragItem.type === 'evento') {
+          targetEl = e.target.closest('.evento, .dia');
+        }
+
+        if (!targetEl || targetEl === activeDragItem.el) return;
+
+        const rect = targetEl.getBoundingClientRect();
+        const isAfter = (e.clientY - rect.top) > (rect.height / 2);
+
+        document.querySelectorAll('.drop-target-before, .drop-target-after').forEach(el => {
+          if (el !== targetEl) {
+            el.classList.remove('drop-target-before', 'drop-target-after');
+          }
+        });
+
+        if (isAfter) {
+          targetEl.classList.remove('drop-target-before');
+          targetEl.classList.add('drop-target-after');
+        } else {
+          targetEl.classList.remove('drop-target-after');
+          targetEl.classList.add('drop-target-before');
+        }
+      });
+
+      container.addEventListener('dragleave', (e) => {
+        const targetEl = e.target.closest('.destino, .dia, .evento');
+        if (targetEl && !targetEl.contains(e.relatedTarget)) {
+          targetEl.classList.remove('drop-target-before', 'drop-target-after');
+        }
+      });
+
+      container.addEventListener('drop', (e) => {
+        if (!activeDragItem) return;
+        e.preventDefault();
+
+        let targetEl = null;
+        if (activeDragItem.type === 'dest') {
+          targetEl = e.target.closest('.destino');
+          if (targetEl && targetEl !== activeDragItem.el) {
+            const isAfter = targetEl.classList.contains('drop-target-after');
+            const fromIdx = activeDragItem.destIdx;
+            let toIdx = Number(targetEl.dataset.destIdx);
+            if (fromIdx < toIdx && !isAfter) toIdx -= 1;
+            else if (fromIdx > toIdx && isAfter) toIdx += 1;
+            moverDestino(fromIdx, Math.max(0, Math.min(toIdx, destinos.length - 1)));
+          }
+        } else if (activeDragItem.type === 'dia') {
+          targetEl = e.target.closest('.dia');
+          if (targetEl && targetEl !== activeDragItem.el) {
+            const isAfter = targetEl.classList.contains('drop-target-after');
+            const fromDestId = activeDragItem.destId;
+            const fromDiaIdx = activeDragItem.diaIdx;
+            const toDestId = Number(targetEl.dataset.destId);
+            let toDiaIdx = Number(targetEl.dataset.diaIdx);
+            if (fromDestId === toDestId) {
+              if (fromDiaIdx < toDiaIdx && !isAfter) toDiaIdx -= 1;
+              else if (fromDiaIdx > toDiaIdx && isAfter) toDiaIdx += 1;
+            } else {
+              if (isAfter) toDiaIdx += 1;
+            }
+            moverDia(fromDestId, fromDiaIdx, toDestId, toDiaIdx);
+          }
+        } else if (activeDragItem.type === 'evento') {
+          targetEl = e.target.closest('.evento');
+          const targetDia = e.target.closest('.dia');
+          if (targetEl && targetEl !== activeDragItem.el) {
+            const isAfter = targetEl.classList.contains('drop-target-after');
+            const fromDestId = activeDragItem.destId;
+            const fromDiaId = activeDragItem.diaId;
+            const fromEvIdx = activeDragItem.evIdx;
+            const toDestId = Number(targetEl.dataset.destId);
+            const toDiaId = Number(targetEl.dataset.diaId);
+            let toEvIdx = Number(targetEl.dataset.evIdx);
+            if (fromDestId === toDestId && fromDiaId === toDiaId) {
+              if (fromEvIdx < toEvIdx && !isAfter) toEvIdx -= 1;
+              else if (fromEvIdx > toEvIdx && isAfter) toEvIdx += 1;
+            } else {
+              if (isAfter) toEvIdx += 1;
+            }
+            moverEvento(fromDestId, fromDiaId, fromEvIdx, toDestId, toDiaId, toEvIdx);
+          } else if (targetDia) {
+            const toDestId = Number(targetDia.dataset.destId);
+            const toDiaId = Number(targetDia.dataset.diaId);
+            const tgtDest = destinos.find(d => d.id === toDestId);
+            const tgtDia = tgtDest?.dias?.find(d => d.id === toDiaId);
+            const toEvIdx = tgtDia?.eventos?.length || 0;
+            moverEvento(activeDragItem.destId, activeDragItem.diaId, activeDragItem.evIdx, toDestId, toDiaId, toEvIdx);
+          }
+        }
+
+        cleanDragState();
+      });
+
+      container.addEventListener('dragend', () => {
+        cleanDragState();
+      });
+
+      // --- Mobile Touch Drag & Drop (Touch and Hold) ---
+      let touchStartX = 0;
+      let touchStartY = 0;
+
+      container.addEventListener('touchstart', (e) => {
+        const handle = e.target.closest('.drag-handle');
+        if (!handle) return;
+
+        const targetItem = handle.closest('.evento, .dia, .destino');
+        if (!targetItem) return;
+
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+
+        const dragType = handle.dataset.dragType;
+        activeDragItem = {
+          type: dragType,
+          el: targetItem,
+          destId: Number(targetItem.dataset.destId),
+          destIdx: Number(targetItem.dataset.destIdx),
+          diaId: targetItem.dataset.diaId !== undefined ? Number(targetItem.dataset.diaId) : undefined,
+          diaIdx: targetItem.dataset.diaIdx !== undefined ? Number(targetItem.dataset.diaIdx) : undefined,
+          evIdx: targetItem.dataset.evIdx !== undefined ? Number(targetItem.dataset.evIdx) : undefined
+        };
+
+        touchHoldTimer = setTimeout(() => {
+          isTouchDragging = true;
+          if (navigator.vibrate) {
+            try { navigator.vibrate(30); } catch(err){}
+          }
+          targetItem.classList.add('is-dragging');
+        }, 120);
+      }, { passive: true });
+
+      container.addEventListener('touchmove', (e) => {
+        if (!activeDragItem) return;
+        const touch = e.touches[0];
+        const diffX = Math.abs(touch.clientX - touchStartX);
+        const diffY = Math.abs(touch.clientY - touchStartY);
+
+        if (!isTouchDragging && (diffX > 10 || diffY > 10)) {
+          clearTimeout(touchHoldTimer);
+          return;
+        }
+
+        if (!isTouchDragging) return;
+        if (e.cancelable) e.preventDefault();
+
+        const elUnderFinger = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!elUnderFinger) return;
+
+        let targetEl = null;
+        if (activeDragItem.type === 'dest') {
+          targetEl = elUnderFinger.closest('.destino');
+        } else if (activeDragItem.type === 'dia') {
+          targetEl = elUnderFinger.closest('.dia');
+        } else if (activeDragItem.type === 'evento') {
+          targetEl = elUnderFinger.closest('.evento, .dia');
+        }
+
+        if (!targetEl || targetEl === activeDragItem.el) return;
+
+        const rect = targetEl.getBoundingClientRect();
+        const isAfter = (touch.clientY - rect.top) > (rect.height / 2);
+
+        document.querySelectorAll('.drop-target-before, .drop-target-after').forEach(el => {
+          if (el !== targetEl) {
+            el.classList.remove('drop-target-before', 'drop-target-after');
+          }
+        });
+
+        touchCurrentTarget = targetEl;
+        touchDropPosition = isAfter ? 'after' : 'before';
+
+        if (isAfter) {
+          targetEl.classList.remove('drop-target-before');
+          targetEl.classList.add('drop-target-after');
+        } else {
+          targetEl.classList.remove('drop-target-after');
+          targetEl.classList.add('drop-target-before');
+        }
+      }, { passive: false });
+
+      const endTouch = () => {
+        clearTimeout(touchHoldTimer);
+        if (isTouchDragging && touchCurrentTarget && activeDragItem) {
+          const isAfter = touchDropPosition === 'after';
+          if (activeDragItem.type === 'dest') {
+            const fromIdx = activeDragItem.destIdx;
+            let toIdx = Number(touchCurrentTarget.dataset.destIdx);
+            if (fromIdx < toIdx && !isAfter) toIdx -= 1;
+            else if (fromIdx > toIdx && isAfter) toIdx += 1;
+            moverDestino(fromIdx, Math.max(0, Math.min(toIdx, destinos.length - 1)));
+          } else if (activeDragItem.type === 'dia') {
+            const fromDestId = activeDragItem.destId;
+            const fromDiaIdx = activeDragItem.diaIdx;
+            const toDestId = Number(touchCurrentTarget.dataset.destId);
+            let toDiaIdx = Number(touchCurrentTarget.dataset.diaIdx);
+            if (fromDestId === toDestId) {
+              if (fromDiaIdx < toDiaIdx && !isAfter) toDiaIdx -= 1;
+              else if (fromDiaIdx > toDiaIdx && isAfter) toDiaIdx += 1;
+            } else {
+              if (isAfter) toDiaIdx += 1;
+            }
+            moverDia(fromDestId, fromDiaIdx, toDestId, toDiaIdx);
+          } else if (activeDragItem.type === 'evento') {
+            const isEvTarget = touchCurrentTarget.classList.contains('evento');
+            if (isEvTarget) {
+              const fromDestId = activeDragItem.destId;
+              const fromDiaId = activeDragItem.diaId;
+              const fromEvIdx = activeDragItem.evIdx;
+              const toDestId = Number(touchCurrentTarget.dataset.destId);
+              const toDiaId = Number(touchCurrentTarget.dataset.diaId);
+              let toEvIdx = Number(touchCurrentTarget.dataset.evIdx);
+              if (fromDestId === toDestId && fromDiaId === toDiaId) {
+                if (fromEvIdx < toEvIdx && !isAfter) toEvIdx -= 1;
+                else if (fromEvIdx > toEvIdx && isAfter) toEvIdx += 1;
+              } else {
+                if (isAfter) toEvIdx += 1;
+              }
+              moverEvento(fromDestId, fromDiaId, fromEvIdx, toDestId, toDiaId, toEvIdx);
+            } else {
+              const toDestId = Number(touchCurrentTarget.dataset.destId);
+              const toDiaId = Number(touchCurrentTarget.dataset.diaId);
+              const tgtDest = destinos.find(d => d.id === toDestId);
+              const tgtDia = tgtDest?.dias?.find(d => d.id === toDiaId);
+              const toEvIdx = tgtDia?.eventos?.length || 0;
+              moverEvento(activeDragItem.destId, activeDragItem.diaId, activeDragItem.evIdx, toDestId, toDiaId, toEvIdx);
+            }
+          }
+        }
+        isTouchDragging = false;
+        touchCurrentTarget = null;
+        touchDropPosition = null;
+        cleanDragState();
+      };
+
+      container.addEventListener('touchend', endTouch);
+      container.addEventListener('touchcancel', endTouch);
+    }
+    window.setupReorderDragListeners = setupReorderDragListeners;
 
     function agregarEvento(destId, diaId) {
       if (!checkEditPermission()) return;
@@ -12572,6 +12957,10 @@ async function exportarPDF() {
   window.programarNotificacionesDelDia = programarNotificacionesDelDia;
   window.verificarViajeActivo = verificarViajeActivo;
   window.toggleViajeActivo = toggleViajeActivo;
+  window.moverDestino = moverDestino;
+  window.moverDia = moverDia;
+  window.moverEvento = moverEvento;
+  window.setupReorderDragListeners = setupReorderDragListeners;
 
   window.abrirSeguridad = abrirSeguridad;
   window.cerrarSeguridad = cerrarSeguridad;

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Resumen del Viaje — Rediseño completo</title>
+<style>
+  :root{
+    --fondo:#0f1115;
+    --card:#181b22;
+    --texto:#f1f5f9;
+    --border:#2b3040;
+    --gris:#94a3b8;
+    --verde:#34d399;
+    --azul:#60a5fa;
+    --rosa:#f472b6;
+    --amarillo:#fbbf24;
+    --rojo:#f87171;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Roboto, sans-serif;
+    background:radial-gradient(circle at top, #1a1e28, #0b0d12 70%);
+    color:var(--texto);
+    padding:32px 16px 60px;
+  }
+  .resumen-content{
+    max-width:1080px;
+    margin:0 auto;
+    background:linear-gradient(160deg, var(--card), #12141c);
+    border:1px solid var(--border);
+    border-radius:28px;
+    padding:36px;
+    box-shadow:0 30px 80px rgba(0,0,0,0.45);
+  }
+
+  /* ===== HERO ===== */
+  .resumen-hero{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:20px;
+    margin-bottom:22px;
+    padding-bottom:24px;
+    border-bottom:1px solid var(--border);
+  }
+  .resumen-hero-left h2{
+    margin:0 0 8px;
+    font-size:2.2rem;
+    background:linear-gradient(90deg,var(--verde),var(--azul),var(--rosa));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .resumen-ruta{
+    display:flex; align-items:center; flex-wrap:wrap; gap:6px;
+    font-size:1rem; color:var(--texto); font-weight:600;
+  }
+  .resumen-ruta .stop{ display:flex; align-items:center; gap:6px; }
+  .resumen-ruta .arrow{ color:var(--gris); opacity:0.7; }
+  .resumen-meta-row{
+    display:flex; flex-wrap:wrap; gap:14px; margin-top:12px; color:var(--gris); font-size:0.88rem;
+  }
+  .resumen-meta-row span{ display:flex; align-items:center; gap:6px; }
+  .resumen-status{
+    padding:6px 14px; border-radius:999px; font-size:0.78rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;
+    background:rgba(52,211,153,0.15); color:var(--verde); border:1px solid rgba(52,211,153,0.35);
+  }
+
+  /* ===== COUNTDOWN / ALERTS ===== */
+  .alerts-row{ display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+  .alert-bar{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    border-radius:16px; padding:13px 18px; font-size:0.85rem;
+  }
+  .alert-bar.ok{ background:rgba(52,211,153,0.12); border:1px solid rgba(52,211,153,0.25); }
+  .alert-bar.warn{ background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); }
+  .alert-bar b{ font-size:1rem; }
+  .alert-bar.ok b{ color:var(--verde); }
+  .alert-bar.warn b{ color:var(--amarillo); }
+  .alert-bar span.txt{ color:var(--gris); }
+
+  /* ===== SECTION TITLES ===== */
+  .sec-title{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-size:0.85rem; text-transform:uppercase; letter-spacing:1px;
+    color:var(--gris); margin:0 0 14px;
+  }
+  .sec-title .sec-badge{
+    font-size:0.68rem; text-transform:none; letter-spacing:0; padding:2px 10px;
+    border-radius:999px; background:rgba(255,255,255,0.06); color:var(--gris);
+  }
+  section.block{ margin-bottom:30px; }
+
+  /* ===== STAT GRID ===== */
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(120px,1fr));
+    gap:14px;
+  }
+  .stat-card{
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px 14px;
+    text-align:center;
+    transition:transform .25s, border-color .25s;
+  }
+  .stat-card:hover{ transform:translateY(-4px); border-color:rgba(255,255,255,0.15); }
+  .stat-card .stat-icon{ font-size:1.5rem; margin-bottom:6px; }
+  .stat-card .stat-value{ font-size:1.55rem; font-weight:800; line-height:1.1; }
+  .stat-card .stat-label{ font-size:0.68rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.8px; margin-top:4px; }
+  .stat-card .stat-sub{ font-size:0.65rem; color:var(--gris); margin-top:4px; }
+  .stat-card.acc-verde .stat-value{ color:var(--verde); }
+  .stat-card.acc-azul .stat-value{ color:var(--azul); }
+  .stat-card.acc-rosa .stat-value{ color:var(--rosa); }
+  .stat-card.acc-amarillo .stat-value{ color:var(--amarillo); }
+
+  /* ===== WEATHER STRIP ===== */
+  .weather-strip{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+  .weather-day{
+    flex:0 0 auto; min-width:86px; background:rgba(255,255,255,0.04); border:1px solid var(--border);
+    border-radius:14px; padding:10px 8px; text-align:center; font-size:0.75rem;
+  }
+  .weather-day .wd-city{ color:var(--gris); font-size:0.65rem; text-transform:uppercase; margin-bottom:4px; }
+  .weather-day .wd-date{ color:var(--texto); font-weight:600; margin-bottom:4px; }
+  .weather-day .wd-icon{ font-size:1.4rem; }
+  .weather-day .wd-temp{ font-weight:700; color:var(--azul); }
+
+  /* ===== TWO COLUMN: MAP + BREAKDOWN ===== */
+  .resumen-grid-2{
+    display:grid;
+    grid-template-columns:1.2fr 1fr;
+    gap:18px;
+  }
+  @media(max-width:760px){ .resumen-grid-2{ grid-template-columns:1fr; } }
+  .panel{
+    background:rgba(255,255,255,0.035);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:20px;
+  }
+  .map-placeholder{
+    height:220px; border-radius:14px;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(96,165,250,0.25), transparent 40%),
+      radial-gradient(circle at 70% 60%, rgba(52,211,153,0.25), transparent 40%),
+      #10131a;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--gris); font-size:0.85rem; border:1px dashed var(--border);
+    position:relative;
+  }
+  .map-dot{ position:absolute; width:10px; height:10px; border-radius:50%; box-shadow:0 0 0 4px rgba(52,211,153,0.2); }
+
+  .breakdown-item{ margin-bottom:14px; }
+  .breakdown-top{ display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px; }
+  .breakdown-top .lbl{ display:flex; align-items:center; gap:6px; color:var(--texto); }
+  .breakdown-top .val{ font-weight:700; }
+  .bar-track{ height:8px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:999px; }
+  .breakdown-total{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:16px; padding-top:14px; border-top:1px solid var(--border);
+  }
+  .breakdown-total .t-lbl{ color:var(--gris); font-size:0.85rem; }
+  .breakdown-total .t-val{ font-size:1.4rem; font-weight:800; color:var(--amarillo); }
+
+  /* ===== PER-TRAVELER SPLIT ===== */
+  .viajeros-tabla{ display:flex; flex-direction:column; gap:10px; }
+  .viajero-row{
+    display:flex; align-items:center; gap:12px; background:rgba(255,255,255,0.04);
+    border:1px solid var(--border); border-radius:14px; padding:10px 14px;
+  }
+  .avatar{
+    width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:0.85rem; font-weight:700; color:#0b0d12; flex-shrink:0;
+  }
+  .viajero-info{ flex:1; min-width:120px; }
+  .viajero-info .v-nombre{ font-weight:700; font-size:0.9rem; }
+  .viajero-info .v-sub{ font-size:0.72rem; color:var(--gris); }
+  .viajero-montos{ text-align:right; }
+  .viajero-montos .v-debe{ font-weight:800; font-size:1rem; }
+  .viajero-montos .v-estado{ font-size:0.7rem; padding:2px 8px; border-radius:999px; margin-top:3px; display:inline-block; }
+  .v-estado.pagado{ background:rgba(52,211,153,0.15); color:var(--verde); }
+  .v-estado.pendiente{ background:rgba(251,191,36,0.15); color:var(--amarillo); }
+
+  /* ===== DOCUMENTS / CHECKLIST ===== */
+  .checklist-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .check-item{
+    display:flex; align-items:flex-start; gap:10px; background:rgba(255,255,255,0.04);
+    border:1px solid var(--border); border-radius:14px; padding:12px 14px;
+  }
+  .check-item .c-icon{ font-size:1.2rem; margin-top:1px; }
+  .check-item.done .c-icon{ color:var(--verde); }
+  .check-item.pending .c-icon{ color:var(--amarillo); }
+  .check-item .c-title{ font-weight:700; font-size:0.85rem; }
+  .check-item .c-sub{ font-size:0.75rem; color:var(--gris); margin-top:2px; }
+
+  /* ===== TIMELINE / DESTINOS ===== */
+  .destinos-timeline{ position:relative; padding-left:28px; }
+  .destinos-timeline::before{
+    content:''; position:absolute; left:9px; top:6px; bottom:6px; width:3px;
+    background:linear-gradient(var(--verde), var(--azul), var(--rosa));
+    border-radius:3px; opacity:0.5;
+  }
+  .destino-card{ position:relative; margin-bottom:18px; }
+  .destino-card::before{
+    content:''; position:absolute; left:-28px; top:6px; width:14px; height:14px; border-radius:50%;
+    background:var(--card); border:3px solid var(--verde);
+  }
+  .destino-head{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
+    background:rgba(255,255,255,0.04); border:1px solid var(--border);
+    border-radius:14px 14px 0 0; padding:14px 18px;
+  }
+  .destino-head h3{ margin:0; font-size:1.05rem; display:flex; align-items:center; gap:8px; }
+  .destino-head .d-tags{ display:flex; gap:8px; flex-wrap:wrap; }
+  .tag{ font-size:0.72rem; padding:4px 10px; border-radius:999px; background:rgba(255,255,255,0.06); color:var(--gris); }
+  .tag.dias{ color:var(--azul); background:rgba(96,165,250,0.12); }
+  .tag.costo{ color:var(--amarillo); background:rgba(251,191,36,0.12); }
+  .destino-body{
+    border:1px solid var(--border); border-top:none; border-radius:0 0 14px 14px; padding:14px 18px;
+    background:rgba(255,255,255,0.015);
+  }
+
+  .transp-card{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:rgba(96,165,250,0.06); border:1px solid rgba(96,165,250,0.2);
+    border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:0.82rem;
+  }
+  .transp-card .tc-icon{ font-size:1.4rem; }
+  .transp-card .tc-main{ flex:1; min-width:180px; }
+  .transp-card .tc-main b{ font-size:0.88rem; }
+  .transp-card .tc-detail{ color:var(--gris); font-size:0.75rem; margin-top:2px; }
+  .transp-card .tc-precio{ font-weight:700; color:var(--azul); white-space:nowrap; }
+
+  .dia-block{ margin-top:14px; }
+  .dia-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:6px; }
+  .dia-head h4{ margin:0; font-size:0.92rem; color:var(--texto); display:flex; align-items:center; gap:8px; }
+  .dia-head .dia-badge{ font-size:0.7rem; color:var(--gris); }
+  .weather-mini{
+    display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--azul);
+    background:rgba(96,165,250,0.1); padding:3px 10px; border-radius:999px;
+  }
+  .evento-row{
+    display:flex; gap:12px; padding:8px 0 8px 4px; border-left:2px solid rgba(255,255,255,0.08); padding-left:14px; margin-bottom:2px;
+    align-items:flex-start;
+  }
+  .evento-row .hora{ min-width:50px; font-weight:700; color:var(--verde); font-size:0.85rem; }
+  .evento-row .ev-body{ flex:1; }
+  .evento-row .ev-body strong{ font-size:0.9rem; }
+  .evento-row .ev-cat{ font-size:0.68rem; color:var(--gris); background:rgba(255,255,255,0.06); padding:1px 8px; border-radius:999px; margin-left:8px; }
+  .evento-row .ev-body p{ margin:2px 0 0; font-size:0.8rem; color:var(--gris); }
+  .evento-row .ev-costo{ margin-left:auto; font-size:0.8rem; color:var(--amarillo); font-weight:700; white-space:nowrap; }
+
+  .dia-nota{
+    margin-top:8px; margin-left:14px; font-size:0.78rem; color:var(--gris);
+    border-left:2px solid rgba(244,114,182,0.4); padding-left:10px;
+  }
+
+  /* ===== NOTES / EMERGENCY ===== */
+  .info-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media(max-width:760px){ .info-grid{ grid-template-columns:1fr; } }
+  .info-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .info-list li{
+    display:flex; gap:10px; align-items:flex-start; font-size:0.85rem;
+    background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+  }
+  .info-list li b{ color:var(--texto); }
+  .info-list li .il-sub{ color:var(--gris); font-size:0.78rem; display:block; margin-top:2px; }
+
+  /* ===== FOOTER TOTAL ===== */
+  .footer-total{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;
+    margin-top:6px; padding:20px 22px; border-radius:18px;
+    background:linear-gradient(90deg, rgba(52,211,153,0.12), rgba(96,165,250,0.1));
+    border:1px solid rgba(52,211,153,0.25);
+  }
+  .footer-total .ft-left{ font-size:0.85rem; color:var(--gris); }
+  .footer-total .ft-total{ font-size:1.9rem; font-weight:800; color:var(--verde); }
+  .footer-total .ft-right{ display:flex; gap:10px; flex-wrap:wrap; }
+  .footer-total button{
+    padding:10px 18px; border-radius:999px; border:none; cursor:pointer; font-weight:700; font-size:0.85rem;
+    background:linear-gradient(45deg,var(--verde),var(--azul)); color:#04120c;
+  }
+  .footer-total button.secundario{
+    background:rgba(255,255,255,0.06); color:var(--texto); border:1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="resumen-content">
+
+  <!-- HERO -->
+  <div class="resumen-hero">
+    <div class="resumen-hero-left">
+      <h2>Tu Viaje Completo</h2>
+      <div class="resumen-ruta">
+        <span class="stop">🏠 Buenos Aires</span>
+        <span class="arrow">→</span>
+        <span class="stop">📍 Barcelona</span>
+        <span class="arrow">→</span>
+        <span class="stop">📍 Roma</span>
+        <span class="arrow">→</span>
+        <span class="stop">📍 Atenas</span>
+        <span class="arrow">→</span>
+        <span class="stop">🏠 Buenos Aires</span>
+      </div>
+      <div class="resumen-meta-row">
+        <span>🗓️ 14 mar 2027 — 29 mar 2027</span>
+        <span>🌙 15 noches</span>
+        <span>👥 3 viajeros</span>
+        <span>✈️ 4 tramos</span>
+      </div>
+    </div>
+    <div class="resumen-status">En 42 días</div>
+  </div>
+
+  <!-- ALERTS -->
+  <div class="alerts-row">
+    <div class="alert-bar warn">
+      <b>⏳ Faltan 42 días</b>
+      <span class="txt">Check-in online del primer vuelo se habilita el 12 mar 2027</span>
+    </div>
+    <div class="alert-bar warn">
+      <b>🛂 Pasaporte de Marina</b>
+      <span class="txt">Vence 20 jun 2027 — verificar que tenga 6 meses de validez al momento del viaje</span>
+    </div>
+  </div>
+
+  <!-- STAT GRID -->
+  <section class="block">
+    <div class="stat-grid">
+      <div class="stat-card acc-azul"><div class="stat-icon">📅</div><div class="stat-value">15</div><div class="stat-label">Días</div></div>
+      <div class="stat-card acc-azul"><div class="stat-icon">🌙</div><div class="stat-value">15</div><div class="stat-label">Noches</div></div>
+      <div class="stat-card acc-verde"><div class="stat-icon">🌍</div><div class="stat-value">3</div><div class="stat-label">Destinos</div></div>
+      <div class="stat-card acc-rosa"><div class="stat-icon">🎯</div><div class="stat-value">18</div><div class="stat-label">Actividades</div></div>
+      <div class="stat-card acc-azul"><div class="stat-icon">✈️</div><div class="stat-value">4</div><div class="stat-label">Transportes</div></div>
+      <div class="stat-card acc-amarillo"><div class="stat-icon">💰</div><div class="stat-value">2.850€</div><div class="stat-label">Total</div></div>
+      <div class="stat-card acc-verde"><div class="stat-icon">👤</div><div class="stat-value">950€</div><div class="stat-label">Por persona</div></div>
+    </div>
+  </section>
+
+  <!-- WEATHER STRIP -->
+  <section class="block">
+    <div class="sec-title">🌦️ Clima previsto en tus destinos</div>
+    <div class="weather-strip">
+      <div class="weather-day"><div class="wd-city">Barcelona</div><div class="wd-date">14 mar</div><div class="wd-icon">🌤️</div><div class="wd-temp">18°C</div></div>
+      <div class="weather-day"><div class="wd-city">Barcelona</div><div class="wd-date">16 mar</div><div class="wd-icon">☀️</div><div class="wd-temp">21°C</div></div>
+      <div class="weather-day"><div class="wd-city">Barcelona</div><div class="wd-date">18 mar</div><div class="wd-icon">🌧️</div><div class="wd-temp">15°C</div></div>
+      <div class="weather-day"><div class="wd-city">Roma</div><div class="wd-date">19 mar</div><div class="wd-icon">🌦️</div><div class="wd-temp">16°C</div></div>
+      <div class="weather-day"><div class="wd-city">Roma</div><div class="wd-date">22 mar</div><div class="wd-icon">☀️</div><div class="wd-temp">19°C</div></div>
+      <div class="weather-day"><div class="wd-city">Roma</div><div class="wd-date">24 mar</div><div class="wd-icon">⛅</div><div class="wd-temp">17°C</div></div>
+      <div class="weather-day"><div class="wd-city">Atenas</div><div class="wd-date">25 mar</div><div class="wd-icon">☀️</div><div class="wd-temp">20°C</div></div>
+      <div class="weather-day"><div class="wd-city">Atenas</div><div class="wd-date">28 mar</div><div class="wd-icon">☀️</div><div class="wd-temp">22°C</div></div>
+    </div>
+  </section>
+
+  <!-- MAP + COST BREAKDOWN -->
+  <section class="block">
+    <div class="resumen-grid-2">
+      <div class="panel">
+        <div class="sec-title">🗺️ Ruta del viaje</div>
+        <div class="map-placeholder">
+          <div class="map-dot" style="left:22%; top:35%; background:var(--verde);"></div>
+          <div class="map-dot" style="left:52%; top:55%; background:var(--azul);"></div>
+          <div class="map-dot" style="left:78%; top:40%; background:var(--rosa);"></div>
+          (mapa interactivo con marcadores y ruta)
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="sec-title">💸 Desglose de gastos</div>
+        <div class="breakdown-item">
+          <div class="breakdown-top"><span class="lbl">✈️ Transporte y alojamiento</span><span class="val" style="color:var(--azul);">1.480€</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:52%; background:var(--azul);"></div></div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-top"><span class="lbl">🎯 Actividades</span><span class="val" style="color:var(--verde);">820€</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:29%; background:var(--verde);"></div></div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-top"><span class="lbl">🍽️ Otros gastos</span><span class="val" style="color:var(--rosa);">550€</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:19%; background:var(--rosa);"></div></div>
+        </div>
+        <div class="breakdown-total">
+          <span class="t-lbl">Total del viaje</span>
+          <span class="t-val">2.850€</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PER TRAVELER SPLIT -->
+  <section class="block">
+    <div class="sec-title">🧾 División de gastos por viajero <span class="sec-badge">Vaca activada</span></div>
+    <div class="viajeros-tabla">
+      <div class="viajero-row">
+        <span class="avatar" style="background:var(--verde);">A</span>
+        <div class="viajero-info"><div class="v-nombre">Ana</div><div class="v-sub">Adelantó 1.200€ en vuelos y hotel de Barcelona</div></div>
+        <div class="viajero-montos"><div class="v-debe">950€</div><span class="v-estado pagado">Pagado</span></div>
+      </div>
+      <div class="viajero-row">
+        <span class="avatar" style="background:var(--azul);">L</span>
+        <div class="viajero-info"><div class="v-nombre">Luis</div><div class="v-sub">Sin adelantos registrados</div></div>
+        <div class="viajero-montos"><div class="v-debe">950€</div><span class="v-estado pendiente">Pendiente</span></div>
+      </div>
+      <div class="viajero-row">
+        <span class="avatar" style="background:var(--rosa);">M</span>
+        <div class="viajero-info"><div class="v-nombre">Marina</div><div class="v-sub">Adelantó 300€ en actividades de Roma</div></div>
+        <div class="viajero-montos"><div class="v-debe">650€</div><span class="v-estado pendiente">Pendiente</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCUMENTS / CHECKLIST -->
+  <section class="block">
+    <div class="sec-title">✅ Checklist de preparativos</div>
+    <div class="checklist-grid">
+      <div class="check-item done"><span class="c-icon">✔️</span><div><div class="c-title">Pasaportes vigentes</div><div class="c-sub">Ana y Luis, OK</div></div></div>
+      <div class="check-item pending"><span class="c-icon">⚠️</span><div><div class="c-title">Pasaporte de Marina</div><div class="c-sub">Vence en menos de 6 meses del viaje</div></div></div>
+      <div class="check-item done"><span class="c-icon">✔️</span><div><div class="c-title">Seguro de viaje</div><div class="c-sub">Contratado — cobertura 15 días</div></div></div>
+      <div class="check-item pending"><span class="c-icon">⚠️</span><div><div class="c-title">Check-in online</div><div class="c-sub">Disponible desde 48h antes de cada vuelo</div></div></div>
+      <div class="check-item done"><span class="c-icon">✔️</span><div><div class="c-title">Reservas de alojamiento</div><div class="c-sub">3 de 3 confirmadas</div></div></div>
+      <div class="check-item pending"><span class="c-icon">⚠️</span><div><div class="c-title">Entradas Sagrada Familia</div><div class="c-sub">Comprar con anticipación, suele agotarse</div></div></div>
+    </div>
+  </section>
+
+  <!-- ITINERARY DETAIL -->
+  <section class="block">
+    <div class="sec-title">📋 Itinerario detallado</div>
+    <div class="destinos-timeline">
+
+      <!-- DESTINO 1 -->
+      <div class="destino-card">
+        <div class="destino-head">
+          <h3>📍 Barcelona</h3>
+          <div class="d-tags"><span class="tag dias">5 días</span><span class="tag costo">980€</span></div>
+        </div>
+        <div class="destino-body">
+          <div class="transp-card">
+            <span class="tc-icon">✈️</span>
+            <div class="tc-main"><b>Vuelo AR1130 · Buenos Aires → Barcelona</b><div class="tc-detail">14 mar, 22:40 → 15 mar, 15:10 (escala en Madrid) · Asientos 24A-24C</div></div>
+            <div class="tc-precio">620€</div>
+          </div>
+          <div class="transp-card">
+            <span class="tc-icon">🏨</span>
+            <div class="tc-main"><b>Hotel Catalonia Ramblas</b><div class="tc-detail">4 noches · Check-in 15 mar · Reserva confirmada #B4821</div></div>
+            <div class="tc-precio">360€</div>
+          </div>
+
+          <div class="dia-block">
+            <div class="dia-head"><h4>Día 1 <span class="dia-badge">(15 mar)</span></h4><span class="weather-mini">🌤️ 18°C</span></div>
+            <div class="evento-row"><span class="hora">16:00</span><div class="ev-body"><strong>Check-in hotel</strong><span class="ev-cat">Alojamiento</span></div></div>
+            <div class="evento-row"><span class="hora">18:30</span><div class="ev-body"><strong>Paseo por La Rambla</strong><span class="ev-cat">Paseo</span></div></div>
+            <div class="dia-nota">↳ Llevar algo de abrigo, refresca al caer el sol</div>
+          </div>
+
+          <div class="dia-block">
+            <div class="dia-head"><h4>Día 2 <span class="dia-badge">(16 mar)</span></h4><span class="weather-mini">☀️ 21°C</span></div>
+            <div class="evento-row"><span class="hora">09:30</span><div class="ev-body"><strong>Sagrada Familia</strong><span class="ev-cat">Cultura</span><p>↳ Entrada con audioguía, reservar con antelación</p></div><span class="ev-costo">💰 90€</span></div>
+            <div class="evento-row"><span class="hora">20:00</span><div class="ev-body"><strong>Cena en El Xampanyet</strong><span class="ev-cat">Gastronomía</span></div><span class="ev-costo">💰 60€</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESTINO 2 -->
+      <div class="destino-card">
+        <div class="destino-head">
+          <h3>📍 Roma</h3>
+          <div class="d-tags"><span class="tag dias">6 días</span><span class="tag costo">1.140€</span></div>
+        </div>
+        <div class="destino-body">
+          <div class="transp-card">
+            <span class="tc-icon">🚄</span>
+            <div class="tc-main"><b>Tren alta velocidad · Barcelona → Roma</b><div class="tc-detail">19 mar, 08:15 → 15:40 · vía Milán</div></div>
+            <div class="tc-precio">140€</div>
+          </div>
+          <div class="transp-card">
+            <span class="tc-icon">🏨</span>
+            <div class="tc-main"><b>Hotel Trastevere Charme</b><div class="tc-detail">5 noches · Reserva confirmada #R2290</div></div>
+            <div class="tc-precio">480€</div>
+          </div>
+
+          <div class="dia-block">
+            <div class="dia-head"><h4>Día 1 <span class="dia-badge">(19 mar)</span></h4><span class="weather-mini">🌦️ 16°C</span></div>
+            <div class="evento-row"><span class="hora">11:00</span><div class="ev-body"><strong>Coliseo Romano</strong><span class="ev-cat">Cultura</span><p>↳ Tour guiado incluido</p></div><span class="ev-costo">💰 45€</span></div>
+          </div>
+
+          <div class="dia-block">
+            <div class="dia-head"><h4>Día 2 <span class="dia-badge">(20 mar)</span></h4><span class="weather-mini">☀️ 19°C</span></div>
+            <div class="evento-row"><span class="hora">09:00</span><div class="ev-body"><strong>Museos Vaticanos</strong><span class="ev-cat">Cultura</span></div><span class="ev-costo">💰 120€</span></div>
+            <div class="evento-row"><span class="hora">19:30</span><div class="ev-body"><strong>Cena Trastevere</strong><span class="ev-cat">Gastronomía</span></div><span class="ev-costo">💰 75€</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESTINO 3 -->
+      <div class="destino-card">
+        <div class="destino-head">
+          <h3>📍 Atenas</h3>
+          <div class="d-tags"><span class="tag dias">4 días</span><span class="tag costo">730€</span></div>
+        </div>
+        <div class="destino-body">
+          <div class="transp-card">
+            <span class="tc-icon">✈️</span>
+            <div class="tc-main"><b>Vuelo A3 401 · Roma → Atenas</b><div class="tc-detail">25 mar, 07:20 → 10:10</div></div>
+            <div class="tc-precio">180€</div>
+          </div>
+          <div class="transp-card">
+            <span class="tc-icon">🏠</span>
+            <div class="tc-main"><b>Airbnb en Plaka</b><div class="tc-detail">4 noches · Anfitrión: Dimitris</div></div>
+            <div class="tc-precio">300€</div>
+          </div>
+
+          <div class="dia-block">
+            <div class="dia-head"><h4>Día 1 <span class="dia-badge">(25 mar)</span></h4><span class="weather-mini">☀️ 20°C</span></div>
+            <div class="evento-row"><span class="hora">10:00</span><div class="ev-body"><strong>Acrópolis y Partenón</strong><span class="ev-cat">Cultura</span></div><span class="ev-costo">💰 50€</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VUELTA -->
+    <div class="destino-card" style="margin-left:0; margin-top:6px;">
+      <div class="destino-head" style="border-left:4px solid var(--rosa); border-radius:14px;">
+        <h3>🔄 Vuelta a casa</h3>
+        <div class="d-tags"><span class="tag costo">590€</span></div>
+      </div>
+      <div class="destino-body" style="border-radius:0 0 14px 14px;">
+        <div class="transp-card">
+          <span class="tc-icon">✈️</span>
+          <div class="tc-main"><b>Vuelo AR1131 · Atenas → Buenos Aires</b><div class="tc-detail">29 mar, 23:50 → 30 mar, 14:20 (escala en Madrid)</div></div>
+          <div class="tc-precio">590€</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOTES + EMERGENCY -->
+  <section class="block">
+    <div class="info-grid">
+      <div class="panel">
+        <div class="sec-title">📝 Notas generales</div>
+        <ul class="info-list">
+          <li>🔌 <div><b>Enchufes tipo C/F</b> en toda Europa continental, tipo G no aplica aquí<span class="il-sub">Llevar un adaptador universal</span></div></li>
+          <li>💳 <div><b>Moneda: Euro (EUR)</b><span class="il-sub">Tarjetas aceptadas casi en todos lados, llevar algo de efectivo para mercados</span></div></li>
+          <li>🎒 <div><b>Equipaje de mano</b><span class="il-sub">Vuelos internos con Aegean permiten 1 bolso + 1 mochila</span></div></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="sec-title">🆘 Contactos de emergencia</div>
+        <ul class="info-list">
+          <li>🏥 <div><b>Emergencias UE: 112</b><span class="il-sub">Válido en España, Italia y Grecia</span></div></li>
+          <li>🛂 <div><b>Consulado Argentino en Roma</b><span class="il-sub">+39 06 3072 5300</span></div></li>
+          <li>📄 <div><b>Póliza de seguro #SV-88214</b><span class="il-sub">Asistencia 24hs: +54 11 4000 0000</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER TOTAL -->
+  <div class="footer-total">
+    <div class="ft-left">
+      Total del viaje (3 personas)<br>
+      <span class="ft-total">2.850€</span>
+    </div>
+    <div class="ft-right">
+      <button class="secundario">📄 Exportar PDF</button>
+      <button class="secundario">🗺️ Ver mapa</button>
+      <button class="secundario">📅 Google Calendar</button>
+      <button>📸 Compartir</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

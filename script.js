@@ -9956,6 +9956,7 @@ async function exportarPDF() {
       }
 
       // Render Plantillas Sections
+      if (typeof initCommunityTemplatesListener === 'function') initCommunityTemplatesListener();
       renderPlantillasOficiales();
       renderPlantillasComunidad();
       renderMisPlantillas();
@@ -10568,6 +10569,8 @@ async function exportarPDF() {
     ];
 
     let filtroComunidadActual = 'todas';
+    let firestoreCommunityTemplates = [];
+    let unsubscribeCommunityTemplates = null;
 
     function getLikedTemplatesSet() {
       try {
@@ -10580,6 +10583,36 @@ async function exportarPDF() {
     function saveLikedTemplatesSet(set) {
       localStorage.setItem('Plux_Template_Likes', JSON.stringify(Array.from(set)));
     }
+
+    function initCommunityTemplatesListener() {
+      if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
+        db = firebase.firestore();
+      }
+      if (!db) return;
+      if (unsubscribeCommunityTemplates) {
+        try { unsubscribeCommunityTemplates(); } catch(e) {}
+      }
+      try {
+        unsubscribeCommunityTemplates = db.collection("plux_plantillas_comunidad")
+          .limit(80)
+          .onSnapshot((snapshot) => {
+            const list = [];
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              if (data && data.nombre) {
+                list.push({ ...data, id: doc.id });
+              }
+            });
+            firestoreCommunityTemplates = list;
+            renderPlantillasComunidad();
+          }, (err) => {
+            console.warn("Snapshot error en plantillas comunidad:", err);
+          });
+      } catch(e) {
+        console.warn("Error inicializando listener de plantillas comunidad:", e);
+      }
+    }
+    window.initCommunityTemplatesListener = initCommunityTemplatesListener;
 
     function isExperiencedCreator(autorNick) {
       if (!autorNick) return false;
@@ -10611,7 +10644,10 @@ async function exportarPDF() {
         }
       });
       if (subtabName === 'oficiales') renderPlantillasOficiales();
-      else if (subtabName === 'comunidad') renderPlantillasComunidad();
+      else if (subtabName === 'comunidad') {
+        if (typeof initCommunityTemplatesListener === 'function') initCommunityTemplatesListener();
+        renderPlantillasComunidad();
+      }
       else if (subtabName === 'mias') renderMisPlantillas();
     }
     window.switchPlantillasSubtab = switchPlantillasSubtab;
@@ -10671,12 +10707,23 @@ async function exportarPDF() {
 
       const likedSet = getLikedTemplatesSet();
 
-      let list = [...PLUX_COMUNIDAD_SEEDS];
+      // Merge Seeds with Firestore Community Templates (deduping by ID)
+      const map = new Map();
+      PLUX_COMUNIDAD_SEEDS.forEach(t => map.set(t.id, t));
+      firestoreCommunityTemplates.forEach(t => map.set(t.id, t));
+
+      let list = Array.from(map.values());
 
       if (filtroComunidadActual === 'destacadas') {
         list = list.filter(t => t.destacada);
       } else if (filtroComunidadActual === 'populares') {
         list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+      } else {
+        list.sort((a, b) => {
+          const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.fecha ? new Date(a.fecha).getTime() : 0);
+          const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.fecha ? new Date(b.fecha).getTime() : 0);
+          return timeB - timeA;
+        });
       }
 
       if (list.length === 0) {
@@ -10688,8 +10735,8 @@ async function exportarPDF() {
         const isLiked = likedSet.has(tpl.id);
         const card = document.createElement('div');
         card.className = 'plantilla-card-premium';
-        const daysCount = (tpl.destinos[0]?.dias || []).length;
-        const eventsCount = (tpl.destinos[0]?.dias || []).reduce((acc, d) => acc + (d.eventos?.length || 0), 0);
+        const daysCount = (tpl.destinos && tpl.destinos[0]?.dias) ? tpl.destinos[0].dias.length : (tpl.destinos ? tpl.destinos.reduce((a,d)=>a+(d.dias?.length||0),0) : 0);
+        const eventsCount = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + (dia.eventos?.length || 0), 0), 0);
 
         card.innerHTML = `
           <div>
@@ -10738,7 +10785,8 @@ async function exportarPDF() {
       const likedSet = getLikedTemplatesSet();
       const isLiked = likedSet.has(tplId);
       
-      const comItem = PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplId);
+      const firestoreTpl = firestoreCommunityTemplates.find(t => t.id === tplId);
+      const comItem = PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplId) || firestoreTpl;
       const ofItem = PLUX_OFICIAL_TEMPLATES.find(t => t.id === tplId);
       const item = comItem || ofItem;
       const countEl = document.getElementById(`like-count-${tplId}`);
@@ -10752,6 +10800,11 @@ async function exportarPDF() {
           const heart = btn.querySelector('.heart-icon-wrap');
           if (heart) heart.innerHTML = getHeartSvg(false);
         }
+        if (db && firestoreTpl) {
+          db.collection("plux_plantillas_comunidad").doc(tplId).update({
+            likes: firebase.firestore.FieldValue.increment(-1)
+          }).catch(()=>{});
+        }
       } else {
         likedSet.add(tplId);
         if (item) item.likes = (item.likes || 0) + 1;
@@ -10759,6 +10812,11 @@ async function exportarPDF() {
           btn.classList.add('liked');
           const heart = btn.querySelector('.heart-icon-wrap');
           if (heart) heart.innerHTML = getHeartSvg(true);
+        }
+        if (db && firestoreTpl) {
+          db.collection("plux_plantillas_comunidad").doc(tplId).update({
+            likes: firebase.firestore.FieldValue.increment(1)
+          }).catch(()=>{});
         }
       }
       saveLikedTemplatesSet(likedSet);
@@ -10774,7 +10832,7 @@ async function exportarPDF() {
       if (origin === 'oficial') {
         tpl = PLUX_OFICIAL_TEMPLATES.find(t => t.id === tplId);
       } else if (origin === 'comunidad') {
-        tpl = PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplId);
+        tpl = firestoreCommunityTemplates.find(t => t.id === tplId) || PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplId);
       }
       if (!tpl) return;
       const templates = getStoredTemplates();
@@ -10794,6 +10852,97 @@ async function exportarPDF() {
       showToast(`Plantilla "${tpl.nombre}" guardada en Mis Plantillas ✨`, 'success');
     }
     window.guardarPlantillaEnMisPlantillas = guardarPlantillaEnMisPlantillas;
+
+    function guardarComoPlantilla() {
+      if (!checkEditPermission()) return;
+      const input = document.getElementById('nombrePlantilla');
+      let nombre = input ? input.value.trim() : '';
+      if (!nombre) {
+        if (destinos && destinos.length > 0) {
+          nombre = `Plantilla de ${destinos.map(d => d.nombre).slice(0, 2).join(' & ')}`;
+        } else {
+          nombre = currentNickname ? `Plantilla de @${currentNickname}` : 'Mi Plantilla';
+        }
+      }
+
+      if (!destinos || destinos.length === 0) {
+        showToast('Añadí al menos un destino antes de guardar la plantilla', 'warning');
+        return;
+      }
+
+      const chkPublicar = document.getElementById('chkPublicarComunidad');
+      const isPublic = chkPublicar ? chkPublicar.checked : true;
+      const autor = currentNickname ? `@${currentNickname.replace('@','')}` : 'Viajero Anónimo';
+      const isExp = isExperiencedCreator(currentNickname);
+      const tplId = 'com_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5);
+      const daysTotal = destinos.reduce((acc, d) => acc + (d.dias?.length || 0), 0);
+      const eventsTotal = destinos.reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + (dia.eventos?.length || 0), 0), 0);
+
+      const newTemplate = {
+        id: tplId,
+        nombre: nombre,
+        descripcion: `Itinerario de ${daysTotal} días por ${destinos.map(d => d.nombre).slice(0, 3).join(', ')} con ${eventsTotal} actividades.`,
+        tags: [
+          `${daysTotal} ${daysTotal === 1 ? 'Día' : 'Días'}`,
+          destinos[0]?.nombre || 'Viaje',
+          'Comunidad'
+        ],
+        fecha: new Date().toISOString(),
+        autor: autor,
+        isExperienced: isExp,
+        destacada: false,
+        likes: 0,
+        isPublic: isPublic,
+        destinos: JSON.parse(JSON.stringify(destinos || [])),
+        vueltaGlobal: vueltaGlobal || '',
+        vueltaPrecioGlobal: vueltaPrecioGlobal || 0,
+        vueltaCostosAdicionales: JSON.parse(JSON.stringify(vueltaCostosAdicionales || []))
+      };
+
+      const myTemplates = getStoredTemplates();
+      myTemplates.push(newTemplate);
+      saveTemplates(myTemplates, true);
+      renderMisPlantillas();
+
+      if (isPublic) {
+        if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
+          db = firebase.firestore();
+        }
+        if (db) {
+          db.collection("plux_plantillas_comunidad").doc(tplId).set({
+            ...newTemplate,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(() => {
+            console.log("Plantilla publicada en Firestore:", tplId);
+            if (typeof initCommunityTemplatesListener === 'function') initCommunityTemplatesListener();
+          }).catch(err => {
+            console.error("Error guardando plantilla pública en Firestore:", err);
+          });
+        }
+      }
+
+      if (input) input.value = '';
+      showToast(`¡Plantilla "${nombre}" guardada ${isPublic ? 'y publicada en la Comunidad' : ''}! 🚀`, 'success');
+      trackEvent('save_template', {
+        template_name: nombre,
+        is_public: isPublic,
+        author: autor
+      });
+    }
+    window.guardarComoPlantilla = guardarComoPlantilla;
+
+    function eliminarPlantilla(index) {
+      const templates = getStoredTemplates();
+      if (!templates[index]) return;
+      const removed = templates.splice(index, 1)[0];
+      saveTemplates(templates, true);
+      renderMisPlantillas();
+      if (removed?.id && db) {
+        db.collection("plux_plantillas_comunidad").doc(removed.id).delete().catch(() => {});
+      }
+      showToast('Plantilla eliminada', 'info');
+    }
+    window.eliminarPlantilla = eliminarPlantilla;
 
     function renderMisPlantillas() {
       const plantillasList = document.getElementById('plantillasList');
@@ -10842,7 +10991,7 @@ async function exportarPDF() {
       if (origin === 'oficial') {
         tpl = PLUX_OFICIAL_TEMPLATES.find(t => t.id === tplIdOrIndex);
       } else if (origin === 'comunidad') {
-        tpl = PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplIdOrIndex);
+        tpl = firestoreCommunityTemplates.find(t => t.id === tplIdOrIndex) || PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplIdOrIndex);
       } else if (origin === 'mia') {
         const templates = getStoredTemplates();
         tpl = templates[tplIdOrIndex];

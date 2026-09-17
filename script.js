@@ -2712,47 +2712,74 @@
         console.log("AutoSave blocked: Read-only mode active");
         return;
       }
+
+      const hasContent = (destinos && destinos.length > 0) || (lugarSalida && lugarSalida.trim()) || (document.getElementById('fechaInicio')?.value);
+      if (!hasContent) return;
       
       const tripId = getCurrentTripId();
+      const trips = getStoredTrips();
 
-      if (loadedTripIndex === null) {
-        // Auto-create a new trip in "Tus viajes"
-        const newTrip = {
-          nombre: t('untitled_event'),
-          fecha: new Date().toISOString(),
-          lugarSalida, numPersonas,
-          nombresPersonas: nombresPersonasGlobal,
-          listaViajeros: [...listaViajeros],
-          tripId: tripId,
-          fechaInicio: document.getElementById('fechaInicio')?.value || '',
-          destinos, vueltaGlobal, vueltaPrecioGlobal, vueltaCostosAdicionales,
-          syncCode, userPreferences
-        };
-        const trips = getStoredTrips();
-        trips.push(newTrip);
-        loadedTripIndex = trips.length - 1;
-        saveTrips(trips, true);
-        renderTripLists();
-      } else {
-        // Update loaded trip in "Tus viajes"
-        const trips = getStoredTrips();
-        if (trips[loadedTripIndex]) {
-          trips[loadedTripIndex].lugarSalida = lugarSalida;
-          trips[loadedTripIndex].numPersonas = numPersonas;
-          trips[loadedTripIndex].nombresPersonas = nombresPersonasGlobal;
-          trips[loadedTripIndex].listaViajeros = [...listaViajeros];
-          trips[loadedTripIndex].tripId = tripId;
-          trips[loadedTripIndex].fechaInicio = document.getElementById('fechaInicio')?.value || '';
-          trips[loadedTripIndex].destinos = destinos;
-          trips[loadedTripIndex].vueltaGlobal = vueltaGlobal;
-          trips[loadedTripIndex].vueltaPrecioGlobal = vueltaPrecioGlobal;
-          trips[loadedTripIndex].vueltaCostosAdicionales = vueltaCostosAdicionales;
-          trips[loadedTripIndex].syncCode = syncCode;
-          trips[loadedTripIndex].fecha = new Date().toISOString();
-          
-          saveTrips(trips, true);
+      // 1. Localizar el viaje existente si ya está en la lista de viajes
+      let targetIndex = -1;
+      if (loadedTripIndex !== null && trips[loadedTripIndex]) {
+        if (!trips[loadedTripIndex].tripId || trips[loadedTripIndex].tripId === tripId || (syncCode && trips[loadedTripIndex].syncCode === syncCode)) {
+          targetIndex = loadedTripIndex;
         }
       }
+
+      if (targetIndex === -1 && trips.length > 0) {
+        targetIndex = trips.findIndex(t => t && ((tripId && t.tripId === tripId) || (syncCode && t.syncCode === syncCode)));
+      }
+
+      // Nombre amigable dinámico si no fue fijado manualmente
+      let tripTitle = document.getElementById('nombreViaje')?.value?.trim();
+      if (!tripTitle && targetIndex !== -1 && trips[targetIndex] && trips[targetIndex].nombre && trips[targetIndex].nombre !== t('untitled_event') && trips[targetIndex].nombre !== 'Viaje sin título') {
+        tripTitle = trips[targetIndex].nombre;
+      }
+      if (!tripTitle) {
+        if (destinos && destinos.length > 0) {
+          const destNames = destinos.map(d => d.nombre).filter(Boolean).slice(0, 3).join(' & ');
+          tripTitle = `Viaje a ${destNames || 'Destino'}`;
+        } else if (lugarSalida && lugarSalida.trim()) {
+          tripTitle = `Viaje desde ${lugarSalida.trim()}`;
+        } else {
+          tripTitle = t('untitled_event') || 'Mi Viaje';
+        }
+      }
+
+      const tripDataToSave = {
+        nombre: tripTitle,
+        fecha: new Date().toISOString(),
+        lugarSalida: lugarSalida || '',
+        numPersonas: numPersonas || 1,
+        nombresPersonas: nombresPersonasGlobal || '',
+        listaViajeros: (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros)) ? [...listaViajeros] : [],
+        tripId: tripId,
+        fechaInicio: document.getElementById('fechaInicio')?.value || '',
+        destinos: destinos || [],
+        vueltaGlobal: typeof vueltaGlobal !== 'undefined' ? vueltaGlobal : '',
+        vueltaPrecioGlobal: typeof vueltaPrecioGlobal !== 'undefined' ? vueltaPrecioGlobal : 0,
+        vueltaCostosAdicionales: typeof vueltaCostosAdicionales !== 'undefined' ? vueltaCostosAdicionales : [],
+        syncCode: syncCode || null,
+        userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : null
+      };
+
+      if (targetIndex !== -1) {
+        // Actualizar el viaje existente en su posición (1 solo registro, no duplicar)
+        trips[targetIndex] = {
+          ...trips[targetIndex],
+          ...tripDataToSave,
+          nombre: (trips[targetIndex].nombre && trips[targetIndex].nombre !== t('untitled_event') && trips[targetIndex].nombre !== 'Viaje sin título' && !document.getElementById('nombreViaje')?.value?.trim()) ? trips[targetIndex].nombre : tripTitle
+        };
+        loadedTripIndex = targetIndex;
+      } else {
+        // Nuevo viaje: agregar 1 sola vez y fijar loadedTripIndex
+        trips.push(tripDataToSave);
+        loadedTripIndex = trips.length - 1;
+      }
+
+      saveTrips(trips, true);
+      renderTripLists();
       
       const tripData = {
         lugarSalida, numPersonas, 

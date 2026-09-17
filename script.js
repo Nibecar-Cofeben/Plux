@@ -1362,7 +1362,7 @@
       if (submitBtn) submitBtn.disabled = true;
 
       try {
-        // Si no tiene @, es un Nickname directo (no requiere base de datos)
+        // Si no tiene @, es un Nickname directo
         if (!loginVal.includes('@')) {
           const nick = loginVal.toLowerCase().replace(/[^a-z0-9_]/g, '');
           if (nick.length < 3) {
@@ -1374,6 +1374,10 @@
           localStorage.setItem('Plux_Nickname', nick);
           localStorage.setItem('Plux_Uid', nick);
           if (typeof updateUserButtonDisplay === 'function') updateUserButtonDisplay();
+          
+          await cargarPerfilUsuario();
+          if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(nick);
+          
           showToast('¡Bienvenido, @' + nick + '!', 'success');
           if (typeof cerrarCuenta === 'function') cerrarCuenta();
           return;
@@ -1573,26 +1577,18 @@
 
         const localTrips = getStoredTrips();
         const cloudTrips = Array.isArray(userData.viajes_guardados) ? userData.viajes_guardados : [];
-        const hasLocalTrips = localTrips.length > 0;
-        const hasCloudTrips = cloudTrips.length > 0;
+        const mergedTrips = (typeof mergeTrips === 'function') ? mergeTrips(localTrips, cloudTrips) : (cloudTrips.length > 0 ? cloudTrips : localTrips);
+        saveTrips(mergedTrips, false);
 
-        if (hasCloudTrips && !hasLocalTrips) {
-          localStorage.setItem('Plux_Trips', JSON.stringify(cloudTrips));
-        } else if (hasLocalTrips && !hasCloudTrips) {
-          // Update Firestore user data with local trips
-          userData.viajes_guardados = localTrips;
-        }
+        const localTemplates = getStoredTemplates();
+        const cloudTemplates = Array.isArray(userData.plantillas) ? userData.plantillas : [];
+        const mergedTemplates = (typeof mergeTemplates === 'function') ? mergeTemplates(localTemplates, cloudTemplates) : (cloudTemplates.length > 0 ? cloudTemplates : localTemplates);
+        saveTemplates(mergedTemplates, false);
 
         const localFriends = getStoredFriends();
         const cloudFriends = Array.isArray(userData.amigos) ? userData.amigos : [];
-        const hasLocalFriends = localFriends.length > 0;
-        const hasCloudFriends = cloudFriends.length > 0;
-
-        if (hasCloudFriends && !hasLocalFriends) {
-          saveFriends(cloudFriends, false);
-        } else if (hasLocalFriends && !hasCloudFriends) {
-          userData.amigos = localFriends;
-        }
+        const mergedFriends = (typeof mergeFriends === 'function') ? mergeFriends(localFriends, cloudFriends) : (cloudFriends.length > 0 ? cloudFriends : localFriends);
+        saveFriends(mergedFriends, false);
 
         currentNickname = nick;
         currentUserUid = nick;
@@ -1603,18 +1599,20 @@
         }
         updateUserButtonDisplay();
         
-        // Update last connection time in Firestore
+        // Update merged data & last connection time in Firestore
+        userData.viajes_guardados = mergedTrips;
+        userData.plantillas = mergedTemplates;
+        userData.amigos = mergedFriends;
         userData.ultimaConexion = new Date().toISOString();
         await db.collection('plux_usuarios').doc(nick).set(userData, { merge: true });
         
         // Load user preferences
         if (userData.idioma && userData.idioma !== currentLang) setLanguage(userData.idioma, false);
         if (userData.tema && userData.tema !== currentTheme) setTheme(userData.tema, false);
-        if (userData.plantillas) saveTemplates(userData.plantillas, false);
         if (userData.preferencias) userPreferences = userData.preferencias;
-        if (userData.amigos) saveFriends(userData.amigos, false);
         
         renderTripLists();
+        if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(nick);
         showToast('¡Bienvenido, @' + nick + '!', 'success');
         cerrarCuenta();
       } catch (e) {
@@ -1760,6 +1758,68 @@
     }
     window.generarNicknameUnico = generarNicknameUnico;
 
+    // Helpers de Fusión (Merge) para sincronización multidispositivo y login
+    function mergeTrips(localTrips, cloudTrips) {
+      const local = Array.isArray(localTrips) ? localTrips : [];
+      const cloud = Array.isArray(cloudTrips) ? cloudTrips : [];
+      const result = [...cloud];
+      
+      local.forEach(lTrip => {
+        if (!lTrip) return;
+        const exists = result.some(cTrip => {
+          if (!cTrip) return false;
+          if (lTrip.tripId && cTrip.tripId && lTrip.tripId === cTrip.tripId) return true;
+          if (lTrip.syncCode && cTrip.syncCode && lTrip.syncCode === cTrip.syncCode) return true;
+          if (lTrip.nombre && cTrip.nombre && lTrip.nombre.toLowerCase().trim() === cTrip.nombre.toLowerCase().trim()) {
+            const lDest = (lTrip.destinos || []).map(d => d.nombre).join('|');
+            const cDest = (cTrip.destinos || []).map(d => d.nombre).join('|');
+            if (lDest === cDest) return true;
+          }
+          return false;
+        });
+        if (!exists) {
+          result.push(lTrip);
+        }
+      });
+      return result;
+    }
+    window.mergeTrips = mergeTrips;
+
+    function mergeTemplates(localTemplates, cloudTemplates) {
+      const local = Array.isArray(localTemplates) ? localTemplates : [];
+      const cloud = Array.isArray(cloudTemplates) ? cloudTemplates : [];
+      const result = [...cloud];
+      
+      local.forEach(lTpl => {
+        if (!lTpl) return;
+        const exists = result.some(cTpl => {
+          if (!cTpl) return false;
+          if (lTpl.id && cTpl.id && lTpl.id === cTpl.id) return true;
+          if (lTpl.nombre && cTpl.nombre && lTpl.nombre.toLowerCase().trim() === cTpl.nombre.toLowerCase().trim()) return true;
+          return false;
+        });
+        if (!exists) {
+          result.push(lTpl);
+        }
+      });
+      return result;
+    }
+    window.mergeTemplates = mergeTemplates;
+
+    function mergeFriends(localFriends, cloudFriends) {
+      const set = new Set();
+      (Array.isArray(cloudFriends) ? cloudFriends : []).forEach(f => {
+        if (typeof f === 'string' && f.trim()) set.add(f.trim().toLowerCase().replace(/^@/, ''));
+        else if (f && f.nickname) set.add(f.nickname.trim().toLowerCase().replace(/^@/, ''));
+      });
+      (Array.isArray(localFriends) ? localFriends : []).forEach(f => {
+        if (typeof f === 'string' && f.trim()) set.add(f.trim().toLowerCase().replace(/^@/, ''));
+        else if (f && f.nickname) set.add(f.nickname.trim().toLowerCase().replace(/^@/, ''));
+      });
+      return Array.from(set);
+    }
+    window.mergeFriends = mergeFriends;
+
     function sincronizarPerfil() {
       const ref = getPluxProfileRef();
       if (!ref && !currentNickname) return;
@@ -1837,13 +1897,29 @@
           }
           if (data.idioma && data.idioma !== currentLang) setLanguage(data.idioma, false);
           if (data.tema && data.tema !== currentTheme) setTheme(data.tema, false);
-          if (data.viajes_guardados) saveTrips(data.viajes_guardados, false);
-          if (data.plantillas) saveTemplates(data.plantillas, false);
+
+          // Merge local and cloud trips to avoid losing any offline or cloud progress
+          const localTrips = getStoredTrips();
+          const cloudTrips = Array.isArray(data.viajes_guardados) ? data.viajes_guardados : [];
+          const mergedTrips = mergeTrips(localTrips, cloudTrips);
+          saveTrips(mergedTrips, false);
+
+          const localTemplates = getStoredTemplates();
+          const cloudTemplates = Array.isArray(data.plantillas) ? data.plantillas : [];
+          const mergedTemplates = mergeTemplates(localTemplates, cloudTemplates);
+          saveTemplates(mergedTemplates, false);
+
+          const localFriends = getStoredFriends();
+          const cloudFriends = Array.isArray(data.amigos) ? data.amigos : [];
+          const mergedFriends = mergeFriends(localFriends, cloudFriends);
+          saveFriends(mergedFriends, false);
+
           if (data.preferencias) userPreferences = data.preferencias;
-          if (data.amigos) saveFriends(data.amigos, false);
+          
           updateUserButtonDisplay();
           renderTripLists();
           sincronizarPerfil();
+          if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(currentNickname);
         } else {
           if (firebaseUser) {
             const nick = await generarNicknameUnico(firebaseUser);
@@ -1856,8 +1932,10 @@
             sincronizarPerfil();
             updateUserButtonDisplay();
             renderTripLists();
+            if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(currentNickname);
           } else if (currentNickname) {
             sincronizarPerfil();
+            if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(currentNickname);
           }
         }
       } catch (e) {
@@ -11172,71 +11250,10 @@ async function exportarPDF() {
       renderTripLists();
     }
 
-    function guardarComoPlantilla() {
-      const nombre = document.getElementById('nombrePlantilla').value.trim();
-      if (!nombre) { showToast('Escribe un nombre para la plantilla', 'error'); return; }
-
-      const publicarComunidad = document.getElementById('chkPublicarComunidad')?.checked ?? true;
-      const autor = currentNickname || null;
-      const isExp = isExperiencedCreator(autor);
-
-      const plantilla = {
-        id: 'tpl_' + Date.now().toString(36),
-        nombre,
-        fecha: new Date().toISOString(),
-        autor: autor || 'Viajero Anónimo',
-        isExperienced: isExp,
-        likes: 1,
-        destinos: JSON.parse(JSON.stringify(destinos || [])),
-        vueltaGlobal,
-        vueltaPrecioGlobal,
-        vueltaCostosAdicionales
-      };
-
-      const templates = getStoredTemplates();
-      templates.push(plantilla);
-      saveTemplates(templates);
-
-      if (publicarComunidad) {
-        PLUX_COMUNIDAD_SEEDS.unshift({
-          id: plantilla.id,
-          nombre: plantilla.nombre,
-          autor: autor,
-          isExperienced: isExp,
-          likes: 1,
-          destacada: false,
-          descripcion: (destinos || []).map(d => d.nombre).join(' → ') + ' planificado en Plux.',
-          tags: [`${destinos.reduce((a, d) => a + (d.dias?.length || 0), 0)} Días`, 'Comunidad Plux'],
-          destinos: JSON.parse(JSON.stringify(destinos || []))
-        });
-
-        // Sync to Firestore collection if available
-        try {
-          const fsInstance = (typeof db !== 'undefined' && db) ? db : (typeof firebase !== 'undefined' && firebase.apps.length ? firebase.firestore() : null);
-          if (fsInstance) {
-            fsInstance.collection('plux_plantillas_comunidad').doc(plantilla.id).set({
-              ...plantilla,
-              timestamp: (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString()
-            }).catch(e => console.warn('No se pudo guardar plantilla en Firestore:', e));
-          }
-        } catch (e) {}
-      }
-
-      renderTripLists();
-      document.getElementById('nombrePlantilla').value = '';
-      showToast(publicarComunidad ? '¡Plantilla guardada y publicada en la Comunidad!' : 'Plantilla guardada en Mis Plantillas', 'success');
-    }
-
     function cargarPlantilla(index) {
       clonarPlantillaCompleta(index, 'mia');
     }
-
-    function eliminarPlantilla(index) {
-      const templates = getStoredTemplates();
-      templates.splice(index, 1);
-      saveTemplates(templates);
-      renderTripLists();
-    }
+    window.cargarPlantilla = cargarPlantilla;
 
     function exportarViajeActual() {
       const viaje = {
@@ -13588,6 +13605,104 @@ async function exportarPDF() {
   }
   window.pushMessageToRealtimeDb = pushMessageToRealtimeDb;
 
+  function registrarConversacionDirecta(senderUser, otherUser, lastMsgText, lastTime) {
+    if (!senderUser || !otherUser || otherUser === 'pluxy' || otherUser === 'yo' || senderUser === otherUser) return;
+    const dbInst = getRealtimeDb();
+    if (!dbInst) return;
+    try {
+      const serverTs = (typeof firebase !== 'undefined' && firebase.database && firebase.database.ServerValue)
+        ? firebase.database.ServerValue.TIMESTAMP
+        : Date.now();
+      
+      const previewText = lastMsgText ? String(lastMsgText).slice(0, 100) : 'Mensaje nuevo';
+      const cleanSender = senderUser.toLowerCase().trim().replace(/^@/, '');
+      const cleanOther = otherUser.toLowerCase().trim().replace(/^@/, '');
+
+      const payloadForRecipient = {
+        otherUser: cleanSender,
+        sender: cleanSender,
+        lastMessage: previewText,
+        lastTime: lastTime || '',
+        updatedAt: serverTs
+      };
+
+      const payloadForSender = {
+        otherUser: cleanOther,
+        sender: cleanSender,
+        lastMessage: previewText,
+        lastTime: lastTime || '',
+        updatedAt: serverTs
+      };
+
+      dbInst.ref(`plux_user_conversations/${cleanOther}/${cleanSender}`).update(payloadForRecipient).catch(()=>{});
+      dbInst.ref(`plux_user_conversations/${cleanSender}/${cleanOther}`).update(payloadForSender).catch(()=>{});
+    } catch(e) {
+      console.warn('Error registrando conversación directa:', e);
+    }
+  }
+  window.registrarConversacionDirecta = registrarConversacionDirecta;
+
+  let unsubscribeUserIncomingConv = null;
+  function listenUserIncomingConversations(nick) {
+    if (!nick) return;
+    const cleanNick = nick.toLowerCase().trim().replace(/^@/, '');
+    if (!cleanNick) return;
+
+    if (unsubscribeUserIncomingConv) {
+      try { unsubscribeUserIncomingConv(); } catch(e){}
+      unsubscribeUserIncomingConv = null;
+    }
+
+    const dbInst = getRealtimeDb();
+    if (!dbInst) return;
+
+    try {
+      const convRef = dbInst.ref(`plux_user_conversations/${cleanNick}`);
+      const onVal = (snapshot) => {
+        const data = snapshot.val();
+        if (!data || typeof data !== 'object') return;
+        
+        let changed = false;
+        ensureChatChannel();
+
+        Object.entries(data).forEach(([otherNick, convInfo]) => {
+          if (!otherNick || otherNick === cleanNick) return;
+          const dmId = 'dm_' + otherNick.toLowerCase();
+          if (!pluxSocialChats[dmId]) {
+            pluxSocialChats[dmId] = {
+              id: dmId,
+              type: 'direct',
+              name: `@${otherNick}`,
+              targetUser: otherNick,
+              messages: []
+            };
+            changed = true;
+            // Si el modal está cerrado o en otro chat y el mensaje es de otro usuario
+            if (convInfo.sender && convInfo.sender.toLowerCase() !== cleanNick && pluxActiveChatId !== dmId) {
+              showToast(`Nuevo mensaje de @${otherNick}: "${convInfo.lastMessage || '...'}"`, 'info');
+            }
+          }
+        });
+
+        if (changed) {
+          localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+          if (typeof renderChannelsList === 'function') renderChannelsList();
+        }
+      };
+
+      convRef.on('value', onVal, (err) => {
+        console.log('Conversations listener fallback:', err.message);
+      });
+
+      unsubscribeUserIncomingConv = () => {
+        try { convRef.off('value', onVal); } catch(e){}
+      };
+    } catch(e) {
+      console.warn("Error escuchando conversaciones de usuario:", e);
+    }
+  }
+  window.listenUserIncomingConversations = listenUserIncomingConversations;
+
   function sumarUsuarioAlChatDelViaje(nickname, motivo = 'invitado') {
     if (!nickname) return;
     const cleanNick = nickname.trim().replace(/^@/, '');
@@ -14180,6 +14295,13 @@ async function exportarPDF() {
       color: getParticipantColor(myName)
     });
 
+    if (pluxActiveChatId && pluxActiveChatId.startsWith('dm_') && pluxActiveChatId !== 'dm_pluxy') {
+      const otherNick = pluxActiveChatId.replace('dm_', '').toLowerCase().trim();
+      if (typeof registrarConversacionDirecta === 'function') {
+        registrarConversacionDirecta(myName, otherNick, text, timeStr);
+      }
+    }
+
     // Trigger Pluxy AI companion if mentioned or in direct chat with Pluxy
     const isPluxyTrigger = text.toLowerCase().includes('@pluxy') || text.toLowerCase().includes('pluxy') || pluxActiveChatId === 'dm_pluxy';
     if (isPluxyTrigger) {
@@ -14311,6 +14433,13 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
       time: timeStr,
       color: getParticipantColor(myName)
     });
+
+    if (pluxActiveChatId && pluxActiveChatId.startsWith('dm_') && pluxActiveChatId !== 'dm_pluxy') {
+      const otherNick = pluxActiveChatId.replace('dm_', '').toLowerCase().trim();
+      if (typeof registrarConversacionDirecta === 'function') {
+        registrarConversacionDirecta(myName, otherNick, newMsg.text || 'Tarjeta adjunta', timeStr);
+      }
+    }
   }
 
   function toggleChecklistItemInChat(msgId, itemIdx) {

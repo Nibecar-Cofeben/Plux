@@ -709,10 +709,16 @@
           <input type="datetime-local" id="fechaInicio" value="">
         </div>
         <div class="fila-dato">
-          <label id="vueltaLabel">Vuelta (opcional):</label>
-          <div class="campo-vuelta">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label id="vueltaLabel" style="margin:0;">Vuelta (opcional):</label>
+            <button type="button" class="btn-live-search" onclick="window.abrirBusquedaVuelosVuelta(event)">
+              ✈️ <span>Buscar vuelos</span>
+            </button>
+          </div>
+          <div class="campo-vuelta" style="position:relative;">
             <input type="text" id="vuelta" placeholder="Descripción">
             <input type="number" id="vueltaPrecio" placeholder="€" value="0">
+            <div id="dropdown-vuelos-vuelta" class="live-booking-dropdown" style="display:none;"></div>
           </div>
         </div>
         <div id="vuelta-costos-adicionales"></div>

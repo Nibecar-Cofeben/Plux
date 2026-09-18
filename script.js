@@ -6183,6 +6183,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       showToast(`🧭 Transporte de vuelta "${op.modo}" cargado ($${op.precio}) y enlace de reserva abierto`, 'success');
     };
 
+    window.abrirBusquedaVuelosVuelta = window.abrirBusquedaTransporteVuelta;
+    window.seleccionarVueloVuelta = window.seleccionarTransporteVuelta;
+    window.abrirBusquedaVuelosTramo = window.abrirBusquedaTransporteTramo;
+    window.seleccionarVueloTramo = window.seleccionarTransporteTramo;
+
     // Cerrar dropdowns de reserva al hacer clic fuera
     document.addEventListener('click', function(e) {
       if (!e.target.closest('.live-booking-dropdown') && !e.target.closest('.btn-live-search')) {
@@ -6207,31 +6212,31 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
             <div class="field-boa" style="position:relative;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px;">
-                <label style="font-size:0.7rem; color:var(--gris); margin:0;">${t('transport').toUpperCase()}</label>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--gris); margin:0;">${t('transport').toUpperCase()}</label>
                 <button type="button" class="btn-live-search" onclick="window.abrirBusquedaTransporteTramo(${destId}, ${ida}, event)">
                   🧭 <span>Buscar transporte</span>
                 </button>
               </div>
               <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="Avión, Tren, Bus, Auto..." value="${tramo.medio || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
-              <div id="dropdown-transporte-${destId}-${ida}" class="live-booking-dropdown" style="display:none;"></div>
+              <div id="dropdown-transporte-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:9999;"></div>
             </div>
             <div class="field-boa">
-              <label style="display:block; font-size:0.7rem; color:var(--gris); margin-bottom:4px;">${t('transport_price') || 'PRECIO TRANSPORTE'}</label>
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('transport_price') || 'PRECIO TRANSPORTE'}</label>
               <input type="number" id="tramo-precio-${destId}-${ida}" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
             </div>
             <div class="field-boa" style="grid-column: 1 / -1; position:relative;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px;">
-                <label style="font-size:0.7rem; color:var(--gris); margin:0;">${t('alojamiento_label')}</label>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--gris); margin:0;">${t('alojamiento_label')}</label>
                 <button type="button" class="btn-live-search hotel-btn" onclick="window.abrirBusquedaHotelesTramo(${destId}, ${ida}, event)">
                   🏨 <span>Buscar hotel</span>
                 </button>
               </div>
               <input type="text" id="tramo-alojamiento-${destId}-${ida}" placeholder="${t('alojamiento_ph')}" value="${tramo.alojamiento || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'alojamiento', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
-              <div id="dropdown-hoteles-${destId}-${ida}" class="live-booking-dropdown" style="display:none;"></div>
+              <div id="dropdown-hoteles-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:9999;"></div>
             </div>
             <div class="field-boa" style="grid-column: 1 / -1;">
-              <label style="display:block; font-size:0.7rem; color:var(--gris); margin-bottom:4px;">${t('precio_alojamiento_label')}</label>
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('precio_alojamiento_label')}</label>
               <input type="number" id="tramo-precioAlojamiento-${destId}-${ida}" placeholder="0.00" value="${tramo.precioAlojamiento || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precioAlojamiento', parseFloat(this.value)||0)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
             </div>
           </div>

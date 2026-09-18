@@ -708,16 +708,14 @@
           <label id="fechaInicioLabel">Fecha de inicio:</label>
           <input type="datetime-local" id="fechaInicio" value="">
         </div>
-        <div class="fila-dato">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px;">
-            <label id="vueltaLabel" style="margin:0;">Vuelta (opcional):</label>
-            <button type="button" class="btn-live-search" onclick="window.abrirBusquedaTransporteVuelta(event)">
+        <div class="fila-dato" style="position:relative; align-items:center;">
+          <label id="vueltaLabel">Vuelta (opcional):</label>
+          <div class="campo-vuelta" style="display:flex; gap:8px; flex:1; align-items:center; position:relative;">
+            <input type="text" id="vuelta" placeholder="Descripción" style="flex:2; min-width:140px;">
+            <input type="number" id="vueltaPrecio" placeholder="€" value="0" style="width:75px; flex-shrink:0;">
+            <button type="button" class="btn-live-search" onclick="window.abrirBusquedaTransporteVuelta(event)" title="Buscar opciones de transporte en vivo">
               🧭 <span>Buscar transporte</span>
             </button>
-          </div>
-          <div class="campo-vuelta" style="position:relative;">
-            <input type="text" id="vuelta" placeholder="Descripción">
-            <input type="number" id="vueltaPrecio" placeholder="€" value="0">
             <div id="dropdown-transporte-vuelta" class="live-booking-dropdown" style="display:none;"></div>
           </div>
         </div>

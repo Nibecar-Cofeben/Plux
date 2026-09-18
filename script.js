@@ -58,7 +58,7 @@
         join_placeholder: "Ej: ABCD-1234", shared_trips_title: "Viajes compartidos con vos",
         colab_title: "Colaboradores", colab_invite_nick: "Invitar por Nickname", colab_invite_btn: "Invitar", colab_nick_ph: "Ej: messi",
         map_title: "Mapa del viaje", conversor_title: "Conversor", conversor_btn: "Convertir",
-        traductor_title: "Traductor para Viajeros", btn_traductor: "🌐 Traductor",
+        traductor_title: "Traductor para Viajeros", btn_traductor: "Traductor",
         descubrir_title: "Descubrir (Feed de Inspiración)", present_title: "Presentación del viaje",
         present_prev: "← Anterior", present_next: "Siguiente →", cuenta_btn_title: "Tu cuenta",
         ares_esc: "PRESIONA ESC PARA SALIR DE ARES",
@@ -211,7 +211,7 @@
         join_placeholder: "e.g. ABCD-1234", shared_trips_title: "Trips shared with you",
         colab_title: "Collaborators", colab_invite_nick: "Invite by nickname", colab_invite_btn: "Invite", colab_nick_ph: "e.g. traveler",
         map_title: "Trip map", conversor_title: "Converter", conversor_btn: "Convert",
-        traductor_title: "Traveler Translator", btn_traductor: "🌐 Translator",
+        traductor_title: "Traveler Translator", btn_traductor: "Translator",
         descubrir_title: "Discover (inspiration feed)", present_title: "Trip presentation",
         present_prev: "← Previous", present_next: "Next →", cuenta_btn_title: "Your account",
         ares_esc: "PRESS ESC TO EXIT ARES",
@@ -363,7 +363,7 @@
         join_placeholder: "ex. ABCD-1234", shared_trips_title: "Voyages partagés avec vous",
         colab_title: "Collaborateurs", colab_invite_nick: "Inviter par pseudo", colab_invite_btn: "Inviter", colab_nick_ph: "ex. voyageur",
         map_title: "Carte du voyage", conversor_title: "Convertisseur", conversor_btn: "Convertir",
-        traductor_title: "Traducteur de Voyage", btn_traductor: "🌐 Traducteur",
+        traductor_title: "Traducteur de Voyage", btn_traductor: "Traducteur",
         descubrir_title: "Découvrir (fil d'inspiration)", present_title: "Présentation du voyage",
         present_prev: "← Précédent", present_next: "Suivant →", cuenta_btn_title: "Votre compte",
         ares_esc: "APPUYEZ SUR ÉCHAP POUR QUITTER ARES",
@@ -510,7 +510,7 @@
         join_placeholder: "z.B. ABCD-1234", shared_trips_title: "Mit dir geteilte Reisen",
         colab_title: "Mitarbeiter", colab_invite_nick: "Per Nickname einladen", colab_invite_btn: "Einladen", colab_nick_ph: "z.B. reisender",
         map_title: "Reisekarte", conversor_title: "Umrechner", conversor_btn: "Umrechnen",
-        traductor_title: "Reise-Übersetzer", btn_traductor: "🌐 Übersetzer",
+        traductor_title: "Reise-Übersetzer", btn_traductor: "Übersetzer",
         descubrir_title: "Entdecken (Inspirations-Feed)", present_title: "Reisepräsentation",
         present_prev: "← Zurück", present_next: "Weiter →", cuenta_btn_title: "Ihr Konto",
         ares_esc: "ESC DRÜCKEN UM ARES ZU VERLASSEN",
@@ -657,7 +657,7 @@
         join_placeholder: "es. ABCD-1234", shared_trips_title: "Viaggi condivisi con te",
         colab_title: "Collaboratori", colab_invite_nick: "Invita per nickname", colab_invite_btn: "Invita", colab_nick_ph: "es. viaggiatore",
         map_title: "Mappa del viaggio", conversor_title: "Convertitore", conversor_btn: "Converti",
-        traductor_title: "Traduttore di Viaggio", btn_traductor: "🌐 Traduttore",
+        traductor_title: "Traduttore di Viaggio", btn_traductor: "Traduttore",
         descubrir_title: "Scopri (feed ispirazione)", present_title: "Presentazione del viaggio",
         present_prev: "← Precedente", present_next: "Successivo →", cuenta_btn_title: "Il tuo account",
         ares_esc: "PREMI ESC PER USCIRE DA ARES",
@@ -7539,6 +7539,60 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     // ================== TRADUCTOR PARA VIAJEROS ==================
     let _traductorDebounceTimer = null;
 
+    const TRAD_LANG_NAMES = {
+      es: 'Español',
+      en: 'Inglés',
+      fr: 'Francés',
+      de: 'Alemán',
+      it: 'Italiano',
+      pt: 'Portugués',
+      ja: 'Japonés',
+      zh: 'Chino',
+      ko: 'Coreano',
+      ru: 'Ruso',
+      ar: 'Árabe',
+      autodetect: 'Detectar idioma'
+    };
+
+    function toggleTradDropdown(which, event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      const menu = document.getElementById(which === 'from' ? 'trad-menu-from' : 'trad-menu-to');
+      const otherMenu = document.getElementById(which === 'from' ? 'trad-menu-to' : 'trad-menu-from');
+      const trigger = document.getElementById(which === 'from' ? 'trad-trigger-from' : 'trad-trigger-to');
+      const otherTrigger = document.getElementById(which === 'from' ? 'trad-trigger-to' : 'trad-trigger-from');
+
+      if (otherMenu) otherMenu.classList.remove('show');
+      if (otherTrigger) otherTrigger.classList.remove('active');
+
+      if (menu) {
+        menu.classList.toggle('show');
+        if (trigger) trigger.classList.toggle('active', menu.classList.contains('show'));
+      }
+    }
+
+    function selectTradLang(which, code, name) {
+      const input = document.getElementById(which === 'from' ? 'trad-lang-from' : 'trad-lang-to');
+      const label = document.getElementById(which === 'from' ? 'trad-label-from' : 'trad-label-to');
+      const menu = document.getElementById(which === 'from' ? 'trad-menu-from' : 'trad-menu-to');
+      const trigger = document.getElementById(which === 'from' ? 'trad-trigger-from' : 'trad-trigger-to');
+
+      if (input) input.value = code;
+      if (label) label.innerText = name || TRAD_LANG_NAMES[code] || code;
+
+      if (menu) {
+        menu.classList.remove('show');
+        menu.querySelectorAll('.trad-option').forEach(opt => {
+          opt.classList.toggle('selected', opt.dataset.code === code);
+        });
+      }
+      if (trigger) trigger.classList.remove('active');
+
+      ejecutarTraduccion();
+    }
+
     function abrirTraductor() {
       const modal = document.getElementById('modal-traductor');
       if (modal) {
@@ -7546,16 +7600,28 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         // Sugerir idioma destino según el primer destino del viaje si está disponible
         if (typeof destinos !== 'undefined' && destinos && destinos.length > 0 && destinos[0]?.nombre) {
           const destName = destinos[0].nombre.toLowerCase();
-          const targetSel = document.getElementById('trad-lang-to');
-          if (targetSel) {
-            if (destName.includes('roma') || destName.includes('italia') || destName.includes('milan') || destName.includes('florencia') || destName.includes('venecia')) targetSel.value = 'it';
-            else if (destName.includes('paris') || destName.includes('francia') || destName.includes('niza') || destName.includes('lyon')) targetSel.value = 'fr';
-            else if (destName.includes('berlin') || destName.includes('alemania') || destName.includes('munich') || destName.includes('frankfurt')) targetSel.value = 'de';
-            else if (destName.includes('tokio') || destName.includes('japon') || destName.includes('kyoto') || destName.includes('osaka')) targetSel.value = 'ja';
-            else if (destName.includes('londres') || destName.includes('york') || destName.includes('miami') || destName.includes('angeles') || destName.includes('eeuu') || destName.includes('usa') || destName.includes('uk')) targetSel.value = 'en';
-            else if (destName.includes('brasil') || destName.includes('rio') || destName.includes('lisboa') || destName.includes('portugal')) targetSel.value = 'pt';
+          let suggestedCode = null;
+          if (destName.includes('roma') || destName.includes('italia') || destName.includes('milan') || destName.includes('florencia') || destName.includes('venecia')) suggestedCode = 'it';
+          else if (destName.includes('paris') || destName.includes('francia') || destName.includes('niza') || destName.includes('lyon')) suggestedCode = 'fr';
+          else if (destName.includes('berlin') || destName.includes('alemania') || destName.includes('munich') || destName.includes('frankfurt')) suggestedCode = 'de';
+          else if (destName.includes('tokio') || destName.includes('japon') || destName.includes('kyoto') || destName.includes('osaka')) suggestedCode = 'ja';
+          else if (destName.includes('londres') || destName.includes('york') || destName.includes('miami') || destName.includes('angeles') || destName.includes('eeuu') || destName.includes('usa') || destName.includes('uk')) suggestedCode = 'en';
+          else if (destName.includes('brasil') || destName.includes('rio') || destName.includes('lisboa') || destName.includes('portugal')) suggestedCode = 'pt';
+
+          if (suggestedCode) {
+            const toInput = document.getElementById('trad-lang-to');
+            const toLabel = document.getElementById('trad-label-to');
+            if (toInput) toInput.value = suggestedCode;
+            if (toLabel) toLabel.innerText = TRAD_LANG_NAMES[suggestedCode] || suggestedCode;
+            const toMenu = document.getElementById('trad-menu-to');
+            if (toMenu) {
+              toMenu.querySelectorAll('.trad-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.dataset.code === suggestedCode);
+              });
+            }
           }
         }
+
         const srcInput = document.getElementById('trad-source-text');
         if (srcInput && !srcInput._hasTradListener) {
           srcInput._hasTradListener = true;
@@ -7571,8 +7637,6 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               if (resDiv) resDiv.innerText = 'Tu traducción aparecerá aquí...';
             }
           });
-          document.getElementById('trad-lang-from')?.addEventListener('change', ejecutarTraduccion);
-          document.getElementById('trad-lang-to')?.addEventListener('change', ejecutarTraduccion);
         }
 
         if (srcInput && srcInput.value.trim()) {
@@ -7584,27 +7648,52 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function cerrarTraductor() {
       const modal = document.getElementById('modal-traductor');
       if (modal) modal.style.display = 'none';
+      document.getElementById('trad-menu-from')?.classList.remove('show');
+      document.getElementById('trad-menu-to')?.classList.remove('show');
+      document.getElementById('trad-trigger-from')?.classList.remove('active');
+      document.getElementById('trad-trigger-to')?.classList.remove('active');
       if ('speechSynthesis' in window) {
         try { window.speechSynthesis.cancel(); } catch(e) {}
       }
     }
 
     function swapTraductorLangs() {
-      const fromSel = document.getElementById('trad-lang-from');
-      const toSel = document.getElementById('trad-lang-to');
-      if (!fromSel || !toSel) return;
-      if (fromSel.value === 'autodetect') fromSel.value = 'es';
-      const temp = fromSel.value;
-      fromSel.value = toSel.value;
-      toSel.value = temp;
+      const fromInput = document.getElementById('trad-lang-from');
+      const toInput = document.getElementById('trad-lang-to');
+      const fromLabel = document.getElementById('trad-label-from');
+      const toLabel = document.getElementById('trad-label-to');
+      if (!fromInput || !toInput) return;
+
+      let fromCode = fromInput.value;
+      if (fromCode === 'autodetect') fromCode = 'es';
+      const toCode = toInput.value;
+
+      fromInput.value = toCode;
+      toInput.value = fromCode;
+
+      if (fromLabel) fromLabel.innerText = TRAD_LANG_NAMES[toCode] || toCode;
+      if (toLabel) toLabel.innerText = TRAD_LANG_NAMES[fromCode] || fromCode;
+
+      const fromMenu = document.getElementById('trad-menu-from');
+      if (fromMenu) {
+        fromMenu.querySelectorAll('.trad-option').forEach(opt => {
+          opt.classList.toggle('selected', opt.dataset.code === toCode);
+        });
+      }
+      const toMenu = document.getElementById('trad-menu-to');
+      if (toMenu) {
+        toMenu.querySelectorAll('.trad-option').forEach(opt => {
+          opt.classList.toggle('selected', opt.dataset.code === fromCode);
+        });
+      }
 
       const srcInput = document.getElementById('trad-source-text');
       const resText = document.getElementById('trad-result-text');
       if (srcInput && resText && resText.innerText && !resText.innerText.includes('aparecerá')) {
         srcInput.value = resText.innerText;
         document.getElementById('trad-char-count').innerText = srcInput.value.length;
-        ejecutarTraduccion();
       }
+      ejecutarTraduccion();
     }
 
     function insertarFraseTraductor(texto) {
@@ -7689,7 +7778,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (!resDiv || !resDiv.innerText || resDiv.innerText.includes('aparecerá')) return;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(resDiv.innerText).then(() => {
-          showToast('📋 Traducción copiada al portapapeles', 'success');
+          showToast('Traducción copiada al portapapeles', 'success');
         }).catch(() => {
           showToast('Copiado', 'success');
         });
@@ -7741,6 +7830,26 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         console.warn('TTS error:', e);
       }
     }
+
+    // Dismiss translator dropdowns on document click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.trad-select-wrapper')) {
+        document.getElementById('trad-menu-from')?.classList.remove('show');
+        document.getElementById('trad-menu-to')?.classList.remove('show');
+        document.getElementById('trad-trigger-from')?.classList.remove('active');
+        document.getElementById('trad-trigger-to')?.classList.remove('active');
+      }
+    });
+
+    window.abrirTraductor = abrirTraductor;
+    window.cerrarTraductor = cerrarTraductor;
+    window.swapTraductorLangs = swapTraductorLangs;
+    window.insertarFraseTraductor = insertarFraseTraductor;
+    window.ejecutarTraduccion = ejecutarTraduccion;
+    window.copiarTraduccion = copiarTraduccion;
+    window.pronunciarTextoTraductor = pronunciarTextoTraductor;
+    window.toggleTradDropdown = toggleTradDropdown;
+    window.selectTradLang = selectTradLang;
 
     // ================== MAPA CORREGIDO (Open-Meteo + Nominatim Fallback) ==================
     async function geocode(lugar) {

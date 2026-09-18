@@ -2330,6 +2330,8 @@
 }
 
 #app .add-destino {
+  position: relative;
+  z-index: 10;
   display: grid;
   grid-template-columns: minmax(220px, 1fr) auto;
   align-items: stretch;
@@ -3375,6 +3377,8 @@
    ============================================================ */
 
 .datos-generales-foldable {
+  position: relative;
+  z-index: 50;
   margin-bottom: 20px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
   border: 1px solid var(--border);
@@ -3382,6 +3386,10 @@
   padding: 16px 20px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.datos-generales-foldable:has(.live-booking-dropdown[style*="display: block"]),
+.datos-generales-foldable:has(.live-booking-dropdown[style*="display:block"]) {
+  z-index: 99999 !important;
 }
 .datos-generales-foldable:hover {
   border-color: rgba(52, 211, 153, 0.45);

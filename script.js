@@ -1976,6 +1976,10 @@
     let numPersonas = 1;
     let nombresPersonasGlobal = "";
     let listaViajeros = [];
+    let pluxActiveChatId = null;
+    let pluxSocialChats = JSON.parse(localStorage.getItem('PluxSocialChats_V2') || '{}');
+    let pluxChatUnsubscribe = null;
+    let pluxDMsUnsubscribe = null;
 
     // ================== COLLAPSE & ACCORDION HELPERS ==================
     function toggleEditorDestino(destId, e) {
@@ -14306,10 +14310,6 @@ async function exportarPDF() {
   // ==========================================================================
   // PLUX SOCIAL CHAT (INDIVIDUAL & GRUPAL - REALTIME FIRESTORE & LOCAL ENGINE)
   // ==========================================================================
-  
-  let pluxActiveChatId = null;
-  let pluxSocialChats = JSON.parse(localStorage.getItem('PluxSocialChats_V2') || '{}');
-  let pluxChatUnsubscribe = null;
 
   function getActiveTripChat() {
     const tripChatId = getTripChatChannelId();

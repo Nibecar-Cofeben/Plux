@@ -1291,7 +1291,7 @@
     .vaca-result { color: var(--rosa); font-weight: bold; font-size: 1.2rem; margin-top: 10px; }
 
     /* ADDONS: Modales & Labs */
-    #modal-panel-herramientas, #modal-calendario, #modal-viajes, #modal-presentacion, #modal-mapa, #modal-conversor, #modal-clima, #modal-colaboradores, #modal-descubrir, #modal-viaje-activo {
+    #modal-panel-herramientas, #modal-calendario, #modal-viajes, #modal-presentacion, #modal-mapa, #modal-conversor, #modal-clima, #modal-colaboradores, #modal-descubrir, #modal-viaje-activo, #modal-traductor {
       position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:300; padding:10px;
     }
     
@@ -1310,24 +1310,64 @@
       background: var(--fondo);
     }
 
-    .panel-herramientas-content, .calendario-content, .modal-content, .presentacion-content, .mapa-content, .conversor-content, .clima-content, .colaboradores-content, .descubrir-content {
+    .panel-herramientas-content, .calendario-content, .modal-content, .presentacion-content, .mapa-content, .conversor-content, .clima-content, .colaboradores-content, .descubrir-content, .traductor-content {
       max-width: 1150px; width: 95%; max-height:90vh; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:24px; padding:20px; box-shadow:0 20px 80px rgba(0,0,0,0.6); position:relative; animation:scaleIn 0.4s ease;
       overflow-y:auto;
     }
     .mapa-content { height: 90vh; display: flex; flex-direction: column; padding: 20px; }
     #map { width: 100%; flex: 1; border-radius: 16px; background: #1a1e24; min-height: 300px; }
     @keyframes scaleIn { from{opacity:0;transform:scale(0.8);} to{opacity:1;transform:scale(1);} }
-    .panel-herramientas-header, .calendario-header, .presentacion-header, .conversor-header, .clima-header, .colab-header, .descubrir-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-    .panel-herramientas-header h2, .calendario-header h2, .conversor-header h2, .clima-header h2, .colab-header h2, .descubrir-header h2 { color:var(--verde); }
-    .close-panel, .close-calendario, .close-modal, .close-conversor, .close-clima, .close-mapa, .close-resumen, .close-colaboradores, .close-descubrir, .close-icon {
+    .panel-herramientas-header, .calendario-header, .presentacion-header, .conversor-header, .clima-header, .colab-header, .descubrir-header, .traductor-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .panel-herramientas-header h2, .calendario-header h2, .conversor-header h2, .clima-header h2, .colab-header h2, .descubrir-header h2, .traductor-header h2 { color:var(--verde); }
+    .close-panel, .close-calendario, .close-modal, .close-conversor, .close-clima, .close-mapa, .close-resumen, .close-colaboradores, .close-descubrir, .close-traductor, .close-icon {
       background: none; border: none; color: var(--gris); font-size: 2.5rem; font-weight: 300; line-height: 1; cursor: pointer; opacity: 0.6; transition: opacity 0.3s, transform 0.3s, color 0.3s; padding: 0; display: inline-flex; align-items: center; justify-content: center;
     }
-    .close-panel:hover, .close-calendario:hover, .close-modal:hover, .close-conversor:hover, .close-clima:hover, .close-mapa:hover, .close-resumen:hover, .close-colaboradores:hover, .close-descubrir:hover, .close-icon:hover {
+    .close-panel:hover, .close-calendario:hover, .close-modal:hover, .close-conversor:hover, .close-clima:hover, .close-mapa:hover, .close-resumen:hover, .close-colaboradores:hover, .close-descubrir:hover, .close-traductor:hover, .close-icon:hover {
       opacity: 1; color: #ef4444; transform: scale(1.2) rotate(90deg);
     }
     .herramientas-grid { display:flex; flex-direction:column; gap:15px; }
     .herramienta-btn { padding:15px 20px; font-size:1.2rem; background:var(--card); border:1px solid var(--border); border-radius:16px; color:var(--texto); cursor:pointer; text-align:left; }
     .herramienta-btn:hover { background:var(--fondo); transform:translateX(8px) scale(1.02); }
+
+    .trad-chip {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: var(--texto) !important;
+      font-size: 0.75rem !important;
+      padding: 4px 10px !important;
+      border-radius: 999px !important;
+      cursor: pointer !important;
+      min-height: unset !important;
+      height: auto !important;
+      width: auto !important;
+      transition: all 0.2s ease !important;
+      font-weight: 500 !important;
+    }
+    .trad-chip:hover {
+      background: rgba(16, 185, 129, 0.2) !important;
+      border-color: #10b981 !important;
+      color: #ffffff !important;
+      transform: translateY(-1px) !important;
+    }
+    .trad-icon-btn {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: var(--texto) !important;
+      font-size: 0.75rem !important;
+      padding: 3px 8px !important;
+      border-radius: 8px !important;
+      cursor: pointer !important;
+      min-height: unset !important;
+      height: 26px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+      line-height: 1 !important;
+    }
+    .trad-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.14) !important;
+      color: #ffffff !important;
+    }
     .calendario-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
     .calendario-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; min-width:350px; }
     .calendario-dia-semana { text-align:center; font-weight:bold; color:var(--gris); padding:8px; }
@@ -3088,6 +3128,7 @@
   #modal-calendario,
   #modal-mapa,
   #modal-conversor,
+  #modal-traductor,
   #modal-clima,
   #modal-viaje-activo,
   #modal-presentacion,

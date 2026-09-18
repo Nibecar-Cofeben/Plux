@@ -57,8 +57,8 @@
         inspo_title: "Inspiración · Destinos Populares", tab_saved: "Guardados", tab_templates: "Plantillas",
         join_placeholder: "Ej: ABCD-1234", shared_trips_title: "Viajes compartidos con vos",
         colab_title: "Colaboradores", colab_invite_nick: "Invitar por Nickname", colab_invite_btn: "Invitar", colab_nick_ph: "Ej: messi",
-        colab_access_code: "CÓDIGO DE ACCESO:", colab_gen_code: "Generar Código de Invitación",
         map_title: "Mapa del viaje", conversor_title: "Conversor", conversor_btn: "Convertir",
+        traductor_title: "Traductor para Viajeros", btn_traductor: "🌐 Traductor",
         descubrir_title: "Descubrir (Feed de Inspiración)", present_title: "Presentación del viaje",
         present_prev: "← Anterior", present_next: "Siguiente →", cuenta_btn_title: "Tu cuenta",
         ares_esc: "PRESIONA ESC PARA SALIR DE ARES",
@@ -210,8 +210,8 @@
         inspo_title: "Inspiration · Popular Destinations", tab_saved: "Saved", tab_templates: "Templates",
         join_placeholder: "e.g. ABCD-1234", shared_trips_title: "Trips shared with you",
         colab_title: "Collaborators", colab_invite_nick: "Invite by nickname", colab_invite_btn: "Invite", colab_nick_ph: "e.g. traveler",
-        colab_access_code: "ACCESS CODE:", colab_gen_code: "Generate invite code",
         map_title: "Trip map", conversor_title: "Converter", conversor_btn: "Convert",
+        traductor_title: "Traveler Translator", btn_traductor: "🌐 Translator",
         descubrir_title: "Discover (inspiration feed)", present_title: "Trip presentation",
         present_prev: "← Previous", present_next: "Next →", cuenta_btn_title: "Your account",
         ares_esc: "PRESS ESC TO EXIT ARES",
@@ -362,8 +362,8 @@
         inspo_title: "Inspiration · Destinations populaires", tab_saved: "Enregistrés", tab_templates: "Modèles",
         join_placeholder: "ex. ABCD-1234", shared_trips_title: "Voyages partagés avec vous",
         colab_title: "Collaborateurs", colab_invite_nick: "Inviter par pseudo", colab_invite_btn: "Inviter", colab_nick_ph: "ex. voyageur",
-        colab_access_code: "CODE D'ACCÈS :", colab_gen_code: "Générer un code d'invitation",
         map_title: "Carte du voyage", conversor_title: "Convertisseur", conversor_btn: "Convertir",
+        traductor_title: "Traducteur de Voyage", btn_traductor: "🌐 Traducteur",
         descubrir_title: "Découvrir (fil d'inspiration)", present_title: "Présentation du voyage",
         present_prev: "← Précédent", present_next: "Suivant →", cuenta_btn_title: "Votre compte",
         ares_esc: "APPUYEZ SUR ÉCHAP POUR QUITTER ARES",
@@ -509,8 +509,8 @@
         inspo_title: "Inspiration · Beliebte Reiseziele", tab_saved: "Gespeichert", tab_templates: "Vorlagen",
         join_placeholder: "z.B. ABCD-1234", shared_trips_title: "Mit dir geteilte Reisen",
         colab_title: "Mitarbeiter", colab_invite_nick: "Per Nickname einladen", colab_invite_btn: "Einladen", colab_nick_ph: "z.B. reisender",
-        colab_access_code: "ZUGANGSCODE:", colab_gen_code: "Einladungscode erzeugen",
         map_title: "Reisekarte", conversor_title: "Umrechner", conversor_btn: "Umrechnen",
+        traductor_title: "Reise-Übersetzer", btn_traductor: "🌐 Übersetzer",
         descubrir_title: "Entdecken (Inspirations-Feed)", present_title: "Reisepräsentation",
         present_prev: "← Zurück", present_next: "Weiter →", cuenta_btn_title: "Ihr Konto",
         ares_esc: "ESC DRÜCKEN UM ARES ZU VERLASSEN",
@@ -656,8 +656,8 @@
         inspo_title: "Ispirazione · Destinazioni popolari", tab_saved: "Salvati", tab_templates: "Modelli",
         join_placeholder: "es. ABCD-1234", shared_trips_title: "Viaggi condivisi con te",
         colab_title: "Collaboratori", colab_invite_nick: "Invita per nickname", colab_invite_btn: "Invita", colab_nick_ph: "es. viaggiatore",
-        colab_access_code: "CODICE DI ACCESSO:", colab_gen_code: "Genera codice invito",
         map_title: "Mappa del viaggio", conversor_title: "Convertitore", conversor_btn: "Converti",
+        traductor_title: "Traduttore di Viaggio", btn_traductor: "🌐 Traduttore",
         descubrir_title: "Scopri (feed ispirazione)", present_title: "Presentazione del viaggio",
         present_prev: "← Precedente", present_next: "Successivo →", cuenta_btn_title: "Il tuo account",
         ares_esc: "PREMI ESC PER USCIRE DA ARES",
@@ -962,6 +962,8 @@
       el('btnConversor', 'conversor_title');
       el('conversorTitle', 'conversor_title');
       el('conversorBtn', 'conversor_btn');
+      el('btnTraductor', 'btn_traductor');
+      el('traductorTitle', 'traductor_title');
       el('btnPreferencias', 'preferencias_btn');
       el('btnViajeActivo', 'viaje_activo_btn');
       el('viajeActivoTitle', 'viaje_activo_modal_title');
@@ -7530,15 +7532,210 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       document.getElementById('conversor-resultado').innerText = `${res.toFixed(2)} ${dest}`;
     }
 
-    // ADDON: EJECUTAR CONVERSOR LABS (Unidades Raras)
-    function ejecutarConversorLabs() {
-        const val = parseFloat(document.getElementById('lab-conv-val').value) || 0;
-        const type = document.getElementById('lab-conv-type').value;
-        let res = 0;
-        if(type === 'f-c') res = (val - 32) * 5/9;
-        if(type === 'mi-km') res = val * 1.60934;
-        if(type === 'gal-l') res = val * 3.78541;
-        document.getElementById('lab-conv-res').innerText = "Resultado: " + res.toFixed(2);
+    // ================== TRADUCTOR PARA VIAJEROS ==================
+    let _traductorDebounceTimer = null;
+
+    function abrirTraductor() {
+      const modal = document.getElementById('modal-traductor');
+      if (modal) {
+        modal.style.display = 'flex';
+        // Sugerir idioma destino según el primer destino del viaje si está disponible
+        if (typeof destinos !== 'undefined' && destinos && destinos.length > 0 && destinos[0]?.nombre) {
+          const destName = destinos[0].nombre.toLowerCase();
+          const targetSel = document.getElementById('trad-lang-to');
+          if (targetSel) {
+            if (destName.includes('roma') || destName.includes('italia') || destName.includes('milan') || destName.includes('florencia') || destName.includes('venecia')) targetSel.value = 'it';
+            else if (destName.includes('paris') || destName.includes('francia') || destName.includes('niza') || destName.includes('lyon')) targetSel.value = 'fr';
+            else if (destName.includes('berlin') || destName.includes('alemania') || destName.includes('munich') || destName.includes('frankfurt')) targetSel.value = 'de';
+            else if (destName.includes('tokio') || destName.includes('japon') || destName.includes('kyoto') || destName.includes('osaka')) targetSel.value = 'ja';
+            else if (destName.includes('londres') || destName.includes('york') || destName.includes('miami') || destName.includes('angeles') || destName.includes('eeuu') || destName.includes('usa') || destName.includes('uk')) targetSel.value = 'en';
+            else if (destName.includes('brasil') || destName.includes('rio') || destName.includes('lisboa') || destName.includes('portugal')) targetSel.value = 'pt';
+          }
+        }
+        const srcInput = document.getElementById('trad-source-text');
+        if (srcInput && !srcInput._hasTradListener) {
+          srcInput._hasTradListener = true;
+          srcInput.addEventListener('input', (e) => {
+            const count = e.target.value.length;
+            const countEl = document.getElementById('trad-char-count');
+            if (countEl) countEl.innerText = count;
+            clearTimeout(_traductorDebounceTimer);
+            if (count > 0) {
+              _traductorDebounceTimer = setTimeout(ejecutarTraduccion, 500);
+            } else {
+              const resDiv = document.getElementById('trad-result-text');
+              if (resDiv) resDiv.innerText = 'Tu traducción aparecerá aquí...';
+            }
+          });
+          document.getElementById('trad-lang-from')?.addEventListener('change', ejecutarTraduccion);
+          document.getElementById('trad-lang-to')?.addEventListener('change', ejecutarTraduccion);
+        }
+
+        if (srcInput && srcInput.value.trim()) {
+          ejecutarTraduccion();
+        }
+      }
+    }
+
+    function cerrarTraductor() {
+      const modal = document.getElementById('modal-traductor');
+      if (modal) modal.style.display = 'none';
+      if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+      }
+    }
+
+    function swapTraductorLangs() {
+      const fromSel = document.getElementById('trad-lang-from');
+      const toSel = document.getElementById('trad-lang-to');
+      if (!fromSel || !toSel) return;
+      if (fromSel.value === 'autodetect') fromSel.value = 'es';
+      const temp = fromSel.value;
+      fromSel.value = toSel.value;
+      toSel.value = temp;
+
+      const srcInput = document.getElementById('trad-source-text');
+      const resText = document.getElementById('trad-result-text');
+      if (srcInput && resText && resText.innerText && !resText.innerText.includes('aparecerá')) {
+        srcInput.value = resText.innerText;
+        document.getElementById('trad-char-count').innerText = srcInput.value.length;
+        ejecutarTraduccion();
+      }
+    }
+
+    function insertarFraseTraductor(texto) {
+      const srcInput = document.getElementById('trad-source-text');
+      if (srcInput) {
+        srcInput.value = texto;
+        const countEl = document.getElementById('trad-char-count');
+        if (countEl) countEl.innerText = texto.length;
+        ejecutarTraduccion();
+      }
+    }
+
+    async function ejecutarTraduccion() {
+      const srcInput = document.getElementById('trad-source-text');
+      const resDiv = document.getElementById('trad-result-text');
+      const statusDiv = document.getElementById('trad-status');
+      if (!srcInput || !resDiv) return;
+
+      const text = srcInput.value.trim();
+      if (!text) {
+        resDiv.innerText = 'Tu traducción aparecerá aquí...';
+        if (statusDiv) statusDiv.innerText = 'Listo';
+        return;
+      }
+
+      let from = document.getElementById('trad-lang-from')?.value || 'es';
+      const to = document.getElementById('trad-lang-to')?.value || 'en';
+
+      if (from === 'autodetect') from = 'es';
+
+      if (from === to) {
+        resDiv.innerText = text;
+        if (statusDiv) statusDiv.innerText = 'Mismo idioma';
+        return;
+      }
+
+      if (statusDiv) statusDiv.innerText = 'Traduciendo...';
+      resDiv.style.opacity = '0.6';
+
+      try {
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
+        const resp = await fetch(url);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.responseData && data.responseData.translatedText) {
+            resDiv.innerText = data.responseData.translatedText;
+            if (statusDiv) statusDiv.innerText = 'Completado ✓';
+          } else {
+            throw new Error('Sin respuesta estructurada');
+          }
+        } else {
+          throw new Error('Error de conexión');
+        }
+      } catch (err) {
+        console.warn('MyMemory traducción fallo, usando fallback offline:', err);
+        const offlineDic = {
+          'hola': { en: 'Hello', fr: 'Bonjour', it: 'Ciao', de: 'Hallo', pt: 'Olá' },
+          'hola, ¿cómo estás?': { en: 'Hello, how are you?', fr: 'Bonjour, comment allez-vous ?', it: 'Ciao, come stai?', de: 'Hallo, wie geht es dir?', pt: 'Olá, como vai você?' },
+          'muchas gracias': { en: 'Thank you very much', fr: 'Merci beaucoup', it: 'Grazie mille', de: 'Vielen Dank', pt: 'Muito obrigado' },
+          'la cuenta, por favor': { en: 'The bill, please', fr: "L'addition, s'il vous plaît", it: 'Il conto, per favore', de: 'Die Rechnung, bitte', pt: 'A conta, por favor' },
+          '¿cuánto cuesta esto?': { en: 'How much does this cost?', fr: 'Combien ça coûte ?', it: 'Quanto costa questo?', de: 'Wie viel kostet das?', pt: 'Quanto custa isso?' },
+          '¿dónde está el baño?': { en: 'Where is the bathroom?', fr: 'Où sont les toilettes ?', it: 'Dov\'è il bagno?', de: 'Wo ist die Toilette?', pt: 'Onde fica o banheiro?' },
+          '¿dónde está la estación de tren o metro?': { en: 'Where is the train or metro station?', fr: 'Où est la gare ou le métro ?', it: 'Dov\'è la stazione del treno o della metropolitana?', de: 'Wo ist der Bahnhof oder die U-Bahn-Station?', pt: 'Onde fica a estação de trem ou metrô?' },
+          'tengo una reserva a mi nombre': { en: 'I have a reservation under my name', fr: 'J\'ai une réservation à mon nom', it: 'Ho una prenotazione a mio nome', de: 'Ich habe eine Reservierung auf meinen Namen', pt: 'Tenho uma reserva em meu nome' },
+          'necesito ayuda, por favor': { en: 'I need help, please', fr: 'J\'ai besoin d\'aide, s\'il vous plaît', it: 'Ho bisogno di aiuto, per favore', de: 'Ich brauche Hilfe, bitte', pt: 'Preciso de ajuda, por favor' }
+        };
+        const lower = text.toLowerCase().trim();
+        if (offlineDic[lower] && offlineDic[lower][to]) {
+          resDiv.innerText = offlineDic[lower][to];
+          if (statusDiv) statusDiv.innerText = 'Offline ✓';
+        } else {
+          resDiv.innerText = text;
+          if (statusDiv) statusDiv.innerText = 'Sin conexión';
+        }
+      } finally {
+        resDiv.style.opacity = '1';
+      }
+    }
+
+    function copiarTraduccion() {
+      const resDiv = document.getElementById('trad-result-text');
+      if (!resDiv || !resDiv.innerText || resDiv.innerText.includes('aparecerá')) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(resDiv.innerText).then(() => {
+          showToast('📋 Traducción copiada al portapapeles', 'success');
+        }).catch(() => {
+          showToast('Copiado', 'success');
+        });
+      }
+    }
+
+    function pronunciarTextoTraductor(tipo) {
+      if (!('speechSynthesis' in window)) {
+        showToast('Tu navegador no soporta síntesis de voz', 'warning');
+        return;
+      }
+      window.speechSynthesis.cancel();
+
+      let text = '';
+      let lang = 'es';
+
+      if (tipo === 'source') {
+        text = document.getElementById('trad-source-text')?.value || '';
+        lang = document.getElementById('trad-lang-from')?.value || 'es';
+        if (lang === 'autodetect') lang = 'es';
+      } else {
+        const resDiv = document.getElementById('trad-result-text');
+        text = resDiv ? resDiv.innerText : '';
+        lang = document.getElementById('trad-lang-to')?.value || 'en';
+      }
+
+      if (!text || text.includes('aparecerá')) return;
+
+      const langMap = {
+        es: 'es-ES',
+        en: 'en-US',
+        fr: 'fr-FR',
+        de: 'de-DE',
+        it: 'it-IT',
+        pt: 'pt-PT',
+        ja: 'ja-JP',
+        zh: 'zh-CN',
+        ko: 'ko-KR',
+        ru: 'ru-RU',
+        ar: 'ar-SA'
+      };
+
+      try {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = langMap[lang] || 'en-US';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+      } catch(e) {
+        console.warn('TTS error:', e);
+      }
     }
 
     // ================== MAPA CORREGIDO (Open-Meteo + Nominatim Fallback) ==================
@@ -13649,6 +13846,13 @@ async function exportarPDF() {
   window.cerrarCalendario = cerrarCalendario;
   window.abrirConversor = abrirConversor;
   window.cerrarConversor = cerrarConversor;
+  window.abrirTraductor = abrirTraductor;
+  window.cerrarTraductor = cerrarTraductor;
+  window.swapTraductorLangs = swapTraductorLangs;
+  window.insertarFraseTraductor = insertarFraseTraductor;
+  window.ejecutarTraduccion = ejecutarTraduccion;
+  window.copiarTraduccion = copiarTraduccion;
+  window.pronunciarTextoTraductor = pronunciarTextoTraductor;
   window.abrirClima = abrirClima;
   window.cerrarClima = cerrarClima;
   window.buscarClimaModal = buscarClimaModal;

@@ -102,7 +102,7 @@
     };
   </script>
 
-  <link rel="stylesheet" href="/plux/styles.css?v=1789693000003">
+  <link rel="stylesheet" href="/plux/styles.css?v=1789694000001">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -120,7 +120,7 @@
   <script src="/plux/firebase/firebase-auth-compat.js"></script>
   <script src="/plux/firebase/firebase-database-compat.js"></script>
   <script src="/plux/firebase/firebase-firestore-compat.js"></script>
-  <script defer src="/plux/script.js?v=1789693000003"></script>
+  <script defer src="/plux/script.js?v=1789694000001"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -214,6 +214,7 @@
         <button class="herramienta-btn" onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; font-weight:bold; grid-column:span 2;">💬 Chat Grupal & Amigos</button>
         <button class="herramienta-btn" onclick="abrirCalendario()" id="btnCalendario">Calendario</button>
         <button class="herramienta-btn" onclick="abrirConversor()" id="btnConversor">Conversor</button>
+        <button class="herramienta-btn" onclick="abrirTraductor()" id="btnTraductor">🌐 Traductor</button>
         <button class="herramienta-btn" onclick="abrirChecklist()" id="btnChecklist">Checklist</button>
         <button class="herramienta-btn" onclick="abrirMapa()" id="btnMapa">Ver mapa</button>
         <button class="herramienta-btn" onclick="abrirClima()" id="btnClima">Clima</button>
@@ -874,6 +875,113 @@
     </div>
   </div>
 
+  <div id="modal-traductor" style="display:none;">
+    <div class="traductor-content" style="max-width:760px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:24px; padding:24px; box-shadow:0 20px 80px rgba(0,0,0,0.6); border:1px solid var(--border); position:relative;">
+      <div class="traductor-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.6rem;">🌐</span>
+          <div>
+            <h2 id="traductorTitle" style="color:var(--verde); margin:0; font-size:1.3rem;">Traductor para Viajeros</h2>
+            <div style="font-size:0.75rem; color:var(--gris);">Traduce frases, carteles y pronuncia en cualquier idioma</div>
+          </div>
+        </div>
+        <span class="close-traductor close-modal" onclick="cerrarTraductor()" style="cursor:pointer; font-size:2.2rem; line-height:1; color:var(--gris);">&times;</span>
+      </div>
+
+      <!-- Selector de Idiomas -->
+      <div class="traductor-lang-bar" style="display:flex; align-items:center; gap:8px; margin-bottom:14px; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:14px; border:1px solid var(--border);">
+        <div style="flex:1;">
+          <label style="font-size:0.7rem; color:var(--gris); display:block; margin-bottom:2px; font-weight:700;">IDIOMA DE ORIGEN</label>
+          <select id="trad-lang-from" style="width:100%; height:38px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; color:var(--texto); padding:0 8px; font-size:0.9rem;">
+            <option value="es" selected>🇪🇸 Español</option>
+            <option value="en">🇬🇧 Inglés</option>
+            <option value="fr">🇫🇷 Francés</option>
+            <option value="de">🇩🇪 Alemán</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="pt">🇵🇹 Portugués</option>
+            <option value="ja">🇯🇵 Japonés</option>
+            <option value="zh">🇨🇳 Chino</option>
+            <option value="ko">🇰🇷 Coreano</option>
+            <option value="ru">🇷🇺 Ruso</option>
+            <option value="ar">🇸🇦 Árabe</option>
+            <option value="autodetect">✨ Detectar idioma</option>
+          </select>
+        </div>
+
+        <button type="button" onclick="window.swapTraductorLangs()" title="Intercambiar idiomas" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--texto); border-radius:50%; width:38px; height:38px; min-height:unset; padding:0; display:flex; align-items:center; justify-content:center; font-size:1.1rem; cursor:pointer; margin-top:14px; transition:all 0.2s;">
+          ⇄
+        </button>
+
+        <div style="flex:1;">
+          <label style="font-size:0.7rem; color:var(--gris); display:block; margin-bottom:2px; font-weight:700;">IDIOMA DESTINO</label>
+          <select id="trad-lang-to" style="width:100%; height:38px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; color:var(--texto); padding:0 8px; font-size:0.9rem;">
+            <option value="en" selected>🇬🇧 Inglés</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="fr">🇫🇷 Francés</option>
+            <option value="de">🇩🇪 Alemán</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="pt">🇵🇹 Portugués</option>
+            <option value="ja">🇯🇵 Japonés</option>
+            <option value="zh">🇨🇳 Chino</option>
+            <option value="ko">🇰🇷 Coreano</option>
+            <option value="ru">🇷🇺 Ruso</option>
+            <option value="ar">🇸🇦 Árabe</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Phrase Chips -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">
+          💬 Frases útiles de viaje (Toca para traducir):
+        </div>
+        <div id="traductor-quick-chips" style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button type="button" class="trad-chip" onclick="window.insertarFraseTraductor('Hola, ¿cómo estás?')">👋 Hola</button>
+          <button type="button" class="trad-chip" onclick="window.insertarFraseTraductor('Muchas gracias')">🙏 Gracias</button>
+          <button type="button" class="trad-chip" onclick="window.insertarFraseTraductor('La cuenta, por favor')">🍽️ La cuenta</button>
+          <button type="button" class="trad-chip" onclick="window.insertarFraseTraductor('¿Cuánto cuesta esto?')">🏷️ ¿Cuánto cuesta?</button>
+          <button type="button" class="trad-chip" onclick="window.insertarFraseTraductor('¿Dónde está el baño?')">🚻 Baño</button>
+          <button type="button" class="trad-chip" onclick="window.insertarFraseTraductor('¿Dónde está la estación de tren o metro?')">🚆 Estación</button>
+          <button type="button" class="trad-chip" onclick="window.insertarFraseTraductor('Tengo una reserva a mi nombre')">🏨 Reserva</button>
+          <button type="button" class="trad-chip" onclick="window.insertarFraseTraductor('Necesito ayuda, por favor')">🆘 Ayuda</button>
+        </div>
+      </div>
+
+      <!-- Cuadros de Entrada y Salida -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:14px;">
+        <!-- Origen -->
+        <div style="display:flex; flex-direction:column; background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:14px; padding:12px;">
+          <textarea id="trad-source-text" placeholder="Escribe aquí el texto a traducir..." style="width:100%; height:110px; background:transparent; border:none; color:var(--texto); font-size:0.95rem; resize:none; outline:none; padding:0; line-height:1.4; font-family:inherit;"></textarea>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid rgba(255,255,255,0.06); padding-top:6px;">
+            <div style="display:flex; gap:6px;">
+              <button type="button" onclick="window.pronunciarTextoTraductor('source')" title="Escuchar texto original" class="trad-icon-btn">🔊</button>
+              <button type="button" onclick="document.getElementById('trad-source-text').value=''; document.getElementById('trad-result-text').innerText='Tu traducción aparecerá aquí...'; document.getElementById('trad-char-count').innerText='0';" title="Borrar texto" class="trad-icon-btn">🗑️</button>
+            </div>
+            <span id="trad-char-count" style="font-size:0.7rem; color:var(--gris);">0</span>
+          </div>
+        </div>
+
+        <!-- Traducción -->
+        <div style="display:flex; flex-direction:column; background:rgba(16,185,129,0.04); border:1px solid rgba(16,185,129,0.25); border-radius:14px; padding:12px; position:relative;">
+          <div id="trad-result-text" style="flex:1; min-height:110px; color:#10b981; font-size:1rem; font-weight:600; line-height:1.4; word-break:break-word; overflow-y:auto; max-height:140px;">
+            Tu traducción aparecerá aquí...
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid rgba(16,185,129,0.15); padding-top:6px;">
+            <div style="display:flex; gap:6px;">
+              <button type="button" onclick="window.pronunciarTextoTraductor('target')" title="Pronunciar traducción" class="trad-icon-btn" style="color:#10b981;">🔊 Pronunciar</button>
+              <button type="button" onclick="window.copiarTraduccion()" title="Copiar traducción" class="trad-icon-btn">📋 Copiar</button>
+            </div>
+            <span id="trad-status" style="font-size:0.7rem; color:var(--gris);">Listo</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" onclick="window.ejecutarTraduccion()" id="btnRealizarTraduccion" style="width:100%; padding:12px; background:linear-gradient(135deg, var(--verde), #38bdf8); color:black; font-weight:800; border:none; border-radius:12px; cursor:pointer; font-size:0.95rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+        🌐 <span>Traducir ahora</span>
+      </button>
+    </div>
+  </div>
+
   <div id="plux-labs-panel">
       <h3 style="color:#00ff41;">PLUX_LABS // V.D5.09</h3>
       <button class="labs-btn" onclick="document.getElementById('plux-labs-panel').style.display='none'" style="color:#ef4444; border-color:#ef4444;">CERRAR</button>
@@ -1457,6 +1565,10 @@
         <button class="mobile-drawer-item" onclick="window.abrirChatSocial(); window.toggleMobileTripMenu();">
           <span class="icon">💬</span>
           <span>Chat Social del Viaje</span>
+        </button>
+        <button class="mobile-drawer-item" onclick="window.abrirTraductor(); window.toggleMobileTripMenu();">
+          <span class="icon">🌐</span>
+          <span>Traductor de Viaje</span>
         </button>
         <button class="mobile-drawer-item cancel-item" onclick="window.toggleMobileTripMenu()">
           <span class="icon">✕</span>

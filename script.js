@@ -5749,7 +5749,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       };
     }
 
-    function generarOpcionesVuelos(origenStr, destinoStr, fechaYmd, numPers = 1) {
+    function generarOpcionesTransporte(origenStr, destinoStr, fechaYmd, numPers = 1) {
       const origIata = resolverCodigoIata(origenStr);
       const destIata = resolverCodigoIata(destinoStr);
       const pers = Math.max(1, parseInt(numPers) || 1);
@@ -5758,52 +5758,70 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const cleanFechaYmd = fechaYmd || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
       const kiwiUrl = `https://www.kiwi.com/deep?from=${encodeURIComponent(origIata)}&to=${encodeURIComponent(destIata)}&departure=${cleanFechaYmd}&passengers=${pers}`;
-      const skyscannerUrl = `https://www.skyscanner.net/transport/flights/${origIata.toLowerCase()}/${destIata.toLowerCase()}/${cleanFechaYmd.replace(/-/g, '').slice(2)}/?adults=${pers}`;
-      const googleFlightsUrl = `https://www.google.com/travel/flights?q=Flights%20to%20${encodeURIComponent(destNombre)}%20from%20${encodeURIComponent(origNombre)}%20on%20${cleanFechaYmd}`;
+      const trainlineUrl = `https://www.trainline.com/search?from=${encodeURIComponent(origNombre)}&to=${encodeURIComponent(destNombre)}&date=${cleanFechaYmd}`;
+      const omioBusUrl = `https://www.omio.com/search-frontend/results/${encodeURIComponent(origNombre)}/${encodeURIComponent(destNombre)}/${cleanFechaYmd}/1/0/0/bus`;
+      const rentalCarsUrl = `https://www.rentalcars.com/search-results?location=${encodeURIComponent(origNombre)}&puDay=${cleanFechaYmd.slice(8,10)}&puMonth=${cleanFechaYmd.slice(5,7)}&puYear=${cleanFechaYmd.slice(0,4)}`;
 
       const isIntercontinental = ['BUE','COR','MDZ','SCL','LIM','BOG','MEX','RIO','SAO'].includes(origIata) && ['MAD','BCN','ROM','PAR','LON','BER','AMS','TYO','DXB','NYC','MIA'].includes(destIata);
 
-      const basePricePerPerson = isIntercontinental ? 620 : 130;
-      const directPrice = Math.round(basePricePerPerson * 1.3 * pers);
-      const scalePrice = Math.round(basePricePerPerson * 0.9 * pers);
-      const recommendedPrice = Math.round(basePricePerPerson * 1.1 * pers);
+      const baseFlight = isIntercontinental ? 620 : 130;
+      const flightPrice = Math.round(baseFlight * 1.2 * pers);
+      const trainPrice = Math.round((isIntercontinental ? 90 : 45) * pers);
+      const busPrice = Math.round((isIntercontinental ? 50 : 25) * pers);
+      const carPrice = Math.round(40 * pers);
 
       return [
         {
-          titulo: '✈️ Vuelo Directo Más Rápido',
-          aerolinea: isIntercontinental ? 'Iberia / LATAM / Air Europa' : 'Aerolíneas / Sky / JetSMART',
-          detalles: `Vuelo directo sin escalas · Salida matutina (${origIata} ➔ ${destIata})`,
-          duracion: isIntercontinental ? '11h 50m' : '2h 15m',
-          precio: directPrice,
-          precioPersona: Math.round(directPrice / pers),
+          tipoIcon: '✈️',
+          modo: 'Avión / Vuelo',
+          titulo: '✈️ Vuelo Directo / Rápido',
+          descripcion: `Vuelo comercial · ${isIntercontinental ? '11h 50m' : '2h 15m'} (${origIata} ➔ ${destIata})`,
+          medioTexto: `✈️ Avión (${isIntercontinental ? '11h 50m' : '2h 15m'})`,
+          precio: flightPrice,
+          precioPersona: Math.round(flightPrice / pers),
           bookingUrl: kiwiUrl,
           badge: 'Más Rápido',
           badgeColor: '#10b981',
-          proveedor: 'Kiwi.com'
+          proveedor: 'Kiwi.com / Skyscanner'
         },
         {
-          titulo: '🏷️ Tarifa Económica (Mejor Precio)',
-          aerolinea: isIntercontinental ? 'Level / Avianca / BOA' : 'Flybondi / JetSMART / Gol',
-          detalles: `1 escala corta · Incluye equipaje de mano (${origIata} ➔ ${destIata})`,
-          duracion: isIntercontinental ? '15h 20m' : '3h 50m',
-          precio: scalePrice,
-          precioPersona: Math.round(scalePrice / pers),
-          bookingUrl: skyscannerUrl,
+          tipoIcon: '🚆',
+          modo: 'Tren de Alta Velocidad',
+          titulo: '🚆 Tren Alta Velocidad / Regional',
+          descripcion: `Confortable y céntrico · ${isIntercontinental ? 'Conexión ferroviaria' : '2h 45m'}`,
+          medioTexto: `🚆 Tren de Alta Velocidad`,
+          precio: trainPrice,
+          precioPersona: Math.round(trainPrice / pers),
+          bookingUrl: trainlineUrl,
+          badge: 'Cómodo',
+          badgeColor: '#0ea5e9',
+          proveedor: 'Trainline / Renfe / Omio'
+        },
+        {
+          tipoIcon: '🚌',
+          modo: 'Bus / Ómnibus Larga Distancia',
+          titulo: '🚌 Bus Larga Distancia (Low-Cost)',
+          descripcion: `Tarifa económica con equipaje · ${isIntercontinental ? 'Ruta de bus' : '4h 30m'}`,
+          medioTexto: `🚌 Bus Larga Distancia`,
+          precio: busPrice,
+          precioPersona: Math.round(busPrice / pers),
+          bookingUrl: omioBusUrl,
           badge: 'Económico',
           badgeColor: '#f59e0b',
-          proveedor: 'Skyscanner'
+          proveedor: 'FlixBus / Alsa / Omio'
         },
         {
-          titulo: '⭐ Vuelo Recomendado Plux',
-          aerolinea: isIntercontinental ? 'LATAM / ITA Airways / Air France' : 'Aerolíneas Argentinas / LATAM',
-          detalles: `Excelente puntualidad y flexibilidad (${origIata} ➔ ${destIata})`,
-          duracion: isIntercontinental ? '13h 10m' : '2h 30m',
-          precio: recommendedPrice,
-          precioPersona: Math.round(recommendedPrice / pers),
-          bookingUrl: googleFlightsUrl,
-          badge: 'Top Opción',
-          badgeColor: '#6366f1',
-          proveedor: 'Google Flights'
+          tipoIcon: '🚗',
+          modo: 'Alquiler de Auto',
+          titulo: '🚗 Alquiler de Auto / Conducir',
+          descripcion: `Libertad total de ruta · Retiro en origen o aeropuerto`,
+          medioTexto: `🚗 Auto de alquiler`,
+          precio: carPrice,
+          precioPersona: Math.round(carPrice / pers),
+          bookingUrl: rentalCarsUrl,
+          badge: 'Flexibilidad',
+          badgeColor: '#8b5cf6',
+          proveedor: 'Rentalcars / Booking Cars'
         }
       ];
     }
@@ -5875,7 +5893,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       ];
     }
 
-    window.abrirBusquedaVuelosTramo = function(destId, tramoIda, event) {
+    window.abrirBusquedaTransporteTramo = function(destId, tramoIda, event) {
       if (event) event.stopPropagation();
       const destIndex = destinos.findIndex(d => d.id === destId);
       if (destIndex === -1) return;
@@ -5884,9 +5902,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const origen = (destIndex === 0) ? (lugarSalida || 'Buenos Aires') : (destinos[destIndex - 1]?.nombre || lugarSalida || 'Origen');
       const destino = dest.nombre || 'Destino';
       const fechas = obtenerFechasDestino(destId);
-      const opciones = generarOpcionesVuelos(origen, destino, fechas.checkinYmd, numPersonas);
+      const opciones = generarOpcionesTransporte(origen, destino, fechas.checkinYmd, numPersonas);
       
-      const dropdown = document.getElementById(`dropdown-vuelos-${destId}-${tramoIda}`);
+      const dropdown = document.getElementById(`dropdown-transporte-${destId}-${tramoIda}`);
       if (!dropdown) return;
 
       if (dropdown.style.display === 'block') {
@@ -5899,9 +5917,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
           <div style="font-size:0.8rem; font-weight:700; color:#38bdf8;">
-            ✈️ Vuelos en vivo: ${escapeHtml(origen)} ➔ ${escapeHtml(destino)}
+            🧭 Comparar transporte: ${escapeHtml(origen)} ➔ ${escapeHtml(destino)}
           </div>
-          <button onclick="document.getElementById('dropdown-vuelos-${destId}-${tramoIda}').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1rem;">×</button>
+          <button onclick="document.getElementById('dropdown-transporte-${destId}-${tramoIda}').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1rem;">×</button>
         </div>
         <div style="font-size:0.75rem; color:var(--gris); margin-bottom:8px;">
           📅 Fecha estimada: <b>${fechas.checkinDmy}</b> · 👥 <b>${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</b>
@@ -5910,13 +5928,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       opciones.forEach((op, idx) => {
         html += `
-          <div class="live-offer-item" onclick="window.seleccionarVueloTramo(${destId}, ${tramoIda}, ${idx})">
+          <div class="live-offer-item" onclick="window.seleccionarTransporteTramo(${destId}, ${tramoIda}, ${idx})">
             <div style="flex:1;">
               <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
-                <span style="font-size:0.82rem; font-weight:700; color:var(--texto);">${escapeHtml(op.aerolinea)}</span>
+                <span style="font-size:0.82rem; font-weight:700; color:var(--texto);">${escapeHtml(op.titulo)}</span>
                 <span style="font-size:0.65rem; font-weight:700; background:${op.badgeColor}; color:white; padding:1px 6px; border-radius:999px;">${op.badge}</span>
               </div>
-              <div style="font-size:0.72rem; color:var(--gris);">${escapeHtml(op.detalles)} · ⏱️ ${op.duracion}</div>
+              <div style="font-size:0.72rem; color:var(--gris);">${escapeHtml(op.descripcion)}</div>
               <div style="font-size:0.68rem; color:#38bdf8; margin-top:2px;">🔗 Reserva en ${op.proveedor}</div>
             </div>
             <div style="text-align:right;">
@@ -5929,7 +5947,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       html += `
         <div style="margin-top:8px; text-align:center; font-size:0.7rem; color:var(--gris);">
-          💡 Al seleccionar una opción se carga en Plux y se abre la página de reserva.
+          💡 Al seleccionar una opción se carga en Plux y se abre la web de reserva.
         </div>
       `;
 
@@ -5937,21 +5955,21 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       dropdown.style.display = 'block';
     };
 
-    window.seleccionarVueloTramo = function(destId, tramoIda, flightIndex) {
+    window.seleccionarTransporteTramo = function(destId, tramoIda, transIndex) {
       const destIndex = destinos.findIndex(d => d.id === destId);
       if (destIndex === -1) return;
       const dest = destinos[destIndex];
       const origen = (destIndex === 0) ? (lugarSalida || 'Buenos Aires') : (destinos[destIndex - 1]?.nombre || lugarSalida || 'Origen');
       const destino = dest.nombre || 'Destino';
       const fechas = obtenerFechasDestino(destId);
-      const opciones = generarOpcionesVuelos(origen, destino, fechas.checkinYmd, numPersonas);
-      const op = opciones[flightIndex];
+      const opciones = generarOpcionesTransporte(origen, destino, fechas.checkinYmd, numPersonas);
+      const op = opciones[transIndex];
       if (!op) return;
 
       if (!dest.tramos) dest.tramos = [];
       if (!dest.tramos[tramoIda]) dest.tramos[tramoIda] = { origen: "", destino: "", medio: "", precio: 0, escalas: [] };
 
-      dest.tramos[tramoIda].medio = `✈️ ${op.aerolinea} (${op.duracion})`;
+      dest.tramos[tramoIda].medio = op.medioTexto;
       dest.tramos[tramoIda].precio = op.precio;
 
       const inputMedio = document.getElementById(`tramo-medio-${destId}-${tramoIda}`);
@@ -5959,7 +5977,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (inputMedio) inputMedio.value = dest.tramos[tramoIda].medio;
       if (inputPrecio) inputPrecio.value = dest.tramos[tramoIda].precio;
 
-      const dropdown = document.getElementById(`dropdown-vuelos-${destId}-${tramoIda}`);
+      const dropdown = document.getElementById(`dropdown-transporte-${destId}-${tramoIda}`);
       if (dropdown) dropdown.style.display = 'none';
 
       try {
@@ -5967,7 +5985,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } catch(e) {}
 
       autoSave();
-      showToast(`✈️ Vuelo "${op.aerolinea}" cargado ($${op.precio}) y enlace de reserva abierto`, 'success');
+      showToast(`🧭 Transporte "${op.modo}" cargado ($${op.precio}) y enlace de reserva abierto`, 'success');
     };
 
     window.abrirBusquedaHotelesTramo = function(destId, tramoIda, event) {
@@ -6061,7 +6079,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       showToast(`🏨 "${op.nombre}" cargado ($${op.precio}) y enlace de Booking abierto`, 'success');
     };
 
-    window.abrirBusquedaVuelosVuelta = function(event) {
+    window.abrirBusquedaTransporteVuelta = function(event) {
       if (event) event.stopPropagation();
       const lastDest = destinos.length > 0 ? destinos[destinos.length - 1].nombre : 'Último destino';
       const destinoVuelta = lugarSalida || 'Buenos Aires';
@@ -6077,8 +6095,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const returnYmd = `${returnDate.getFullYear()}-${pad(returnDate.getMonth()+1)}-${pad(returnDate.getDate())}`;
       const returnDmy = `${pad(returnDate.getDate())}/${pad(returnDate.getMonth()+1)}/${returnDate.getFullYear()}`;
 
-      const opciones = generarOpcionesVuelos(lastDest, destinoVuelta, returnYmd, numPersonas);
-      const dropdown = document.getElementById('dropdown-vuelos-vuelta');
+      const opciones = generarOpcionesTransporte(lastDest, destinoVuelta, returnYmd, numPersonas);
+      const dropdown = document.getElementById('dropdown-transporte-vuelta');
       if (!dropdown) return;
 
       if (dropdown.style.display === 'block') {
@@ -6091,9 +6109,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
           <div style="font-size:0.8rem; font-weight:700; color:#38bdf8;">
-            ✈️ Vuelo de Vuelta: ${escapeHtml(lastDest)} ➔ ${escapeHtml(destinoVuelta)}
+            🧭 Transporte de Vuelta: ${escapeHtml(lastDest)} ➔ ${escapeHtml(destinoVuelta)}
           </div>
-          <button onclick="document.getElementById('dropdown-vuelos-vuelta').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1rem;">×</button>
+          <button onclick="document.getElementById('dropdown-transporte-vuelta').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1rem;">×</button>
         </div>
         <div style="font-size:0.75rem; color:var(--gris); margin-bottom:8px;">
           📅 Fecha estimada regreso: <b>${returnDmy}</b> · 👥 <b>${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</b>
@@ -6102,13 +6120,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       opciones.forEach((op, idx) => {
         html += `
-          <div class="live-offer-item" onclick="window.seleccionarVueloVuelta(${idx})">
+          <div class="live-offer-item" onclick="window.seleccionarTransporteVuelta(${idx})">
             <div style="flex:1;">
               <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
-                <span style="font-size:0.82rem; font-weight:700; color:var(--texto);">${escapeHtml(op.aerolinea)}</span>
+                <span style="font-size:0.82rem; font-weight:700; color:var(--texto);">${escapeHtml(op.titulo)}</span>
                 <span style="font-size:0.65rem; font-weight:700; background:${op.badgeColor}; color:white; padding:1px 6px; border-radius:999px;">${op.badge}</span>
               </div>
-              <div style="font-size:0.72rem; color:var(--gris);">${escapeHtml(op.detalles)} · ⏱️ ${op.duracion}</div>
+              <div style="font-size:0.72rem; color:var(--gris);">${escapeHtml(op.descripcion)}</div>
               <div style="font-size:0.68rem; color:#38bdf8; margin-top:2px;">🔗 Reserva en ${op.proveedor}</div>
             </div>
             <div style="text-align:right;">
@@ -6129,7 +6147,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       dropdown.style.display = 'block';
     };
 
-    window.seleccionarVueloVuelta = function(flightIndex) {
+    window.seleccionarTransporteVuelta = function(transIndex) {
       const lastDest = destinos.length > 0 ? destinos[destinos.length - 1].nombre : 'Último destino';
       const destinoVuelta = lugarSalida || 'Buenos Aires';
       const fInicio = document.getElementById('fechaInicio')?.value;
@@ -6142,11 +6160,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const pad = n => String(n).padStart(2, '0');
       const returnYmd = `${returnDate.getFullYear()}-${pad(returnDate.getMonth()+1)}-${pad(returnDate.getDate())}`;
 
-      const opciones = generarOpcionesVuelos(lastDest, destinoVuelta, returnYmd, numPersonas);
-      const op = opciones[flightIndex];
+      const opciones = generarOpcionesTransporte(lastDest, destinoVuelta, returnYmd, numPersonas);
+      const op = opciones[transIndex];
       if (!op) return;
 
-      vueltaGlobal = `✈️ Vuelo de regreso ${op.aerolinea} (${op.duracion})`;
+      vueltaGlobal = `${op.modo} (${op.titulo})`;
       vueltaPrecioGlobal = op.precio;
 
       const fVue = document.getElementById('vuelta');
@@ -6154,7 +6172,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (fVue) fVue.value = vueltaGlobal;
       if (fVueP) fVueP.value = vueltaPrecioGlobal;
 
-      const dropdown = document.getElementById('dropdown-vuelos-vuelta');
+      const dropdown = document.getElementById('dropdown-transporte-vuelta');
       if (dropdown) dropdown.style.display = 'none';
 
       try {
@@ -6162,7 +6180,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } catch(e) {}
 
       autoSave();
-      showToast(`✈️ Vuelo de vuelta "${op.aerolinea}" cargado ($${op.precio}) y enlace de reserva abierto`, 'success');
+      showToast(`🧭 Transporte de vuelta "${op.modo}" cargado ($${op.precio}) y enlace de reserva abierto`, 'success');
     };
 
     // Cerrar dropdowns de reserva al hacer clic fuera
@@ -6189,24 +6207,24 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
             <div class="field-boa" style="position:relative;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px;">
                 <label style="font-size:0.7rem; color:var(--gris); margin:0;">${t('transport').toUpperCase()}</label>
-                <button type="button" class="btn-live-search" onclick="window.abrirBusquedaVuelosTramo(${destId}, ${ida}, event)">
-                  ✈️ <span>${t('btn_buscar_vuelos') || 'Buscar vuelos'}</span>
+                <button type="button" class="btn-live-search" onclick="window.abrirBusquedaTransporteTramo(${destId}, ${ida}, event)">
+                  🧭 <span>Buscar transporte</span>
                 </button>
               </div>
-              <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="Avión, Bus, Tren..." value="${tramo.medio || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
-              <div id="dropdown-vuelos-${destId}-${ida}" class="live-booking-dropdown" style="display:none;"></div>
+              <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="Avión, Tren, Bus, Auto..." value="${tramo.medio || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <div id="dropdown-transporte-${destId}-${ida}" class="live-booking-dropdown" style="display:none;"></div>
             </div>
             <div class="field-boa">
               <label style="display:block; font-size:0.7rem; color:var(--gris); margin-bottom:4px;">${t('transport_price') || 'PRECIO TRANSPORTE'}</label>
               <input type="number" id="tramo-precio-${destId}-${ida}" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
             </div>
             <div class="field-boa" style="grid-column: 1 / -1; position:relative;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px;">
                 <label style="font-size:0.7rem; color:var(--gris); margin:0;">${t('alojamiento_label')}</label>
                 <button type="button" class="btn-live-search hotel-btn" onclick="window.abrirBusquedaHotelesTramo(${destId}, ${ida}, event)">
-                  🏨 <span>${t('btn_buscar_hoteles') || 'Buscar hoteles'}</span>
+                  🏨 <span>Buscar hotel</span>
                 </button>
               </div>
               <input type="text" id="tramo-alojamiento-${destId}-${ida}" placeholder="${t('alojamiento_ph')}" value="${tramo.alojamiento || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'alojamiento', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">

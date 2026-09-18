@@ -4411,36 +4411,41 @@ body.mode-reader #mobileMenuCloneBtn {
 
 /* ================== LIVE FLIGHTS & HOTELS BOOKING INTEGRATION ================== */
 .btn-live-search {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(99, 102, 241, 0.25));
+  background: rgba(14, 165, 233, 0.12);
   border: 1px solid rgba(14, 165, 233, 0.4);
   color: #38bdf8;
   font-size: 0.72rem;
   font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  transition: all 0.2s ease;
+  white-space: nowrap !important;
+  flex-shrink: 0;
+  line-height: 1.2;
+  height: 24px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-live-search:hover {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.4), rgba(99, 102, 241, 0.5));
+  background: rgba(14, 165, 233, 0.25);
   border-color: #38bdf8;
   color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 .btn-live-search.hotel-btn {
-  background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(168, 85, 247, 0.25));
+  background: rgba(236, 72, 153, 0.12);
   border-color: rgba(236, 72, 153, 0.4);
   color: #f472b6;
 }
 .btn-live-search.hotel-btn:hover {
-  background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(168, 85, 247, 0.5));
+  background: rgba(236, 72, 153, 0.25);
   border-color: #f472b6;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.25);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
 }
 
 .live-booking-dropdown {

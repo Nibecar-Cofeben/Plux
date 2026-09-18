@@ -102,13 +102,17 @@
     };
   </script>
 
+  <link rel="stylesheet" href="/plux/styles.css?v=1789693000002">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/plux/styles.css?v=1789130000030">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
   
   <!-- Firebase (compat) Local Offline SDK -->
@@ -116,8 +120,7 @@
   <script src="/plux/firebase/firebase-auth-compat.js"></script>
   <script src="/plux/firebase/firebase-database-compat.js"></script>
   <script src="/plux/firebase/firebase-firestore-compat.js"></script>
-  <script src="/plux/firebase/firebase-analytics-compat.js"></script>
-  <script defer src="/plux/script.js?v=1789130000030"></script>
+  <script defer src="/plux/script.js?v=1789693000002"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -708,15 +711,17 @@
           <label id="fechaInicioLabel">Fecha de inicio:</label>
           <input type="datetime-local" id="fechaInicio" value="">
         </div>
-        <div class="fila-dato" style="position:relative; align-items:center;">
-          <label id="vueltaLabel">Vuelta (opcional):</label>
-          <div class="campo-vuelta" style="display:flex; gap:8px; flex:1; align-items:center; position:relative;">
-            <input type="text" id="vuelta" placeholder="Descripción" style="flex:2; min-width:140px;">
-            <input type="number" id="vueltaPrecio" placeholder="€" value="0" style="width:75px; flex-shrink:0;">
-            <button type="button" class="btn-live-search" onclick="window.abrirBusquedaTransporteVuelta(event)" title="Buscar opciones de transporte en vivo">
+        <div class="fila-dato" style="position:relative; align-items:flex-start;">
+          <div style="display:flex; flex-direction:column; gap:4px; min-width:130px;">
+            <label id="vueltaLabel" style="margin:0; font-size:0.95rem; font-weight:600;">Vuelta (opcional):</label>
+            <button type="button" id="btnBuscarTransporteVuelta" class="btn-live-search" onclick="window.abrirBusquedaTransporteVuelta(event)" title="Buscar opciones de transporte de vuelta" style="align-self:flex-start; margin-top:2px;">
               🧭 <span>Buscar transporte</span>
             </button>
-            <div id="dropdown-transporte-vuelta" class="live-booking-dropdown" style="display:none;"></div>
+          </div>
+          <div class="campo-vuelta" style="display:flex; gap:8px; width:100%; align-items:center; position:relative;">
+            <input type="text" id="vuelta" placeholder="Descripción de vuelta (ej. Vuelo / Tren / Auto)" style="flex:2; min-width:140px;">
+            <input type="number" id="vueltaPrecio" placeholder="€" value="0" style="width:75px; flex-shrink:0;">
+            <div id="dropdown-transporte-vuelta" class="live-booking-dropdown" style="display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:99999;"></div>
           </div>
         </div>
         <div id="vuelta-costos-adicionales"></div>

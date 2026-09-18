@@ -5833,68 +5833,82 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       const bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(destNombre)}&checkin=${checkinYmd}&checkout=${checkoutYmd}&group_adults=${pers}&no_rooms=1`;
       const hotellookUrl = `https://hotellook.com/search/#?location=${encodeURIComponent(destNombre)}&checkIn=${checkinYmd}&checkOut=${checkoutYmd}&adults=${pers}`;
-      const airbnbUrl = `https://www.airbnb.com/s/${encodeURIComponent(destNombre)}/homes?checkin=${checkinYmd}&checkout=${checkoutYmd}&adults=${pers}`;
+      const airbnbEntireUrl = `https://www.airbnb.com/s/${encodeURIComponent(destNombre)}/homes?checkin=${checkinYmd}&checkout=${checkoutYmd}&adults=${pers}&room_types%5B%5D=Entire%20home%2Fapt`;
+      const airbnbRoomUrl = `https://www.airbnb.com/s/${encodeURIComponent(destNombre)}/homes?checkin=${checkinYmd}&checkout=${checkoutYmd}&adults=${pers}&room_types%5B%5D=Private%20room`;
 
-      const basePricePerNight = 70;
-      const hotelCenterPrice = Math.round(basePricePerNight * 1.35 * noches);
-      const hotelLuxuryPrice = Math.round(basePricePerNight * 2.9 * noches);
-      const hostelEcoPrice = Math.round(basePricePerNight * 0.55 * noches);
-      const apartPrice = Math.round(basePricePerNight * 1.15 * noches);
+      const basePricePerNight = 68;
+      const airbnbDeptoPrice = Math.round(basePricePerNight * 1.15 * noches);
+      const hotelCenterPrice = Math.round(basePricePerNight * 1.38 * noches);
+      const airbnbRoomPrice = Math.round(basePricePerNight * 0.70 * noches);
+      const hotelLuxuryPrice = Math.round(basePricePerNight * 2.85 * noches);
+      const hostelEcoPrice = Math.round(basePricePerNight * 0.50 * noches);
 
       return [
         {
+          nombre: `Airbnb: Depto entero en ${destNombre}`,
+          tipo: 'Airbnb Departamento',
+          detalles: `Superhost · Cocina equipada, WiFi alta velocidad, auto check-in · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
+          puntuacion: '★ 4.92 Superhost',
+          precio: airbnbDeptoPrice,
+          precioNoche: Math.round(airbnbDeptoPrice / noches),
+          bookingUrl: airbnbEntireUrl,
+          badge: 'Airbnb Top',
+          badgeColor: '#ff385c',
+          proveedor: 'Airbnb'
+        },
+        {
           nombre: `Hotel Central Plaza ${destNombre} ★★★★`,
-          tipo: 'Hotel 4 Estrellas',
-          detalles: `Ubicación céntrica · Desayuno buffet incluido · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
+          tipo: 'Hotel 4 Estrellas Booking',
+          detalles: `Ubicación céntrica · Desayuno buffet incluido · Cancelación gratis · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
           puntuacion: '★ 8.9 Fabuloso',
           precio: hotelCenterPrice,
           precioNoche: Math.round(hotelCenterPrice / noches),
           bookingUrl: bookingUrl,
-          badge: 'Más Elegido',
-          badgeColor: '#10b981',
+          badge: 'Booking.com',
+          badgeColor: '#003580',
           proveedor: 'Booking.com'
         },
         {
-          nombre: `Gran Resort & Suites ${destNombre} ★★★★★`,
-          tipo: 'Hotel 5 Estrellas / Lujo',
-          detalles: `Piscina, Spa, Vista panorámica · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
+          nombre: `Airbnb: Habitación privada & terraza en ${destNombre}`,
+          tipo: 'Airbnb Habitación',
+          detalles: `Zona céntrica y turística · Balcón privado, ambiente tranquilo · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
+          puntuacion: '★ 4.88 Excelente',
+          precio: airbnbRoomPrice,
+          precioNoche: Math.round(airbnbRoomPrice / noches),
+          bookingUrl: airbnbRoomUrl,
+          badge: 'Airbnb Económico',
+          badgeColor: '#ff385c',
+          proveedor: 'Airbnb'
+        },
+        {
+          nombre: `Gran Resort & Spa ${destNombre} ★★★★★`,
+          tipo: 'Hotel 5 Estrellas Booking / Lujo',
+          detalles: `Piscina climatizada, Spa, Vista panorámica · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
           puntuacion: '★ 9.5 Excepcional',
           precio: hotelLuxuryPrice,
           precioNoche: Math.round(hotelLuxuryPrice / noches),
           bookingUrl: bookingUrl,
-          badge: 'Premium',
+          badge: 'Booking Lujo',
           badgeColor: '#ec4899',
           proveedor: 'Booking.com'
         },
         {
           nombre: `Hostel Boutique & Suites ${destNombre}`,
           tipo: 'Hostel / Low-Cost Confort',
-          detalles: `Habitación privada, ambiente joven · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
+          detalles: `Habitación privada o compartida de diseño · Ambiente internacional · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
           puntuacion: '★ 8.5 Muy Bueno',
           precio: hostelEcoPrice,
           precioNoche: Math.round(hostelEcoPrice / noches),
           bookingUrl: hotellookUrl,
-          badge: 'Económico',
+          badge: 'Low-Cost',
           badgeColor: '#f59e0b',
-          proveedor: 'Hotellook'
-        },
-        {
-          nombre: `Apartamento Entero Moderno en ${destNombre}`,
-          tipo: 'Departamento Completo',
-          detalles: `Cocina equipada, Wifi alta velocidad · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
-          puntuacion: '★ 4.9 Superhost',
-          precio: apartPrice,
-          precioNoche: Math.round(apartPrice / noches),
-          bookingUrl: airbnbUrl,
-          badge: 'Privacidad',
-          badgeColor: '#8b5cf6',
-          proveedor: 'Airbnb / Booking'
+          proveedor: 'Hotellook / Booking'
         }
       ];
     }
 
     window.abrirBusquedaTransporteTramo = function(destId, tramoIda, event) {
-      if (event) event.stopPropagation();
+      if (event) { event.stopPropagation(); }
       const destIndex = destinos.findIndex(d => d.id === destId);
       if (destIndex === -1) return;
       
@@ -5919,7 +5933,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           <div style="font-size:0.8rem; font-weight:700; color:#38bdf8;">
             🧭 Comparar transporte: ${escapeHtml(origen)} ➔ ${escapeHtml(destino)}
           </div>
-          <button onclick="document.getElementById('dropdown-transporte-${destId}-${tramoIda}').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1rem;">×</button>
+          <button type="button" onclick="document.getElementById('dropdown-transporte-${destId}-${tramoIda}').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1.1rem; line-height:1; padding:0 4px;">×</button>
         </div>
         <div style="font-size:0.75rem; color:var(--gris); margin-bottom:8px;">
           📅 Fecha estimada: <b>${fechas.checkinDmy}</b> · 👥 <b>${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</b>
@@ -5989,7 +6003,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     };
 
     window.abrirBusquedaHotelesTramo = function(destId, tramoIda, event) {
-      if (event) event.stopPropagation();
+      if (event) { event.stopPropagation(); }
       const dest = destinos.find(d => d.id === destId);
       if (!dest) return;
       
@@ -6010,9 +6024,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
           <div style="font-size:0.8rem; font-weight:700; color:#f472b6;">
-            🏨 Alojamientos en vivo: ${escapeHtml(destino)}
+            🏨/🏡 Alojamientos (Airbnb & Booking): ${escapeHtml(destino)}
           </div>
-          <button onclick="document.getElementById('dropdown-hoteles-${destId}-${tramoIda}').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1rem;">×</button>
+          <button type="button" onclick="document.getElementById('dropdown-hoteles-${destId}-${tramoIda}').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1.1rem; line-height:1; padding:0 4px;">×</button>
         </div>
         <div style="font-size:0.75rem; color:var(--gris); margin-bottom:8px;">
           📅 Estadía: <b>${fechas.checkinDmy}</b> al <b>${fechas.checkoutDmy}</b> (${fechas.dias} ${fechas.dias === 1 ? 'noche' : 'noches'}) · 👥 <b>${numPersonas} huéspedes</b>
@@ -6040,7 +6054,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       html += `
         <div style="margin-top:8px; text-align:center; font-size:0.7rem; color:var(--gris);">
-          💡 Al seleccionar un hotel se carga en Plux y se abre la ficha de reserva.
+          💡 Al seleccionar un alojamiento se carga en Plux y se abre la ficha de reserva.
         </div>
       `;
 
@@ -6076,19 +6090,33 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } catch(e) {}
 
       autoSave();
-      showToast(`🏨 "${op.nombre}" cargado ($${op.precio}) y enlace de Booking abierto`, 'success');
+      showToast(`🏡 "${op.nombre}" cargado ($${op.precio}) y enlace de ${op.proveedor} abierto`, 'success');
     };
 
     window.abrirBusquedaTransporteVuelta = function(event) {
-      if (event) event.stopPropagation();
-      const lastDest = destinos.length > 0 ? destinos[destinos.length - 1].nombre : 'Último destino';
-      const destinoVuelta = lugarSalida || 'Buenos Aires';
+      if (event) { 
+        event.stopPropagation(); 
+        if (event.preventDefault) event.preventDefault();
+      }
+      
+      const lastDest = (destinos && destinos.length > 0 && destinos[destinos.length - 1]?.nombre) 
+        ? destinos[destinos.length - 1].nombre 
+        : 'Último destino';
+        
+      const inputSalida = document.getElementById('lugarSalida');
+      const destinoVuelta = (inputSalida && inputSalida.value.trim()) 
+        ? inputSalida.value.trim() 
+        : (lugarSalida || 'Origen');
       
       const fInicio = document.getElementById('fechaInicio')?.value;
       let baseDate = fInicio ? new Date(fInicio) : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
       if (isNaN(baseDate.getTime())) baseDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
       let totalDias = 0;
-      destinos.forEach(d => { totalDias += (d.dias || []).length || 1; });
+      if (destinos && destinos.length > 0) {
+        destinos.forEach(d => { totalDias += (d.dias || []).length || 1; });
+      } else {
+        totalDias = 5;
+      }
       const returnDate = new Date(baseDate.getTime() + (totalDias * 24 * 60 * 60 * 1000));
       
       const pad = n => String(n).padStart(2, '0');
@@ -6096,8 +6124,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const returnDmy = `${pad(returnDate.getDate())}/${pad(returnDate.getMonth()+1)}/${returnDate.getFullYear()}`;
 
       const opciones = generarOpcionesTransporte(lastDest, destinoVuelta, returnYmd, numPersonas);
-      const dropdown = document.getElementById('dropdown-transporte-vuelta');
-      if (!dropdown) return;
+      const dropdown = document.getElementById('dropdown-transporte-vuelta') || document.getElementById('dropdown-vuelos-vuelta');
+      if (!dropdown) {
+        console.warn("Dropdown de transporte de vuelta no encontrado");
+        return;
+      }
 
       if (dropdown.style.display === 'block') {
         dropdown.style.display = 'none';
@@ -6111,7 +6142,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           <div style="font-size:0.8rem; font-weight:700; color:#38bdf8;">
             🧭 Transporte de Vuelta: ${escapeHtml(lastDest)} ➔ ${escapeHtml(destinoVuelta)}
           </div>
-          <button onclick="document.getElementById('dropdown-transporte-vuelta').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1rem;">×</button>
+          <button type="button" onclick="(document.getElementById('dropdown-transporte-vuelta')||document.getElementById('dropdown-vuelos-vuelta')).style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1.1rem; line-height:1; padding:0 4px;">×</button>
         </div>
         <div style="font-size:0.75rem; color:var(--gris); margin-bottom:8px;">
           📅 Fecha estimada regreso: <b>${returnDmy}</b> · 👥 <b>${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</b>
@@ -6148,13 +6179,22 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     };
 
     window.seleccionarTransporteVuelta = function(transIndex) {
-      const lastDest = destinos.length > 0 ? destinos[destinos.length - 1].nombre : 'Último destino';
-      const destinoVuelta = lugarSalida || 'Buenos Aires';
+      const lastDest = (destinos && destinos.length > 0 && destinos[destinos.length - 1]?.nombre) 
+        ? destinos[destinos.length - 1].nombre 
+        : 'Último destino';
+      const inputSalida = document.getElementById('lugarSalida');
+      const destinoVuelta = (inputSalida && inputSalida.value.trim()) 
+        ? inputSalida.value.trim() 
+        : (lugarSalida || 'Origen');
       const fInicio = document.getElementById('fechaInicio')?.value;
       let baseDate = fInicio ? new Date(fInicio) : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
       if (isNaN(baseDate.getTime())) baseDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
       let totalDias = 0;
-      destinos.forEach(d => { totalDias += (d.dias || []).length || 1; });
+      if (destinos && destinos.length > 0) {
+        destinos.forEach(d => { totalDias += (d.dias || []).length || 1; });
+      } else {
+        totalDias = 5;
+      }
       const returnDate = new Date(baseDate.getTime() + (totalDias * 24 * 60 * 60 * 1000));
       
       const pad = n => String(n).padStart(2, '0');
@@ -6172,7 +6212,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (fVue) fVue.value = vueltaGlobal;
       if (fVueP) fVueP.value = vueltaPrecioGlobal;
 
-      const dropdown = document.getElementById('dropdown-transporte-vuelta');
+      const dropdown = document.getElementById('dropdown-transporte-vuelta') || document.getElementById('dropdown-vuelos-vuelta');
       if (dropdown) dropdown.style.display = 'none';
 
       try {
@@ -6219,7 +6259,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 </button>
               </div>
               <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="Avión, Tren, Bus, Auto..." value="${tramo.medio || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
-              <div id="dropdown-transporte-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:9999;"></div>
+              <div id="dropdown-transporte-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:99999;"></div>
             </div>
             <div class="field-boa">
               <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('transport_price') || 'PRECIO TRANSPORTE'}</label>
@@ -6229,11 +6269,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
                 <label style="font-size:0.75rem; font-weight:700; color:var(--gris); margin:0;">${t('alojamiento_label')}</label>
                 <button type="button" class="btn-live-search hotel-btn" onclick="window.abrirBusquedaHotelesTramo(${destId}, ${ida}, event)">
-                  🏨 <span>Buscar hotel</span>
+                  🏡 <span>Buscar alojamiento</span>
                 </button>
               </div>
               <input type="text" id="tramo-alojamiento-${destId}-${ida}" placeholder="${t('alojamiento_ph')}" value="${tramo.alojamiento || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'alojamiento', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
-              <div id="dropdown-hoteles-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:9999;"></div>
+              <div id="dropdown-hoteles-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:99999;"></div>
             </div>
             <div class="field-boa" style="grid-column: 1 / -1;">
               <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('precio_alojamiento_label')}</label>

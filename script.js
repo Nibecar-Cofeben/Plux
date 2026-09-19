@@ -803,10 +803,23 @@
     let loadedTripIndex = null;
     window.currentTripRole = 'editor';
     var unsubscribeUserIncomingConv = null;
+    var userProfileUnsubscribe = null;
+    var userPreferences = {
+      eventsPerDay: 4,
+      transportType: 'any',
+      pace: 'relaxed'
+    };
 
     function getPluxProfileRef() {
-      if (!db || !currentUserUid) return null;
-      return db.collection('plux_usuarios').doc(currentUserUid);
+      if (!db && typeof getFirestoreDb === 'function') {
+        db = getFirestoreDb();
+      }
+      if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
+        db = firebase.firestore();
+      }
+      const uid = currentUserUid || (firebaseUser && firebaseUser.uid) || currentNickname || localStorage.getItem('Plux_Uid') || localStorage.getItem('Plux_Nickname');
+      if (!db || !uid) return null;
+      return db.collection('plux_usuarios').doc(uid);
     }
 
     function themeDisplayName() {
@@ -1286,8 +1299,13 @@
           pluxChatUnsubscribe();
           pluxChatUnsubscribe = null;
         }
+        if (typeof userProfileUnsubscribe === 'function') {
+          try { userProfileUnsubscribe(); } catch(e){}
+          userProfileUnsubscribe = null;
+        }
 
         if (borrarTodo) {
+          localStorage.removeItem(TRIPS_STORAGE_KEY);
           localStorage.removeItem('PluxSocialChats_V2');
           localStorage.removeItem('Plux_Viajes');
           localStorage.removeItem('Plux_ActiveTrip');
@@ -1616,6 +1634,9 @@
         if (userData.preferencias) userPreferences = userData.preferencias;
         
         renderTripLists();
+        if ((!destinos || destinos.length === 0) && mergedTrips.length > 0) {
+          cargarViaje(mergedTrips.length - 1, false);
+        }
         if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(nick);
         showToast('¡Bienvenido, @' + nick + '!', 'success');
         cerrarCuenta();
@@ -1770,7 +1791,7 @@
       
       local.forEach(lTrip => {
         if (!lTrip) return;
-        const exists = result.some(cTrip => {
+        const existingIdx = result.findIndex(cTrip => {
           if (!cTrip) return false;
           if (lTrip.tripId && cTrip.tripId && lTrip.tripId === cTrip.tripId) return true;
           if (lTrip.syncCode && cTrip.syncCode && lTrip.syncCode === cTrip.syncCode) return true;
@@ -1781,8 +1802,15 @@
           }
           return false;
         });
-        if (!exists) {
+        if (existingIdx === -1) {
           result.push(lTrip);
+        } else {
+          // If local modification timestamp is newer, prefer local properties
+          const lTime = new Date(lTrip.fecha || 0).getTime();
+          const cTime = new Date(result[existingIdx].fecha || 0).getTime();
+          if (lTime >= cTime) {
+            result[existingIdx] = { ...result[existingIdx], ...lTrip };
+          }
         }
       });
       return result;
@@ -1825,8 +1853,16 @@
     window.mergeFriends = mergeFriends;
 
     function sincronizarPerfil() {
+      if (!db && typeof getFirestoreDb === 'function') db = getFirestoreDb();
+      if (!db && typeof firebase !== 'undefined' && firebase.firestore) db = firebase.firestore();
+
       const ref = getPluxProfileRef();
-      if (!ref && !currentNickname) return;
+      const nick = currentNickname || localStorage.getItem('Plux_Nickname');
+      const uid = currentUserUid || (firebaseUser && firebaseUser.uid) || localStorage.getItem('Plux_Uid') || nick;
+
+      if (!ref && !nick && !uid) return;
+      if (!db) return;
+
       const trips = getStoredTrips();
       const templates = getStoredTemplates();
       const friends = getStoredFriends();
@@ -1836,13 +1872,13 @@
         personalInfo = JSON.parse(localStorage.getItem('Plux_PersonalInfo') || '{}');
       } catch(e){}
 
-      const payload = {
-        uid: currentUserUid || currentNickname,
+      const rawPayload = {
+        uid: uid,
         email: firebaseUser?.email || null,
-        nickname: currentNickname,
+        nickname: nick || null,
         photoUrl: photo,
-        idioma: currentLang,
-        tema: currentTheme,
+        idioma: typeof currentLang !== 'undefined' ? currentLang : 'es',
+        tema: typeof currentTheme !== 'undefined' ? currentTheme : 'theme-oscuro',
         info_personal: personalInfo,
         nombreCompleto: personalInfo.fullname || (firebaseUser ? firebaseUser.displayName : null) || null,
         residencia: personalInfo.location || null,
@@ -1850,30 +1886,92 @@
         bio: personalInfo.bio || null,
         viajes_guardados: trips,
         plantillas: templates,
-        preferencias: userPreferences,
-        amigos: friends,
-        ultimaConexion: firebase.firestore.FieldValue.serverTimestamp()
+        preferencias: (typeof userPreferences !== 'undefined' && userPreferences) ? userPreferences : { eventsPerDay: 4, transportType: 'any', pace: 'relaxed' },
+        amigos: friends
       };
 
-      if (ref) {
-        ref.set(payload, { merge: true }).catch(e => console.error("Error sincronizando perfil por uid:", e));
+      // Deep clean undefined values so Firestore never rejects the write
+      let safePayload = {};
+      try {
+        safePayload = JSON.parse(JSON.stringify(rawPayload));
+      } catch(e) {
+        safePayload = rawPayload;
       }
-      if (currentNickname && db && currentUserUid !== currentNickname) {
-        db.collection('plux_usuarios').doc(currentNickname).set(payload, { merge: true }).catch(e => console.error("Error sincronizando perfil por nick:", e));
+      safePayload.ultimaConexion = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+        ? firebase.firestore.FieldValue.serverTimestamp()
+        : new Date().toISOString();
+
+      try {
+        if (ref) {
+          ref.set(safePayload, { merge: true }).catch(e => console.warn("Sincronización por ref:", e));
+        }
+        if (uid && db) {
+          db.collection('plux_usuarios').doc(uid).set(safePayload, { merge: true }).catch(e => console.warn("Sincronización por uid:", e));
+        }
+        if (nick && db && uid !== nick) {
+          db.collection('plux_usuarios').doc(nick).set(safePayload, { merge: true }).catch(e => console.warn("Sincronización por nick:", e));
+        }
+      } catch (err) {
+        console.warn("Error enviando perfil a Firestore:", err);
       }
     }
 
     async function cargarPerfilUsuario() {
-      const ref = getPluxProfileRef();
-      if (!ref && !currentNickname && !firebaseUser) return;
-      if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
-        db = firebase.firestore();
-      }
+      if (!db && typeof getFirestoreDb === 'function') db = getFirestoreDb();
+      if (!db && typeof firebase !== 'undefined' && firebase.firestore) db = firebase.firestore();
+
+      const targetUid = currentUserUid || (firebaseUser && firebaseUser.uid) || localStorage.getItem('Plux_Uid');
+      const targetNick = currentNickname || localStorage.getItem('Plux_Nickname');
+      const targetEmail = firebaseUser?.email || null;
+
+      if (!targetUid && !targetNick && !targetEmail) return;
+      if (!db) return;
 
       try {
-        let doc = ref ? await ref.get() : null;
+        let doc = null;
+
+        // 1. Try by targetUid (Firebase Auth UID or Nick)
+        if (targetUid) {
+          try {
+            const uidDoc = await db.collection('plux_usuarios').doc(targetUid).get();
+            if (uidDoc && uidDoc.exists) doc = uidDoc;
+          } catch(e) {}
+        }
+
+        // 2. Fallback: Try by targetNick
+        if ((!doc || !doc.exists) && targetNick) {
+          try {
+            const nickDoc = await db.collection('plux_usuarios').doc(targetNick).get();
+            if (nickDoc && nickDoc.exists) doc = nickDoc;
+          } catch(e) {}
+        }
+
+        // 3. Fallback: Query by email if logged in with Firebase Auth
+        if ((!doc || !doc.exists) && targetEmail) {
+          try {
+            const qEmail = await db.collection('plux_usuarios').where('email', '==', targetEmail).limit(1).get();
+            if (!qEmail.empty) doc = qEmail.docs[0];
+          } catch(e) {}
+        }
+
+        // 4. Fallback: Query where uid == targetUid
+        if ((!doc || !doc.exists) && targetUid) {
+          try {
+            const qUid = await db.collection('plux_usuarios').where('uid', '==', targetUid).limit(1).get();
+            if (!qUid.empty) doc = qUid.docs[0];
+          } catch(e) {}
+        }
+
+        // 5. Fallback: Query where nickname == targetNick
+        if ((!doc || !doc.exists) && targetNick) {
+          try {
+            const qNick = await db.collection('plux_usuarios').where('nickname', '==', targetNick).limit(1).get();
+            if (!qNick.empty) doc = qNick.docs[0];
+          } catch(e) {}
+        }
+
         if (doc && doc.exists) {
-          const data = doc.data();
+          const data = doc.data() || {};
           let nick = data.nickname;
           if (!nick && firebaseUser) {
             nick = await generarNicknameUnico(firebaseUser);
@@ -1881,8 +1979,10 @@
             nick = currentNickname || 'viajero';
           }
           currentNickname = String(nick).toLowerCase().replace(/[^a-z0-9_]/g, '');
+          currentUserUid = data.uid || currentUserUid || currentNickname;
           localStorage.setItem('Plux_Nickname', currentNickname);
-          localStorage.setItem('Plux_Uid', currentUserUid || currentNickname);
+          localStorage.setItem('Plux_Uid', currentUserUid);
+
           if (data.photoUrl) {
             localStorage.setItem('Plux_UserProfile_Photo', data.photoUrl);
           }
@@ -1922,23 +2022,60 @@
           
           updateUserButtonDisplay();
           renderTripLists();
-          sincronizarPerfil();
+
+          // Auto-load latest trip in editor if currently empty
+          if ((!destinos || destinos.length === 0) && mergedTrips.length > 0) {
+            cargarViaje(mergedTrips.length - 1, false);
+          }
+
+          // Sync back to cloud if local had trips not yet in cloud
+          if (mergedTrips.length > cloudTrips.length) {
+            sincronizarPerfil();
+          }
+
           if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(currentNickname);
+
+          // Subscribe to real-time updates for trips from other devices
+          if (doc.ref && !userProfileUnsubscribe) {
+            userProfileUnsubscribe = doc.ref.onSnapshot(snap => {
+              if (snap && snap.exists && !isSyncing) {
+                const liveData = snap.data();
+                if (liveData && Array.isArray(liveData.viajes_guardados)) {
+                  const currLocal = getStoredTrips();
+                  const updatedMerged = mergeTrips(currLocal, liveData.viajes_guardados);
+                  if (JSON.stringify(currLocal) !== JSON.stringify(updatedMerged)) {
+                    saveTrips(updatedMerged, false);
+                    renderTripLists();
+                    if ((!destinos || destinos.length === 0) && updatedMerged.length > 0) {
+                      cargarViaje(updatedMerged.length - 1, false);
+                    }
+                  }
+                }
+              }
+            }, err => console.warn("Snapshot error perfil:", err));
+          }
         } else {
           if (firebaseUser) {
             const nick = await generarNicknameUnico(firebaseUser);
             currentNickname = nick;
+            currentUserUid = firebaseUser.uid;
             localStorage.setItem('Plux_Nickname', currentNickname);
-            localStorage.setItem('Plux_Uid', currentUserUid || nick);
+            localStorage.setItem('Plux_Uid', currentUserUid);
             if (firebaseUser.photoURL) {
               localStorage.setItem('Plux_UserProfile_Photo', firebaseUser.photoURL);
             }
-            sincronizarPerfil();
+            const localTrips = getStoredTrips();
+            if (localTrips.length > 0) {
+              sincronizarPerfil();
+            }
             updateUserButtonDisplay();
             renderTripLists();
             if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(currentNickname);
           } else if (currentNickname) {
-            sincronizarPerfil();
+            const localTrips = getStoredTrips();
+            if (localTrips.length > 0) {
+              sincronizarPerfil();
+            }
             if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(currentNickname);
           }
         }
@@ -2664,7 +2801,7 @@
     window.trackEvent = trackEvent;
 
     // User Preferences
-    let userPreferences = {
+    userPreferences = userPreferences || {
       eventsPerDay: 4,
       transportType: 'any',
       pace: 'relaxed'

@@ -1393,6 +1393,7 @@
       background: rgba(0, 0, 0, 0.5) !important;
     }
     .trad-dropdown-menu {
+      display: none !important;
       position: absolute;
       top: calc(100% + 6px);
       left: 0;
@@ -1407,6 +1408,9 @@
       overflow-y: auto;
       backdrop-filter: blur(14px);
       animation: pluxFadeInDown 0.18s ease;
+    }
+    .trad-dropdown-menu.show {
+      display: block !important;
     }
     .trad-option {
       padding: 9px 14px;
@@ -4687,7 +4691,7 @@ body.mode-reader #mobileMenuCloneBtn {
   max-height: 230px;
   overflow-y: auto;
   z-index: 2500;
-  display: none;
+  display: none !important;
   padding: 6px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(16px);
@@ -4696,7 +4700,7 @@ body.mode-reader #mobileMenuCloneBtn {
 }
 
 .trad-dropdown-menu.show {
-  display: block;
+  display: block !important;
 }
 
 .trad-option {

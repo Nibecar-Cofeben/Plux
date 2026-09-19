@@ -802,6 +802,7 @@
     let currentNickname = null;
     let loadedTripIndex = null;
     window.currentTripRole = 'editor';
+    var unsubscribeUserIncomingConv = null;
 
     function getPluxProfileRef() {
       if (!db || !currentUserUid) return null;
@@ -7841,6 +7842,15 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       }
     });
 
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('trad-menu-from')?.classList.remove('show');
+        document.getElementById('trad-menu-to')?.classList.remove('show');
+        document.getElementById('trad-trigger-from')?.classList.remove('active');
+        document.getElementById('trad-trigger-to')?.classList.remove('active');
+      }
+    });
+
     window.abrirTraductor = abrirTraductor;
     window.cerrarTraductor = cerrarTraductor;
     window.swapTraductorLangs = swapTraductorLangs;
@@ -8464,6 +8474,93 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         resultados.innerHTML = `<p class="clima-placeholder">${msg}</p>`;
         showToast(e.message === 'Ciudad no encontrada' ? 'Ciudad no encontrada' : 'Error de clima', 'error');
       }
+    }
+
+    // ================== CONVERSOR DE MONEDA ==================
+    function abrirConversor() {
+      if (typeof cerrarPanelHerramientas === 'function') cerrarPanelHerramientas();
+      const modal = document.getElementById('modal-conversor');
+      if (modal) modal.style.display = 'flex';
+      convertirMoneda();
+    }
+
+    function cerrarConversor() {
+      const modal = document.getElementById('modal-conversor');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function convertirMoneda() {
+      const cantEl = document.getElementById('conv-cantidad') || document.getElementById('conversor-cantidad');
+      const origEl = document.getElementById('conv-origen') || document.getElementById('conversor-origen');
+      const destEl = document.getElementById('conv-destino') || document.getElementById('conversor-destino');
+      const resEl = document.getElementById('conversor-resultado');
+      
+      const cant = parseFloat(cantEl ? cantEl.value : 1) || 0;
+      const orig = origEl ? origEl.value : 'EUR';
+      const dest = destEl ? destEl.value : 'USD';
+      
+      const tasas = {
+        USD: 1.0,
+        EUR: 0.92,
+        GBP: 0.79,
+        JPY: 155.0,
+        ARS: 1250.0,
+        MXN: 18.2,
+        CAD: 1.36,
+        AUD: 1.52,
+        CHF: 0.90,
+        CNY: 7.25,
+        BRL: 5.50,
+        CLP: 940.0
+      };
+
+      const tasaOrigen = tasas[orig] || 1;
+      const tasaDestino = tasas[dest] || 1;
+      const enUsd = cant / tasaOrigen;
+      const res = enUsd * tasaDestino;
+
+      if (resEl) {
+        const formatted = (res >= 1000 || dest === 'ARS' || dest === 'JPY' || dest === 'CLP')
+          ? res.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : res.toFixed(2);
+        resEl.innerText = `${formatted} ${dest}`;
+      }
+    }
+
+    // Auto-conversión reactiva en cambios de input
+    document.addEventListener('input', (e) => {
+      if (e.target && (e.target.id === 'conv-cantidad' || e.target.id === 'conversor-cantidad')) {
+        convertirMoneda();
+      }
+    });
+    document.addEventListener('change', (e) => {
+      if (e.target && (e.target.id === 'conv-origen' || e.target.id === 'conv-destino' || e.target.id === 'conversor-origen' || e.target.id === 'conversor-destino')) {
+        convertirMoneda();
+      }
+    });
+
+    // ADDON: EJECUTAR CONVERSOR LABS (Unidades Raras)
+    function ejecutarConversorLabs() {
+      const valInput = document.getElementById('lab-conv-val');
+      const typeSelect = document.getElementById('lab-conv-type');
+      const resP = document.getElementById('lab-conv-res');
+      if (!valInput || !typeSelect || !resP) return;
+
+      const val = parseFloat(valInput.value) || 0;
+      const type = typeSelect.value;
+      let res = 0;
+      let unit = '';
+      if (type === 'f-c') {
+        res = (val - 32) * 5 / 9;
+        unit = '°C';
+      } else if (type === 'mi-km') {
+        res = val * 1.60934;
+        unit = 'km';
+      } else if (type === 'gal-l') {
+        res = val * 3.78541;
+        unit = 'L';
+      }
+      resP.innerText = `Resultado: ${res.toFixed(2)} ${unit}`;
     }
 
     async function dibujarMapa(containerId='map') {
@@ -13995,6 +14092,8 @@ async function exportarPDF() {
   window.presentacionAnterior = presentacionAnterior;
   window.presentacionSiguiente = presentacionSiguiente;
   window.mostrarPresentacionEvento = mostrarPresentacionEvento;
+  window.abrirConversor = abrirConversor;
+  window.cerrarConversor = cerrarConversor;
   window.convertirMoneda = convertirMoneda;
   window.ejecutarConversorLabs = ejecutarConversorLabs;
   window.geocode = geocode;
@@ -14538,7 +14637,7 @@ async function exportarPDF() {
   }
   window.registrarConversacionDirecta = registrarConversacionDirecta;
 
-  let unsubscribeUserIncomingConv = null;
+  // unsubscribeUserIncomingConv declared at top level to avoid TDZ
   function listenUserIncomingConversations(nick) {
     if (!nick) return;
     const cleanNick = nick.toLowerCase().trim().replace(/^@/, '');

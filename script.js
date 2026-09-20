@@ -7534,7 +7534,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const mapContainer = document.getElementById('resumen-map-mini');
       if (mapContainer && window.L && destinos.length > 0) {
         mapContainer.innerHTML = '';
-        if (window._resumenMap) { window._resumenMap.remove(); window._resumenMap = null; }
+        if (window._resumenMap) { try { window._resumenMap.remove(); } catch(e){} window._resumenMap = null; }
+        if (mapContainer._leaflet_id) { mapContainer._leaflet_id = null; }
         
         const geocodePromises = destinos.map(dest => geocode(dest.nombre));
         Promise.allSettled(geocodePromises).then(results => {
@@ -7551,6 +7552,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             return;
           }
           
+          if (window._resumenMap) { try { window._resumenMap.remove(); } catch(e){} window._resumenMap = null; }
+          if (mapContainer._leaflet_id) { mapContainer._leaflet_id = null; }
           const miniMap = L.map('resumen-map-mini', { zoomControl: true, scrollWheelZoom: false });
           window._resumenMap = miniMap;
           L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '©OSM ©CARTO' }).addTo(miniMap);
@@ -7575,6 +7578,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       }
 
       // Detail Content: Timeline vs Standard Collapsible View
+      const tripSchedule = buildTripDaySchedule();
       if (isTimeline) {
         // ORIGINAL TIMELINE VIEW (FAITHFUL REPRODUCTION)
         if (lugarSalida) {

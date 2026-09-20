@@ -759,9 +759,7 @@
       </div>
 
       <!-- ACTION BUTTONS -->
-      <div class="resumen-actions" style="margin-bottom:24px;">
-        <button class="view-toggle" onclick="toggleVistaResumen()" id="toggleVistaBtn">Línea de tiempo</button>
-        <button class="view-toggle" onclick="toggleAllCollapseResumen()" id="btnToggleCollapseResumen" style="background:rgba(255,255,255,0.08) !important; border:1px solid var(--border) !important;">Plegar todo</button>
+      <div class="resumen-actions" style="margin-bottom:20px;">
         <button onclick="exportarPDF()" id="pdfBtn">PDF</button>
         <button onclick="compartirTravelCard()" id="shareCardBtn" style="background:linear-gradient(135deg, #ec4899, #8b5cf6); color:white; font-weight:600; border:none;">Historia 9:16</button>
         <button onclick="window.clonarViajeActual()" id="btnClonarResumen" class="btn-clonar-action" style="background:linear-gradient(135deg, #10b981, #0ea5e9); color:#030712; font-weight:700; border:none;"><span id="btnClonarResumenTxt">Clonar</span></button>
@@ -770,39 +768,90 @@
         <button onclick="abrirMapaResumen()" id="mapaResumenBtn">Ver mapa</button>
       </div>
 
-      <!-- STAT CARDS -->
-      <div class="stat-grid" id="stat-grid"></div>
+      <!-- TABS NAVIGATION -->
+      <div class="resumen-nav-tabs" id="resumenNavTabs">
+        <button type="button" class="resumen-tab-btn active" id="tab-btn-general" onclick="window.switchResumenTab('general')">
+          <span class="tab-title">General</span>
+        </button>
+        <button type="button" class="resumen-tab-btn" id="tab-btn-presupuesto" onclick="window.switchResumenTab('presupuesto')">
+          <span class="tab-title">Presupuesto</span>
+        </button>
+        <button type="button" class="resumen-tab-btn" id="tab-btn-transporte" onclick="window.switchResumenTab('transporte')">
+          <span class="tab-title">Transporte</span>
+        </button>
+      </div>
 
-      <!-- CHARTS + MINI MAP -->
-      <div class="resumen-chart-section">
-        <div class="chart-box">
+      <!-- TAB 1: GENERAL -->
+      <div class="resumen-tab-panel" id="resumen-tab-general">
+        <!-- STAT CARDS -->
+        <div class="stat-grid" id="stat-grid"></div>
+
+        <!-- MINI MAP -->
+        <div class="chart-box" style="margin-bottom: 24px;">
           <h4>Ruta del viaje</h4>
           <div id="resumen-map-mini"></div>
         </div>
-        <div class="chart-box" id="resumen-gastos-box">
-          <h4>Distribución de gastos</h4>
-          <div style="display:flex; flex-direction:column; gap:16px; height:100%; justify-content:center;">
-            <div style="position:relative; height:170px; max-height:170px;">
+
+        <!-- VIEW CONTROLS -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+          <h3 style="margin:0; font-size:1.25rem; font-weight:700; color:var(--blanco, #fff);">Itinerario de Actividades</h3>
+          <div style="display:flex; gap:8px;">
+            <button class="view-toggle" onclick="toggleVistaResumen()" id="toggleVistaBtn" style="padding:6px 14px; font-size:0.82rem;">Línea de tiempo</button>
+            <button class="view-toggle" onclick="toggleAllCollapseResumen()" id="btnToggleCollapseResumen" style="padding:6px 14px; font-size:0.82rem; background:rgba(255,255,255,0.08) !important; border:1px solid var(--border) !important;">Plegar todo</button>
+          </div>
+        </div>
+
+        <!-- ITINERARY DETAIL -->
+        <div id="resumenContenido"></div>
+      </div>
+
+      <!-- TAB 2: PRESUPUESTO -->
+      <div class="resumen-tab-panel" id="resumen-tab-presupuesto" style="display:none;">
+        <!-- FINANCIAL KPIS -->
+        <div class="stat-grid" id="presupuesto-kpi-grid" style="margin-bottom:20px;"></div>
+
+        <!-- CHARTS SECTION -->
+        <div class="chart-box" id="resumen-gastos-box" style="margin-bottom:24px;">
+          <h4>Distribución y desglose de gastos</h4>
+          <div class="presupuesto-charts-layout" style="display:flex; gap:24px; align-items:center; flex-wrap:wrap;">
+            <div style="position:relative; height:200px; max-height:200px; width:200px; min-width:180px; margin:0 auto;">
               <canvas id="chart-distribucion"></canvas>
             </div>
-            <div id="resumen-gastos-breakdown" class="resumen-breakdown-bars"></div>
+            <div id="resumen-gastos-breakdown" class="resumen-breakdown-bars" style="flex:1; min-width:260px;"></div>
           </div>
+        </div>
+
+        <!-- VACA / SPLIT BILL CONTROL -->
+        <div class="vaca-card" id="vaca-card" style="background:rgba(255,255,255,0.035); border:1px solid var(--border); border-radius:18px; padding:20px; margin-bottom:24px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+            <div>
+              <div style="font-weight:700; font-size:1rem; color:#f8fafc;">División de gastos y balances del grupo</div>
+              <div style="font-size:0.8rem; color:var(--gris);">Calcula el aporte por persona, pagos realizados y saldos pendientes</div>
+            </div>
+            <label class="switch" id="vaca-control">
+              <input type="checkbox" id="vaca-toggle" onchange="renderResumen()">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="costoGlobal" class="costo-total"></div>
+          <div id="vacaGlobal" class="vaca-result" style="text-align:right;"></div>
+          <div id="presupuesto-balances-list" style="margin-top:14px;"></div>
+        </div>
+
+        <!-- DETAILED EXPENSE LIST (EDITABLE) -->
+        <div class="chart-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+            <h4 style="margin:0;">Control y estado de pagos por ítem</h4>
+            <span style="font-size:0.75rem; color:var(--gris);">Los cambios se guardan automáticamente</span>
+          </div>
+          <div id="resumen-gastos-tabla"></div>
         </div>
       </div>
 
-      <!-- ITINERARY DETAIL -->
-      <div id="resumenContenido"></div>
-
-      <div class="switch-vaca-container" style="display:none;" id="vaca-control">
-        <span>Dividir gastos (Vaca):</span>
-        <label class="switch">
-          <input type="checkbox" id="vaca-toggle" onchange="renderResumen()">
-          <span class="slider"></span>
-        </label>
+      <!-- TAB 3: TRANSPORTE -->
+      <div class="resumen-tab-panel" id="resumen-tab-transporte" style="display:none;">
+        <div id="resumen-transporte-content"></div>
       </div>
-      
-      <div id="costoGlobal" class="costo-total"></div>
-      <div id="vacaGlobal" class="vaca-result" style="text-align: right;"></div>
     </div>
   </div>
 

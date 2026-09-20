@@ -7247,60 +7247,243 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       renderResumen();
     }
 
+    let activeResumenTab = 'general';
+
+    function switchResumenTab(tabName) {
+      activeResumenTab = tabName;
+      ['general', 'presupuesto', 'transporte'].forEach(tName => {
+        const btn = document.getElementById(`tab-btn-${tName}`);
+        const panel = document.getElementById(`resumen-tab-${tName}`);
+        if (btn) {
+          if (tName === tabName) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+        if (panel) {
+          panel.style.display = tName === tabName ? 'block' : 'none';
+        }
+      });
+      if (tabName === 'general' && window._resumenMap) {
+        setTimeout(() => {
+          try { window._resumenMap.invalidateSize(); } catch(e){}
+        }, 150);
+      }
+      if (tabName === 'presupuesto' && window._chartDonut) {
+        setTimeout(() => {
+          try { window._chartDonut.resize(); } catch(e){}
+        }, 150);
+      }
+    }
+    window.switchResumenTab = switchResumenTab;
+
+    function calcularHoraLlegada(horaSalida, duracionMinutos, retrasoMinutos = 0) {
+      if (!horaSalida) return '--:--';
+      const parts = String(horaSalida).split(':');
+      if (parts.length < 2) return '--:--';
+      const horas = parseInt(parts[0], 10) || 0;
+      const minutos = parseInt(parts[1], 10) || 0;
+      const dur = parseInt(duracionMinutos, 10) || 0;
+      const ret = parseInt(retrasoMinutos, 10) || 0;
+      const totalMinutos = (horas * 60 + minutos) + dur + ret;
+      const hLlegada = Math.floor((totalMinutos / 60) % 24);
+      const mLlegada = totalMinutos % 60;
+      const diasExtra = Math.floor(totalMinutos / (24 * 60));
+      const timeStr = `${String(hLlegada).padStart(2, '0')}:${String(mLlegada).padStart(2, '0')}`;
+      return diasExtra > 0 ? `${timeStr} (+${diasExtra}d)` : timeStr;
+    }
+    window.calcularHoraLlegada = calcularHoraLlegada;
+
+    function obtenerListaViajerosTotal() {
+      const set = new Set();
+      if (currentNickname) set.add(`@${currentNickname}`);
+      if (firebaseUser && firebaseUser.displayName) set.add(firebaseUser.displayName);
+      if (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros)) {
+        listaViajeros.forEach(v => { if (v && String(v).trim()) set.add(String(v).trim()); });
+      }
+      if (typeof nombresPersonasGlobal === 'string' && nombresPersonasGlobal) {
+        nombresPersonasGlobal.split(',').forEach(v => { if (v && String(v).trim()) set.add(String(v).trim()); });
+      }
+      if (set.size === 0) set.add('Viajero 1');
+      return Array.from(set);
+    }
+    window.obtenerListaViajerosTotal = obtenerListaViajerosTotal;
+
     function renderResumen() {
       const cont = document.getElementById("resumenContenido");
+      if (!cont) return;
       cont.innerHTML = "";
       let costoGlobal = 0;
       let costoTransporte = 0;
+      let costoAlojamiento = 0;
       let costoEventos = 0;
       let costoOtros = 0;
       let totalEventos = 0;
       let totalDias = 0;
+      let totalPagado = 0;
+      let totalPendiente = 0;
       const costosPorDestino = [];
+      const allExpenses = [];
 
       const isTimeline = modoVista === 1;
       if (isTimeline) cont.classList.add('vista-linea-tiempo');
       else cont.classList.remove('vista-linea-tiempo');
 
-      // Calculate stats
-      destinos.forEach(dest => {
+      // Calculate stats & collect expenses
+      destinos.forEach((dest, destIdx) => {
         const numDiasDest = dest.dias ? dest.dias.length : 0;
         totalDias += numDiasDest;
         let costoDest = 0;
-        (dest.dias || []).forEach(dia => {
+
+        (dest.tramos || []).forEach((tramo, tramoIdx) => {
+          const precioTransp = Number(tramo.precio) || 0;
+          const precioAloj = Number(tramo.precioAlojamiento) || 0;
+          if (precioTransp > 0) {
+            const cTransp = precioTransp * numPersonas;
+            costoGlobal += cTransp;
+            costoTransporte += cTransp;
+            costoDest += cTransp;
+            const isPaid = tramo.pagado === true;
+            if (isPaid) totalPagado += cTransp; else totalPendiente += cTransp;
+            allExpenses.push({
+              tipo: 'tramo_transporte',
+              destId: dest.id,
+              destIndex: destIdx,
+              subId: null,
+              itemIndex: tramoIdx,
+              concepto: `Transporte a ${dest.nombre} (${tramo.medio || 'Trayecto'})`,
+              categoria: 'Transporte',
+              costoUnitario: precioTransp,
+              costoTotal: cTransp,
+              pagadoPor: tramo.pagadoPor || 'Todos',
+              pagado: isPaid,
+              ubicacion: dest.nombre
+            });
+          }
+          if (precioAloj > 0) {
+            const cAloj = precioAloj * numPersonas;
+            costoGlobal += cAloj;
+            costoAlojamiento += cAloj;
+            costoDest += cAloj;
+            const isPaid = tramo.alojamientoPagado === true;
+            if (isPaid) totalPagado += cAloj; else totalPendiente += cAloj;
+            allExpenses.push({
+              tipo: 'tramo_alojamiento',
+              destId: dest.id,
+              destIndex: destIdx,
+              subId: null,
+              itemIndex: tramoIdx,
+              concepto: `Alojamiento en ${dest.nombre} (${tramo.alojamiento || 'Estancia'})`,
+              categoria: 'Alojamiento',
+              costoUnitario: precioAloj,
+              costoTotal: cAloj,
+              pagadoPor: tramo.alojamientoPagadoPor || 'Todos',
+              pagado: isPaid,
+              ubicacion: dest.nombre
+            });
+          }
+        });
+
+        (dest.dias || []).forEach((dia, diaIdx) => {
           totalEventos += dia.eventos ? dia.eventos.length : 0;
-          (dia.eventos || []).forEach(ev => {
+          (dia.eventos || []).forEach((ev, evIdx) => {
             if (ev.costo) {
-              const c = ev.costo * numPersonas;
+              const c = (Number(ev.costo) || 0) * numPersonas;
               costoGlobal += c;
               costoEventos += c;
               costoDest += c;
+              const isPaid = ev.pagado === true;
+              if (isPaid) totalPagado += c; else totalPendiente += c;
+              allExpenses.push({
+                tipo: 'evento',
+                destId: dest.id,
+                destIndex: destIdx,
+                subId: dia.id,
+                diaIndex: diaIdx,
+                itemIndex: evIdx,
+                concepto: ev.titulo || t('untitled_event') || 'Actividad',
+                categoria: 'Actividades',
+                costoUnitario: Number(ev.costo) || 0,
+                costoTotal: c,
+                pagadoPor: ev.pagadoPor || 'Todos',
+                pagado: isPaid,
+                ubicacion: `${dest.nombre} - Dia ${diaIdx + 1}`
+              });
             }
           });
-          (dia.costosAdicionales || []).forEach(c => {
+          (dia.costosAdicionales || []).forEach((c, cIdx) => {
             if (c.precio) {
-              costoGlobal += c.precio;
-              costoOtros += c.precio;
-              costoDest += c.precio;
+              const p = Number(c.precio) || 0;
+              costoGlobal += p;
+              costoOtros += p;
+              costoDest += p;
+              const isPaid = c.pagado === true;
+              if (isPaid) totalPagado += p; else totalPendiente += p;
+              allExpenses.push({
+                tipo: 'costo_adicional_dia',
+                destId: dest.id,
+                destIndex: destIdx,
+                subId: dia.id,
+                diaIndex: diaIdx,
+                itemIndex: cIdx,
+                concepto: c.concepto || c.descripcion || 'Gasto adicional',
+                categoria: 'Extras',
+                costoUnitario: p,
+                costoTotal: p,
+                pagadoPor: c.pagadoPor || 'Todos',
+                pagado: isPaid,
+                ubicacion: `${dest.nombre} - Dia ${diaIdx + 1}`
+              });
             }
           });
         });
-        (dest.tramos || []).forEach(tramo => {
-          const sum = (Number(tramo.precio) || 0) + (Number(tramo.precioAlojamiento) || 0);
-          if (sum) {
-            const c = sum * numPersonas;
-            costoGlobal += c;
-            costoTransporte += c;
-            costoDest += c;
-          }
-        });
+
         costosPorDestino.push({ id: dest.id, nombre: dest.nombre, costo: costoDest, diasCount: numDiasDest });
       });
+
       if (vueltaPrecioGlobal) {
-        const vCost = vueltaPrecioGlobal * numPersonas;
+        const vCost = (Number(vueltaPrecioGlobal) || 0) * numPersonas;
         costoGlobal += vCost;
         costoTransporte += vCost;
+        const isPaid = (typeof vueltaPagado !== 'undefined') ? vueltaPagado === true : false;
+        if (isPaid) totalPagado += vCost; else totalPendiente += vCost;
+        allExpenses.push({
+          tipo: 'vuelta',
+          destId: null,
+          destIndex: null,
+          subId: null,
+          itemIndex: null,
+          concepto: `Regreso / Vuelta (${vueltaGlobal || 'Retorno'})`,
+          categoria: 'Transporte',
+          costoUnitario: Number(vueltaPrecioGlobal) || 0,
+          costoTotal: vCost,
+          pagadoPor: (typeof vueltaPagadoPor !== 'undefined') ? vueltaPagadoPor : 'Todos',
+          pagado: isPaid,
+          ubicacion: 'Regreso'
+        });
       }
+
+      (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales) ? vueltaCostosAdicionales : []).forEach((vc, vcIdx) => {
+        if (vc.precio) {
+          const p = Number(vc.precio) || 0;
+          costoGlobal += p;
+          costoOtros += p;
+          const isPaid = vc.pagado === true;
+          if (isPaid) totalPagado += p; else totalPendiente += p;
+          allExpenses.push({
+            tipo: 'vuelta_costo_adicional',
+            destId: null,
+            destIndex: null,
+            subId: null,
+            itemIndex: vcIdx,
+            concepto: vc.descripcion || vc.concepto || 'Extra de vuelta',
+            categoria: 'Extras',
+            costoUnitario: p,
+            costoTotal: p,
+            pagadoPor: vc.pagadoPor || 'Todos',
+            pagado: isPaid,
+            ubicacion: 'Regreso'
+          });
+        }
+      });
 
       // Update hero subtitle
       const fechaEl = document.getElementById('fechaInicio');
@@ -7312,15 +7495,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         subtitleEl.textContent = sub;
       }
 
-      // Stat cards (modern badges without emojis)
+      // ==========================================
+      // 1. RENDER PESTAÑA GENERAL
+      // ==========================================
       const statGrid = document.getElementById('stat-grid');
       if (statGrid) {
         const totalNoches = totalDias > 1 ? totalDias - 1 : (totalDias === 1 ? 1 : 0);
         statGrid.innerHTML = `
           <div class="stat-card stat-azul">
-            <div class="stat-badge">DURACIÓN</div>
+            <div class="stat-badge">DURACION</div>
             <div class="stat-value">${totalDias}</div>
-            <div class="stat-label">${totalDias} Días • ${totalNoches} Noches</div>
+            <div class="stat-label">${totalDias} Dias • ${totalNoches} Noches</div>
           </div>
           <div class="stat-card stat-verde">
             <div class="stat-badge">ACTIVIDADES</div>
@@ -7389,69 +7574,6 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         });
       }
 
-      // Donut chart + Breakdown progress bars
-      const ctxDonut = document.getElementById('chart-distribucion');
-      const breakdownBox = document.getElementById('resumen-gastos-breakdown');
-      if (window.Chart && ctxDonut) {
-        if (window._chartDonut) { window._chartDonut.destroy(); window._chartDonut = null; }
-        
-        if (costoGlobal > 0) {
-          window._chartDonut = new Chart(ctxDonut, {
-            type: 'doughnut',
-            data: {
-              labels: ['Transporte & Hospedaje', 'Actividades', 'Otros gastos'],
-              datasets: [{
-                data: [costoTransporte, costoEventos, costoOtros],
-                backgroundColor: ['#38bdf8', '#34d399', '#f472b6'],
-                borderWidth: 0,
-                hoverOffset: 6
-              }]
-            },
-            options: {
-              plugins: {
-                legend: { display: false }
-              },
-              cutout: '72%',
-              responsive: true,
-              maintainAspectRatio: false
-            }
-          });
-
-          if (breakdownBox) {
-            const pctTransp = Math.round((costoTransporte / costoGlobal) * 100) || 0;
-            const pctAct = Math.round((costoEventos / costoGlobal) * 100) || 0;
-            const pctOtros = Math.round((costoOtros / costoGlobal) * 100) || 0;
-            breakdownBox.innerHTML = `
-              <div class="breakdown-item">
-                <div class="breakdown-header">
-                  <span><span class="breakdown-dot" style="background:#38bdf8;"></span>Transporte & Estancia</span>
-                  <span class="breakdown-amt">${costoTransporte.toFixed(0)}€ <small>(${pctTransp}%)</small></span>
-                </div>
-                <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctTransp}%; background:#38bdf8;"></div></div>
-              </div>
-              <div class="breakdown-item">
-                <div class="breakdown-header">
-                  <span><span class="breakdown-dot" style="background:#34d399;"></span>Actividades & Entradas</span>
-                  <span class="breakdown-amt">${costoEventos.toFixed(0)}€ <small>(${pctAct}%)</small></span>
-                </div>
-                <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctAct}%; background:#34d399;"></div></div>
-              </div>
-              <div class="breakdown-item">
-                <div class="breakdown-header">
-                  <span><span class="breakdown-dot" style="background:#f472b6;"></span>Otros & Extras</span>
-                  <span class="breakdown-amt">${costoOtros.toFixed(0)}€ <small>(${pctOtros}%)</small></span>
-                </div>
-                <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctOtros}%; background:#f472b6;"></div></div>
-              </div>
-            `;
-          }
-        } else {
-          if (breakdownBox) {
-            breakdownBox.innerHTML = '<p style="color:var(--gris);text-align:center;padding:15px;margin:0;font-size:0.85rem;">Sin gastos asignados en este viaje</p>';
-          }
-        }
-      }
-
       // Detail Content (Collapsible Destinations, Days, and Events)
       if (lugarSalida) {
         cont.innerHTML += `
@@ -7476,13 +7598,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#f8fafc;">${dest.nombre}</h3>
               </div>
               <div style="font-size:0.82rem; color:var(--gris); font-weight:500;">
-                ${destStats.diasCount} ${destStats.diasCount === 1 ? 'día' : 'días'}${destStats.costo > 0 ? ` • <span style="color:#34d399; font-weight:600;">${destStats.costo.toFixed(0)}€</span>` : ''}
+                ${destStats.diasCount} ${destStats.diasCount === 1 ? 'dia' : 'dias'}${destStats.costo > 0 ? ` • <span style="color:#34d399; font-weight:600;">${destStats.costo.toFixed(0)}€</span>` : ''}
               </div>
             </div>
             <div id="resumen-dest-body-${dest.id}" style="display:${isDestCollapsed ? 'none' : 'block'}; padding: 12px 16px 16px;">
         `;
 
-        // Tramos / Lodging summary
+        // Tramos summary
         (dest.tramos || []).forEach((tramo, i) => {
           const sum = (Number(tramo.precio) || 0) + (Number(tramo.precioAlojamiento) || 0);
           html += `
@@ -7512,11 +7634,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div class="dia-resumen-header" onclick="toggleResumenDia(${dest.id}, ${dia.id})" style="cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.03);">
                 <div style="display:flex; align-items:center; gap:8px;">
                   <span id="resumen-dia-chev-${dest.id}-${dia.id}" class="chevron-indicator" style="font-size:0.75rem; transform:${isDiaCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
-                  <h4 style="margin:0; font-size:0.95rem; font-weight:600;">Día ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris); font-weight:normal;">(${daySched.dateLabel})</small>` : ''}</h4>
+                  <h4 style="margin:0; font-size:0.95rem; font-weight:600;">Dia ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris); font-weight:normal;">(${daySched.dateLabel})</small>` : ''}</h4>
                   <span style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">${evCount} ${evCount === 1 ? 'actividad' : 'actividades'}</span>
                 </div>
-                <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="Clima del día">
-                  <div class="weather-chip-row"><span class="weather-chip-icon">🌤️</span><span class="weather-chip-temp">...</span></div>
+                <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="Pronostico del dia">
+                  <div class="weather-chip-row"><span class="weather-chip-icon">...</span><span class="weather-chip-temp">...</span></div>
                 </div>
               </div>
               <div id="resumen-dia-body-${dest.id}-${dia.id}" style="display:${isDiaCollapsed ? 'none' : 'block'}; padding:8px 12px;">
@@ -7528,7 +7650,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             dia.eventos.forEach(ev => {
               const hasDetails = Boolean(ev.notas || ev.lugar || ev.categoria);
               html += `
-                <div class="evento-row-compact" onclick="toggleResumenEventoDetails(this)" title="${hasDetails ? 'Click para ver más detalles' : ''}">
+                <div class="evento-row-compact" onclick="toggleResumenEventoDetails(this)" title="${hasDetails ? 'Click para ver mas detalles' : ''}">
                   <div class="ev-main-line">
                     <span class="ev-time">${ev.hora || '--:--'}</span>
                     <span class="ev-title">${ev.titulo || t('untitled_event')}</span>
@@ -7537,7 +7659,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                   </div>
                   ${hasDetails ? `
                     <div class="ev-details">
-                      ${ev.lugar ? `<div style="font-weight:600; margin-bottom:2px;">Ubicación: ${ev.lugar}</div>` : ''}
+                      ${ev.lugar ? `<div style="font-weight:600; margin-bottom:2px;">Ubicacion: ${ev.lugar}</div>` : ''}
                       ${ev.notas ? `<div>${ev.notas}</div>` : ''}
                     </div>
                   ` : ''}
@@ -7546,7 +7668,6 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             });
           }
 
-          // Extra day costs
           (dia.costosAdicionales || []).forEach(c => {
             if (c.precio || c.concepto) {
               html += `
@@ -7558,10 +7679,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             }
           });
 
-          html += `</div></div>`; // close resumen-dia-body and dia-resumen
+          html += `</div></div>`;
         });
 
-        html += `</div></div>`; // close resumen-dest-body and collapsible-card
+        html += `</div></div>`;
         cont.innerHTML += html;
       });
 
@@ -7582,25 +7703,488 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         cont.innerHTML += vueltaHtml;
       }
 
+      // ==========================================
+      // 2. RENDER PESTAÑA PRESUPUESTO
+      // ==========================================
+      const presupuestoKpiGrid = document.getElementById('presupuesto-kpi-grid');
+      if (presupuestoKpiGrid) {
+        presupuestoKpiGrid.innerHTML = `
+          <div class="stat-card stat-rosa">
+            <div class="stat-badge">TOTAL ESTIMADO</div>
+            <div class="stat-value">${costoGlobal.toFixed(0)}€</div>
+            <div class="stat-label">Costo global del viaje</div>
+          </div>
+          <div class="stat-card stat-azul">
+            <div class="stat-badge">POR PERSONA</div>
+            <div class="stat-value">${numPersonas > 0 ? (costoGlobal / numPersonas).toFixed(0) : 0}€</div>
+            <div class="stat-label">${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</div>
+          </div>
+          <div class="stat-card stat-verde">
+            <div class="stat-badge">TOTAL PAGADO</div>
+            <div class="stat-value">${totalPagado.toFixed(0)}€</div>
+            <div class="stat-label">${costoGlobal > 0 ? Math.round((totalPagado / costoGlobal) * 100) : 0}% completado</div>
+          </div>
+          <div class="stat-card stat-amarillo">
+            <div class="stat-badge">PENDIENTE</div>
+            <div class="stat-value">${totalPendiente.toFixed(0)}€</div>
+            <div class="stat-label">Por abonar o liquidar</div>
+          </div>
+        `;
+      }
+
+      // Donut chart + Breakdown progress bars
+      const ctxDonut = document.getElementById('chart-distribucion');
+      const breakdownBox = document.getElementById('resumen-gastos-breakdown');
+      if (window.Chart && ctxDonut) {
+        if (window._chartDonut) { window._chartDonut.destroy(); window._chartDonut = null; }
+        
+        if (costoGlobal > 0) {
+          window._chartDonut = new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+              labels: ['Transporte', 'Alojamiento', 'Actividades', 'Extras'],
+              datasets: [{
+                data: [costoTransporte, costoAlojamiento, costoEventos, costoOtros],
+                backgroundColor: ['#38bdf8', '#818cf8', '#34d399', '#f472b6'],
+                borderWidth: 0,
+                hoverOffset: 6
+              }]
+            },
+            options: {
+              plugins: {
+                legend: { display: false }
+              },
+              cutout: '72%',
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+
+          if (breakdownBox) {
+            const pctTransp = Math.round((costoTransporte / costoGlobal) * 100) || 0;
+            const pctAloj = Math.round((costoAlojamiento / costoGlobal) * 100) || 0;
+            const pctAct = Math.round((costoEventos / costoGlobal) * 100) || 0;
+            const pctOtros = Math.round((costoOtros / costoGlobal) * 100) || 0;
+            breakdownBox.innerHTML = `
+              <div class="breakdown-item">
+                <div class="breakdown-header">
+                  <span><span class="breakdown-dot" style="background:#38bdf8;"></span>Transporte</span>
+                  <span class="breakdown-amt">${costoTransporte.toFixed(0)}€ <small>(${pctTransp}%)</small></span>
+                </div>
+                <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctTransp}%; background:#38bdf8;"></div></div>
+              </div>
+              <div class="breakdown-item">
+                <div class="breakdown-header">
+                  <span><span class="breakdown-dot" style="background:#818cf8;"></span>Alojamiento</span>
+                  <span class="breakdown-amt">${costoAlojamiento.toFixed(0)}€ <small>(${pctAloj}%)</small></span>
+                </div>
+                <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctAloj}%; background:#818cf8;"></div></div>
+              </div>
+              <div class="breakdown-item">
+                <div class="breakdown-header">
+                  <span><span class="breakdown-dot" style="background:#34d399;"></span>Actividades</span>
+                  <span class="breakdown-amt">${costoEventos.toFixed(0)}€ <small>(${pctAct}%)</small></span>
+                </div>
+                <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctAct}%; background:#34d399;"></div></div>
+              </div>
+              <div class="breakdown-item">
+                <div class="breakdown-header">
+                  <span><span class="breakdown-dot" style="background:#f472b6;"></span>Extras</span>
+                  <span class="breakdown-amt">${costoOtros.toFixed(0)}€ <small>(${pctOtros}%)</small></span>
+                </div>
+                <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctOtros}%; background:#f472b6;"></div></div>
+              </div>
+            `;
+          }
+        } else {
+          if (breakdownBox) {
+            breakdownBox.innerHTML = '<p style="color:var(--gris);text-align:center;padding:15px;margin:0;font-size:0.85rem;">Sin gastos asignados en este viaje</p>';
+          }
+        }
+      }
+
+      // Vaca / Split bill & Balances
       const costEl = document.getElementById('costoGlobal');
       if (costEl) {
         costEl.innerHTML = costoGlobal > 0 ? `<strong>Total del viaje: ${costoGlobal.toFixed(2)}€</strong>` : '';
       }
-
       const vacaGlobal = document.getElementById('vacaGlobal');
       const vacaToggle = document.getElementById('vaca-toggle');
+      const balancesListEl = document.getElementById('presupuesto-balances-list');
+
+      const listaViajerosTotal = obtenerListaViajerosTotal();
+      const numTotalV = listaViajerosTotal.length > 0 ? listaViajerosTotal.length : (numPersonas || 1);
+      const cuotaIndividual = costoGlobal / numTotalV;
+
+      // Calculate paid amounts per person
+      const aportesPorPersona = {};
+      listaViajerosTotal.forEach(v => { aportesPorPersona[v] = 0; });
+      allExpenses.forEach(exp => {
+        if (exp.pagado && exp.pagadoPor && exp.pagadoPor !== 'Todos') {
+          aportesPorPersona[exp.pagadoPor] = (aportesPorPersona[exp.pagadoPor] || 0) + exp.costoTotal;
+        }
+      });
+
       if (vacaGlobal && vacaToggle) {
-        const vacaControl = document.getElementById('vaca-control');
-        if (vacaControl) vacaControl.style.display = numPersonas > 1 ? 'flex' : 'none';
-        if (vacaToggle.checked && costoGlobal > 0 && numPersonas > 1) {
-          vacaGlobal.innerHTML = `Por persona: ${(costoGlobal / numPersonas).toFixed(2)}€`;
+        if (vacaToggle.checked && costoGlobal > 0 && numTotalV > 1) {
+          vacaGlobal.innerHTML = `Cuota equitativa por persona: ${(cuotaIndividual).toFixed(2)}€`;
           vacaGlobal.style.display = 'block';
         } else {
           vacaGlobal.innerHTML = '';
           vacaGlobal.style.display = 'none';
         }
       }
+
+      if (balancesListEl) {
+        if (numTotalV > 1 && costoGlobal > 0) {
+          let balHtml = `<div class="balance-card-grid">`;
+          listaViajerosTotal.forEach(v => {
+            const pagado = aportesPorPersona[v] || 0;
+            const balance = pagado - cuotaIndividual;
+            const balColor = balance > 0.01 ? '#34d399' : (balance < -0.01 ? '#f87171' : 'var(--gris)');
+            const balTexto = balance > 0.01 ? `+${balance.toFixed(2)}€ (a favor)` : (balance < -0.01 ? `${balance.toFixed(2)}€ (debe)` : 'Al dia');
+            balHtml += `
+              <div class="balance-person-card">
+                <div class="balance-person-name">${v}</div>
+                <div class="balance-person-stat"><span>Abonado:</span> <strong style="color:#f8fafc;">${pagado.toFixed(2)}€</strong></div>
+                <div class="balance-person-stat"><span>Balance:</span> <strong style="color:${balColor};">${balTexto}</strong></div>
+              </div>
+            `;
+          });
+          balHtml += `</div>`;
+          balancesListEl.innerHTML = balHtml;
+        } else {
+          balancesListEl.innerHTML = '';
+        }
+      }
+
+      // Editable Expense List Table
+      const tablaGastosEl = document.getElementById('resumen-gastos-tabla');
+      if (tablaGastosEl) {
+        if (allExpenses.length === 0) {
+          tablaGastosEl.innerHTML = `<p style="color:var(--gris); text-align:center; padding:16px; margin:0;">No hay gastos registrados en este viaje.</p>`;
+        } else {
+          let tHtml = `
+            <div class="tabla-gastos-container">
+              <table class="tabla-gastos">
+                <thead>
+                  <tr>
+                    <th>Concepto</th>
+                    <th>Categoria</th>
+                    <th>Ubicacion</th>
+                    <th>Costo</th>
+                    <th>Pagado por</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          allExpenses.forEach(exp => {
+            const optionsPayer = ['Todos', ...listaViajerosTotal].map(p => {
+              return `<option value="${p}" ${exp.pagadoPor === p ? 'selected' : ''}>${p}</option>`;
+            }).join('');
+
+            tHtml += `
+              <tr>
+                <td><strong>${exp.concepto}</strong></td>
+                <td><span style="font-size:0.75rem; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:6px;">${exp.categoria}</span></td>
+                <td><span style="color:var(--gris); font-size:0.8rem;">${exp.ubicacion}</span></td>
+                <td>
+                  <input type="number" step="any" min="0" value="${exp.costoUnitario}" 
+                    style="width:75px; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:6px; padding:4px 6px; color:#f8fafc; font-weight:700;"
+                    onchange="window.actualizarGastoResumen('${exp.tipo}', ${exp.destId !== null ? exp.destId : 'null'}, ${exp.subId !== null ? exp.subId : 'null'}, ${exp.itemIndex !== null ? exp.itemIndex : 'null'}, 'costo', this.value)">
+                  <span style="font-size:0.75rem; color:var(--gris);">€${numPersonas > 1 && (exp.tipo === 'evento' || exp.tipo === 'tramo_transporte' || exp.tipo === 'tramo_alojamiento' || exp.tipo === 'vuelta') ? ` (x${numPersonas})` : ''}</span>
+                </td>
+                <td>
+                  <select style="background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:6px; padding:4px 8px; color:#f8fafc; font-size:0.82rem;"
+                    onchange="window.actualizarGastoResumen('${exp.tipo}', ${exp.destId !== null ? exp.destId : 'null'}, ${exp.subId !== null ? exp.subId : 'null'}, ${exp.itemIndex !== null ? exp.itemIndex : 'null'}, 'pagadoPor', this.value)">
+                    ${optionsPayer}
+                  </select>
+                </td>
+                <td>
+                  <span class="badge-pago ${exp.pagado ? 'pagado' : 'pendiente'}" 
+                    onclick="window.toggleEstadoPago('${exp.tipo}', ${exp.destId !== null ? exp.destId : 'null'}, ${exp.subId !== null ? exp.subId : 'null'}, ${exp.itemIndex !== null ? exp.itemIndex : 'null'})">
+                    ${exp.pagado ? 'Pagado' : 'Pendiente'}
+                  </span>
+                </td>
+              </tr>
+            `;
+          });
+          tHtml += `</tbody></table></div>`;
+          tablaGastosEl.innerHTML = tHtml;
+        }
+      }
+
+      // ==========================================
+      // 3. RENDER PESTAÑA TRANSPORTE
+      // ==========================================
+      const transpContEl = document.getElementById('resumen-transporte-content');
+      if (transpContEl) {
+        let trHtml = '';
+
+        // Route overview nodes
+        trHtml += `
+          <div class="transporte-route-overview">
+            <div class="route-node"><span>${lugarSalida || 'Origen'}</span></div>
+        `;
+        destinos.forEach(dest => {
+          trHtml += `
+            <div class="route-arrow">➔</div>
+            <div class="route-node"><span>${dest.nombre}</span></div>
+          `;
+        });
+        if (vueltaGlobal) {
+          trHtml += `
+            <div class="route-arrow">➔</div>
+            <div class="route-node"><span>Vuelta: ${lugarSalida || 'Retorno'}</span></div>
+          `;
+        }
+        trHtml += `</div>`;
+
+        // Segment cards for destinations
+        destinos.forEach((dest, destIdx) => {
+          const tramos = dest.tramos || [];
+          if (tramos.length === 0) {
+            // Default placeholder tramo if none explicitly added
+            tramos.push({ medio: 'Vuelo', horaSalida: '10:00', duracion: 120, retraso: 0, precio: 0, alojamiento: '', precioAlojamiento: 0 });
+            dest.tramos = tramos;
+          }
+
+          tramos.forEach((tramo, tramoIdx) => {
+            const horaSalida = tramo.horaSalida || '10:00';
+            const duracion = parseInt(tramo.duracion, 10) || 120;
+            const retraso = parseInt(tramo.retraso, 10) || 0;
+            const horaLlegada = calcularHoraLlegada(horaSalida, duracion, retraso);
+            const origenNombre = destIdx === 0 ? (lugarSalida || 'Origen') : (destinos[destIdx - 1]?.nombre || 'Origen');
+            const searchUrl = `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(origenNombre)}+to+${encodeURIComponent(dest.nombre)}`;
+
+            trHtml += `
+              <div class="transporte-segment-card">
+                <div class="transporte-card-header">
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <span class="transporte-mode-badge">${tramo.medio || 'Transporte'}</span>
+                    <h3 style="margin:0; font-size:1.15rem; color:#f8fafc;">${origenNombre} ➔ ${dest.nombre}</h3>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <a href="${searchUrl}" target="_blank" rel="noopener" style="font-size:0.78rem; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); padding:5px 12px; border-radius:8px; text-decoration:none;">
+                      Buscar pasajes
+                    </a>
+                  </div>
+                </div>
+
+                <div class="transporte-times-grid">
+                  <div class="time-field-box">
+                    <span class="time-field-label">Hora Salida</span>
+                    <input type="time" class="time-field-input" value="${horaSalida}"
+                      onchange="window.actualizarTransporteResumen('tramo', ${dest.id}, ${tramoIdx}, 'horaSalida', this.value)">
+                  </div>
+                  <div class="time-field-box">
+                    <span class="time-field-label">Duracion (min)</span>
+                    <input type="number" min="0" step="5" class="time-field-input" value="${duracion}"
+                      onchange="window.actualizarTransporteResumen('tramo', ${dest.id}, ${tramoIdx}, 'duracion', this.value)">
+                  </div>
+                  <div class="time-field-box">
+                    <span class="time-field-label">Retraso / Demora (min)</span>
+                    <input type="number" min="0" step="5" class="time-field-input" value="${retraso}"
+                      style="color:${retraso > 0 ? '#fbbf24' : 'white'};"
+                      onchange="window.actualizarTransporteResumen('tramo', ${dest.id}, ${tramoIdx}, 'retraso', this.value)">
+                  </div>
+                  <div class="time-field-box">
+                    <span class="time-field-label">Llegada Estimada</span>
+                    <div style="padding:7px 8px; background:rgba(52,211,153,0.12); border:1px solid rgba(52,211,153,0.3); border-radius:6px; color:#34d399; font-weight:800; font-size:0.95rem; text-align:center;">
+                      ${horaLlegada}
+                    </div>
+                  </div>
+                </div>
+
+                ${retraso > 0 ? `
+                  <div class="retraso-warning-box">
+                    <span>Aviso: Retraso de ${retraso} minutos registrado. Llegada recalculada a las ${horaLlegada}.</span>
+                  </div>
+                ` : ''}
+
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:0.85rem; color:var(--gris); border-top:1px solid rgba(255,255,255,0.04); padding-top:10px;">
+                  <div>
+                    ${tramo.alojamiento ? `<span>Alojamiento al llegar: <strong style="color:#f8fafc;">${tramo.alojamiento}</strong></span>` : '<span>Sin alojamiento asignado</span>'}
+                  </div>
+                  <div>
+                    <span>Precio tramo: <strong style="color:#38bdf8;">${(Number(tramo.precio) || 0) * numPersonas}€</strong></span>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+        });
+
+        // Return trip card
+        if (vueltaGlobal || vueltaPrecioGlobal) {
+          const vHoraSalida = (typeof vueltaHoraSalida !== 'undefined' && vueltaHoraSalida) ? vueltaHoraSalida : '18:00';
+          const vDuracion = (typeof vueltaDuracion !== 'undefined' && vueltaDuracion) ? parseInt(vueltaDuracion, 10) : 180;
+          const vRetraso = (typeof vueltaRetraso !== 'undefined' && vueltaRetraso) ? parseInt(vueltaRetraso, 10) : 0;
+          const vLlegada = calcularHoraLlegada(vHoraSalida, vDuracion, vRetraso);
+          const ultimoDest = destinos.length > 0 ? destinos[destinos.length - 1].nombre : 'Destino';
+          const origenVuelta = lugarSalida || 'Origen';
+          const searchVueltaUrl = `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(ultimoDest)}+to+${encodeURIComponent(origenVuelta)}`;
+
+          trHtml += `
+            <div class="transporte-segment-card" style="border-left: 3px solid #f472b6;">
+              <div class="transporte-card-header">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <span class="transporte-mode-badge" style="background:rgba(244,114,182,0.12); color:#f472b6; border-color:rgba(244,114,182,0.3);">Regreso</span>
+                  <h3 style="margin:0; font-size:1.15rem; color:#f8fafc;">${ultimoDest} ➔ ${origenVuelta}</h3>
+                </div>
+                <div>
+                  <a href="${searchVueltaUrl}" target="_blank" rel="noopener" style="font-size:0.78rem; font-weight:700; color:#f472b6; background:rgba(244,114,182,0.1); border:1px solid rgba(244,114,182,0.3); padding:5px 12px; border-radius:8px; text-decoration:none;">
+                    Buscar regreso
+                  </a>
+                </div>
+              </div>
+
+              <div class="transporte-times-grid">
+                <div class="time-field-box">
+                  <span class="time-field-label">Hora Salida</span>
+                  <input type="time" class="time-field-input" value="${vHoraSalida}"
+                    onchange="window.actualizarTransporteResumen('vuelta', null, null, 'vueltaHoraSalida', this.value)">
+                </div>
+                <div class="time-field-box">
+                  <span class="time-field-label">Duracion (min)</span>
+                  <input type="number" min="0" step="5" class="time-field-input" value="${vDuracion}"
+                    onchange="window.actualizarTransporteResumen('vuelta', null, null, 'vueltaDuracion', this.value)">
+                </div>
+                <div class="time-field-box">
+                  <span class="time-field-label">Retraso / Demora (min)</span>
+                  <input type="number" min="0" step="5" class="time-field-input" value="${vRetraso}"
+                    style="color:${vRetraso > 0 ? '#fbbf24' : 'white'};"
+                    onchange="window.actualizarTransporteResumen('vuelta', null, null, 'vueltaRetraso', this.value)">
+                </div>
+                <div class="time-field-box">
+                  <span class="time-field-label">Llegada Estimada</span>
+                  <div style="padding:7px 8px; background:rgba(52,211,153,0.12); border:1px solid rgba(52,211,153,0.3); border-radius:6px; color:#34d399; font-weight:800; font-size:0.95rem; text-align:center;">
+                    ${vLlegada}
+                  </div>
+                </div>
+              </div>
+
+              ${vRetraso > 0 ? `
+                <div class="retraso-warning-box">
+                  <span>Aviso: Retraso de ${vRetraso} minutos en el regreso. Llegada recalculada a las ${vLlegada}.</span>
+                </div>
+              ` : ''}
+
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:0.85rem; color:var(--gris); border-top:1px solid rgba(255,255,255,0.04); padding-top:10px;">
+                <div><span>Detalle: <strong style="color:#f8fafc;">${vueltaGlobal || 'Viaje de retorno'}</strong></span></div>
+                <div><span>Precio vuelta: <strong style="color:#f472b6;">${(Number(vueltaPrecioGlobal) || 0) * numPersonas}€</strong></span></div>
+              </div>
+            </div>
+          `;
+        }
+
+        transpContEl.innerHTML = trHtml;
+      }
     }
+
+    // Bidirectional editing handlers from Resumen
+    function actualizarGastoResumen(tipo, destId, subId, itemIndex, campo, valor) {
+      if (tipo === 'evento') {
+        const dest = destinos.find(d => d.id === destId);
+        const dia = dest?.dias?.find(d => d.id === subId);
+        if (dia && dia.eventos && dia.eventos[itemIndex]) {
+          if (campo === 'costo') dia.eventos[itemIndex].costo = parseFloat(valor) || 0;
+          if (campo === 'pagadoPor') dia.eventos[itemIndex].pagadoPor = valor;
+          if (campo === 'pagado') dia.eventos[itemIndex].pagado = Boolean(valor);
+        }
+      } else if (tipo === 'costo_adicional_dia') {
+        const dest = destinos.find(d => d.id === destId);
+        const dia = dest?.dias?.find(d => d.id === subId);
+        if (dia && dia.costosAdicionales && dia.costosAdicionales[itemIndex]) {
+          if (campo === 'costo') dia.costosAdicionales[itemIndex].precio = parseFloat(valor) || 0;
+          if (campo === 'pagadoPor') dia.costosAdicionales[itemIndex].pagadoPor = valor;
+          if (campo === 'pagado') dia.costosAdicionales[itemIndex].pagado = Boolean(valor);
+        }
+      } else if (tipo === 'tramo_transporte') {
+        const dest = destinos.find(d => d.id === destId);
+        if (dest && dest.tramos && dest.tramos[itemIndex]) {
+          if (campo === 'costo') dest.tramos[itemIndex].precio = parseFloat(valor) || 0;
+          if (campo === 'pagadoPor') dest.tramos[itemIndex].pagadoPor = valor;
+          if (campo === 'pagado') dest.tramos[itemIndex].pagado = Boolean(valor);
+        }
+      } else if (tipo === 'tramo_alojamiento') {
+        const dest = destinos.find(d => d.id === destId);
+        if (dest && dest.tramos && dest.tramos[itemIndex]) {
+          if (campo === 'costo') dest.tramos[itemIndex].precioAlojamiento = parseFloat(valor) || 0;
+          if (campo === 'pagadoPor') dest.tramos[itemIndex].alojamientoPagadoPor = valor;
+          if (campo === 'pagado') dest.tramos[itemIndex].alojamientoPagado = Boolean(valor);
+        }
+      } else if (tipo === 'vuelta') {
+        if (campo === 'costo') {
+          vueltaPrecioGlobal = parseFloat(valor) || 0;
+          const vInput = document.getElementById('vueltaPrecio');
+          if (vInput) vInput.value = vueltaPrecioGlobal;
+        }
+        if (campo === 'pagadoPor') window.vueltaPagadoPor = valor;
+        if (campo === 'pagado') window.vueltaPagado = Boolean(valor);
+      } else if (tipo === 'vuelta_costo_adicional') {
+        if (typeof vueltaCostosAdicionales !== 'undefined' && vueltaCostosAdicionales[itemIndex]) {
+          if (campo === 'costo') vueltaCostosAdicionales[itemIndex].precio = parseFloat(valor) || 0;
+          if (campo === 'pagadoPor') vueltaCostosAdicionales[itemIndex].pagadoPor = valor;
+          if (campo === 'pagado') vueltaCostosAdicionales[itemIndex].pagado = Boolean(valor);
+        }
+      }
+      autoSave();
+      renderResumen();
+    }
+    window.actualizarGastoResumen = actualizarGastoResumen;
+
+    function toggleEstadoPago(tipo, destId, subId, itemIndex) {
+      if (tipo === 'evento') {
+        const dest = destinos.find(d => d.id === destId);
+        const dia = dest?.dias?.find(d => d.id === subId);
+        if (dia && dia.eventos && dia.eventos[itemIndex]) {
+          dia.eventos[itemIndex].pagado = !dia.eventos[itemIndex].pagado;
+        }
+      } else if (tipo === 'costo_adicional_dia') {
+        const dest = destinos.find(d => d.id === destId);
+        const dia = dest?.dias?.find(d => d.id === subId);
+        if (dia && dia.costosAdicionales && dia.costosAdicionales[itemIndex]) {
+          dia.costosAdicionales[itemIndex].pagado = !dia.costosAdicionales[itemIndex].pagado;
+        }
+      } else if (tipo === 'tramo_transporte') {
+        const dest = destinos.find(d => d.id === destId);
+        if (dest && dest.tramos && dest.tramos[itemIndex]) {
+          dest.tramos[itemIndex].pagado = !dest.tramos[itemIndex].pagado;
+        }
+      } else if (tipo === 'tramo_alojamiento') {
+        const dest = destinos.find(d => d.id === destId);
+        if (dest && dest.tramos && dest.tramos[itemIndex]) {
+          dest.tramos[itemIndex].alojamientoPagado = !dest.tramos[itemIndex].alojamientoPagado;
+        }
+      } else if (tipo === 'vuelta') {
+        window.vueltaPagado = !window.vueltaPagado;
+      } else if (tipo === 'vuelta_costo_adicional') {
+        if (typeof vueltaCostosAdicionales !== 'undefined' && vueltaCostosAdicionales[itemIndex]) {
+          vueltaCostosAdicionales[itemIndex].pagado = !vueltaCostosAdicionales[itemIndex].pagado;
+        }
+      }
+      autoSave();
+      renderResumen();
+    }
+    window.toggleEstadoPago = toggleEstadoPago;
+
+    function actualizarTransporteResumen(tipo, destId, tramoIdx, campo, valor) {
+      if (tipo === 'tramo') {
+        const dest = destinos.find(d => d.id === destId);
+        if (dest && dest.tramos && dest.tramos[tramoIdx]) {
+          dest.tramos[tramoIdx][campo] = (campo === 'duracion' || campo === 'retraso') ? parseInt(valor, 10) || 0 : valor;
+        }
+      } else if (tipo === 'vuelta') {
+        if (campo === 'vueltaHoraSalida') window.vueltaHoraSalida = valor;
+        if (campo === 'vueltaDuracion') window.vueltaDuracion = parseInt(valor, 10) || 0;
+        if (campo === 'vueltaRetraso') window.vueltaRetraso = parseInt(valor, 10) || 0;
+      }
+      autoSave();
+      renderResumen();
+    }
+    window.actualizarTransporteResumen = actualizarTransporteResumen;
 
 
     // ================== PRESENTACI ==================

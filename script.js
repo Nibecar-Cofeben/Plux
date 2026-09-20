@@ -7574,133 +7574,225 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         });
       }
 
-      // Detail Content (Collapsible Destinations, Days, and Events)
-      if (lugarSalida) {
-        cont.innerHTML += `
-          <div class="ciudad-block ${isTimeline ? 'timeline' : ''}" style="border-left: 3px solid #38bdf8; margin-bottom: 16px;">
-            <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:700;">PUNTO DE PARTIDA</div>
-            <div style="font-size:1.05rem; font-weight:600; color:#f8fafc; margin-top:2px;">${lugarSalida}</div>
-          </div>
-        `;
-      }
-
-      const tripSchedule = buildTripDaySchedule();
-      destinos.forEach((dest, destIdx) => {
-        const isDestCollapsed = collapsedResumenDestinos.has(dest.id);
-        const destStats = costosPorDestino.find(cd => cd.id === dest.id) || { costo: 0, diasCount: 0 };
-        
-        let html = `
-          <div class="collapsible-card ${isTimeline ? 'timeline' : ''}" style="margin-bottom: 20px;">
-            <div class="collapsible-header" onclick="toggleResumenDestino(${dest.id})">
-              <div style="display:flex; align-items:center; gap:12px;">
-                <span id="resumen-dest-chev-${dest.id}" class="chevron-indicator" style="transform:${isDestCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
-                <span style="background:rgba(56,189,248,0.12); color:#38bdf8; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:6px; letter-spacing:0.04em;">DESTINO ${destIdx + 1}</span>
-                <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#f8fafc;">${dest.nombre}</h3>
-              </div>
-              <div style="font-size:0.82rem; color:var(--gris); font-weight:500;">
-                ${destStats.diasCount} ${destStats.diasCount === 1 ? 'dia' : 'dias'}${destStats.costo > 0 ? ` • <span style="color:#34d399; font-weight:600;">${destStats.costo.toFixed(0)}€</span>` : ''}
-              </div>
-            </div>
-            <div id="resumen-dest-body-${dest.id}" style="display:${isDestCollapsed ? 'none' : 'block'}; padding: 12px 16px 16px;">
-        `;
-
-        // Tramos summary
-        (dest.tramos || []).forEach((tramo, i) => {
-          const sum = (Number(tramo.precio) || 0) + (Number(tramo.precioAlojamiento) || 0);
-          html += `
-            <div class="transp-summary-card">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <strong>Transporte / Estancia ${i + 1}:</strong> ${tramo.medio || 'Trayecto'}
-                  ${tramo.alojamiento ? `<span style="color:var(--gris);"> • Alojamiento: ${tramo.alojamiento}</span>` : ''}
-                </div>
-                ${sum ? `<span style="color:#38bdf8; font-weight:600; font-size:0.85rem;">${(sum * numPersonas).toFixed(2)}€</span>` : ''}
-              </div>
+      // Detail Content: Timeline vs Standard Collapsible View
+      if (isTimeline) {
+        // ORIGINAL TIMELINE VIEW (FAITHFUL REPRODUCTION)
+        if (lugarSalida) {
+          cont.innerHTML += `
+            <div class="ciudad-block timeline" style="border-left:none; margin-bottom:24px;">
+              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:700;">PUNTO DE PARTIDA</div>
+              <div style="font-size:1.1rem; font-weight:700; color:#f8fafc; margin-top:4px;">${lugarSalida}</div>
             </div>
           `;
+        }
+
+        destinos.forEach((dest, destIdx) => {
+          let html = `
+            <div class="ciudad-block timeline" style="border-left:none; margin-bottom:32px;">
+              <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:8px;">
+                <h3 style="color:#38bdf8; margin:0; font-size:1.3rem; font-weight:700;">${destIdx + 1}. ${dest.nombre}</h3>
+                ${(dest.tramos || []).length ? `<small style="color:var(--gris); font-size:0.82rem;">${dest.tramos.map(t => t.medio || 'Trayecto').join(' • ')}</small>` : ''}
+              </div>
+          `;
+
+          // Tramos
+          (dest.tramos || []).forEach((tramo, i) => {
+            const sum = (Number(tramo.precio) || 0) + (Number(tramo.precioAlojamiento) || 0);
+            html += `
+              <div style="margin-bottom:12px; font-size:0.88rem; color:var(--gris); background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:8px;">
+                <strong style="color:#f8fafc;">Transporte / Estancia ${i + 1}:</strong> ${tramo.medio || 'Trayecto'}
+                ${tramo.alojamiento ? ` • Alojamiento: ${tramo.alojamiento}` : ''}
+                ${sum ? ` — <span style="color:#34d399; font-weight:600;">${(sum * numPersonas).toFixed(2)}€</span>` : ''}
+              </div>
+            `;
+          });
+
+          // Days
+          (dest.dias || []).forEach((dia, diaIdx) => {
+            const daySched = tripSchedule.find(s => s.destId === dest.id && s.diaId === dia.id);
+            const dateStr = daySched?.dateStr || '';
+            const fidx = daySched?.forecastIndex ?? '';
+
+            html += `
+              <div class="dia-resumen timeline">
+                <div class="dia-resumen-header" style="margin-bottom:10px;">
+                  <h4 style="margin:0; font-size:1.02rem; font-weight:700; color:#f8fafc;">Dia ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris); font-weight:normal;">(${daySched.dateLabel})</small>` : ''}</h4>
+                  <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="Pronostico del dia">
+                    <div class="weather-chip-row"><span class="weather-chip-icon">...</span><span class="weather-chip-temp">...</span></div>
+                  </div>
+                </div>
+            `;
+
+            if (!dia.eventos || dia.eventos.length === 0) {
+              html += `<p style="color:var(--gris); font-size:0.85rem; margin:6px 0; font-style:italic;">Sin actividades registradas</p>`;
+            } else {
+              dia.eventos.forEach(ev => {
+                html += `
+                  <div class="evento-resumen timeline">
+                    <span class="hora-t">${ev.hora || '--:--'}</span>
+                    <div class="ev-info">
+                      <strong style="color:#f8fafc; font-size:0.95rem;">${ev.titulo || t('untitled_event')}</strong>
+                      ${ev.duracion ? `<small style="color:var(--gris); margin-left:8px;">[${ev.duracion} min]</small>` : ''}
+                      ${ev.costo ? `<small style="color:#fbbf24; margin-left:8px; font-weight:700;">${(ev.costo * numPersonas).toFixed(2)}€</small>` : ''}
+                      ${ev.lugar ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.82rem;">Ubicacion: ${ev.lugar}</p>` : ''}
+                      ${ev.notas ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.85rem;">↳ ${ev.notas}</p>` : ''}
+                    </div>
+                  </div>
+                `;
+              });
+            }
+
+            (dia.costosAdicionales || []).forEach(c => {
+              if (c.precio || c.concepto) {
+                html += `
+                  <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--gris); padding:4px 0; border-top:1px dashed rgba(255,255,255,0.05); margin-top:6px;">
+                    <span>Costo adicional: ${c.concepto || 'Extra'}</span>
+                    <span style="color:#f472b6; font-weight:600;">${(Number(c.precio) || 0).toFixed(2)}€</span>
+                  </div>
+                `;
+              }
+            });
+
+            html += `</div>`; // close dia-resumen timeline
+          });
+
+          html += `</div>`; // close ciudad-block timeline
+          cont.innerHTML += html;
         });
 
-        // Days
-        (dest.dias || []).forEach((dia, diaIdx) => {
-          const dayKey = `${dest.id}_${dia.id}`;
-          const isDiaCollapsed = collapsedResumenDias.has(dayKey);
-          const daySched = tripSchedule.find(s => s.destId === dest.id && s.diaId === dia.id);
-          const dateStr = daySched?.dateStr || '';
-          const fidx = daySched?.forecastIndex ?? '';
-          const evCount = dia.eventos ? dia.eventos.length : 0;
+        if (vueltaGlobal || vueltaCostosAdicionales.length) {
+          let vueltaHtml = `
+            <div class="ciudad-block timeline" style="border-left:none; margin-top:20px;">
+              <h3 style="color:#f472b6; margin:0 0 8px 0; font-size:1.15rem; font-weight:700;">Regreso / Vuelta</h3>
+              <div><strong style="color:#f8fafc;">${vueltaGlobal || 'Viaje de retorno'}</strong>${vueltaPrecioGlobal ? ` — <span style="color:#f472b6; font-weight:700;">${(vueltaPrecioGlobal * numPersonas).toFixed(2)}€</span>` : ''}</div>
+            </div>
+          `;
+          cont.innerHTML += vueltaHtml;
+        }
+      } else {
+        // STANDARD VIEW (COLLAPSIBLE CARDS)
+        if (lugarSalida) {
+          cont.innerHTML += `
+            <div class="ciudad-block" style="border-left: 3px solid #38bdf8; margin-bottom: 16px;">
+              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:700;">PUNTO DE PARTIDA</div>
+              <div style="font-size:1.05rem; font-weight:600; color:#f8fafc; margin-top:2px;">${lugarSalida}</div>
+            </div>
+          `;
+        }
 
-          html += `
-            <div class="dia-resumen ${isTimeline ? 'timeline' : ''}" style="margin-top: 12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; overflow:hidden;">
-              <div class="dia-resumen-header" onclick="toggleResumenDia(${dest.id}, ${dia.id})" style="cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.03);">
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <span id="resumen-dia-chev-${dest.id}-${dia.id}" class="chevron-indicator" style="font-size:0.75rem; transform:${isDiaCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
-                  <h4 style="margin:0; font-size:0.95rem; font-weight:600;">Dia ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris); font-weight:normal;">(${daySched.dateLabel})</small>` : ''}</h4>
-                  <span style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">${evCount} ${evCount === 1 ? 'actividad' : 'actividades'}</span>
+        destinos.forEach((dest, destIdx) => {
+          const isDestCollapsed = collapsedResumenDestinos.has(dest.id);
+          const destStats = costosPorDestino.find(cd => cd.id === dest.id) || { costo: 0, diasCount: 0 };
+          
+          let html = `
+            <div class="collapsible-card" style="margin-bottom: 20px;">
+              <div class="collapsible-header" onclick="toggleResumenDestino(${dest.id})">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span id="resumen-dest-chev-${dest.id}" class="chevron-indicator" style="transform:${isDestCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
+                  <span style="background:rgba(56,189,248,0.12); color:#38bdf8; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:6px; letter-spacing:0.04em;">DESTINO ${destIdx + 1}</span>
+                  <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#f8fafc;">${dest.nombre}</h3>
                 </div>
-                <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="Pronostico del dia">
-                  <div class="weather-chip-row"><span class="weather-chip-icon">...</span><span class="weather-chip-temp">...</span></div>
+                <div style="font-size:0.82rem; color:var(--gris); font-weight:500;">
+                  ${destStats.diasCount} ${destStats.diasCount === 1 ? 'dia' : 'dias'}${destStats.costo > 0 ? ` • <span style="color:#34d399; font-weight:600;">${destStats.costo.toFixed(0)}€</span>` : ''}
                 </div>
               </div>
-              <div id="resumen-dia-body-${dest.id}-${dia.id}" style="display:${isDiaCollapsed ? 'none' : 'block'}; padding:8px 12px;">
+              <div id="resumen-dest-body-${dest.id}" style="display:${isDestCollapsed ? 'none' : 'block'}; padding: 12px 16px 16px;">
           `;
 
-          if (!dia.eventos || dia.eventos.length === 0) {
-            html += `<p style="color:var(--gris); font-size:0.85rem; margin:6px 0; font-style:italic;">Sin actividades registradas</p>`;
-          } else {
-            dia.eventos.forEach(ev => {
-              const hasDetails = Boolean(ev.notas || ev.lugar || ev.categoria);
-              html += `
-                <div class="evento-row-compact" onclick="toggleResumenEventoDetails(this)" title="${hasDetails ? 'Click para ver mas detalles' : ''}">
-                  <div class="ev-main-line">
-                    <span class="ev-time">${ev.hora || '--:--'}</span>
-                    <span class="ev-title">${ev.titulo || t('untitled_event')}</span>
-                    ${ev.duracion ? `<span class="ev-dur">${ev.duracion} min</span>` : ''}
-                    ${ev.costo ? `<span class="ev-cost">${(ev.costo * numPersonas).toFixed(2)}€</span>` : ''}
+          // Tramos summary
+          (dest.tramos || []).forEach((tramo, i) => {
+            const sum = (Number(tramo.precio) || 0) + (Number(tramo.precioAlojamiento) || 0);
+            html += `
+              <div class="transp-summary-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <strong>Transporte / Estancia ${i + 1}:</strong> ${tramo.medio || 'Trayecto'}
+                    ${tramo.alojamiento ? `<span style="color:var(--gris);"> • Alojamiento: ${tramo.alojamiento}</span>` : ''}
                   </div>
-                  ${hasDetails ? `
-                    <div class="ev-details">
-                      ${ev.lugar ? `<div style="font-weight:600; margin-bottom:2px;">Ubicacion: ${ev.lugar}</div>` : ''}
-                      ${ev.notas ? `<div>${ev.notas}</div>` : ''}
-                    </div>
-                  ` : ''}
+                  ${sum ? `<span style="color:#38bdf8; font-weight:600; font-size:0.85rem;">${(sum * numPersonas).toFixed(2)}€</span>` : ''}
                 </div>
-              `;
-            });
-          }
+              </div>
+            `;
+          });
 
-          (dia.costosAdicionales || []).forEach(c => {
-            if (c.precio || c.concepto) {
-              html += `
-                <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--gris); padding:4px 8px; border-top:1px dashed rgba(255,255,255,0.05); margin-top:4px;">
-                  <span>Costo adicional: ${c.concepto || 'Extra'}</span>
-                  <span style="color:#f472b6; font-weight:600;">${(Number(c.precio) || 0).toFixed(2)}€</span>
+          // Days
+          (dest.dias || []).forEach((dia, diaIdx) => {
+            const dayKey = `${dest.id}_${dia.id}`;
+            const isDiaCollapsed = collapsedResumenDias.has(dayKey);
+            const daySched = tripSchedule.find(s => s.destId === dest.id && s.diaId === dia.id);
+            const dateStr = daySched?.dateStr || '';
+            const fidx = daySched?.forecastIndex ?? '';
+            const evCount = dia.eventos ? dia.eventos.length : 0;
+
+            html += `
+              <div class="dia-resumen" style="margin-top: 12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; overflow:hidden;">
+                <div class="dia-resumen-header" onclick="toggleResumenDia(${dest.id}, ${dia.id})" style="cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.03);">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="resumen-dia-chev-${dest.id}-${dia.id}" class="chevron-indicator" style="font-size:0.75rem; transform:${isDiaCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
+                    <h4 style="margin:0; font-size:0.95rem; font-weight:600;">Dia ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris); font-weight:normal;">(${daySched.dateLabel})</small>` : ''}</h4>
+                    <span style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">${evCount} ${evCount === 1 ? 'actividad' : 'actividades'}</span>
+                  </div>
+                  <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="Pronostico del dia">
+                    <div class="weather-chip-row"><span class="weather-chip-icon">...</span><span class="weather-chip-temp">...</span></div>
+                  </div>
                 </div>
-              `;
+                <div id="resumen-dia-body-${dest.id}-${dia.id}" style="display:${isDiaCollapsed ? 'none' : 'block'}; padding:8px 12px;">
+            `;
+
+            if (!dia.eventos || dia.eventos.length === 0) {
+              html += `<p style="color:var(--gris); font-size:0.85rem; margin:6px 0; font-style:italic;">Sin actividades registradas</p>`;
+            } else {
+              dia.eventos.forEach(ev => {
+                const hasDetails = Boolean(ev.notas || ev.lugar || ev.categoria);
+                html += `
+                  <div class="evento-row-compact" onclick="toggleResumenEventoDetails(this)" title="${hasDetails ? 'Click para ver mas detalles' : ''}">
+                    <div class="ev-main-line">
+                      <span class="ev-time">${ev.hora || '--:--'}</span>
+                      <span class="ev-title">${ev.titulo || t('untitled_event')}</span>
+                      ${ev.duracion ? `<span class="ev-dur">${ev.duracion} min</span>` : ''}
+                      ${ev.costo ? `<span class="ev-cost">${(ev.costo * numPersonas).toFixed(2)}€</span>` : ''}
+                    </div>
+                    ${hasDetails ? `
+                      <div class="ev-details">
+                        ${ev.lugar ? `<div style="font-weight:600; margin-bottom:2px;">Ubicacion: ${ev.lugar}</div>` : ''}
+                        ${ev.notas ? `<div>${ev.notas}</div>` : ''}
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              });
             }
+
+            (dia.costosAdicionales || []).forEach(c => {
+              if (c.precio || c.concepto) {
+                html += `
+                  <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--gris); padding:4px 8px; border-top:1px dashed rgba(255,255,255,0.05); margin-top:4px;">
+                    <span>Costo adicional: ${c.concepto || 'Extra'}</span>
+                    <span style="color:#f472b6; font-weight:600;">${(Number(c.precio) || 0).toFixed(2)}€</span>
+                  </div>
+                `;
+              }
+            });
+
+            html += `</div></div>`;
           });
 
           html += `</div></div>`;
+          cont.innerHTML += html;
         });
 
-        html += `</div></div>`;
-        cont.innerHTML += html;
-      });
-
-      tripSchedule.filter(s => !s.isDestOnly && s.diaId != null).forEach(s => {
-        loadWeatherForTripDay(`weather-resumen-day-${s.destId}-${s.diaId}`, s.destName, s.dateStr, s.forecastIndex);
-      });
-
-      if (vueltaGlobal || vueltaCostosAdicionales.length) {
-        let vueltaHtml = `
-          <div class="collapsible-card" style="border-left: 3px solid #f472b6; margin-top: 16px; padding: 14px 18px;">
-            <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#f472b6; font-weight:700;">REGRESO / VUELTA</div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-              <div style="font-weight:600; color:#f8fafc; font-size:1rem;">${vueltaGlobal || 'Viaje de vuelta'}</div>
-              ${vueltaPrecioGlobal ? `<span style="color:#f472b6; font-weight:700; font-size:1rem;">${(vueltaPrecioGlobal * numPersonas).toFixed(2)}€</span>` : ''}
+        if (vueltaGlobal || vueltaCostosAdicionales.length) {
+          let vueltaHtml = `
+            <div class="collapsible-card" style="border-left: 3px solid #f472b6; margin-top: 16px; padding: 14px 18px;">
+              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#f472b6; font-weight:700;">REGRESO / VUELTA</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                <div style="font-weight:600; color:#f8fafc; font-size:1rem;">${vueltaGlobal || 'Viaje de vuelta'}</div>
+                ${vueltaPrecioGlobal ? `<span style="color:#f472b6; font-weight:700; font-size:1rem;">${(vueltaPrecioGlobal * numPersonas).toFixed(2)}€</span>` : ''}
+              </div>
             </div>
-          </div>
-        `;
-        cont.innerHTML += vueltaHtml;
+          `;
+          cont.innerHTML += vueltaHtml;
+        }
       }
 
       // ==========================================

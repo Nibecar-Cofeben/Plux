@@ -1589,13 +1589,14 @@
 
     /* TIMELINE VISTA MEJORADA */
     .vista-linea-tiempo { position: relative; padding-left: 40px; }
-    .vista-linea-tiempo::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 4px; background: var(--border); border-radius: 2px; }
+    .vista-linea-tiempo::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #38bdf8, #34d399, #ec4899); border-radius: 2px; }
     .ciudad-block.timeline { position: relative; margin-bottom: 40px; border-left: none; }
-    .ciudad-block.timeline::before { content: ' ✈ '; position: absolute; left: -38px; top: 15px; background: var(--card); padding: 5px; border-radius: 50%; border: 2px solid var(--verde); font-size: 1.2rem; }
+    .ciudad-block.timeline::before { content: ''; position: absolute; left: -38px; top: 14px; width: 26px; height: 26px; background: var(--card, #0f172a); border-radius: 50%; border: 3px solid #38bdf8; box-shadow: 0 0 12px rgba(56,189,248,0.5); }
     .dia-resumen.timeline { position: relative; margin-left: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px; }
-    .dia-resumen.timeline::before { content: ''; position: absolute; left: -31px; top: 10px; width: 12px; height: 12px; border-radius: 50%; background: var(--rosa); box-shadow: 0 0 10px var(--rosa); }
-    .evento-resumen.timeline { display: flex; gap: 15px; align-items: center; margin-bottom: 10px; }
-    .evento-resumen.timeline .hora-t { font-weight: bold; color: var(--verde); min-width: 60px; }
+    .dia-resumen.timeline::before { content: ''; position: absolute; left: -31px; top: 10px; width: 12px; height: 12px; border-radius: 50%; background: #ec4899; box-shadow: 0 0 10px #ec4899; }
+    .evento-resumen.timeline { display: flex; gap: 15px; align-items: flex-start; margin-bottom: 12px; }
+    .evento-resumen.timeline .hora-t { font-weight: bold; color: #34d399; min-width: 65px; font-size: 0.95rem; }
+    .evento-resumen.timeline .ev-info { flex: 1; }
 
     /* ARES THEME OPTIMIZATIONS */
     .theme-ares .container, .theme-ares .welcome { 

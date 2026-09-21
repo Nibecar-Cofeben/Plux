@@ -1291,21 +1291,21 @@
     .vaca-result { color: var(--rosa); font-weight: bold; font-size: 1.2rem; margin-top: 10px; }
 
     /* ADDONS: Modales & Labs */
-    #modal-panel-herramientas, #modal-calendario, #modal-viajes, #modal-presentacion, #modal-mapa, #modal-conversor, #modal-clima, #modal-colaboradores, #modal-descubrir, #modal-viaje-activo, #modal-traductor {
+    #modal-panel-herramientas, #modal-calendario, #modal-viajes, #modal-presentacion, #modal-mapa, #modal-conversor, #modal-clima, #modal-colaboradores, #modal-viaje-activo, #modal-traductor {
       position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:300; padding:10px;
     }
     
     /* Discover modal styles defined in new section below */
 
-    .panel-herramientas-content, .calendario-content, .modal-content, .presentacion-content, .mapa-content, .conversor-content, .clima-content, .colaboradores-content, .descubrir-content, .traductor-content {
+    .panel-herramientas-content, .calendario-content, .modal-content, .presentacion-content, .mapa-content, .conversor-content, .clima-content, .colaboradores-content, .traductor-content {
       max-width: 1150px; width: 95%; max-height:90vh; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:24px; padding:20px; box-shadow:0 20px 80px rgba(0,0,0,0.6); position:relative; animation:scaleIn 0.4s ease;
       overflow-y:auto;
     }
     .mapa-content { height: 90vh; display: flex; flex-direction: column; padding: 20px; }
     #map { width: 100%; flex: 1; border-radius: 16px; background: #1a1e24; min-height: 300px; }
     @keyframes scaleIn { from{opacity:0;transform:scale(0.8);} to{opacity:1;transform:scale(1);} }
-    .panel-herramientas-header, .calendario-header, .presentacion-header, .conversor-header, .clima-header, .colab-header, .descubrir-header, .traductor-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-    .panel-herramientas-header h2, .calendario-header h2, .conversor-header h2, .clima-header h2, .colab-header h2, .descubrir-header h2, .traductor-header h2 { color:var(--verde); }
+    .panel-herramientas-header, .calendario-header, .presentacion-header, .conversor-header, .clima-header, .colab-header, .traductor-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .panel-herramientas-header h2, .calendario-header h2, .conversor-header h2, .clima-header h2, .colab-header h2, .traductor-header h2 { color:var(--verde); }
     .close-panel, .close-calendario, .close-modal, .close-conversor, .close-clima, .close-mapa, .close-resumen, .close-colaboradores, .close-descubrir, .close-traductor, .close-icon {
       background: none; border: none; color: var(--gris); font-size: 2.5rem; font-weight: 300; line-height: 1; cursor: pointer; opacity: 0.6; transition: opacity 0.3s, transform 0.3s, color 0.3s; padding: 0; display: inline-flex; align-items: center; justify-content: center;
     }
@@ -3402,8 +3402,7 @@
   /* Optimize modal panel sizing */
   #modal-panel-herramientas, 
   #modal-viajes, 
-  #modal-cuenta, 
-  #modal-descubrir {
+  #modal-cuenta {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -3424,8 +3423,7 @@
 
   .panel-herramientas-content,
   .modal-content,
-  .cuenta-content,
-  .descubrir-content {
+  .cuenta-content {
     width: 100% !important;
     max-width: 100% !important;
     height: 100% !important;
@@ -5036,34 +5034,58 @@ body.mode-reader #mobileMenuCloneBtn {
 }
 
 .descubrir-modal-box {
-  background: linear-gradient(145deg, rgba(17, 24, 39, 0.95), rgba(11, 15, 25, 0.98));
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  border-radius: 24px;
-  max-width: 1200px;
-  width: 100%;
-  height: 92vh;
-  max-height: 900px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.15);
+  background: linear-gradient(145deg, rgba(17, 24, 39, 0.98), rgba(11, 15, 25, 0.98)) !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  border-radius: 24px !important;
+  max-width: 1200px !important;
+  width: 95vw !important;
+  height: 92vh !important;
+  min-height: 550px !important;
+  max-height: 900px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 40px rgba(99, 102, 241, 0.18) !important;
   animation: scaleIn 0.3s ease;
+  position: relative !important;
 }
 
 .descubrir-header {
-  padding: 16px 24px;
-  background: rgba(15, 23, 42, 0.85);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
+  padding: 16px 24px !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
 }
 
 .descubrir-header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+.descubrir-header .mobile-back-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: var(--verde) !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  padding: 8px 14px !important;
+  border-radius: 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+.descubrir-header .mobile-back-btn:hover {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: var(--verde) !important;
+  transform: translateX(-2px) !important;
 }
 
 .descubrir-title-group h2 {

@@ -4434,28 +4434,18 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       document.getElementById('modal-viajes').style.display = 'none';
     }
 
-    // Abrir descubrir
+    // Abrir descubrir (delegar a implementación unificada)
     function abrirDescubrir() {
-      if (typeof window.renderDescubrirParaTi === 'function') {
-        window.renderDescubrirParaTi();
+      if (typeof window.abrirDescubrirModalUnified === 'function') {
+        window.abrirDescubrirModalUnified();
       }
-      if (typeof window.renderCatalogoDestinos === 'function') {
-        window.renderCatalogoDestinos('todos');
-      }
-      if (typeof window.renderCatalogoActividades === 'function') {
-        window.renderCatalogoActividades('todas');
-      }
-      if (typeof window.inicializarComparador === 'function') {
-        window.inicializarComparador();
-      }
-      const modal = document.getElementById('modal-descubrir');
-      if (modal) modal.style.display = 'flex';
     }
 
-    // Cerrar descubrir
+    // Cerrar descubrir (delegar a implementación unificada)
     function cerrarDescubrir() {
-      const modal = document.getElementById('modal-descubrir');
-      if (modal) modal.style.display = 'none';
+      if (typeof window.cerrarDescubrirModalUnified === 'function') {
+        window.cerrarDescubrirModalUnified();
+      }
     }
 
     // ================== CITY AUTOCOMPLETE ==================
@@ -13667,27 +13657,190 @@ async function exportarPDF() {
       ]
     };
 
+    // Garantizar que la estructura HTML moderna del modal Descubrir exista
+    function asegurarEstructuraModalDescubrir(modal) {
+      if (!modal) return;
+      const box = modal.querySelector('.descubrir-modal-box');
+      const content = document.getElementById('descubrir-context-content');
+      if (!box || !content) {
+        modal.innerHTML = `
+          <div class="descubrir-modal-box">
+            <!-- Top Header -->
+            <div class="descubrir-header">
+              <div class="descubrir-header-left">
+                <button class="mobile-back-btn" onclick="window.cerrarDescubrir()">
+                  <i class="fa-solid fa-arrow-left"></i>
+                  <span class="txt-volver">Volver</span>
+                </button>
+                <div class="descubrir-title-group">
+                  <h2 id="descubrirTitle"><i class="fa-solid fa-compass" style="color:var(--verde); margin-right:8px;"></i>Descubrir</h2>
+                  <span class="descubrir-subtitle" id="descubrirSubtitle">Inspiración, itinerarios inteligentes y comparador</span>
+                </div>
+              </div>
+              <span class="close-panel" onclick="window.cerrarDescubrir()">&times;</span>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="descubrir-nav-tabs">
+              <button class="descubrir-tab-btn active" id="tabBtn-para_ti" onclick="window.cambiarTabDescubrir('para_ti')">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span id="txtTabParaTi">Para ti</span>
+              </button>
+              <button class="descubrir-tab-btn" id="tabBtn-destinos" onclick="window.cambiarTabDescubrir('destinos')">
+                <i class="fa-solid fa-earth-americas"></i>
+                <span id="txtTabDestinos">Explorar Destinos</span>
+              </button>
+              <button class="descubrir-tab-btn" id="tabBtn-actividades" onclick="window.cambiarTabDescubrir('actividades')">
+                <i class="fa-solid fa-ticket"></i>
+                <span id="txtTabActividades">Actividades</span>
+              </button>
+              <button class="descubrir-tab-btn" id="tabBtn-comparador" onclick="window.cambiarTabDescubrir('comparador')">
+                <i class="fa-solid fa-code-compare"></i>
+                <span id="txtTabComparador">Comparador</span>
+              </button>
+            </div>
+
+            <!-- Scrollable Tab Contents -->
+            <div class="descubrir-body-container">
+              <!-- Tab 1: Para ti (Contextual) -->
+              <div class="descubrir-tab-pane active" id="pane-descubrir-para_ti">
+                <div id="descubrir-context-content"></div>
+              </div>
+
+              <!-- Tab 2: Explorar Destinos -->
+              <div class="descubrir-tab-pane" id="pane-descubrir-destinos">
+                <div class="descubrir-search-filter-bar">
+                  <div class="descubrir-search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="destinosSearchInput" placeholder="Buscar destino por ciudad, país o estilo..." oninput="window.filtrarDestinosDescubrir(this.value)">
+                  </div>
+                  <div class="descubrir-chips-filter" id="destinosCategoryChips">
+                    <button class="filter-chip active" onclick="window.filtrarDestinosPorTag('todos', this)">Todos</button>
+                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('cultura', this)">Cultura e Historia</button>
+                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('playa', this)">Playa y Sol</button>
+                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('gastronomia', this)">Gastronomía</button>
+                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('metropolis', this)">Grandes Ciudades</button>
+                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('economico', this)">Bajo Presupuesto</button>
+                  </div>
+                </div>
+                <div class="descubrir-grid-destinos" id="gridDestinosCatalogo"></div>
+              </div>
+
+              <!-- Tab 3: Actividades & Experiencias -->
+              <div class="descubrir-tab-pane" id="pane-descubrir-actividades">
+                <div class="descubrir-search-filter-bar">
+                  <div class="descubrir-search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="actividadesSearchInput" placeholder="Buscar actividad (ej: Museo, Mirador, Tour gastronómico)..." oninput="window.filtrarActividadesDescubrir(this.value)">
+                  </div>
+                  <div class="descubrir-chips-filter" id="actividadesCategoryChips">
+                    <button class="filter-chip active" onclick="window.filtrarActividadesPorCategoria('todas', this)">Todas</button>
+                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('imperdibles', this)">Imperdibles</button>
+                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('cultura', this)">Museos y Arte</button>
+                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('gastronomia', this)">Comida y Bebida</button>
+                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('naturaleza', this)">Aire Libre</button>
+                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('gratis', this)">Gratis / Económicas</button>
+                  </div>
+                </div>
+                <div class="descubrir-grid-actividades" id="gridActividadesCatalogo"></div>
+              </div>
+
+              <!-- Tab 4: Comparador (Destinos & Actividades) -->
+              <div class="descubrir-tab-pane" id="pane-descubrir-comparador">
+                <div class="comparador-subswitch-wrapper">
+                  <div class="comparador-subswitch">
+                    <button class="subswitch-btn active" id="subswitch-destinos" onclick="window.cambiarSubswitchComparador('destinos')">
+                      <i class="fa-solid fa-city"></i> Comparar Destinos
+                    </button>
+                    <button class="subswitch-btn" id="subswitch-actividades" onclick="window.cambiarSubswitchComparador('actividades')">
+                      <i class="fa-solid fa-ticket-simple"></i> Comparar Actividades
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Subsección Comparar Destinos -->
+                <div id="comparador-seccion-destinos" class="comparador-seccion active">
+                  <div class="comparador-selectors-row">
+                    <div class="comp-select-box">
+                      <label for="compDestino1"><i class="fa-solid fa-location-dot"></i> Destino 1</label>
+                      <select id="compDestino1" onchange="window.actualizarComparativaDestinos()"></select>
+                    </div>
+                    <div class="comp-vs-badge">VS</div>
+                    <div class="comp-select-box">
+                      <label for="compDestino2"><i class="fa-solid fa-location-dot"></i> Destino 2</label>
+                      <select id="compDestino2" onchange="window.actualizarComparativaDestinos()"></select>
+                    </div>
+                    <div class="comp-select-box comp-select-optional" id="compDestino3Wrapper">
+                      <label for="compDestino3"><i class="fa-solid fa-location-dot"></i> Destino 3 (Opcional)</label>
+                      <select id="compDestino3" onchange="window.actualizarComparativaDestinos()"></select>
+                    </div>
+                  </div>
+                  <div id="comparador-destinos-resultado" class="comparador-resultado-container"></div>
+                </div>
+
+                <!-- Subsección Comparar Actividades -->
+                <div id="comparador-seccion-actividades" class="comparador-seccion" style="display:none;">
+                  <div class="comparador-selectors-row">
+                    <div class="comp-select-box">
+                      <label for="compActividad1"><i class="fa-solid fa-ticket"></i> Actividad 1</label>
+                      <select id="compActividad1" onchange="window.actualizarComparativaActividades()"></select>
+                    </div>
+                    <div class="comp-vs-badge">VS</div>
+                    <div class="comp-select-box">
+                      <label for="compActividad2"><i class="fa-solid fa-ticket"></i> Actividad 2</label>
+                      <select id="compActividad2" onchange="window.actualizarComparativaActividades()"></select>
+                    </div>
+                  </div>
+                  <div id="comparador-actividades-resultado" class="comparador-resultado-container"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
     // Apertura y orquestación del modal Descubrir
     function abrirDescubrir() {
       const modal = document.getElementById('modal-descubrir');
       if (!modal) return;
+      asegurarEstructuraModalDescubrir(modal);
       modal.style.display = 'flex';
 
-      // Renderizar pestaña contextual "Para ti"
-      renderDescubrirParaTi();
+      try {
+        renderDescubrirParaTi();
+      } catch (err) {
+        console.error('Error in renderDescubrirParaTi:', err);
+      }
 
-      // Renderizar catálogos
-      renderCatalogoDestinos('todos');
-      renderCatalogoActividades('todas');
+      try {
+        renderCatalogoDestinos('todos');
+      } catch (err) {
+        console.error('Error in renderCatalogoDestinos:', err);
+      }
 
-      // Inicializar comparador
-      inicializarComparador();
+      try {
+        renderCatalogoActividades('todas');
+      } catch (err) {
+        console.error('Error in renderCatalogoActividades:', err);
+      }
+
+      try {
+        inicializarComparador();
+      } catch (err) {
+        console.error('Error in inicializarComparador:', err);
+      }
     }
 
     function cerrarDescubrir() {
       const modal = document.getElementById('modal-descubrir');
       if (modal) modal.style.display = 'none';
     }
+
+    window.abrirDescubrir = abrirDescubrir;
+    window.cerrarDescubrir = cerrarDescubrir;
+    window.abrirDescubrirModalUnified = abrirDescubrir;
+    window.cerrarDescubrirModalUnified = cerrarDescubrir;
 
     function cambiarTabDescubrir(tabKey) {
       document.querySelectorAll('.descubrir-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -13705,27 +13858,31 @@ async function exportarPDF() {
       const container = document.getElementById('descubrir-context-content');
       if (!container) return;
 
-      const hasActiveTrip = (typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0) || 
+      const validDestinos = (typeof destinos !== 'undefined' && Array.isArray(destinos)) 
+        ? destinos.filter(d => d && typeof d.nombre === 'string' && d.nombre.trim() !== '') 
+        : [];
+      const hasActiveTrip = (validDestinos.length > 0) || 
                             (typeof dias !== 'undefined' && Array.isArray(dias) && dias.length > 0);
 
       if (hasActiveTrip) {
         // MODO B: Usuario con viaje en planificación
-        const nombresDestinos = (destinos && destinos.length > 0) 
-          ? destinos.map(d => d.nombre).join(', ') 
+        const nombresDestinos = (validDestinos.length > 0) 
+          ? validDestinos.map(d => d.nombre).join(', ') 
           : 'Tu viaje en curso';
 
-        const mainCity = (destinos && destinos[0]) ? destinos[0].nombre.toLowerCase().trim() : '';
+        const mainCity = (validDestinos.length > 0 && validDestinos[0].nombre) ? validDestinos[0].nombre.toLowerCase().trim() : '';
 
         // Buscar actividades que coincidan con las ciudades del viaje
-        const ciudadesViaje = destinos.map(d => d.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+        const ciudadesViaje = validDestinos.map(d => (d.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
         const actividadesRecomendadas = PLUX_CURATED_ACTIVITIES.filter(act => {
-          const actCity = act.ciudad.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-          return ciudadesViaje.some(c => actCity.includes(c) || c.includes(actCity));
+          const actCity = (act.ciudad || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+          return ciudadesViaje.some(c => c && (actCity.includes(c) || c.includes(actCity)));
         });
 
         // Buscar escapadas
         let escapadas = [];
         for (const c of ciudadesViaje) {
+          if (!c) continue;
           for (const k in PLUX_NEARBY_GETAWAYS) {
             if (c.includes(k) || k.includes(c)) {
               escapadas = escapadas.concat(PLUX_NEARBY_GETAWAYS[k]);
@@ -13769,7 +13926,7 @@ async function exportarPDF() {
           html += `
             <div style="background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.15); border-radius:16px; padding:24px; text-align:center;">
               <p style="color:var(--gris); margin:0 0 12px 0;">Explorando atracciones para ${escapeHtml(nombresDestinos)}...</p>
-              <button class="btn-card-primary" style="max-width:280px; margin:0 auto;" onclick="window.buscarLugaresPorDestino('${escapeHtml(destinos[0]?.nombre || '')}')">
+              <button class="btn-card-primary" style="max-width:280px; margin:0 auto;" onclick="window.buscarLugaresPorDestino('${escapeHtml(validDestinos[0]?.nombre || '')}')">
                 <i class="fa-solid fa-sparkles"></i> Buscar actividades con IA
               </button>
             </div>

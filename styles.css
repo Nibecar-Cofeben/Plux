@@ -1295,20 +1295,7 @@
       position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:300; padding:10px;
     }
     
-    /* Discover full screen */
-    #modal-descubrir {
-      background: var(--fondo);
-      padding: 0;
-    }
-    #modal-descubrir .descubrir-content {
-      max-width: none;
-      width: 100%;
-      height: 100%;
-      max-height: none;
-      border-radius: 0;
-      border: none;
-      background: var(--fondo);
-    }
+    /* Discover modal styles defined in new section below */
 
     .panel-herramientas-content, .calendario-content, .modal-content, .presentacion-content, .mapa-content, .conversor-content, .clima-content, .colaboradores-content, .descubrir-content, .traductor-content {
       max-width: 1150px; width: 95%; max-height:90vh; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:24px; padding:20px; box-shadow:0 20px 80px rgba(0,0,0,0.6); position:relative; animation:scaleIn 0.4s ease;

@@ -59,7 +59,7 @@
         colab_title: "Colaboradores", colab_invite_nick: "Invitar por Nickname", colab_invite_btn: "Invitar", colab_nick_ph: "Ej: messi",
         map_title: "Mapa del viaje", conversor_title: "Conversor", conversor_btn: "Convertir",
         traductor_title: "Traductor para Viajeros", btn_traductor: "Traductor",
-        descubrir_title: "Descubrir (Feed de Inspiración)", present_title: "Presentación del viaje",
+        descubrir_title: "Descubrir", present_title: "Presentación del viaje",
         present_prev: "← Anterior", present_next: "Siguiente →", cuenta_btn_title: "Tu cuenta",
         ares_esc: "PRESIONA ESC PARA SALIR DE ARES",
         toast_code_invalid: "Ingresa un código válido", toast_connecting: "Conectando con la nube...",
@@ -1001,7 +1001,10 @@
       el('anteriorBtn', 'present_prev');
       el('siguienteBtn', 'present_next');
       el('mapTitle', 'map_title');
-      el('descubrirTitle', 'descubrir_title');
+      const dTitle = document.getElementById('descubrirTitle');
+      if (dTitle) {
+        dTitle.innerHTML = '<i class="fa-solid fa-compass" style="color:var(--verde); margin-right:8px;"></i>' + (t('descubrir_title') || 'Descubrir');
+      }
       el('eventosDiaTitle', 'eventos_dia_title');
       el('ares-esc-banner', 'ares_esc');
 
@@ -4343,12 +4346,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function explorarInspo(ciudad) {
       abrirDescubrir();
       setTimeout(() => {
-        const input = document.getElementById('feedSearchInput');
+        if (typeof window.cambiarTabDescubrir === 'function') {
+          window.cambiarTabDescubrir('destinos');
+        }
+        const input = document.getElementById('destinosSearchInput');
         if (input) {
           input.value = ciudad;
-          buscarLugaresWikiFeed(ciudad);
+          if (typeof window.filtrarDestinosDescubrir === 'function') {
+            window.filtrarDestinosDescubrir(ciudad);
+          }
         }
-      }, 300);
+      }, 150);
     }
     window.applyGlobalI18n = applyGlobalI18n;
 
@@ -4428,12 +4436,26 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     // Abrir descubrir
     function abrirDescubrir() {
-      document.getElementById('modal-descubrir').style.display = 'flex';
+      if (typeof window.renderDescubrirParaTi === 'function') {
+        window.renderDescubrirParaTi();
+      }
+      if (typeof window.renderCatalogoDestinos === 'function') {
+        window.renderCatalogoDestinos('todos');
+      }
+      if (typeof window.renderCatalogoActividades === 'function') {
+        window.renderCatalogoActividades('todas');
+      }
+      if (typeof window.inicializarComparador === 'function') {
+        window.inicializarComparador();
+      }
+      const modal = document.getElementById('modal-descubrir');
+      if (modal) modal.style.display = 'flex';
     }
 
     // Cerrar descubrir
     function cerrarDescubrir() {
-      document.getElementById('modal-descubrir').style.display = 'none';
+      const modal = document.getElementById('modal-descubrir');
+      if (modal) modal.style.display = 'none';
     }
 
     // ================== CITY AUTOCOMPLETE ==================

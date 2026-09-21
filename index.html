@@ -5,10 +5,17 @@
   <script>
     (function() {
       var h = window.location.hostname;
-      if (h === 'nibecar-cofeben.web.app' || h === 'nibecarcofeben.web.app') {
-        window.location.replace('https://nibecarcofeben.com' + window.location.pathname + window.location.search + window.location.hash);
+      var p = window.location.pathname;
+      if (h === 'nibecarcofeben.com' || h === 'nibecar-cofeben.web.app' || h === 'nibecarcofeben.web.app') {
+        if (p.startsWith('/plux')) {
+          var clean = p.replace(/^\/plux\/?/, '/');
+          window.location.replace('https://plux.nibecarcofeben.com' + (clean.startsWith('/') ? clean : '/' + clean) + window.location.search + window.location.hash);
+          return;
+        }
       } else if (h === 'plux-nibecarcofeben.web.app') {
-        window.location.replace('https://plux.nibecarcofeben.com' + window.location.pathname + window.location.search + window.location.hash);
+        var cleanPlux = p.replace(/^\/plux\/?/, '/');
+        window.location.replace('https://plux.nibecarcofeben.com' + (cleanPlux.startsWith('/') ? cleanPlux : '/' + cleanPlux) + window.location.search + window.location.hash);
+        return;
       }
     })();
   </script>
@@ -21,14 +28,14 @@
   <meta name="author" content="Nibecar Cofeben" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://plux.nibecarcofeben.com/" />
-  <link rel="icon" type="image/ico" href="/plux/favico.ico" />
+  <link rel="icon" type="image/ico" href="/favico.ico" />
 
   <!-- Open Graph / Redes Sociales (Facebook, WhatsApp, Telegram, LinkedIn) -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://plux.nibecarcofeben.com/" />
   <meta property="og:title" content="Plux · Planificador Inteligente de Viajes e Itinerarios" />
   <meta property="og:description" content="Organiza tus viajes día por día, calcula presupuestos automáticos, colabora en tiempo real con amigos y exporta a PDF o calendario." />
-  <meta property="og:image" content="https://plux.nibecarcofeben.com/plux/og-banner.png" />
+  <meta property="og:image" content="https://plux.nibecarcofeben.com/og-banner.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Plux - Planificador Inteligente de Viajes e Itinerarios" />
@@ -40,7 +47,7 @@
   <meta name="twitter:url" content="https://plux.nibecarcofeben.com/" />
   <meta name="twitter:title" content="Plux · Planificador Inteligente de Viajes e Itinerarios" />
   <meta name="twitter:description" content="Organiza tus viajes día por día, calcula presupuestos automáticos y colabora en tiempo real con amigos." />
-  <meta name="twitter:image" content="https://plux.nibecarcofeben.com/plux/og-banner.png" />
+  <meta name="twitter:image" content="https://plux.nibecarcofeben.com/og-banner.png" />
 
   <!-- Datos Estructurados JSON-LD (Schema.org) - SoftwareApplication -->
   <script type="application/ld+json">
@@ -50,8 +57,8 @@
     "name": "Plux",
     "applicationCategory": "TravelApplication",
     "operatingSystem": "Web, Android, iOS, Windows, macOS",
-    "url": "https://nibecarcofeben.com/plux/",
-    "image": "https://nibecarcofeben.com/plux/og-banner.png",
+    "url": "https://plux.nibecarcofeben.com/",
+    "image": "https://plux.nibecarcofeben.com/og-banner.png",
     "isAccessibleForFree": true,
     "offers": {
       "@type": "Offer",
@@ -102,7 +109,7 @@
     };
   </script>
 
-  <link rel="stylesheet" href="/plux/styles.css?v=1789820000001">
+  <link rel="stylesheet" href="/styles.css?v=1789820000001">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -116,11 +123,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
   
   <!-- Firebase (compat) Local Offline SDK -->
-  <script src="/plux/firebase/firebase-app-compat.js"></script>
-  <script src="/plux/firebase/firebase-auth-compat.js"></script>
-  <script src="/plux/firebase/firebase-database-compat.js"></script>
-  <script src="/plux/firebase/firebase-firestore-compat.js"></script>
-  <script defer src="/plux/script.js?v=1789830000001"></script>
+  <script src="/firebase/firebase-app-compat.js"></script>
+  <script src="/firebase/firebase-auth-compat.js"></script>
+  <script src="/firebase/firebase-database-compat.js"></script>
+  <script src="/firebase/firebase-firestore-compat.js"></script>
+  <script defer src="/script.js?v=1789830000001"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -158,7 +165,7 @@
       <button class="main-btn" id="tripsBtn" onclick="window.abrirModalViajes()" style="flex: 1 1 45%;">Tus viajes</button>
       <button class="main-btn discover-btn" id="discoverBtn" onclick="window.abrirDescubrir()" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
       <button class="main-btn tools-btn" id="toolsBtn" onclick="window.abrirPanelHerramientas()" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
-      <button class="main-btn" onclick="window.abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/plux/pet.png" alt="Pluxy" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
+      <button class="main-btn" onclick="window.abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/pet.png" alt="Pluxy" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
     </div>
 
     <!-- Inspiration Cards -->
@@ -588,7 +595,7 @@
   <!-- FLOATING CHAT BUTTON -->
   
   <button id="chat-float-btn" onclick="abrirChatIA()" title="Pluxy" style="display:flex !important; align-items:center; justify-content:center; padding:0; background:transparent !important; border:none !important;">
-    <img src="/plux/pet.png" alt="Pluxy">
+    <img src="/pet.png" alt="Pluxy">
     <span class="chat-badge" id="chat-badge" style="display:none;">✨</span>
   </button>
 
@@ -597,7 +604,7 @@
     <div class="chat-container" style="position:relative;">
       <div class="chat-header" style="padding:14px 18px; background:linear-gradient(135deg, #6366f1, #8b5cf6); display:flex; align-items:center; justify-content:space-between;">
         <div style="display:flex; align-items:center; gap:12px;">
-          <img src="/plux/pet.png" alt="Pluxy" style="height:42px; width:auto; flex-shrink:0; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3));">
+          <img src="/pet.png" alt="Pluxy" style="height:42px; width:auto; flex-shrink:0; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3));">
           <div>
             <h3 id="pluxyAssistant" style="margin:0; font-size:1.05rem; font-weight:700; color:white; display:flex; align-items:center; gap:6px;">Pluxy <span style="font-size:0.65rem; padding:2px 8px; background:rgba(255,255,255,0.25); border-radius:10px; font-weight:700; text-transform:uppercase;">IA Agent</span></h3>
             <div class="chat-header-info" id="pluxyHint" style="font-size:0.75rem; color:rgba(255,255,255,0.85); font-weight:500;">Tu asistente inteligente de viaje</div>
@@ -614,7 +621,7 @@
       </div>
       <div class="chat-messages" id="chat-messages">
         <div class="chat-msg ai" style="display:flex; gap:10px; align-items:flex-start;">
-          <img src="/plux/pet.png" alt="Pluxy" style="height:28px; width:auto; flex-shrink:0; margin-top:2px;">
+          <img src="/pet.png" alt="Pluxy" style="height:28px; width:auto; flex-shrink:0; margin-top:2px;">
           <div>¡Hola! Soy tu asistente de viaje Pluxy ✨. Contame qué tenés en mente; puedo ayudarte a armar tu itinerario, crear la checklist, calcular costos o sugerir actividades.</div>
         </div>
       </div>
@@ -1098,7 +1105,7 @@
         <!-- Nibecar Cofeben Account Section (Inline /public/login) -->
         <div style="padding-bottom:15px; border-bottom:1px solid var(--border); text-align:left;">
           <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px;">
-            <img src="/static/Logo.png" alt="Nibecar Cofeben" style="width:26px; height:26px; object-fit:contain; border-radius:6px;" onerror="this.src='/plux/pet.png'">
+            <img src="/static/Logo.png" alt="Nibecar Cofeben" style="width:26px; height:26px; object-fit:contain; border-radius:6px;" onerror="this.src='/pet.png'">
             <span style="color:var(--blanco, #fff); font-weight:bold; font-size:1.05rem;">Nibecar Cofeben</span>
           </div>
 
@@ -1787,7 +1794,7 @@
           <div style="font-size:0.75rem; font-weight:700; color:#818cf8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">✨ Asistente de Viaje</div>
           <div class="plux-contact-item" onclick="window.iniciarChatConUsuario('Pluxy')">
             <div class="plux-chat-avatar plux-avatar-pluxy" style="width:38px; height:38px; display:flex; align-items:center; justify-content:center; padding:0;">
-              <img src="/plux/pet.png" alt="Pluxy" style="width:24px; height:24px; object-fit:contain; display:block;">
+              <img src="/pet.png" alt="Pluxy" style="width:24px; height:24px; object-fit:contain; display:block;">
             </div>
             <div style="flex:1; min-width:0;">
               <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">Pluxy</div>

@@ -4305,7 +4305,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         div.className = 'chat-msg ai pluxy-thinking-msg';
         if (id) div.id = id;
         div.innerHTML = `
-          <img src="/plux/pet.png" style="height:26px; width:auto; flex-shrink:0;">
+          <img src="/pet.png" style="height:26px; width:auto; flex-shrink:0;">
           <span style="flex:1; color:var(--gris); font-style:italic;">${texto}</span>
           <span class="pluxy-thinking-dots"><span></span><span></span><span></span></span>`;
       } else if (tipo.includes('ai')) {
@@ -4315,7 +4315,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         div.style.gap = '10px';
         div.style.alignItems = 'flex-start';
         div.innerHTML = `
-          <img src="/plux/pet.png" style="height:26px; width:auto; flex-shrink:0; margin-top:2px;">
+          <img src="/pet.png" style="height:26px; width:auto; flex-shrink:0; margin-top:2px;">
           <div style="flex:1; line-height:1.5;">${texto.replace(/\n/g, '<br>')}</div>`;
       } else {
         div.className = `chat-msg ${tipo}`;
@@ -9730,7 +9730,7 @@ async function asegurarViajeEnNubeParaCompartir() {
     }
   }
 
-  return `https://plux.nibecarcofeben.com/plux/?join=${encodeURIComponent(syncCode)}&mode=reader`;
+  return `https://plux.nibecarcofeben.com/?join=${encodeURIComponent(syncCode)}&mode=reader`;
 }
 
 // ================== MODO LECTOR & PERMISOS ==================
@@ -15013,13 +15013,13 @@ async function exportarPDF() {
     if (!ciudad) return;
     const ciudadLower = ciudad.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     const cityMap = {
-      'buenos aires': '/plux/destinies/buenosaires/',
-      'bs. aires': '/plux/destinies/buenosaires/',
-      'roma': '/plux/destinies/roma/',
-      'tokio': '/plux/destinies/tokio/',
-      'nueva york': '/plux/destinies/nuevayork/',
-      'paris': '/plux/destinies/paris/',
-      'barcelona': '/plux/destinies/barcelona/'
+      'buenos aires': '/destinies/buenosaires/',
+      'bs. aires': '/destinies/buenosaires/',
+      'roma': '/destinies/roma/',
+      'tokio': '/destinies/tokio/',
+      'nueva york': '/destinies/nuevayork/',
+      'paris': '/destinies/paris/',
+      'barcelona': '/destinies/barcelona/'
     };
 
     const targetUrl = cityMap[ciudadLower];
@@ -15608,7 +15608,7 @@ async function exportarPDF() {
 
   function getParticipantInitial(name) {
     if (!name) return '👤';
-    if (name.toLowerCase().includes('pluxy')) return '<img src="/plux/pet.png" alt="Pluxy" style="width:22px; height:22px; object-fit:contain; display:block;">';
+    if (name.toLowerCase().includes('pluxy')) return '<img src="/pet.png" alt="Pluxy" style="width:22px; height:22px; object-fit:contain; display:block;">';
     return name.trim().charAt(0).toUpperCase();
   }
 
@@ -16007,7 +16007,7 @@ async function exportarPDF() {
       const isActive = c.id === pluxActiveChatId;
       const lastMsg = c.messages && c.messages.length > 0 ? (c.messages[c.messages.length - 1].text || 'Tarjeta adjunta') : 'Sin mensajes aún';
       const isPluxy = c.id === 'dm_pluxy';
-      const icon = isPluxy ? '<img src="/plux/pet.png" alt="Pluxy" style="width:22px; height:22px; object-fit:contain; display:block;">' : '👤';
+      const icon = isPluxy ? '<img src="/pet.png" alt="Pluxy" style="width:22px; height:22px; object-fit:contain; display:block;">' : '👤';
       html += `
         <div class="plux-channel-item ${isActive ? 'active' : ''}" onclick="window.cambiarCanalSocial('${c.id}')">
           <div style="font-size:1.2rem; display:flex; align-items:center; justify-content:center; width:28px;">${icon}</div>

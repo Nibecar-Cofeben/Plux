@@ -372,18 +372,144 @@
     </div>
   </div>
 
-  <!-- Modal de descubrir -->
-  <div id="modal-descubrir" style="display:none;">
-    <div class="descubrir-content">
-      <div class="descubrir-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <button class="mobile-back-btn" onclick="cerrarDescubrir()" style="background:none; border:none; color:var(--verde); font-size:1.1rem; display:flex; align-items:center; gap:5px; cursor:pointer; padding:0;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0;"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          <span class="txt-volver">Volver</span>
-        </button>
-        <h2 id="descubrirTitle" style="margin:0;">Descubrir (Feed de Inspiración)</h2>
+  <!-- MODAL: DESCUBRIR DESTINOS, ACTIVIDADES Y COMPARADOR -->
+  <div id="modal-descubrir" style="display:none;" onclick="if(event.target===this) window.cerrarDescubrir()">
+    <div class="descubrir-modal-box">
+      
+      <!-- Top Header -->
+      <div class="descubrir-header">
+        <div class="descubrir-header-left">
+          <button class="mobile-back-btn" onclick="window.cerrarDescubrir()">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span class="txt-volver">Volver</span>
+          </button>
+          <div class="descubrir-title-group">
+            <h2 id="descubrirTitle"><i class="fa-solid fa-compass" style="color:var(--verde); margin-right:8px;"></i>Descubrir</h2>
+            <span class="descubrir-subtitle" id="descubrirSubtitle">Inspiración, itinerarios inteligentes y comparador</span>
+          </div>
+        </div>
+        <span class="close-panel" onclick="window.cerrarDescubrir()">&times;</span>
       </div>
-      <div id="descubrirDestinos" style="margin-bottom:15px;"></div>
-      <div class="descubrir-results" id="descubrirResultados"></div>
+
+      <!-- Navigation Tabs -->
+      <div class="descubrir-nav-tabs">
+        <button class="descubrir-tab-btn active" id="tabBtn-para_ti" onclick="window.cambiarTabDescubrir('para_ti')">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span id="txtTabParaTi">Para ti</span>
+        </button>
+        <button class="descubrir-tab-btn" id="tabBtn-destinos" onclick="window.cambiarTabDescubrir('destinos')">
+          <i class="fa-solid fa-earth-americas"></i>
+          <span id="txtTabDestinos">Explorar Destinos</span>
+        </button>
+        <button class="descubrir-tab-btn" id="tabBtn-actividades" onclick="window.cambiarTabDescubrir('actividades')">
+          <i class="fa-solid fa-ticket"></i>
+          <span id="txtTabActividades">Actividades</span>
+        </button>
+        <button class="descubrir-tab-btn" id="tabBtn-comparador" onclick="window.cambiarTabDescubrir('comparador')">
+          <i class="fa-solid fa-code-compare"></i>
+          <span id="txtTabComparador">Comparador</span>
+        </button>
+      </div>
+
+      <!-- Scrollable Tab Contents -->
+      <div class="descubrir-body-container">
+        
+        <!-- Tab 1: Para ti (Contextual) -->
+        <div class="descubrir-tab-pane active" id="pane-descubrir-para_ti">
+          <div id="descubrir-context-content"></div>
+        </div>
+
+        <!-- Tab 2: Explorar Destinos -->
+        <div class="descubrir-tab-pane" id="pane-descubrir-destinos">
+          <div class="descubrir-search-filter-bar">
+            <div class="descubrir-search-input-wrapper">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="destinosSearchInput" placeholder="Buscar destino por ciudad, país o estilo..." oninput="window.filtrarDestinosDescubrir(this.value)">
+            </div>
+            <div class="descubrir-chips-filter" id="destinosCategoryChips">
+              <button class="filter-chip active" onclick="window.filtrarDestinosPorTag('todos', this)">Todos</button>
+              <button class="filter-chip" onclick="window.filtrarDestinosPorTag('cultura', this)">Cultura e Historia</button>
+              <button class="filter-chip" onclick="window.filtrarDestinosPorTag('playa', this)">Playa y Sol</button>
+              <button class="filter-chip" onclick="window.filtrarDestinosPorTag('gastronomia', this)">Gastronomía</button>
+              <button class="filter-chip" onclick="window.filtrarDestinosPorTag('metropolis', this)">Grandes Ciudades</button>
+              <button class="filter-chip" onclick="window.filtrarDestinosPorTag('economico', this)">Bajo Presupuesto</button>
+            </div>
+          </div>
+          <div class="descubrir-grid-destinos" id="gridDestinosCatalogo"></div>
+        </div>
+
+        <!-- Tab 3: Actividades & Experiencias -->
+        <div class="descubrir-tab-pane" id="pane-descubrir-actividades">
+          <div class="descubrir-search-filter-bar">
+            <div class="descubrir-search-input-wrapper">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="actividadesSearchInput" placeholder="Buscar actividad (ej: Museo, Mirador, Tour gastronómico)..." oninput="window.filtrarActividadesDescubrir(this.value)">
+            </div>
+            <div class="descubrir-chips-filter" id="actividadesCategoryChips">
+              <button class="filter-chip active" onclick="window.filtrarActividadesPorCategoria('todas', this)">Todas</button>
+              <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('imperdibles', this)">Imperdibles</button>
+              <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('cultura', this)">Museos y Arte</button>
+              <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('gastronomia', this)">Comida y Bebida</button>
+              <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('naturaleza', this)">Aire Libre</button>
+              <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('gratis', this)">Gratis / Económicas</button>
+            </div>
+          </div>
+          <div class="descubrir-grid-actividades" id="gridActividadesCatalogo"></div>
+        </div>
+
+        <!-- Tab 4: Comparador (Destinos & Actividades) -->
+        <div class="descubrir-tab-pane" id="pane-descubrir-comparador">
+          <div class="comparador-subswitch-wrapper">
+            <div class="comparador-subswitch">
+              <button class="subswitch-btn active" id="subswitch-destinos" onclick="window.cambiarSubswitchComparador('destinos')">
+                <i class="fa-solid fa-city"></i> Comparar Destinos
+              </button>
+              <button class="subswitch-btn" id="subswitch-actividades" onclick="window.cambiarSubswitchComparador('actividades')">
+                <i class="fa-solid fa-ticket-simple"></i> Comparar Actividades
+              </button>
+            </div>
+          </div>
+
+          <!-- Subsección Comparar Destinos -->
+          <div id="comparador-seccion-destinos" class="comparador-seccion active">
+            <div class="comparador-selectors-row">
+              <div class="comp-select-box">
+                <label for="compDestino1"><i class="fa-solid fa-location-dot"></i> Destino 1</label>
+                <select id="compDestino1" onchange="window.actualizarComparativaDestinos()"></select>
+              </div>
+              <div class="comp-vs-badge">VS</div>
+              <div class="comp-select-box">
+                <label for="compDestino2"><i class="fa-solid fa-location-dot"></i> Destino 2</label>
+                <select id="compDestino2" onchange="window.actualizarComparativaDestinos()"></select>
+              </div>
+              <div class="comp-select-box comp-select-optional" id="compDestino3Wrapper">
+                <label for="compDestino3"><i class="fa-solid fa-location-dot"></i> Destino 3 (Opcional)</label>
+                <select id="compDestino3" onchange="window.actualizarComparativaDestinos()"></select>
+              </div>
+            </div>
+            <div id="comparador-destinos-resultado" class="comparador-resultado-container"></div>
+          </div>
+
+          <!-- Subsección Comparar Actividades -->
+          <div id="comparador-seccion-actividades" class="comparador-seccion" style="display:none;">
+            <div class="comparador-selectors-row">
+              <div class="comp-select-box">
+                <label for="compActividad1"><i class="fa-solid fa-ticket"></i> Actividad 1</label>
+                <select id="compActividad1" onchange="window.actualizarComparativaActividades()"></select>
+              </div>
+              <div class="comp-vs-badge">VS</div>
+              <div class="comp-select-box">
+                <label for="compActividad2"><i class="fa-solid fa-ticket"></i> Actividad 2</label>
+                <select id="compActividad2" onchange="window.actualizarComparativaActividades()"></select>
+              </div>
+            </div>
+            <div id="comparador-actividades-resultado" class="comparador-resultado-container"></div>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   </div>
 

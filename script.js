@@ -13291,183 +13291,1115 @@ async function exportarPDF() {
         document.getElementById('tab-plantillas').classList.add('active');
       }
     }
-    // ================== DESCUBRIR ==================
+    // ==========================================================================
+    // REDESIGNED DESCUBRIR (CONTEXTUAL INSPIRATION & COMPARATOR SYSTEM)
+    // ==========================================================================
+
+    const PLUX_CURATED_DESTINATIONS = [
+      {
+        id: 'roma',
+        nombre: 'Roma',
+        pais: 'Italia',
+        codigoPais: 'IT',
+        continente: 'Europa',
+        estilo: 'cultura',
+        img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80',
+        presupuestoDia: 85,
+        mejorEpoca: 'Abril a Junio / Septiembre a Octubre',
+        vibe: 'Histórico, Romántico, Gastronómico',
+        idioma: 'Italiano',
+        moneda: 'EUR (€)',
+        transporte: 'Metro y caminata',
+        seguridad: 'Alta (atención con carteristas)',
+        rating: 4.9,
+        descripcion: 'La Ciudad Eterna deslumbra con el Coliseo, la Fontana di Trevi, el Vaticano y una gastronomía inigualable.',
+        lugaresClave: ['Coliseo Romano', 'Fontana di Trevi', 'Museos Vaticanos', 'Trastevere', 'Panteón'],
+        guiaUrl: '/destinies/roma/'
+      },
+      {
+        id: 'tokio',
+        nombre: 'Tokio',
+        pais: 'Japón',
+        codigoPais: 'JP',
+        continente: 'Asia',
+        estilo: 'metropolis',
+        img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80',
+        presupuestoDia: 95,
+        mejorEpoca: 'Marzo a Mayo (Cerezos) / Octubre a Noviembre',
+        vibe: 'Futurista, Tradicional, Alta Tecnología',
+        idioma: 'Japonés',
+        moneda: 'JPY (¥)',
+        transporte: 'Tren y Metro de clase mundial',
+        seguridad: 'Excelente (una de las más seguras)',
+        rating: 5.0,
+        descripcion: 'Megaciudad donde conviven templos ancestrales como Senso-ji con el cruce de Shibuya y la vanguardia de Akihabara.',
+        lugaresClave: ['Cruce de Shibuya', 'Templo Senso-ji', 'Akihabara', 'Shinjuku', 'Torre de Tokio'],
+        guiaUrl: '/destinies/tokio/'
+      },
+      {
+        id: 'paris',
+        nombre: 'París',
+        pais: 'Francia',
+        codigoPais: 'FR',
+        continente: 'Europa',
+        estilo: 'cultura',
+        img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80',
+        presupuestoDia: 110,
+        mejorEpoca: 'Mayo a Septiembre',
+        vibe: 'Elegante, Artístico, Romántico',
+        idioma: 'Francés',
+        moneda: 'EUR (€)',
+        transporte: 'Metro muy conectado',
+        seguridad: 'Alta (precaución en zonas turísticas)',
+        rating: 4.8,
+        descripcion: 'La Ciudad de la Luz cautiva con la Torre Eiffel, el Museo del Louvre, Montmartre y sus cafés tradicionales.',
+        lugaresClave: ['Torre Eiffel', 'Museo del Louvre', 'Catedral de Notre-Dame', 'Montmartre', 'Arco del Triunfo'],
+        guiaUrl: '/destinies/paris/'
+      },
+      {
+        id: 'barcelona',
+        nombre: 'Barcelona',
+        pais: 'España',
+        codigoPais: 'ES',
+        continente: 'Europa',
+        estilo: 'playa',
+        img: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=800&q=80',
+        presupuestoDia: 75,
+        mejorEpoca: 'Mayo a Octubre',
+        vibe: 'Mediterráneo, Modernista, Costero',
+        idioma: 'Español / Catalán',
+        moneda: 'EUR (€)',
+        transporte: 'Metro, autobús y bicicleta',
+        seguridad: 'Alta (cuidado con pertenencias en Las Ramblas)',
+        rating: 4.9,
+        descripcion: 'Fusión única de arquitectura modernista de Gaudí, playas mediterráneas, Barrio Gótico y vibrante gastronomía.',
+        lugaresClave: ['Sagrada Familia', 'Park Güell', 'Barrio Gótico', 'La Barceloneta', 'Casa Batlló'],
+        guiaUrl: '/destinies/barcelona/'
+      },
+      {
+        id: 'nuevayork',
+        nombre: 'Nueva York',
+        pais: 'Estados Unidos',
+        codigoPais: 'US',
+        continente: 'América del Norte',
+        estilo: 'metropolis',
+        img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&q=80',
+        presupuestoDia: 140,
+        mejorEpoca: 'Septiembre a Noviembre / Abril a Junio',
+        vibe: 'Cosmopolita, Vibrante, Teatral',
+        idioma: 'Inglés',
+        moneda: 'USD ($)',
+        transporte: 'Metro 24 horas',
+        seguridad: 'Buena en zonas turísticas',
+        rating: 4.8,
+        descripcion: 'La Gran Manzana nunca duerme: Times Square, Central Park, Broadway, el Puente de Brooklyn y miradores icónicos.',
+        lugaresClave: ['Central Park', 'Times Square', 'Estatua de la Libertad', 'Puente de Brooklyn', 'Empire State'],
+        guiaUrl: '/destinies/nuevayork/'
+      },
+      {
+        id: 'buenosaires',
+        nombre: 'Buenos Aires',
+        pais: 'Argentina',
+        codigoPais: 'AR',
+        continente: 'América del Sur',
+        estilo: 'economico',
+        img: 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=800&q=80',
+        presupuestoDia: 45,
+        mejorEpoca: 'Marzo a Mayo / Septiembre a Diciembre',
+        vibe: 'Bohemio, Tango, Pasión Futbolera, Asados',
+        idioma: 'Español',
+        moneda: 'ARS ($)',
+        transporte: 'Subte, colectivos y taxis accesibles',
+        seguridad: 'Moderada (cuidado de noche en ciertas zonas)',
+        rating: 4.8,
+        descripcion: 'La reina del Plata cautiva con su arquitectura europea, el encanto de San Telmo, los teatros de Corrientes y su gastronomía.',
+        lugaresClave: ['Teatro Colón', 'San Telmo', 'Caminito La Boca', 'Puerto Madero', 'Bosques de Palermo'],
+        guiaUrl: '/destinies/buenosaires/'
+      },
+      {
+        id: 'londres',
+        nombre: 'Londres',
+        pais: 'Reino Unido',
+        codigoPais: 'GB',
+        continente: 'Europa',
+        estilo: 'cultura',
+        img: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80',
+        presupuestoDia: 120,
+        mejorEpoca: 'Junio a Agosto',
+        vibe: 'Histórico, Monárquico, Museos Gratuitos',
+        idioma: 'Inglés',
+        moneda: 'GBP (£)',
+        transporte: 'Underground y autobuses de dos pisos',
+        seguridad: 'Muy alta',
+        rating: 4.9,
+        descripcion: 'Capital repleta de museos de clase mundial, el Big Ben, palacios reales, mercados vintage y parques majestuosos.',
+        lugaresClave: ['Big Ben', 'London Eye', 'British Museum', 'Torre de Londres', 'Camden Market'],
+        guiaUrl: null
+      },
+      {
+        id: 'kioto',
+        nombre: 'Kioto',
+        pais: 'Japón',
+        codigoPais: 'JP',
+        continente: 'Asia',
+        estilo: 'cultura',
+        img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
+        presupuestoDia: 75,
+        mejorEpoca: 'Noviembre (Otoño rojizo) / Abril (Cerezos)',
+        vibe: 'Zen, Tradicional, Espiritual',
+        idioma: 'Japonés',
+        moneda: 'JPY (¥)',
+        transporte: 'Autobús y tren',
+        seguridad: 'Excelente',
+        rating: 4.9,
+        descripcion: 'Corazón cultural japonés con más de 1000 templos, el bosque de bambú de Arashiyama y los torii rojos de Fushimi Inari.',
+        lugaresClave: ['Fushimi Inari-taisha', 'Kinkaku-ji (Pabellón Dorado)', 'Bosque de Bambú Arashiyama', 'Distrito Gion', 'Kiyomizu-dera'],
+        guiaUrl: null
+      },
+      {
+        id: 'riodejaneiro',
+        nombre: 'Río de Janeiro',
+        pais: 'Brasil',
+        codigoPais: 'BR',
+        continente: 'América del Sur',
+        estilo: 'playa',
+        img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80',
+        presupuestoDia: 55,
+        mejorEpoca: 'Diciembre a Marzo',
+        vibe: 'Carioca, Playero, Samba, Naturaleza',
+        idioma: 'Portugués',
+        moneda: 'BRL (R$)',
+        transporte: 'Metro y Uber',
+        seguridad: 'Moderada (estar atento en playas y transporte)',
+        rating: 4.7,
+        descripcion: 'La ciudad maravillosa reúne el Cristo Redentor, el Pan de Azúcar, las playas de Copacabana e Ipanema y el carnaval.',
+        lugaresClave: ['Cristo Redentor', 'Pan de Azúcar', 'Playa de Copacabana', 'Ipanema', 'Escalera de Selarón'],
+        guiaUrl: null
+      }
+    ];
+
+    const PLUX_CURATED_ACTIVITIES = [
+      {
+        id: 'act-coliseo',
+        ciudad: 'Roma',
+        nombre: 'Tour guiado por el Coliseo y Foro Romano',
+        categoria: 'imperdibles',
+        duracion: '180 min',
+        costo: 35,
+        reserva: 'Obligatoria',
+        mejorMomento: 'Mañana temprano',
+        descripcion: 'Explora el anfiteatro más famoso de la historia antigua y camina por las ruinas del Foro Romano y el Palatino.',
+        rating: 4.9
+      },
+      {
+        id: 'act-vaticano',
+        ciudad: 'Roma',
+        nombre: 'Museos Vaticanos y Capilla Sixtina',
+        categoria: 'cultura',
+        duracion: '210 min',
+        costo: 30,
+        reserva: 'Obligatoria',
+        mejorMomento: 'Tarde',
+        descripcion: 'Maravíllate con las obras maestras del Renacimiento y los frescos de Miguel Ángel en la Capilla Sixtina.',
+        rating: 4.9
+      },
+      {
+        id: 'act-trevi',
+        ciudad: 'Roma',
+        nombre: 'Lanzar una moneda en la Fontana di Trevi',
+        categoria: 'gratis',
+        duracion: '45 min',
+        costo: 0,
+        reserva: 'Libre',
+        mejorMomento: 'Noche iluminada',
+        descripcion: 'Tradición icónica de Roma. Visítala de noche cuando las luces iluminan el mármol barroco con menos multitud.',
+        rating: 4.8
+      },
+      {
+        id: 'act-shibuya',
+        ciudad: 'Tokio',
+        nombre: 'Cruce de Shibuya y Mirador Shibuya Sky',
+        categoria: 'imperdibles',
+        duracion: '90 min',
+        costo: 20,
+        reserva: 'Recomendada',
+        mejorMomento: 'Atardecer',
+        descripcion: 'El cruce peatonal más concurrido del planeta visto desde la calle y desde la terraza panorámica en 360 grados.',
+        rating: 4.9
+      },
+      {
+        id: 'act-sensoji',
+        ciudad: 'Tokio',
+        nombre: 'Paseo por el Templo Senso-ji y Asakusa',
+        categoria: 'cultura',
+        duracion: '120 min',
+        costo: 0,
+        reserva: 'Libre',
+        mejorMomento: 'Mañana',
+        descripcion: 'El templo budista más antiguo de Tokio con su puerta Kaminarimon y la calle comercial Nakamise-dori.',
+        rating: 4.8
+      },
+      {
+        id: 'act-eiffel',
+        ciudad: 'París',
+        nombre: 'Subida a la Torre Eiffel y picnic en Campos de Marte',
+        categoria: 'imperdibles',
+        duracion: '120 min',
+        costo: 28,
+        reserva: 'Recomendada',
+        mejorMomento: 'Atardecer',
+        descripcion: 'Vista panorámica de todo París desde las alturas y espectáculo de luces titilantes cada hora por la noche.',
+        rating: 4.9
+      },
+      {
+        id: 'act-louvre',
+        ciudad: 'París',
+        nombre: 'Recorrido por el Museo del Louvre',
+        categoria: 'cultura',
+        duracion: '180 min',
+        costo: 22,
+        reserva: 'Obligatoria',
+        mejorMomento: 'Mañana',
+        descripcion: 'Hogar de la Gioconda, la Victoria de Samotracia y miles de obras maestras en un palacio histórico.',
+        rating: 4.8
+      },
+      {
+        id: 'act-sagrada-familia',
+        ciudad: 'Barcelona',
+        nombre: 'Visita a la Basílica de la Sagrada Familia',
+        categoria: 'imperdibles',
+        duracion: '120 min',
+        costo: 26,
+        reserva: 'Obligatoria',
+        mejorMomento: 'Mañana con sol',
+        descripcion: 'La obra cumbre de Antoni Gaudí con sus vitrales que inundan el interior de luz y columnas arbóreas.',
+        rating: 5.0
+      },
+      {
+        id: 'act-park-guell',
+        ciudad: 'Barcelona',
+        nombre: 'Paseo por el Park Güell de Gaudí',
+        categoria: 'naturaleza',
+        duracion: '120 min',
+        costo: 10,
+        reserva: 'Recomendada',
+        mejorMomento: 'Tarde',
+        descripcion: 'Parque público con mosaicos coloridos, el dragón de trencadís y vistas abiertas sobre la ciudad y el mar.',
+        rating: 4.8
+      },
+      {
+        id: 'act-central-park',
+        ciudad: 'Nueva York',
+        nombre: 'Recorrido en bicicleta por Central Park',
+        categoria: 'naturaleza',
+        duracion: '150 min',
+        costo: 15,
+        reserva: 'Libre',
+        mejorMomento: 'Mañana',
+        descripcion: 'El pulmón verde de Manhattan con Bow Bridge, Bethesda Terrace, Strawberry Fields y senderos arbolados.',
+        rating: 4.9
+      },
+      {
+        id: 'act-teatro-colon',
+        ciudad: 'Buenos Aires',
+        nombre: 'Visita guiada al Teatro Colón',
+        categoria: 'cultura',
+        duracion: '75 min',
+        costo: 12,
+        reserva: 'Recomendada',
+        mejorMomento: 'Mediodía',
+        descripcion: 'Uno de los cinco mejores teatros de ópera del mundo por su acústica perfecta y arquitectura renacentista.',
+        rating: 4.9
+      }
+    ];
+
+    const PLUX_NEARBY_GETAWAYS = {
+      'roma': [
+        { nombre: 'Florencia', tiempo: '1h 30m en tren alta velocidad', desc: 'Cuna del Renacimiento, Ponte Vecchio y Galería Uffizi.' },
+        { nombre: 'Tívoli (Villa de Este y Villa Adriana)', tiempo: '45 min en tren', desc: 'Jardines renacentistas con fuentes espectaculares y ruinas imperiales.' },
+        { nombre: 'Nápoles y Pompeya', tiempo: '1h 10m en tren', desc: 'La mejor pizza del mundo y la ciudad romana petrificada por el Vesubio.' }
+      ],
+      'tokio': [
+        { nombre: 'Kamakura', tiempo: '55 min en tren', desc: 'Gran Buda de bronce al aire libre, templos costeros y playas.' },
+        { nombre: 'Hakone y Monte Fuji', tiempo: '1h 20m en tren', desc: 'Aguas termales onsen, vistas del Fuji y paseo en barco por el lago Ashi.' },
+        { nombre: 'Nikko', tiempo: '1h 50m en tren', desc: 'Santuarios dorados en medio de bosques milenarios de cedros.' }
+      ],
+      'paris': [
+        { nombre: 'Palacio de Versalles', tiempo: '40 min en RER C', desc: 'Salón de los Espejos y majestuosos jardines reales de Luis XIV.' },
+        { nombre: 'Giverny (Casa de Monet)', tiempo: '50 min en tren', desc: 'Los jardines de nenúfares y el puente japonés que inspiraron a Monet.' },
+        { nombre: 'Mont Saint-Michel', tiempo: '3h en tren/tour', desc: 'Abadía gótica sobre un islote rocoso rodeado de mareas increíbles.' }
+      ],
+      'barcelona': [
+        { nombre: 'Montserrat', tiempo: '1h en tren', desc: 'Monasterio enclavado en montañas con formaciones rocosas únicas.' },
+        { nombre: 'Girona', tiempo: '40 min en AVE', desc: 'Casco histórico medieval, murallas y locaciones de series épicas.' },
+        { nombre: 'Sitges', tiempo: '35 min en tren', desc: 'Pueblo costero blanco con playas, museos y animada vida gastronómica.' }
+      ],
+      'nuevayork': [
+        { nombre: 'Filadelfia', tiempo: '1h 20m en tren', desc: 'Campana de la Libertad, Independence Hall y los escalones de Rocky.' },
+        { nombre: 'Washington D.C.', tiempo: '3h en tren', desc: 'El Capitolio, Monumento a Lincoln y los museos gratuitos del Smithsonian.' }
+      ],
+      'buenosaires': [
+        { nombre: 'Tigre y Delta del Paraná', tiempo: '50 min en tren', desc: 'Paseo en lancha colectiva por islas fluviales y Puerto de Frutos.' },
+        { nombre: 'Colonia del Sacramento (Uruguay)', tiempo: '1h 15m en ferry', desc: 'Pueblo colonial portugués empedrado frente al Río de la Plata.' },
+        { nombre: 'San Antonio de Areco', tiempo: '1h 30m en auto/bus', desc: 'Cuna de la tradición gaucha, platería criolla y estancias de campo.' }
+      ]
+    };
+
+    // Apertura y orquestación del modal Descubrir
     function abrirDescubrir() {
-      document.getElementById('modal-descubrir').style.display = 'flex';
-      const destinosDiv = document.getElementById('descubrirDestinos');
-      
-      // Clear and show search as primary
-      destinosDiv.innerHTML = `
-        <div style="padding:40px; text-align:center; max-width:600px; margin:0 auto;">
-          <h2 style="font-size:2.5rem; margin-bottom:20px; color:var(--verde);">${t('descubrir_title')}</h2>
-          <div style="display:flex;gap:15px;">
-            <input type="text" id="feedSearchInput" placeholder="${t('descubrir_placeholder')}" style="flex:1;padding:18px;background:rgba(255,255,255,0.05);border:2px solid var(--border);border-radius:16px;color:white;font-size:1.2rem; outline:none; transition:border-color 0.3s;">
-            <button onclick="buscarLugaresPorDestino(document.getElementById('feedSearchInput').value)" class="btn-add-feed" style="padding:0 30px; font-size:1.1rem; background:linear-gradient(45deg, var(--verde), var(--azul));">${t('descubrir_search_btn')}</button>
+      const modal = document.getElementById('modal-descubrir');
+      if (!modal) return;
+      modal.style.display = 'flex';
+
+      // Renderizar pestaña contextual "Para ti"
+      renderDescubrirParaTi();
+
+      // Renderizar catálogos
+      renderCatalogoDestinos('todos');
+      renderCatalogoActividades('todas');
+
+      // Inicializar comparador
+      inicializarComparador();
+    }
+
+    function cerrarDescubrir() {
+      const modal = document.getElementById('modal-descubrir');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function cambiarTabDescubrir(tabKey) {
+      document.querySelectorAll('.descubrir-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.descubrir-tab-pane').forEach(pane => pane.classList.remove('active'));
+
+      const activeBtn = document.getElementById(`tabBtn-${tabKey}`);
+      const activePane = document.getElementById(`pane-descubrir-${tabKey}`);
+
+      if (activeBtn) activeBtn.classList.add('active');
+      if (activePane) activePane.classList.add('active');
+    }
+
+    // ================== PESTAÑA 1: PARA TI (CONTEXTUAL) ==================
+    function renderDescubrirParaTi() {
+      const container = document.getElementById('descubrir-context-content');
+      if (!container) return;
+
+      const hasActiveTrip = (typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0) || 
+                            (typeof dias !== 'undefined' && Array.isArray(dias) && dias.length > 0);
+
+      if (hasActiveTrip) {
+        // MODO B: Usuario con viaje en planificación
+        const nombresDestinos = (destinos && destinos.length > 0) 
+          ? destinos.map(d => d.nombre).join(', ') 
+          : 'Tu viaje en curso';
+
+        const mainCity = (destinos && destinos[0]) ? destinos[0].nombre.toLowerCase().trim() : '';
+
+        // Buscar actividades que coincidan con las ciudades del viaje
+        const ciudadesViaje = destinos.map(d => d.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+        const actividadesRecomendadas = PLUX_CURATED_ACTIVITIES.filter(act => {
+          const actCity = act.ciudad.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+          return ciudadesViaje.some(c => actCity.includes(c) || c.includes(actCity));
+        });
+
+        // Buscar escapadas
+        let escapadas = [];
+        for (const c of ciudadesViaje) {
+          for (const k in PLUX_NEARBY_GETAWAYS) {
+            if (c.includes(k) || k.includes(c)) {
+              escapadas = escapadas.concat(PLUX_NEARBY_GETAWAYS[k]);
+            }
+          }
+        }
+
+        let html = `
+          <!-- Active Trip Banner -->
+          <div class="descubrir-hero-banner">
+            <div class="descubrir-hero-banner-content">
+              <div class="descubrir-hero-badge"><i class="fa-solid fa-plane-departure"></i> Viaje en Planificación</div>
+              <h3>Optimizando tu aventura en ${escapeHtml(nombresDestinos)}</h3>
+              <p>Basado en tu itinerario actual, te recomendamos las mejores actividades para agregar a tus días y escapadas cercanas.</p>
+            </div>
+            <div>
+              <button class="btn-card-secondary" onclick="window.cerrarDescubrir()" style="padding:10px 18px;">
+                <i class="fa-solid fa-calendar-days"></i> Ver mi itinerario
+              </button>
+            </div>
           </div>
-          <p style="color:var(--gris); margin-top:15px; font-size:0.9rem;">${t('descubrir_ai_hint')}</p>
-        </div>
-        <div id="feed-resultados"></div>`;
-      
-      if (destinos.length > 0) {
-        // Load with AI first, then supplement with Wikipedia
-        buscarLugaresPorDestino(destinos[0].nombre);
+        `;
+
+        // Actividades para tus destinos
+        html += `
+          <div class="descubrir-section-header" style="margin-top:24px;">
+            <div>
+              <h4><i class="fa-solid fa-star" style="color:#fbbf24;"></i> Actividades Imperdibles para tu viaje</h4>
+              <p>Selecciona y añade directamente a cualquiera de los días de tu itinerario</p>
+            </div>
+          </div>
+        `;
+
+        if (actividadesRecomendadas.length > 0) {
+          html += '<div class="descubrir-grid-actividades">';
+          actividadesRecomendadas.forEach(act => {
+            html += renderTarjetaActividadHTML(act, true);
+          });
+          html += '</div>';
+        } else {
+          html += `
+            <div style="background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.15); border-radius:16px; padding:24px; text-align:center;">
+              <p style="color:var(--gris); margin:0 0 12px 0;">Explorando atracciones para ${escapeHtml(nombresDestinos)}...</p>
+              <button class="btn-card-primary" style="max-width:280px; margin:0 auto;" onclick="window.buscarLugaresPorDestino('${escapeHtml(destinos[0]?.nombre || '')}')">
+                <i class="fa-solid fa-sparkles"></i> Buscar actividades con IA
+              </button>
+            </div>
+          `;
+        }
+
+        // Escapadas cercanas
+        if (escapadas.length > 0) {
+          html += `
+            <div class="descubrir-section-header" style="margin-top:30px;">
+              <div>
+                <h4><i class="fa-solid fa-route" style="color:#38bdf8;"></i> Escapadas y Destinos Cercanos (Day Trips)</h4>
+                <p>Lugares que puedes visitar en el día desde tus destinos principales</p>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+          `;
+          escapadas.forEach(esc => {
+            html += `
+              <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong style="color:#ffffff; font-size:1.05rem;">${escapeHtml(esc.nombre)}</strong>
+                  <span style="font-size:0.72rem; color:#38bdf8; background:rgba(56,189,248,0.12); padding:3px 8px; border-radius:8px; font-weight:700;">
+                    <i class="fa-solid fa-train"></i> ${escapeHtml(esc.tiempo)}
+                  </span>
+                </div>
+                <p style="font-size:0.83rem; color:rgba(255,255,255,0.75); margin:0; line-height:1.4;">${escapeHtml(esc.desc)}</p>
+                <div style="margin-top:8px; text-align:right;">
+                  <button class="btn-card-secondary" style="padding:6px 14px; font-size:0.78rem;" onclick="window.añadirDesdeFeed('Excursión a ${escapeHtml(esc.nombre)}')">
+                    <i class="fa-solid fa-plus"></i> Añadir excursión
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+        }
+
+        // Buscador IA Integrado
+        html += `
+          <div style="margin-top:30px; background:rgba(15,23,42,0.7); border:1px solid rgba(99,102,241,0.25); border-radius:20px; padding:22px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+              <i class="fa-solid fa-brain" style="color:#818cf8; font-size:1.2rem;"></i>
+              <strong style="color:#ffffff; font-size:1rem;">Búsqueda Inteligente de Lugares con IA</strong>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <input type="text" id="aiCustomSearchInput" placeholder="Escribe cualquier ciudad o atracción (ej: Trastevere, Kioto, Montmartre)..." style="flex:1; min-width:240px; padding:12px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:12px; color:white; font-size:0.9rem; outline:none;">
+              <button class="btn-card-primary" style="padding:10px 22px;" onclick="window.buscarLugaresPorDestino(document.getElementById('aiCustomSearchInput').value)">
+                <i class="fa-solid fa-magnifying-glass"></i> Explorar
+              </button>
+            </div>
+            <div id="feed-resultados" style="margin-top:16px;"></div>
+          </div>
+        `;
+
+        container.innerHTML = html;
+
+      } else {
+        // MODO A: Sin viaje activo (Inspira y Recomienda Destinos)
+        let html = `
+          <!-- Hero Banner Sin Viaje -->
+          <div class="descubrir-hero-banner" style="background:linear-gradient(135deg, rgba(16,185,129,0.2), rgba(56,189,248,0.2)); border-color:rgba(16,185,129,0.35);">
+            <div class="descubrir-hero-banner-content">
+              <div class="descubrir-hero-badge"><i class="fa-solid fa-compass"></i> Comienza una nueva aventura</div>
+              <h3>¿A dónde quieres viajar en tu próxima escapada?</h3>
+              <p>Elige un destino icónico o clona un itinerario de la comunidad con presupuesto y días ya organizados.</p>
+            </div>
+            <div>
+              <button class="btn-card-primary" onclick="window.decisionViajeNuevo(); window.cerrarDescubrir();" style="padding:12px 22px; font-size:0.9rem;">
+                <i class="fa-solid fa-plus"></i> Crear viaje desde cero
+              </button>
+            </div>
+          </div>
+
+          <!-- Destinos Destacados en Tendencia -->
+          <div class="descubrir-section-header" style="margin-top:24px;">
+            <div>
+              <h4><i class="fa-solid fa-fire" style="color:#f43f5e;"></i> Destinos Más Populares y en Tendencia</h4>
+              <p>Guías detalladas con presupuestos diarios estimados e itinerarios recomendados</p>
+            </div>
+          </div>
+          <div class="descubrir-grid-destinos">
+        `;
+
+        PLUX_CURATED_DESTINATIONS.slice(0, 6).forEach(dest => {
+          html += renderTarjetaDestinoHTML(dest);
+        });
+
+        html += `
+          </div>
+
+          <!-- Plantillas Listas para Usar -->
+          <div class="descubrir-section-header" style="margin-top:34px;">
+            <div>
+              <h4><i class="fa-solid fa-layer-group" style="color:#a855f7;"></i> Plantillas de Viaje Listas para Usar</h4>
+              <p>Empieza en segundos con un plan completo día por día</p>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+            <div style="background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+              <div>
+                <span style="font-size:0.75rem; color:var(--verde); font-weight:700; text-transform:uppercase;">4 Días · Italia</span>
+                <h5 style="color:#ffffff; font-size:1.1rem; margin:4px 0 6px 0;">Roma Clásica e Historia</h5>
+                <p style="font-size:0.82rem; color:var(--gris); margin:0;">Coliseo, Vaticano, Trastevere y paseo nocturno de fuentes.</p>
+              </div>
+              <button class="btn-card-primary" onclick="window.location.href='/join/plantillas/roma'">
+                <i class="fa-solid fa-clone"></i> Usar Plantilla Roma
+              </button>
+            </div>
+            <div style="background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+              <div>
+                <span style="font-size:0.75rem; color:#38bdf8; font-weight:700; text-transform:uppercase;">7 Días · Japón</span>
+                <h5 style="color:#ffffff; font-size:1.1rem; margin:4px 0 6px 0;">Tokio Futurista y Tradición</h5>
+                <p style="font-size:0.82rem; color:var(--gris); margin:0;">Shibuya, Asakusa, Akihabara, miradores y gastronomía nipona.</p>
+              </div>
+              <button class="btn-card-primary" onclick="window.location.href='/join/plantillas/tokio'">
+                <i class="fa-solid fa-clone"></i> Usar Plantilla Tokio
+              </button>
+            </div>
+            <div style="background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+              <div>
+                <span style="font-size:0.75rem; color:#fbbf24; font-weight:700; text-transform:uppercase;">3 Días · España</span>
+                <h5 style="color:#ffffff; font-size:1.1rem; margin:4px 0 6px 0;">Barcelona y el Mediterráneo</h5>
+                <p style="font-size:0.82rem; color:var(--gris); margin:0;">Sagrada Familia, Park Güell, Barrio Gótico y playa.</p>
+              </div>
+              <button class="btn-card-primary" onclick="window.location.href='/join/plantillas/barcelona'">
+                <i class="fa-solid fa-clone"></i> Usar Plantilla Barcelona
+              </button>
+            </div>
+          </div>
+        `;
+
+        container.innerHTML = html;
       }
     }
 
-    async function buscarLugaresWikiFeed(ciudad) {
-        if(!ciudad) return;
-        const resultados = document.getElementById('feed-resultados');
-        resultados.innerHTML = '<p style="color:var(--gris); padding:40px; text-align:center; font-size:1.2rem; animation:pulse 1s infinite;">Explorando ${ciudad}...</p>';
-        await buscarLugaresWikiFallback(ciudad, resultados);
+    // Render HTML de Tarjeta de Destino
+    function renderTarjetaDestinoHTML(dest) {
+      const estiloLabels = {
+        cultura: 'Cultura e Historia',
+        playa: 'Playa y Relax',
+        gastronomia: 'Gastronomía',
+        metropolis: 'Gran Metrópolis',
+        economico: 'Bajo Presupuesto'
+      };
+
+      const guiaBtn = dest.guiaUrl ? `
+        <button class="btn-card-secondary" onclick="window.location.href='${dest.guiaUrl}'" title="Ver guía turística completa">
+          <i class="fa-solid fa-book-open"></i> Guía
+        </button>
+      ` : '';
+
+      return `
+        <div class="dest-card-rich">
+          <div class="dest-card-rich-img" style="background-image: url('${dest.img}');">
+            <div class="dest-card-rich-overlay">
+              <div class="dest-card-top-badges">
+                <span class="dest-country-badge">${dest.codigoPais} · ${escapeHtml(dest.pais)}</span>
+                <span class="dest-rating-badge"><i class="fa-solid fa-star"></i> ${dest.rating}</span>
+              </div>
+            </div>
+          </div>
+          <div class="dest-card-rich-content">
+            <div class="dest-card-title-row">
+              <h5>${escapeHtml(dest.nombre)}</h5>
+              <span class="dest-card-budget">~$${dest.presupuestoDia} USD / día</span>
+            </div>
+            <p class="dest-card-desc">${escapeHtml(dest.descripcion)}</p>
+            <div class="dest-card-tags">
+              <span class="dest-tag-pill"><i class="fa-solid fa-tag"></i> ${estiloLabels[dest.estilo] || dest.estilo}</span>
+              <span class="dest-tag-pill"><i class="fa-solid fa-calendar"></i> ${escapeHtml(dest.mejorEpoca.split('/')[0])}</span>
+            </div>
+            <div class="dest-card-actions">
+              <button class="btn-card-primary" onclick="window.empezarViajeDesdeDescubrir('${escapeHtml(dest.nombre)}')">
+                <i class="fa-solid fa-plane"></i> Planear Viaje
+              </button>
+              ${guiaBtn}
+              <button class="btn-card-secondary" onclick="window.seleccionarEnComparador('${dest.id}')" title="Comparar este destino">
+                <i class="fa-solid fa-code-compare"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
     }
-    
-    function cerrarDescubrir() {
-      document.getElementById('modal-descubrir').style.display = 'none';
+
+    // Render HTML de Tarjeta de Actividad
+    function renderTarjetaActividadHTML(act, showAddDropdown = true) {
+      const catLabels = {
+        imperdibles: 'Imperdible',
+        cultura: 'Cultura y Arte',
+        gastronomia: 'Comida y Bebida',
+        naturaleza: 'Aire Libre',
+        gratis: 'Gratis'
+      };
+
+      const precioTxt = act.costo === 0 ? 'Gratis' : `~$${act.costo} USD`;
+
+      return `
+        <div class="activity-card-rich">
+          <div class="activity-card-header">
+            <div>
+              <span style="font-size:0.75rem; color:#38bdf8; font-weight:700; text-transform:uppercase;">${escapeHtml(act.ciudad)}</span>
+              <h5>${escapeHtml(act.nombre)}</h5>
+            </div>
+            <span class="activity-card-cat-badge">${catLabels[act.categoria] || act.categoria}</span>
+          </div>
+          <p class="activity-card-desc">${escapeHtml(act.descripcion)}</p>
+          <div class="activity-card-meta">
+            <span class="activity-meta-item"><i class="fa-regular fa-clock"></i> ${escapeHtml(act.duracion)}</span>
+            <span class="activity-meta-item"><i class="fa-solid fa-sun"></i> ${escapeHtml(act.mejorMomento)}</span>
+            <span class="activity-meta-item"><i class="fa-solid fa-ticket"></i> ${escapeHtml(act.reserva)}</span>
+          </div>
+          <div class="activity-card-footer">
+            <span class="activity-price-tag">${precioTxt}</span>
+            <button class="btn-add-activity-trip" onclick="window.añadirDesdeFeed('${escapeHtml(act.nombre)}', ${act.costo}, '${escapeHtml(act.duracion)}')">
+              <i class="fa-solid fa-plus"></i> Añadir al viaje
+            </button>
+          </div>
+        </div>
+      `;
     }
-    
+
+    // ================== PESTAÑA 2: EXPLORAR DESTINOS ==================
+    let currentDestinosFilter = 'todos';
+    let currentDestinosSearch = '';
+
+    function renderCatalogoDestinos(tagFiltro = 'todos') {
+      currentDestinosFilter = tagFiltro;
+      const grid = document.getElementById('gridDestinosCatalogo');
+      if (!grid) return;
+
+      const filtrados = PLUX_CURATED_DESTINATIONS.filter(d => {
+        const matchesTag = (currentDestinosFilter === 'todos') || (d.estilo === currentDestinosFilter);
+        const q = currentDestinosSearch.toLowerCase().trim();
+        const matchesSearch = !q || d.nombre.toLowerCase().includes(q) || d.pais.toLowerCase().includes(q) || d.continente.toLowerCase().includes(q);
+        return matchesTag && matchesSearch;
+      });
+
+      if (filtrados.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; padding:40px; text-align:center; color:var(--gris);">
+            <i class="fa-solid fa-magnifying-glass" style="font-size:2rem; margin-bottom:12px; display:block; opacity:0.4;"></i>
+            No encontramos destinos con ese filtro. Prueba otra búsqueda.
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filtrados.forEach(dest => {
+        html += renderTarjetaDestinoHTML(dest);
+      });
+      grid.innerHTML = html;
+    }
+
+    function filtrarDestinosPorTag(tag, btnEl) {
+      if (btnEl) {
+        document.querySelectorAll('#destinosCategoryChips .filter-chip').forEach(c => c.classList.remove('active'));
+        btnEl.classList.add('active');
+      }
+      renderCatalogoDestinos(tag);
+    }
+
+    function filtrarDestinosDescubrir(val) {
+      currentDestinosSearch = val || '';
+      renderCatalogoDestinos(currentDestinosFilter);
+    }
+
+    // ================== PESTAÑA 3: ACTIVIDADES ==================
+    let currentActividadesFilter = 'todas';
+    let currentActividadesSearch = '';
+
+    function renderCatalogoActividades(catFiltro = 'todas') {
+      currentActividadesFilter = catFiltro;
+      const grid = document.getElementById('gridActividadesCatalogo');
+      if (!grid) return;
+
+      const filtradas = PLUX_CURATED_ACTIVITIES.filter(a => {
+        const matchesCat = (currentActividadesFilter === 'todas') || (a.categoria === currentActividadesFilter);
+        const q = currentActividadesSearch.toLowerCase().trim();
+        const matchesSearch = !q || a.nombre.toLowerCase().includes(q) || a.ciudad.toLowerCase().includes(q) || a.descripcion.toLowerCase().includes(q);
+        return matchesCat && matchesSearch;
+      });
+
+      if (filtradas.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; padding:40px; text-align:center; color:var(--gris);">
+            <i class="fa-solid fa-ticket" style="font-size:2rem; margin-bottom:12px; display:block; opacity:0.4;"></i>
+            No se encontraron actividades con ese criterio.
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filtradas.forEach(act => {
+        html += renderTarjetaActividadHTML(act);
+      });
+      grid.innerHTML = html;
+    }
+
+    function filtrarActividadesPorCategoria(cat, btnEl) {
+      if (btnEl) {
+        document.querySelectorAll('#actividadesCategoryChips .filter-chip').forEach(c => c.classList.remove('active'));
+        btnEl.classList.add('active');
+      }
+      renderCatalogoActividades(cat);
+    }
+
+    function filtrarActividadesDescubrir(val) {
+      currentActividadesSearch = val || '';
+      renderCatalogoActividades(currentActividadesFilter);
+    }
+
+    // ================== PESTAÑA 4: COMPARADOR ==================
+    function inicializarComparador() {
+      const sel1 = document.getElementById('compDestino1');
+      const sel2 = document.getElementById('compDestino2');
+      const sel3 = document.getElementById('compDestino3');
+
+      if (sel1 && sel2 && sel3) {
+        let opts = '';
+        PLUX_CURATED_DESTINATIONS.forEach(d => {
+          opts += `<option value="${d.id}">${escapeHtml(d.nombre)} (${escapeHtml(d.pais)})</option>`;
+        });
+        sel1.innerHTML = opts;
+        sel2.innerHTML = opts;
+        sel3.innerHTML = `<option value="">-- Ninguno (Comparar 2) --</option>` + opts;
+
+        sel1.value = 'roma';
+        sel2.value = 'tokio';
+        sel3.value = '';
+
+        actualizarComparativaDestinos();
+      }
+
+      // Actividades select
+      const actSel1 = document.getElementById('compActividad1');
+      const actSel2 = document.getElementById('compActividad2');
+      if (actSel1 && actSel2) {
+        let actOpts = '';
+        PLUX_CURATED_ACTIVITIES.forEach(a => {
+          actOpts += `<option value="${a.id}">${escapeHtml(a.ciudad)}: ${escapeHtml(a.nombre)}</option>`;
+        });
+        actSel1.innerHTML = actOpts;
+        actSel2.innerHTML = actOpts;
+
+        if (PLUX_CURATED_ACTIVITIES[0]) actSel1.value = PLUX_CURATED_ACTIVITIES[0].id;
+        if (PLUX_CURATED_ACTIVITIES[1]) actSel2.value = PLUX_CURATED_ACTIVITIES[1].id;
+
+        actualizarComparativaActividades();
+      }
+    }
+
+    function cambiarSubswitchComparador(tipo) {
+      document.querySelectorAll('.subswitch-btn').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById(`subswitch-${tipo}`);
+      if (btn) btn.classList.add('active');
+
+      const secDestinos = document.getElementById('comparador-seccion-destinos');
+      const secActividades = document.getElementById('comparador-seccion-actividades');
+
+      if (tipo === 'destinos') {
+        if (secDestinos) secDestinos.style.display = 'block';
+        if (secActividades) secActividades.style.display = 'none';
+        actualizarComparativaDestinos();
+      } else {
+        if (secDestinos) secDestinos.style.display = 'none';
+        if (secActividades) secActividades.style.display = 'block';
+        actualizarComparativaActividades();
+      }
+    }
+
+    function seleccionarEnComparador(destId) {
+      cambiarTabDescubrir('comparador');
+      cambiarSubswitchComparador('destinos');
+      const sel2 = document.getElementById('compDestino2');
+      if (sel2) {
+        sel2.value = destId;
+        actualizarComparativaDestinos();
+      }
+    }
+
+    function actualizarComparativaDestinos() {
+      const d1Id = document.getElementById('compDestino1')?.value;
+      const d2Id = document.getElementById('compDestino2')?.value;
+      const d3Id = document.getElementById('compDestino3')?.value;
+      const resContainer = document.getElementById('comparador-destinos-resultado');
+      if (!resContainer) return;
+
+      const selected = [
+        PLUX_CURATED_DESTINATIONS.find(d => d.id === d1Id),
+        PLUX_CURATED_DESTINATIONS.find(d => d.id === d2Id),
+        PLUX_CURATED_DESTINATIONS.find(d => d.id === d3Id)
+      ].filter(Boolean);
+
+      if (selected.length < 2) {
+        resContainer.innerHTML = '<p style="color:var(--gris); text-align:center; padding:20px;">Selecciona al menos 2 destinos para comparar.</p>';
+        return;
+      }
+
+      let html = '<div class="comp-matrix-grid">';
+      selected.forEach(d => {
+        html += `
+          <div class="comp-matrix-card">
+            <div class="comp-matrix-hero">
+              <img src="${d.img}" alt="${escapeHtml(d.nombre)}" class="comp-matrix-hero-img">
+              <div class="comp-matrix-hero-text">
+                <h4>${escapeHtml(d.nombre)}</h4>
+                <span>${escapeHtml(d.pais)} · ${d.codigoPais}</span>
+              </div>
+            </div>
+            <div class="comp-metrics-list">
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-coins"></i> Presupuesto / día</span>
+                <span class="comp-metric-value highlight-green">~$${d.presupuestoDia} USD</span>
+              </div>
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-star"></i> Puntuación Plux</span>
+                <span class="comp-metric-value highlight-blue">${d.rating} / 5.0</span>
+              </div>
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-cloud-sun"></i> Mejor época</span>
+                <span class="comp-metric-value" style="font-size:0.75rem;">${escapeHtml(d.mejorEpoca)}</span>
+              </div>
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-heart"></i> Vibe de viaje</span>
+                <span class="comp-metric-value" style="font-size:0.75rem;">${escapeHtml(d.vibe)}</span>
+              </div>
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-train-subway"></i> Movilidad</span>
+                <span class="comp-metric-value">${escapeHtml(d.transporte)}</span>
+              </div>
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-shield-halved"></i> Seguridad</span>
+                <span class="comp-metric-value">${escapeHtml(d.seguridad)}</span>
+              </div>
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-money-bill"></i> Moneda / Idioma</span>
+                <span class="comp-metric-value">${escapeHtml(d.moneda)} / ${escapeHtml(d.idioma)}</span>
+              </div>
+              <div style="margin-top:6px;">
+                <span class="comp-metric-label" style="margin-bottom:6px;"><i class="fa-solid fa-monument"></i> Lugares icónicos:</span>
+                <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                  ${d.lugaresClave.map(l => `<span class="dest-tag-pill">${escapeHtml(l)}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:auto; padding-top:12px;">
+              <button class="btn-card-primary" style="width:100%;" onclick="window.empezarViajeDesdeDescubrir('${escapeHtml(d.nombre)}')">
+                <i class="fa-solid fa-check"></i> Elegir ${escapeHtml(d.nombre)}
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      resContainer.innerHTML = html;
+    }
+
+    function actualizarComparativaActividades() {
+      const a1Id = document.getElementById('compActividad1')?.value;
+      const a2Id = document.getElementById('compActividad2')?.value;
+      const resContainer = document.getElementById('comparador-actividades-resultado');
+      if (!resContainer) return;
+
+      const act1 = PLUX_CURATED_ACTIVITIES.find(a => a.id === a1Id);
+      const act2 = PLUX_CURATED_ACTIVITIES.find(a => a.id === a2Id);
+
+      if (!act1 || !act2) {
+        resContainer.innerHTML = '<p style="color:var(--gris); text-align:center; padding:20px;">Selecciona 2 actividades para comparar.</p>';
+        return;
+      }
+
+      const items = [act1, act2];
+      let html = '<div class="comp-matrix-grid">';
+      items.forEach(a => {
+        html += `
+          <div class="comp-matrix-card">
+            <div class="comp-matrix-hero">
+              <div style="width:48px; height:48px; background:linear-gradient(135deg, #6366f1, #8b5cf6); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.4rem;">
+                <i class="fa-solid fa-ticket"></i>
+              </div>
+              <div class="comp-matrix-hero-text">
+                <h4 style="font-size:1.1rem;">${escapeHtml(a.nombre)}</h4>
+                <span>${escapeHtml(a.ciudad)}</span>
+              </div>
+            </div>
+            <p style="font-size:0.83rem; color:rgba(255,255,255,0.75); margin:0;">${escapeHtml(a.descripcion)}</p>
+            <div class="comp-metrics-list">
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-coins"></i> Costo estimado</span>
+                <span class="comp-metric-value highlight-green">${a.costo === 0 ? 'Gratis' : `~$${a.costo} USD`}</span>
+              </div>
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-regular fa-clock"></i> Duración sugerida</span>
+                <span class="comp-metric-value">${escapeHtml(a.duracion)}</span>
+              </div>
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-sun"></i> Momento ideal</span>
+                <span class="comp-metric-value highlight-blue">${escapeHtml(a.mejorMomento)}</span>
+              </div>
+              <div class="comp-metric-row">
+                <span class="comp-metric-label"><i class="fa-solid fa-ticket"></i> Tipo de reserva</span>
+                <span class="comp-metric-value">${escapeHtml(a.reserva)}</span>
+              </div>
+            </div>
+            <div style="margin-top:auto; padding-top:12px;">
+              <button class="btn-add-activity-trip" style="width:100%; justify-content:center; padding:10px;" onclick="window.añadirDesdeFeed('${escapeHtml(a.nombre)}', ${a.costo}, '${escapeHtml(a.duracion)}')">
+                <i class="fa-solid fa-plus"></i> Añadir a mi itinerario
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      resContainer.innerHTML = html;
+    }
+
+    // Acción para empezar viaje desde un destino elegido
+    function empezarViajeDesdeDescubrir(ciudad) {
+      cerrarDescubrir();
+      if (typeof window.decisionViajeNuevo === 'function') {
+        window.decisionViajeNuevo();
+      }
+      setTimeout(() => {
+        const destInput = document.getElementById('nuevoDestino');
+        if (destInput) {
+          destInput.value = ciudad;
+        }
+        if (typeof window.agregarDestino === 'function') {
+          window.agregarDestino();
+        }
+        if (typeof window.showToast === 'function') {
+          window.showToast(`Destino ${ciudad} añadido a tu nuevo viaje`, 'success');
+        }
+      }, 250);
+    }
+
+    // Acción para añadir actividad desde el feed al viaje
+    function añadirDesdeFeed(titulo, costo = 0, duracion = '60') {
+      if (!titulo) return;
+
+      // Asegurar que exista al menos un día
+      if (!dias || dias.length === 0) {
+        if (typeof agregarDia === 'function') {
+          agregarDia();
+        } else {
+          dias = [{ fecha: '', eventos: [] }];
+        }
+      }
+
+      const durMin = parseInt(duracion) || 60;
+      const targetDiaIndex = 0; // Añadir al primer día o día activo
+
+      if (!dias[targetDiaIndex].eventos) {
+        dias[targetDiaIndex].eventos = [];
+      }
+
+      dias[targetDiaIndex].eventos.push({
+        hora: '10:00',
+        titulo: titulo,
+        notas: 'Añadido desde Descubrir Plux',
+        costo: Number(costo) || 0,
+        duracion: durMin,
+        categoria: 'Turismo'
+      });
+
+      if (typeof renderizarEventosDia === 'function') {
+        renderizarEventosDia();
+      }
+      if (typeof guardarViajeAutomatico === 'function') {
+        guardarViajeAutomatico();
+      }
+
+      if (typeof window.showToast === 'function') {
+        window.showToast(`"${titulo}" añadido a tu viaje`, 'success');
+      } else {
+        alert(`"${titulo}" añadido al día 1`);
+      }
+    }
+
+    // Búsqueda IA asistente
     async function buscarLugaresPorDestino(ciudad) {
       if (!ciudad) return;
       const resultados = document.getElementById('feed-resultados');
-      resultados.innerHTML = `<p style="color:var(--gris); padding:40px; text-align:center; font-size:1.2rem; animation:pulse 1s infinite;">🤖 Analizando ${ciudad} con IA...</p>`;
+      if (!resultados) return;
+      resultados.innerHTML = `<p style="color:var(--gris); padding:25px; text-align:center; font-size:1.05rem; animation:pulse 1s infinite;"><i class="fa-solid fa-sparkles" style="color:var(--verde);"></i> Analizando ${escapeHtml(ciudad)} con IA...</p>`;
       
       try {
-        const prompt = `Eres un experto guía turístico. Recomienda 10 lugares imperdibles en ${ciudad}. Devuelve ESTRICTAMENTE un JSON: {"lugares":[{"titulo":"Nombre","descripcion":"Breve descripción"}]}`;
+        const prompt = `Eres un experto guía turístico. Recomienda 6 lugares o actividades imperdibles en ${ciudad}. Devuelve ESTRICTAMENTE un JSON: {"lugares":[{"titulo":"Nombre","descripcion":"Breve descripción","costo":15,"duracion":"90 min"}]}`;
         const textContent = await callAI(prompt);
         if (!textContent) throw new Error('No response');
         
         const jsonStr = textContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         const suggestions = JSON.parse(jsonStr);
         
-        let html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px; padding:20px;">';
+        let html = '<div class="descubrir-grid-actividades" style="margin-top:16px;">';
         suggestions.lugares.forEach(p => {
-            html += `
-              <div class="feed-card" style="display:flex; flex-direction:column; background:rgba(0,0,0,0.3); border-radius:12px; border:1px solid var(--border); padding:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                <div style="flex:1;">
-                  <h4 style="color:var(--rosa); margin-bottom:10px; line-height:1.2; font-size:1.1rem;">${p.titulo}</h4>
-                  <p style="font-size:0.85rem; color:var(--texto); opacity:0.8; height:4.8em; overflow:hidden; line-height:1.6;">${p.descripcion}</p>
+          html += `
+            <div class="activity-card-rich">
+              <div class="activity-card-header">
+                <div>
+                  <span style="font-size:0.75rem; color:var(--verde); font-weight:700; text-transform:uppercase;">${escapeHtml(ciudad)}</span>
+                  <h5>${escapeHtml(p.titulo)}</h5>
                 </div>
-                <div style="margin-top:15px; text-align:right;">
-                  <button class="btn-add-feed" onclick="añadirDesdeFeed('${p.titulo.replace(/'/g, "\\'")}')" style="padding:8px 20px;">+ Añadir al viaje</button>
-                </div>
+                <span class="activity-card-cat-badge">Recomendado IA</span>
               </div>
-            `;
+              <p class="activity-card-desc">${escapeHtml(p.descripcion)}</p>
+              <div class="activity-card-meta">
+                <span class="activity-meta-item"><i class="fa-regular fa-clock"></i> ${escapeHtml(p.duracion || '60 min')}</span>
+                <span class="activity-meta-item"><i class="fa-solid fa-coins"></i> ~$${p.costo || 0} USD</span>
+              </div>
+              <div class="activity-card-footer">
+                <span class="activity-price-tag">${p.costo ? `~$${p.costo} USD` : 'Gratis / Consulta'}</span>
+                <button class="btn-add-activity-trip" onclick="window.añadirDesdeFeed('${escapeHtml(p.titulo)}', ${p.costo || 0}, '${escapeHtml(p.duracion || '60')}')">
+                  <i class="fa-solid fa-plus"></i> Añadir
+                </button>
+              </div>
+            </div>
+          `;
         });
         html += '</div>';
         resultados.innerHTML = html;
-        
-        // Supplement with Wikipedia results (half preloaded) - add separator
-        setTimeout(() => {
-          const separator = document.createElement('div');
-          separator.style.cssText = 'text-align:center; padding:20px; color:var(--gris); font-size:0.9rem; border-top:1px solid var(--border); margin-top:20px;';
-          separator.innerHTML = '📚 Más lugares de Wikipedia';
-          resultados.appendChild(separator);
-          buscarLugaresWikiFallback(ciudad, resultados, true);
-        }, 500);
       } catch(e) {
         console.error('AI Feed Error:', e);
-        resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">IA no disponible. Cargando desde Wikipedia...</p>';
-        buscarLugaresWikiFallback(ciudad, resultados);
+        resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">No se pudo completar la consulta con IA. Intenta con otro término.</p>';
       }
     }
-    
-    async function buscarLugaresWikiFallback(ciudad, resultados, isSupplement = false) {
-      try {
-        const coords = await geocode(ciudad);
-        if (!coords) {
-          if (!isSupplement) {
-            resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">No se pudo ubicar el destino.</p>';
-          }
-          return;
-        }
 
-        let data = null;
-        const wikiUserAgent = '&Api-User-Agent=PluxTravelApp/6.0+(https://nibecarcofeben.com)';
-        const wikiParams = `action=query&prop=extracts|pageimages&exintro&explaintext&exchars=120&pithumbsize=400&generator=geosearch&ggsradius=15000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=25&format=json&origin=*${wikiUserAgent}`;
-
-        try {
-          const res = await fetch(`https://es.wikipedia.org/w/api.php?${wikiParams}`);
-          if (res.ok) data = await res.json();
-        } catch (e) {
-          console.warn('Wikipedia ES error:', e);
-        }
-
-        if (!data || !data.query || !data.query.pages) {
-          try {
-            const resEn = await fetch(`https://en.wikipedia.org/w/api.php?${wikiParams}`);
-            if (resEn.ok) data = await resEn.json();
-          } catch (e) {
-            console.warn('Wikipedia EN error:', e);
-          }
-        }
-        
-        if (!data || !data.query || !data.query.pages) {
-          if (!isSupplement) {
-            resultados.innerHTML = `
-              <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px; padding:20px;">
-                <div class="feed-card" style="display:flex; flex-direction:column; min-height:360px; background:var(--card); border-radius:12px; overflow:hidden; padding:20px;">
-                  <h4 style="color:var(--verde); margin-bottom:10px;">🏛️ Centro Histórico de ${ciudad}</h4>
-                  <p style="font-size:0.85rem; color:var(--texto); opacity:0.8; flex:1;">Puntos de interés principales, plazas y paseos tradicionales en ${ciudad}.</p>
-                  <button class="btn-add-feed" onclick="añadirDesdeFeed('Centro Histórico de ${ciudad.replace(/'/g, "\\'")}')" style="padding:8px 20px; align-self:flex-end;">+ Añadir al viaje</button>
-                </div>
-                <div class="feed-card" style="display:flex; flex-direction:column; min-height:360px; background:var(--card); border-radius:12px; overflow:hidden; padding:20px;">
-                  <h4 style="color:var(--azul); margin-bottom:10px;">🎨 Atracciones Culturales y Paseos</h4>
-                  <p style="font-size:0.85rem; color:var(--texto); opacity:0.8; flex:1;">Exposiciones, patrimonio y lugares culturales emblemáticos de ${ciudad}.</p>
-                  <button class="btn-add-feed" onclick="añadirDesdeFeed('Atracciones Culturales de ${ciudad.replace(/'/g, "\\'")}')" style="padding:8px 20px; align-self:flex-end;">+ Añadir al viaje</button>
-                </div>
-              </div>
-            `;
-          }
-          return;
-        }
-        
-        const pages = data.query.pages;
-        const places = Object.values(pages).filter(p => 
-          !p.title.match(/\d{3,4}/) && 
-          !['incendio','batalla','muerte','evento','concierto','festival','estación','metro','subway','parada','línea de colectivo','línea de', 'reunión', 'partido de', 'conferencia'].some(w => p.title.toLowerCase().includes(w)) &&
-          p.title.length > 2
-        );
-        
-        // If supplement, create new grid container instead of appending to existing HTML
-        let html = '';
-        if (!isSupplement) {
-          html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px; padding:20px;">';
-        } else {
-          html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px; padding:20px; padding-top:0;">';
-        }
-        
-        places.slice(0, isSupplement ? 6 : 12).forEach(place => {
-          const imgSrc = (place.thumbnail && place.thumbnail.source) ? place.thumbnail.source : 'https://images.unsplash.com/photo-1503220317375-aaad61436b1b?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80';
-          const summary = place.extract ? place.extract : 'Punto de interés histórico / cultural';
-          
-          html += `
-          <div class="feed-card" style="display:flex; flex-direction:column; min-height:420px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); background:var(--card); border-radius:12px; overflow:hidden;">
-            <img src="${imgSrc}" class="feed-img" alt="${place.title}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1503220317375-aaad61436b1b?auto=format&fit=crop&w=400&q=80'" style="height:220px; width:100%; object-fit:cover;">
-            <div class="feed-body" style="padding:15px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
-              <div>
-                <h4 style="color:var(--rosa); margin-bottom:10px; line-height:1.2; font-size:1.1rem;">${place.title}</h4>
-                <p style="font-size:0.85rem; color:var(--texto); opacity:0.8; height:4.8em; overflow:hidden; line-height:1.6;">${summary}...</p>
-              </div>
-              <div style="margin-top:15px; text-align:right;">
-                <button class="btn-add-feed" onclick="event.stopPropagation(); añadirDesdeFeed('${place.title.replace(/'/g, "\\'")}')" style="padding:8px 20px;">+ Añadir al viaje</button>
-              </div>
-            </div>
-          </div>`;
-        });
-        html += '</div>';
-        
-        if (isSupplement) {
-          // Append new grid container to existing results
-          const newGrid = document.createElement('div');
-          newGrid.innerHTML = html;
-          resultados.appendChild(newGrid);
-        } else {
-          resultados.innerHTML = html;
-        }
-      } catch (e) {
-        console.error('Wiki Fallback Error:', e);
-        resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">Error al cargar el feed alternativo.</p>';
-      }
-    }
+    // Exponer funciones en window
+    window.abrirDescubrir = abrirDescubrir;
+    window.cerrarDescubrir = cerrarDescubrir;
+    window.cambiarTabDescubrir = cambiarTabDescubrir;
+    window.renderDescubrirParaTi = renderDescubrirParaTi;
+    window.renderCatalogoDestinos = renderCatalogoDestinos;
+    window.renderCatalogoActividades = renderCatalogoActividades;
+    window.filtrarDestinosPorTag = filtrarDestinosPorTag;
+    window.filtrarDestinosDescubrir = filtrarDestinosDescubrir;
+    window.filtrarActividadesPorCategoria = filtrarActividadesPorCategoria;
+    window.filtrarActividadesDescubrir = filtrarActividadesDescubrir;
+    window.inicializarComparador = inicializarComparador;
+    window.cambiarSubswitchComparador = cambiarSubswitchComparador;
+    window.seleccionarEnComparador = seleccionarEnComparador;
+    window.actualizarComparativaDestinos = actualizarComparativaDestinos;
+    window.actualizarComparativaActividades = actualizarComparativaActividades;
+    window.empezarViajeDesdeDescubrir = empezarViajeDesdeDescubrir;
+    window.añadirDesdeFeed = añadirDesdeFeed;
+    window.buscarLugaresPorDestino = buscarLugaresPorDestino;
 
     async function verDetalleLugar(pageid, titulo) {
         const modal = document.getElementById('modal-detalle-lugar');

@@ -12530,6 +12530,46 @@ async function exportarPDF() {
       return `<span class="tpl-author">@${escapeHtml(clean)} ${hasStar ? '<span class="star-badge" title="Creador experimentado de Plux (múltiples plantillas)">⭐</span>' : ''}</span>`;
     }
 
+    const INDEXNOW_KEY = 'dc826f48264d48e9b0c4f208eebc4963';
+    const INDEXNOW_KEY_LOCATION = 'https://plux.nibecarcofeben.com/dc826f48264d48e9b0c4f208eebc4963.txt';
+
+    function notificarIndexNow(targetUrl) {
+      if (!targetUrl) return;
+      try {
+        const encUrl = encodeURIComponent(targetUrl);
+        const encLoc = encodeURIComponent(INDEXNOW_KEY_LOCATION);
+        const bingUrl = `https://www.bing.com/indexnow?url=${encUrl}&key=${INDEXNOW_KEY}&keyLocation=${encLoc}`;
+        const apiNowUrl = `https://api.indexnow.org/indexnow?url=${encUrl}&key=${INDEXNOW_KEY}&keyLocation=${encLoc}`;
+
+        if (typeof fetch === 'function') {
+          fetch(bingUrl, { method: 'GET', mode: 'no-cors' }).catch(() => {});
+          fetch(apiNowUrl, { method: 'GET', mode: 'no-cors' }).catch(() => {});
+        } else if (typeof Image !== 'undefined') {
+          new Image().src = bingUrl;
+          new Image().src = apiNowUrl;
+        }
+        console.log('[IndexNow] Despacho automatico enviado a Bing para:', targetUrl);
+      } catch (err) {
+        console.warn('[IndexNow] Error despachando URL:', err);
+      }
+    }
+    window.notificarIndexNow = notificarIndexNow;
+
+    function compartirPlantillaPublica(id, nombre, event) {
+      if (event) event.stopPropagation();
+      const shareUrl = `https://plux.nibecarcofeben.com/join/plantillas/${id}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showToast(`Enlace de plantilla copiado: ${shareUrl}`, 'success');
+        }).catch(() => {
+          prompt('Copia el enlace de esta plantilla:', shareUrl);
+        });
+      } else {
+        prompt('Copia el enlace de esta plantilla:', shareUrl);
+      }
+    }
+    window.compartirPlantillaPublica = compartirPlantillaPublica;
+
     function switchPlantillasSubtab(subtabName) {
       const subtabs = ['oficiales', 'comunidad', 'mias'];
       subtabs.forEach(name => {
@@ -12658,6 +12698,10 @@ async function exportarPDF() {
               <button class="plantilla-save-btn" onclick="window.guardarPlantillaEnMisPlantillas('${tpl.id}', 'comunidad', event)" title="Guardar copia en Mis Plantillas" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                 <span>Guardar</span>
+              </button>
+              <button class="plantilla-share-btn" onclick="window.compartirPlantillaPublica('${tpl.id}', '${escapeHtml(tpl.nombre)}', event)" title="Compartir enlace de plantilla" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                <span>Compartir</span>
               </button>
               <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', 'comunidad')">
                 Clonar
@@ -12805,21 +12849,32 @@ async function exportarPDF() {
         if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
           db = firebase.firestore();
         }
+        const canonicalPublicUrl = `https://plux.nibecarcofeben.com/join/plantillas/${tplId}`;
+        newTemplate.publicUrl = canonicalPublicUrl;
+
         if (db) {
           db.collection("plux_plantillas_comunidad").doc(tplId).set({
             ...newTemplate,
+            publicUrl: canonicalPublicUrl,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           }).then(() => {
             console.log("Plantilla publicada en Firestore:", tplId);
+            if (typeof notificarIndexNow === 'function') {
+              notificarIndexNow(canonicalPublicUrl);
+            }
             if (typeof initCommunityTemplatesListener === 'function') initCommunityTemplatesListener();
           }).catch(err => {
             console.error("Error guardando plantilla pública en Firestore:", err);
           });
+        } else {
+          if (typeof notificarIndexNow === 'function') {
+            notificarIndexNow(canonicalPublicUrl);
+          }
         }
       }
 
       if (input) input.value = '';
-      showToast(`¡Plantilla "${nombre}" guardada ${isPublic ? 'y publicada en la Comunidad' : ''}! 🚀`, 'success');
+      showToast(`Plantilla "${nombre}" guardada ${isPublic ? 'y despachada a IndexNow para indexacion en Bing' : ''}`, 'success');
       trackEvent('save_template', {
         template_name: nombre,
         is_public: isPublic,
@@ -16975,10 +17030,42 @@ async function exportarPDF() {
       });
     }
 
+    // 3. Check loaded firestore community templates
+    if (!matchedTemplate && typeof firestoreCommunityTemplates !== 'undefined' && Array.isArray(firestoreCommunityTemplates)) {
+      matchedTemplate = firestoreCommunityTemplates.find(t => {
+        const tplName = (t.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
+        const tplId = (t.id || '').toLowerCase().replace(/^(com_|tpl_)/, '').replace(/[\s\-_]/g, "");
+        const destName = (t.destinos && t.destinos[0]?.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
+        return t.id === ciudadRaw || tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
+      });
+    }
+
     if (matchedTemplate) {
       if (typeof clonarPlantillaCompleta === 'function') {
-        clonarPlantillaCompleta(matchedTemplate.id, matchedTemplate.id.startsWith('com_') ? 'comunidad' : 'oficial');
+        clonarPlantillaCompleta(matchedTemplate.id, (matchedTemplate.id.startsWith('com_') || matchedTemplate.id.startsWith('tpl_')) ? 'comunidad' : 'oficial');
         return;
+      }
+    }
+
+    // 4. If looks like a template ID and not matched in memory, fetch asynchronously from Firestore
+    if (!matchedTemplate && (ciudadRaw.startsWith('com_') || ciudadRaw.startsWith('tpl_') || ciudadRaw.length >= 8)) {
+      if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
+        db = firebase.firestore();
+      }
+      if (db) {
+        db.collection("plux_plantillas_comunidad").doc(ciudadRaw).get().then(doc => {
+          if (doc.exists) {
+            const tData = doc.data();
+            if (typeof firestoreCommunityTemplates !== 'undefined' && !firestoreCommunityTemplates.some(t => t.id === tData.id)) {
+              firestoreCommunityTemplates.push(tData);
+            }
+            if (typeof clonarPlantillaCompleta === 'function') {
+              clonarPlantillaCompleta(tData.id, 'comunidad');
+            }
+          }
+        }).catch(err => {
+          console.warn('[Plantillas] No se pudo cargar plantilla desde Firestore:', err);
+        });
       }
     }
 

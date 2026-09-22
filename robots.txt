@@ -1,0 +1,16 @@
+# Robots.txt for Plux (https://plux.nibecarcofeben.com/)
+User-agent: *
+Allow: /
+
+# Search Engine Crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Canonical Sitemap
+Sitemap: https://plux.nibecarcofeben.com/sitemap.xml

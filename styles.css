@@ -5022,36 +5022,38 @@ body.mode-reader #mobileMenuCloneBtn {
 #modal-descubrir {
   position: fixed !important;
   inset: 0 !important;
-  background: rgba(8, 12, 22, 0.95) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #080c16 !important;
   display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-  padding: 15px;
-  box-sizing: border-box;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  z-index: 99999 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .descubrir-modal-box {
-  background: linear-gradient(145deg, rgba(17, 24, 39, 0.98), rgba(11, 15, 25, 0.98)) !important;
-  border: 1px solid rgba(56, 189, 248, 0.3) !important;
-  border-radius: 24px !important;
-  max-width: 1200px !important;
-  width: 95vw !important;
-  height: 92vh !important;
-  min-height: 550px !important;
-  max-height: 900px !important;
+  background: linear-gradient(180deg, #0b0f19 0%, #060911 100%) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 40px rgba(99, 102, 241, 0.18) !important;
-  animation: scaleIn 0.3s ease;
+  box-shadow: none !important;
+  animation: fadeIn 0.2s ease !important;
   position: relative !important;
+  margin: 0 !important;
 }
 
 .descubrir-header {
-  padding: 16px 24px !important;
+  padding: 16px 32px !important;
   background: rgba(15, 23, 42, 0.95) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   display: flex !important;
@@ -5108,9 +5110,9 @@ body.mode-reader #mobileMenuCloneBtn {
 /* Nav Tabs Bar */
 .descubrir-nav-tabs {
   display: flex;
-  gap: 8px;
-  padding: 10px 24px;
-  background: rgba(10, 15, 26, 0.9);
+  gap: 10px;
+  padding: 12px 32px;
+  background: rgba(10, 15, 26, 0.95);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   overflow-x: auto;
   scrollbar-width: none;
@@ -5125,9 +5127,9 @@ body.mode-reader #mobileMenuCloneBtn {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--gris);
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 14px;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
@@ -5152,11 +5154,11 @@ body.mode-reader #mobileMenuCloneBtn {
 
 /* Body Container */
 .descubrir-body-container {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
-  padding: 24px;
+  padding: 28px 32px 60px;
   box-sizing: border-box;
-  background: radial-gradient(circle at top center, rgba(30, 41, 59, 0.2) 0%, rgba(11, 15, 25, 0) 70%);
+  background: radial-gradient(circle at top center, rgba(30, 41, 59, 0.25) 0%, rgba(11, 15, 25, 0) 70%);
 }
 
 .descubrir-tab-pane {
@@ -5681,12 +5683,14 @@ body.mode-reader #mobileMenuCloneBtn {
 
 .comp-select-box select {
   width: 100%;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 16px;
+  background-color: #0f172a !important;
+  background: #0f172a !important;
+  color-scheme: dark !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 12px;
-  color: #ffffff;
-  font-size: 0.9rem;
+  color: #ffffff !important;
+  font-size: 0.95rem;
   font-weight: 600;
   outline: none;
   cursor: pointer;
@@ -5696,6 +5700,14 @@ body.mode-reader #mobileMenuCloneBtn {
 .comp-select-box select:focus {
   border-color: #38bdf8;
   box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}
+
+.comp-select-box select option {
+  background-color: #0f172a !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  padding: 12px 14px !important;
+  font-size: 0.95rem !important;
 }
 
 .comp-vs-badge {

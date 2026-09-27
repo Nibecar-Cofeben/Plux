@@ -9861,7 +9861,20 @@ function crearCanvasLogoPlux(w = 240, h = 95) {
   ctx.fillStyle = grad;
 
   ctx.beginPath();
-  ctx.roundRect(4, 4, w - 8, h - 8, r - 4);
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(4, 4, w - 8, h - 8, r - 4);
+  } else {
+    const rx = 4, ry = 4, rw = w - 8, rh = h - 8, rad = Math.min(r - 4, rh / 2);
+    ctx.moveTo(rx + rad, ry);
+    ctx.lineTo(rx + rw - rad, ry);
+    ctx.arcTo(rx + rw, ry, rx + rw, ry + rad, rad);
+    ctx.lineTo(rx + rw, ry + rh - rad);
+    ctx.arcTo(rx + rw, ry + rh, rx + rw - rad, ry + rh, rad);
+    ctx.lineTo(rx + rad, ry + rh);
+    ctx.arcTo(rx, ry + rh, rx, ry + rh - rad, rad);
+    ctx.lineTo(rx, ry + rad);
+    ctx.arcTo(rx, ry, rx + rad, ry, rad);
+  }
   ctx.fill();
 
   // Reset shadow for text
@@ -11503,31 +11516,132 @@ async function compartirTravelCard() {
 window.compartirTravelCard = compartirTravelCard;
 
 
-// ================== EXPORTAR PDF (DOSSIER EDITORIAL PLUX) ==================
-async function exportarPDF() {
-  if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
-    if (typeof showToast === 'function') showToast('Librería PDF no disponible', 'error');
-    return;
+// Helper: Guarantees jsPDF and autotable are ready
+async function asegurarLibreriasPDF() {
+  function cargarScript(src) {
+    return new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
   }
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
+  let jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+  if (!jsPDFClass) {
+    for (let i = 0; i < 20; i++) {
+      await new Promise(r => setTimeout(r, 100));
+      jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+      if (jsPDFClass) break;
+    }
+  }
 
+  if (!jsPDFClass) {
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+  }
+
+  if (jsPDFClass) {
+    const hasAutoTable = (jsPDFClass.API && typeof jsPDFClass.API.autoTable === 'function') || (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && typeof window.jspdf.jsPDF.API.autoTable === 'function');
+    if (!hasAutoTable) {
+      const loaded = await cargarScript('/jspdf.plugin.autotable.min.js');
+      if (!loaded) {
+        await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+      }
+    }
+  }
+
+  return jsPDFClass;
+}
+
+// ================== EXPORTAR PDF (DOSSIER EDITORIAL PLUX) ==================
+async function exportarPDF() {
   const langKey = (typeof currentLang !== 'undefined' && (currentLang === 'en' || currentLang === 'es')) ? currentLang : 'es';
 
   if (typeof showToast === 'function') {
     showToast(langKey === 'es' ? 'Compilando Dossier Oficial de Plux...' : 'Compiling official Plux Dossier...', 'info');
   }
 
-  // 1. Ensure trip exists in Firestore and get Reader URL
-  const shareUrl = await asegurarViajeEnNubeParaCompartir();
+  try {
+    const jsPDFClass = await asegurarLibreriasPDF();
+    if (!jsPDFClass) {
+      if (typeof showToast === 'function') showToast(langKey === 'es' ? 'Librería PDF no disponible. Revisa tu conexión.' : 'PDF engine not available.', 'error');
+      return;
+    }
 
-  // 2. Trip metrics
-  const tripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || 'Viaje en Plux');
+    const doc = new jsPDFClass({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+
+    // Fallback if doc.autoTable is somehow missing
+    if (typeof doc.autoTable !== 'function') {
+      doc.autoTable = function(options) {
+        options = options || {};
+        let y = options.startY || 35;
+        const margin = (options.margin && options.margin.left) || 14;
+        const headCols = (options.head && options.head[0]) ? options.head[0] : [];
+        const bodyRows = options.body || [];
+        const colCount = Math.max(headCols.length, (bodyRows[0] ? bodyRows[0].length : 1), 1);
+        const colW = (pageWidth - margin * 2) / colCount;
+
+        if (headCols.length > 0) {
+          doc.setFillColor(15, 23, 42);
+          doc.rect(margin, y, pageWidth - margin * 2, 8, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(56, 189, 248);
+          headCols.forEach((h, i) => {
+            doc.text(String(h || ''), margin + i * colW + 2, y + 5.5);
+          });
+          y += 9;
+        }
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        bodyRows.forEach((row, rIdx) => {
+          if (y > pageHeight - 35) {
+            doc.addPage();
+            doc.setFillColor(11, 17, 32);
+            doc.rect(0, 0, pageWidth, pageHeight, 'F');
+            y = 20;
+          }
+          if (rIdx % 2 === 1) {
+            doc.setFillColor(15, 23, 42);
+            doc.rect(margin, y, pageWidth - margin * 2, 7, 'F');
+          }
+          doc.setTextColor(226, 232, 240);
+          (Array.isArray(row) ? row : []).forEach((cell, cIdx) => {
+            const val = (typeof cell === 'object' && cell !== null) ? (cell.content || '') : String(cell || '');
+            doc.text(String(val).substring(0, 38), margin + cIdx * colW + 2, y + 5);
+          });
+          y += 7.5;
+        });
+
+        doc.lastAutoTable = { finalY: y };
+        return this;
+      };
+    }
+
+    // 1. Ensure trip exists in Firestore and get Reader URL with timeout protection
+    let shareUrl = 'https://plux.nibecarcofeben.com/';
+    try {
+      shareUrl = await Promise.race([
+        asegurarViajeEnNubeParaCompartir(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500))
+      ]);
+    } catch(e) {
+      const sc = (typeof syncCode !== 'undefined' && syncCode) ? syncCode : 'PLUX';
+      shareUrl = `https://plux.nibecarcofeben.com/?join=${encodeURIComponent(sc)}&mode=reader`;
+    }
+
+    // 2. Trip metrics
+    const tripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || 'Viaje en Plux');
   const departureCity = (typeof lugarSalida !== 'undefined' && lugarSalida) ? lugarSalida : 'Sin origen registrado';
   const startDay = document.getElementById('fechaInicio')?.value || 'Fecha a convenir';
   const companionsFormatted = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : (nombresPersonasGlobal || '@Viajero');
@@ -11744,7 +11858,7 @@ async function exportarPDF() {
   });
 
   // Destinations Breakdown list on Cover
-  let currentY = doc.lastAutoTable.finalY + 10;
+  let currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : (ctaBtnY + 45)) + 10;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(236, 72, 153); // pink
@@ -11780,7 +11894,7 @@ async function exportarPDF() {
         fillColor: [15, 23, 42]
       }
     });
-    currentY = doc.lastAutoTable.finalY + 8;
+    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY) + 8;
   }
 
   // Scannable QR Code section at bottom of Page 1
@@ -11901,7 +12015,8 @@ async function exportarPDF() {
   });
 
   // Notes and Tips box
-  const notesY = Math.min(doc.lastAutoTable.finalY + 8, pageHeight - 45);
+  const autoTableFinalY = (doc.lastAutoTable && typeof doc.lastAutoTable.finalY === 'number') ? doc.lastAutoTable.finalY : 180;
+  const notesY = Math.min(autoTableFinalY + 8, pageHeight - 45);
   doc.setFillColor(15, 23, 42);
   doc.roundedRect(14, notesY, pageWidth - 28, 28, 3, 3, 'F');
   doc.setDrawColor(30, 41, 59);
@@ -11938,6 +12053,8 @@ async function exportarPDF() {
   const btnPrint = document.getElementById('btnPrintPDF') || document.getElementById('btn-print-pdf');
   const btnOpenTab = document.getElementById('btnOpenPDFTab') || document.getElementById('btn-open-pdf-tab');
 
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
   if (modal && iframe) {
     iframe.src = pdfBlobUrl;
     modal.style.display = 'flex';
@@ -11945,7 +12062,7 @@ async function exportarPDF() {
     if (btnDownload) {
       btnDownload.onclick = () => {
         doc.save(safeFilename);
-        if (typeof showToast === 'function') showToast('PDF descargado con exito', 'success');
+        if (typeof showToast === 'function') showToast(langKey === 'es' ? 'PDF descargado con exito' : 'PDF downloaded successfully', 'success');
       };
     }
 
@@ -11965,10 +12082,21 @@ async function exportarPDF() {
       };
     }
 
-    if (typeof showToast === 'function') showToast('Dossier PDF oficial listo para ver', 'success');
+    // Direct download trigger for mobile users whose webview doesn't render blob iframes
+    if (isMobileDevice) {
+      doc.save(safeFilename);
+    }
+
+    if (typeof showToast === 'function') showToast(langKey === 'es' ? 'Dossier PDF oficial listo para ver' : 'Official PDF dossier ready', 'success');
   } else {
     doc.save(safeFilename);
-    if (typeof showToast === 'function') showToast('PDF generado correctamente', 'success');
+    if (typeof showToast === 'function') showToast(langKey === 'es' ? 'PDF generado correctamente' : 'PDF generated successfully', 'success');
+  }
+  } catch(err) {
+    console.error('Error generando PDF en Plux:', err);
+    if (typeof showToast === 'function') {
+      showToast('Error al generar PDF: ' + (err.message || 'error inesperado'), 'error');
+    }
   }
 }
 

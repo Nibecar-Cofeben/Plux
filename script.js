@@ -23,7 +23,10 @@
         clima_title: "Clima", clima_btn: "Clima", clima_search: "Buscar", clima_placeholder: "Escribí una ciudad para ver el pronóstico.",
         clima_feed_title: "Clima de tu viaje", clima_feed_empty: "Agregá destinos y días para ver el pronóstico de tu viaje.", clima_beyond: "Sin pronóstico (muy lejano)", clima_feed_now: "Pronóstico general",
         discover_btn: "Descubrir Destinos", join_invite: "¿Tienes un código de invitación? No hace falta registrarse.", join_btn: "Unirse",
-        auth_hint: "Iniciá sesión con correo y contraseña obligatoria, o con Google.", auth_login: "Iniciar sesión", auth_register: "Crear cuenta", auth_logout: "Cerrar sesión",
+        auth_hint: "Iniciá sesión con correo y contraseña obligatoria, o con Google.", auth_login: "Iniciar sesión", auth_register: "Crear cuenta", auth_register_short: "Crear", auth_logout: "Cerrar sesión",
+        auth_enter_btn: "Ingresar", auth_email_nick_ph: "Correo o Nickname", auth_password_optional_nick_ph: "Contraseña (opcional si usás nickname)",
+        auth_email_address_ph: "Correo electrónico", auth_password_min6_ph: "Contraseña (mín. 6 car.)", auth_repeat_password_ph: "Repetir contraseña",
+        auth_or: "o", auth_google_continue: "Continuar con Google",
         cuenta_title: "Tu Perfil", cuenta_email: "Correo", cuenta_lang: "Idioma", cuenta_theme: "Tema", cuenta_trips: "Viajes guardados",
         cuenta_nibecar_section: "Cuenta de Nibecar Cofeben", cuenta_nickname_section: "Nickname",
         cuenta_nickname_placeholder: "Nickname", cuenta_password_placeholder: "Contraseña (si requiere)", cuenta_password_optional: "Quiero contraseña (opcional)",
@@ -153,7 +156,8 @@
         banner_reader_desc: 'Estás visualizando este viaje compartido. Podés clonarlo a tus viajes para editar tu propia copia.',
         toast_cloned: '¡Viaje clonado exitosamente a "Mis Viajes"! Ahora podés editarlo libremente ✨',
         toast_reader_no_edit: 'Modo Lectura: Este viaje es de sólo lectura. Podés clonarlo para editar tu propia copia.',
-        toast_pluxy_reader_block: 'Pluxy no puede modificar un viaje en Modo Lectura. Clonalo para que Pluxy te ayude a personalizarlo.'
+        toast_pluxy_reader_block: 'Pluxy no puede modificar un viaje en Modo Lectura. Clonalo para que Pluxy te ayude a personalizarlo.',
+        theme_by_lang: "Colores según idioma"
       },
       en: {
         welcome_start: "Start your journey", trips_btn: "Your trips", tools_btn: "More tools",
@@ -177,7 +181,10 @@
         clima_title: "Weather", clima_btn: "Weather", clima_search: "Search", clima_placeholder: "Enter a city to see the forecast.",
         clima_feed_title: "Your trip weather", clima_feed_empty: "Add destinations and days to see your trip forecast.", clima_beyond: "No forecast (too far)", clima_feed_now: "General forecast",
         discover_btn: "Discover Destinations", join_invite: "Have an invite code? No sign-up required.", join_btn: "Join",
-        auth_hint: "Sign in with email and required password, or with Google.", auth_login: "Sign in", auth_register: "Create account", auth_logout: "Sign out",
+        auth_hint: "Sign in with email and required password, or with Google.", auth_login: "Sign in", auth_register: "Create account", auth_register_short: "Create", auth_logout: "Sign out",
+        auth_enter_btn: "Sign in", auth_email_nick_ph: "Email or Nickname", auth_password_optional_nick_ph: "Password (optional if using nickname)",
+        auth_email_address_ph: "Email address", auth_password_min6_ph: "Password (min. 6 chars)", auth_repeat_password_ph: "Repeat password",
+        auth_or: "or", auth_google_continue: "Continue with Google",
         cuenta_title: "Your Profile", cuenta_email: "Email", cuenta_lang: "Language", cuenta_theme: "Theme", cuenta_trips: "Saved trips",
         cuenta_nibecar_section: "Nibecar Cofeben Account", cuenta_nickname_section: "Nickname",
         cuenta_nickname_placeholder: "Nickname", cuenta_password_placeholder: "Password (if required)", cuenta_password_optional: "I want a password (optional)",
@@ -305,7 +312,8 @@
         banner_reader_desc: 'You are viewing this shared trip. You can clone it to your trips to edit your own copy.',
         toast_cloned: 'Trip successfully cloned to "My Trips"! You can now edit it freely ✨',
         toast_reader_no_edit: 'Reader Mode: This trip is read-only. You can clone it to edit your own copy.',
-        toast_pluxy_reader_block: 'Pluxy cannot modify a trip in Reader Mode. Clone it so Pluxy can help you customize it.'
+        toast_pluxy_reader_block: 'Pluxy cannot modify a trip in Reader Mode. Clone it so Pluxy can help you customize it.',
+        theme_by_lang: "Colors by language"
       },
       fr: {
         welcome_start: "Commencez votre voyage", trips_btn: "Vos voyages", tools_btn: "Plus d'outils",
@@ -329,7 +337,10 @@
         clima_title: "Météo", clima_btn: "Météo", clima_search: "Rechercher", clima_placeholder: "Entrez une ville pour voir la météo.",
         clima_feed_title: "Météo de votre voyage", clima_feed_empty: "Ajoutez des destinations et des jours pour voir la météo.", clima_beyond: "Pas de prévision (trop loin)", clima_feed_now: "Prévision générale",
         discover_btn: "Découvrir", join_invite: "Code d'invitation ? Pas besoin de compte.", join_btn: "Rejoindre",
-        auth_hint: "Connectez-vous avec e-mail et mot de passe obligatoire, ou Google.", auth_login: "Connexion", auth_register: "Créer un compte", auth_logout: "Déconnexion",
+        auth_hint: "Connectez-vous avec e-mail et mot de passe obligatoire, ou Google.", auth_login: "Connexion", auth_register: "Créer un compte", auth_register_short: "Créer", auth_logout: "Déconnexion",
+        auth_enter_btn: "Connexion", auth_email_nick_ph: "E-mail ou Pseudo", auth_password_optional_nick_ph: "Mot de passe (optionnel si vous utilisez un pseudo)",
+        auth_email_address_ph: "Adresse e-mail", auth_password_min6_ph: "Mot de passe (min. 6 car.)", auth_repeat_password_ph: "Répéter le mot de passe",
+        auth_or: "ou", auth_google_continue: "Continuer avec Google",
         cuenta_title: "Votre profil", cuenta_email: "E-mail", cuenta_lang: "Langue", cuenta_theme: "Thème", cuenta_trips: "Voyages enregistrés",
         cuenta_nibecar_section: "Compte Nibecar Cofeben", cuenta_nickname_section: "Pseudo",
         cuenta_nickname_placeholder: "Pseudo", cuenta_password_placeholder: "Mot de passe (si requis)", cuenta_password_optional: "Je veux un mot de passe (optionnel)",
@@ -452,7 +463,8 @@
         banner_reader_desc: 'Vous consultez ce voyage partagé. Vous pouvez le cloner dans vos voyages pour modifier votre propre copie.',
         toast_cloned: 'Voyage cloné avec succès dans "Mes voyages" ! Vous pouvez maintenant le modifier librement ✨',
         toast_reader_no_edit: 'Mode lecture : Ce voyage est en lecture seule. Vous pouvez le cloner pour modifier votre propre copie.',
-        toast_pluxy_reader_block: 'Pluxy ne peut pas modifier un voyage en mode lecture. Clonez-le pour que Pluxy vous aide à le personnaliser.'
+        toast_pluxy_reader_block: 'Pluxy ne peut pas modifier un voyage en mode lecture. Clonez-le pour que Pluxy vous aide à le personnaliser.',
+        theme_by_lang: "Couleurs par langue"
       },
       de: {
         welcome_start: "Beginnen Sie Ihre Reise", trips_btn: "Ihre Reisen", tools_btn: "Weitere Tools",
@@ -476,7 +488,10 @@
         clima_title: "Wetter", clima_btn: "Wetter", clima_search: "Suchen", clima_placeholder: "Stadt eingeben für die Vorhersage.",
         clima_feed_title: "Wetter Ihrer Reise", clima_feed_empty: "Ziele und Tage hinzufügen für die Vorhersage.", clima_beyond: "Keine Vorhersage (zu weit)", clima_feed_now: "Allgemeine Vorhersage",
         discover_btn: "Entdecken", join_invite: "Einladungscode? Keine Anmeldung nötig.", join_btn: "Beitreten",
-        auth_hint: "Mit E-Mail und Passwort (Pflicht) oder Google anmelden.", auth_login: "Anmelden", auth_register: "Konto erstellen", auth_logout: "Abmelden",
+        auth_hint: "Mit E-Mail und Passwort (Pflicht) oder Google anmelden.", auth_login: "Anmelden", auth_register: "Konto erstellen", auth_register_short: "Erstellen", auth_logout: "Abmelden",
+        auth_enter_btn: "Anmelden", auth_email_nick_ph: "E-Mail oder Spitzname", auth_password_optional_nick_ph: "Passwort (optional bei Spitzname)",
+        auth_email_address_ph: "E-Mail-Adresse", auth_password_min6_ph: "Passwort (mind. 6 Zeichen)", auth_repeat_password_ph: "Passwort wiederholen",
+        auth_or: "oder", auth_google_continue: "Weiter mit Google",
         cuenta_title: "Ihr Profil", cuenta_email: "E-Mail", cuenta_lang: "Sprache", cuenta_theme: "Thema", cuenta_trips: "Gespeicherte Reisen",
         cuenta_nibecar_section: "Nibecar Cofeben Konto", cuenta_nickname_section: "Spitzname",
         cuenta_nickname_placeholder: "Spitzname", cuenta_password_placeholder: "Passwort (falls erforderlich)", cuenta_password_optional: "Ich möchte ein Passwort (optional)",
@@ -599,7 +614,8 @@
         banner_reader_desc: 'Sie sehen diese geteilte Reise an. Sie können sie klonen, um Ihre eigene Kopie zu bearbeiten.',
         toast_cloned: 'Reise erfolgreich in "Meine Reisen" geklont! Sie können sie jetzt frei bearbeiten ✨',
         toast_reader_no_edit: 'Lesemodus: Diese Reise ist schreibgeschützt. Sie können sie klonen, um Ihre eigene Kopie zu bearbeiten.',
-        toast_pluxy_reader_block: 'Pluxy kann eine Reise im Lesemodus nicht ändern. Klonen Sie sie, damit Pluxy Ihnen beim Anpassen helfen kann.'
+        toast_pluxy_reader_block: 'Pluxy kann eine Reise im Lesemodus nicht ändern. Klonen Sie sie, damit Pluxy Ihnen beim Anpassen helfen kann.',
+        theme_by_lang: "Farben nach Sprache"
       },
       it: {
         welcome_start: "Inizia il tuo viaggio", trips_btn: "I tuoi viaggi", tools_btn: "Altri strumenti",
@@ -623,7 +639,10 @@
         clima_title: "Meteo", clima_btn: "Meteo", clima_search: "Cerca", clima_placeholder: "Inserisci una città per la previsione.",
         clima_feed_title: "Meteo del viaggio", clima_feed_empty: "Aggiungi destinazioni e giorni per la previsione.", clima_beyond: "Nessuna previsione (lontano)", clima_feed_now: "Previsione generale",
         discover_btn: "Scopri destinazioni", join_invite: "Codice invito? Non serve registrarsi.", join_btn: "Unisciti",
-        auth_hint: "Accedi con email e password obbligatoria, o Google.", auth_login: "Accedi", auth_register: "Crea account", auth_logout: "Esci",
+        auth_hint: "Accedi con email e password obbligatoria, o Google.", auth_login: "Accedi", auth_register: "Crea account", auth_register_short: "Crea", auth_logout: "Esci",
+        auth_enter_btn: "Accedi", auth_email_nick_ph: "Email o Nickname", auth_password_optional_nick_ph: "Password (opzionale se usi nickname)",
+        auth_email_address_ph: "Indirizzo email", auth_password_min6_ph: "Password (min. 6 car.)", auth_repeat_password_ph: "Ripeti password",
+        auth_or: "o", auth_google_continue: "Continua con Google",
         cuenta_title: "Il tuo profilo", cuenta_email: "Email", cuenta_lang: "Lingua", cuenta_theme: "Tema", cuenta_trips: "Viaggi salvati",
         cuenta_nibecar_section: "Account Nibecar Cofeben", cuenta_nickname_section: "Nickname",
         cuenta_nickname_placeholder: "Nickname", cuenta_password_placeholder: "Password (se richiesta)", cuenta_password_optional: "Voglio una password (opzionale)",
@@ -746,7 +765,8 @@
         banner_reader_desc: 'Stai visualizzando questo viaggio condiviso. Puoi clonarlo nei tuoi viaggi per modificare la tua copia.',
         toast_cloned: 'Viaggio clonato con successo in "I miei viaggi"! Ora puoi modificarlo liberamente ✨',
         toast_reader_no_edit: 'Modalità lettura: Questo viaggio è di sola lettura. Puoi clonarlo per modificare la tua copia.',
-        toast_pluxy_reader_block: 'Pluxy non può modificare un viaggio in modalità lettura. Clonalo in modo che Pluxy possa aiutarti a personalizzarlo.'
+        toast_pluxy_reader_block: 'Pluxy non può modificare un viaggio in modalità lettura. Clonalo in modo che Pluxy possa aiutarti a personalizzarlo.',
+        theme_by_lang: "Colori per lingua"
       }
     };
 
@@ -829,6 +849,8 @@
 
     function applyCuentaModalI18n() {
       const el = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = t(key); };
+      const ph = (id, key) => { const n = document.getElementById(id); if (n) n.placeholder = t(key); };
+
       el('cuentaTitle', 'cuenta_title');
       el('cuentaNibecarSection', 'cuenta_nibecar_section');
       el('cuentaNicknameSection', 'cuenta_nickname_section');
@@ -836,15 +858,40 @@
       el('cuentaLinkRegister', 'auth_register');
       el('cuentaPasswordOptional', 'cuenta_password_optional');
       
+      // Nibecar Cofeben tabs and forms
+      el('tabNCLogin', 'auth_login');
+      el('tabNCRegister', 'auth_register');
+      el('btnNCLoginSubmit', 'auth_enter_btn');
+      el('btnNCRegisterSubmit', 'auth_register');
+      el('lblNCOr', 'auth_or');
+      el('btnNCGoogleTxt', 'auth_google_continue');
+
+      // Nickname tabs and forms
+      el('tab-login-btn', 'auth_login');
+      el('tab-register-btn', 'auth_register_short');
+      el('btnNickLoginSubmit', 'auth_login');
+      el('btnNickRegSubmit', 'auth_register_short');
+
       // Update placeholders
-      const ph = (id, key) => { const n = document.getElementById(id); if (n) n.placeholder = t(key); };
+      ph('ncLoginEmail', 'auth_email_nick_ph');
+      ph('ncLoginPassword', 'auth_password_optional_nick_ph');
+      ph('ncRegEmail', 'auth_email_address_ph');
+      ph('ncRegPassword', 'auth_password_min6_ph');
+      ph('ncRegPassword2', 'auth_repeat_password_ph');
       ph('login-nickname', 'cuenta_nickname_placeholder');
       ph('login-password', 'cuenta_password_placeholder');
       ph('register-password', 'cuenta_password_optional_placeholder');
       
-      // Update tab buttons
-      el('tab-login-btn', 'auth_login');
-      el('tab-register-btn', 'auth_register');
+      // Re-apply tab contrast colors according to active language and state
+      if (typeof window.switchNCTab === 'function') {
+        const isReg = document.getElementById('form-nc-register')?.style.display === 'flex';
+        window.switchNCTab(isReg ? 'register' : 'login');
+      }
+      if (typeof window.switchCuentaTab === 'function') {
+        const isReg = document.getElementById('form-register')?.style.display === 'flex';
+        window.switchCuentaTab(isReg ? 'register' : 'login');
+      }
+
       el('cuentaLogoutBtn', 'auth_logout');
       el('cuentaLblEmail', 'cuenta_email');
       el('cuentaLblLang', 'cuenta_lang');
@@ -908,6 +955,8 @@
       el('decisionModalDesc', 'choose_trip_option_desc');
       el('decisionNewBtn', 'choose_trip_new');
       el('decisionContinueBtn', 'choose_trip_continue');
+      el('lblThemeByLang', 'theme_by_lang');
+      el('lblThemeByLangMobile', 'theme_by_lang');
 
       // Header buttons
       el('chatGrupalHeaderBtn', 'chat_grupal_btn');
@@ -1276,6 +1325,12 @@
 
     function cerrarCuenta() {
       document.getElementById('modal-cuenta').style.display = 'none';
+      if (typeof window.cerrarAmigos === 'function') window.cerrarAmigos();
+      if (typeof window.cerrarSeguridad === 'function') window.cerrarSeguridad();
+      if (typeof window.cerrarInfoPersonal === 'function') window.cerrarInfoPersonal();
+      if (typeof window.cerrarSupport === 'function') window.cerrarSupport();
+      const prefModal = document.getElementById('modal-preferencias');
+      if (prefModal) prefModal.remove();
     }
 
     function cerrarSesion() {
@@ -1364,13 +1419,16 @@
       const formLogin = document.getElementById('form-nc-login');
       const formReg = document.getElementById('form-nc-register');
 
+      const isItWhite = document.body.classList.contains('lang-theme-active') && document.body.classList.contains('lang-it');
+      const activeTextColor = isItWhite ? '#0f172a' : 'white';
+
       if (tabLogin) {
         tabLogin.style.background = isLogin ? 'var(--azul)' : 'transparent';
-        tabLogin.style.color = isLogin ? 'white' : 'var(--gris)';
+        tabLogin.style.color = isLogin ? activeTextColor : 'var(--gris)';
       }
       if (tabReg) {
         tabReg.style.background = !isLogin ? 'var(--azul)' : 'transparent';
-        tabReg.style.color = !isLogin ? 'white' : 'var(--gris)';
+        tabReg.style.color = !isLogin ? activeTextColor : 'var(--gris)';
       }
       if (formLogin) formLogin.style.display = isLogin ? 'flex' : 'none';
       if (formReg) formReg.style.display = !isLogin ? 'flex' : 'none';
@@ -1519,15 +1577,19 @@
       const tabRegister = document.getElementById('tab-register-btn');
       const formLogin = document.getElementById('form-login');
       const formRegister = document.getElementById('form-register');
+
+      const isItWhite = document.body.classList.contains('lang-theme-active') && document.body.classList.contains('lang-it');
+      const activeTextColor = isItWhite ? '#0f172a' : 'white';
+
       if (tabLogin) {
         tabLogin.classList.toggle('active', isLogin);
         tabLogin.style.background = isLogin ? 'var(--azul)' : 'rgba(255,255,255,0.1)';
-        tabLogin.style.color = isLogin ? 'white' : 'var(--gris)';
+        tabLogin.style.color = isLogin ? activeTextColor : 'var(--gris)';
       }
       if (tabRegister) {
         tabRegister.classList.toggle('active', !isLogin);
         tabRegister.style.background = !isLogin ? 'var(--azul)' : 'rgba(255,255,255,0.1)';
-        tabRegister.style.color = !isLogin ? 'white' : 'var(--gris)';
+        tabRegister.style.color = !isLogin ? activeTextColor : 'var(--gris)';
       }
       if (formLogin) formLogin.style.display = isLogin ? 'flex' : 'none';
       if (formRegister) formRegister.style.display = isLogin ? 'none' : 'flex';
@@ -2091,8 +2153,121 @@
       }
     }
 
+    // ================== AUTO-DETECCIÓN DE IDIOMA Y TEMA ==================
+    const SPANISH_COUNTRIES = new Set([
+      'ES', 'AR', 'MX', 'CO', 'CL', 'PE', 'VE', 'UY', 'PY', 'BO',
+      'EC', 'GT', 'CU', 'DO', 'HN', 'SV', 'NI', 'CR', 'PA', 'PR', 'GQ'
+    ]);
+
+    function detectInitialLanguage() {
+      try {
+        // 1. Detección por idiomas configurados en el navegador (navigator.languages)
+        const browserLangs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''])
+          .filter(Boolean)
+          .map(l => l.toLowerCase());
+
+        for (const raw of browserLangs) {
+          const code = raw.split('-')[0];
+          const region = (raw.split('-')[1] || '').toUpperCase();
+
+          // Español (países hispanohablantes o navegador en español)
+          if (code === 'es' || SPANISH_COUNTRIES.has(region)) return 'es';
+          // Idiomas específicos soportados en Plux
+          if (code === 'it' || region === 'IT') return 'it';
+          if (code === 'fr' || region === 'FR') return 'fr';
+          if (code === 'de' || ['DE', 'AT', 'CH'].includes(region)) return 'de';
+
+          // Cualquier otro país o idioma internacional (turco, chino, japonés, ruso, inglés, etc.) -> inglés
+          return 'en';
+        }
+
+        // 2. Detección por zona horaria como pista geográfica instantánea
+        let tz = '';
+        try { tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').toLowerCase(); } catch (_) {}
+        if (tz) {
+          // Zonas hispanohablantes -> español
+          const hispanicTzs = [
+            'argentina', 'buenos_aires', 'cordoba', 'catamarca', 'jujuy', 'mendoza', 'tucuman', 'ushuaia',
+            'madrid', 'canary', 'ceuta', 'mexico_city', 'cancun', 'monterrey', 'tijuana', 'chihuahua',
+            'mazatlan', 'hermosillo', 'bogota', 'lima', 'santiago', 'caracas', 'montevideo', 'asuncion',
+            'la_paz', 'guayaquil', 'quito', 'havana', 'santo_domingo', 'panama', 'costa_rica',
+            'guatemala', 'el_salvador', 'tegucigalpa', 'managua'
+          ];
+          if (hispanicTzs.some(h => tz.includes(h))) return 'es';
+          if (tz.includes('rome')) return 'it';
+          if (tz.includes('paris')) return 'fr';
+          if (tz.includes('berlin') || tz.includes('vienna') || tz.includes('zurich')) return 'de';
+
+          // Cualquier otra zona horaria mundial (Turquía, China, USA, etc.) -> inglés
+          return 'en';
+        }
+      } catch (e) {
+        console.warn('[Plux] detectInitialLanguage error:', e);
+      }
+      return 'en'; // Default internacional: inglés
+    }
+
+    function autoDetectCountryGeoIP() {
+      // Si el usuario ya eligió manualmente un idioma antes, respetamos su selección
+      if (localStorage.getItem('Plux_Lang_Manual')) return;
+
+      fetch('https://api.country.is/', { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+          if (!data || !data.country) return;
+          const c = data.country.toUpperCase();
+          let targetLang = 'en'; // Todo el mundo por defecto en inglés (Turquía, China, USA, Japón, Brasil, etc.)
+
+          if (SPANISH_COUNTRIES.has(c)) {
+            targetLang = 'es'; // Hispanohablantes -> español
+          } else if (c === 'IT') {
+            targetLang = 'it';
+          } else if (c === 'FR') {
+            targetLang = 'fr';
+          } else if (['DE', 'AT', 'CH'].includes(c)) {
+            targetLang = 'de';
+          }
+
+          if (targetLang && targetLang !== currentLang && !localStorage.getItem('Plux_Lang_Manual')) {
+            console.log(`[Plux GeoIP] País detectado: ${c} -> configurando idioma a: ${targetLang}`);
+            setLanguage(targetLang, false, false);
+          }
+        })
+        .catch(err => {
+          // Fallback silencioso si no hay red o está bloqueado
+        });
+    }
+
+    // ================== GESTIÓN DE TEMA SEGÚN IDIOMA ==================
+    let themeByLangEnabled = localStorage.getItem('Plux_ThemeByLang') !== 'false';
+
+    function setThemeByLang(enabled) {
+      themeByLangEnabled = !!enabled;
+      localStorage.setItem('Plux_ThemeByLang', themeByLangEnabled ? 'true' : 'false');
+      applyThemeByLangState();
+    }
+    window.setThemeByLang = setThemeByLang;
+
+    function applyThemeByLangState() {
+      const chk = document.getElementById('chkThemeByLang');
+      if (chk) chk.checked = themeByLangEnabled;
+      const chkMob = document.getElementById('chkThemeByLangMobile');
+      if (chkMob) chkMob.checked = themeByLangEnabled;
+
+      if (themeByLangEnabled) {
+        document.body.classList.add('lang-theme-active');
+      } else {
+        document.body.classList.remove('lang-theme-active');
+      }
+
+      if (typeof applyCuentaModalI18n === 'function') {
+        applyCuentaModalI18n();
+      }
+    }
+    window.applyThemeByLangState = applyThemeByLangState;
+
     // ================== VARIABLES GLOBALES ==================
-    let currentLang = localStorage.getItem('Plux_Lang') || 'es';
+    let currentLang = localStorage.getItem('Plux_Lang') || detectInitialLanguage();
     let currentTheme = localStorage.getItem('Plux_Theme') || 'theme-oscuro';
     let destinos = [];
     let openTransportDestIds = new Set();
@@ -2377,16 +2552,19 @@
     }
     window.renderThemeDropdown = renderThemeDropdown;
 
-    function setLanguage(lang, sync = true) {
+    function setLanguage(lang, sync = true, isManual = false) {
       if (!lang || !i18n[lang]) lang = 'es';
       currentLang = lang;
       localStorage.setItem('Plux_Lang', lang);
+      if (isManual || sync) {
+        localStorage.setItem('Plux_Lang_Manual', 'true');
+      }
 
       const btn = document.getElementById('langButton');
       if (btn) btn.textContent = lang.toUpperCase();
 
       // Actualizar chips en menú colapsado
-      document.querySelectorAll('.lang-chip').forEach(chip => {
+      document.querySelectorAll('.lang-chip, .lang-chip-btn').forEach(chip => {
         if (chip.getAttribute('data-lang') === lang) chip.classList.add('active');
         else chip.classList.remove('active');
       });
@@ -2394,10 +2572,11 @@
       // Actualizar clase de idioma en el body
       document.body.classList.remove('lang-es', 'lang-en', 'lang-fr', 'lang-de', 'lang-it');
       document.body.classList.add(`lang-${lang}`);
+      applyThemeByLangState();
 
       // Actualizar opción activa en dropdown
       document.querySelectorAll('.lang-option').forEach(opt => {
-        const optLang = opt.getAttribute('data-lang');
+        const optLang = opt.getAttribute('data-lang') || opt.dataset.lang;
         if (optLang === lang) opt.classList.add('active');
         else opt.classList.remove('active');
       });
@@ -2508,9 +2687,11 @@
 
     // Auto-inicializar idioma y tema guardados
     setTimeout(() => {
-      setLanguage(currentLang, false);
+      setLanguage(currentLang, false, false);
       setTheme(currentTheme, false);
       renderThemeDropdown();
+      applyThemeByLangState();
+      autoDetectCountryGeoIP();
     }, 0);
 
     window.renderTravelerChips = function() {
@@ -4731,7 +4912,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       setupPopstateNavigation();
       checkUrlJoinCode();
       
-      loadFromStorage();
+      const _checkParams = new URLSearchParams(window.location.search);
+      const _hasIncoming = _checkParams.has('destino') || _checkParams.has('plantilla') || _checkParams.has('template') || window.location.pathname.includes('/join/');
+      if (!_hasIncoming) {
+        loadFromStorage();
+      }
       const savedTheme = localStorage.getItem('PluxTheme') || 'theme-oscuro';
       const savedLang = localStorage.getItem('pluxUserLanguage') || 'es';
       
@@ -11872,6 +12057,42 @@ async function exportarPDF() {
 
     const PLUX_OFICIAL_TEMPLATES = [
       {
+        id: 'oficial_buenosaires',
+        nombre: 'Buenos Aires Cultural & Gastronómico',
+        descripcion: 'Obelisco, Caminito, San Telmo, La Bombonera, Cementerio de Recoleta, Puerto Madero y las mejores parrillas.',
+        tags: ['3 Días', 'Tango & Asado', 'Sudamérica'],
+        presupuestoAprox: '120€',
+        likes: 412,
+        destinos: [
+          {
+            nombre: 'Buenos Aires',
+            dias: [
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Obelisco & Recorrido por Av. Corrientes', notas: 'Caminata por el centro y teatros tradicionales', costo: 0, duracion: 90 },
+                  { hora: '13:00', titulo: 'Almuerzo Pizzería Güerrín', notas: 'Pizza tradicional al molde porteña', costo: 15, duracion: 60 },
+                  { hora: '16:00', titulo: 'Teatro Colón & Plaza de Mayo', notas: 'Visita guiada por el teatro neoclásico', costo: 12, duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '10:30', titulo: 'Caminito & Paseo por La Boca', notas: 'Conventillos multicolor y show de tango al aire libre', costo: 0, duracion: 120 },
+                  { hora: '13:00', titulo: 'Estadio La Bombonera', notas: 'Tour por el museo del club Boca Juniors', costo: 18, duracion: 90 },
+                  { hora: '20:30', titulo: 'Cena en Parrilla Don Julio', notas: 'Asado argentino y carne a la parrilla', costo: 45, duracion: 120 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '11:00', titulo: 'Cementerio de Recoleta & El Ateneo Splendid', notas: 'Librería histórica en un teatro antiguo', costo: 5, duracion: 120 },
+                  { hora: '16:00', titulo: 'Puerto Madero & Puente de la Mujer', notas: 'Paseo por los diques al atardecer', costo: 0, duracion: 90 },
+                  { hora: '21:00', titulo: 'Show de Tango & Cena', notas: 'Espectáculo de tango rioplatense', costo: 50, duracion: 150 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
         id: 'oficial_roma',
         nombre: 'Roma Imperial & Vaticano',
         descripcion: 'Coliseo, Trastevere, Vaticano, Panteón y Fontana di Trevi con itinerario optimizado.',
@@ -13236,7 +13457,7 @@ async function exportarPDF() {
           { id: 'theme-ares', name: 'Ares', desc: 'Crimson', color: '#ff3333', border: 'none', activeBorder: '#ff3333' }
         ];
 
-        let html = `<div id="modal-preferencias" style="position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:900;padding:15px;" onclick="if(event.target===this) this.remove()">
+        let html = `<div id="modal-preferencias" style="position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2100;padding:15px;" onclick="if(event.target===this) this.remove()">
             <div class="cuenta-content" style="background:linear-gradient(135deg,var(--card),var(--fondo));border:1px solid var(--border);border-radius:26px;padding:26px;max-width:500px;width:100%;max-height:88vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 25px 80px rgba(0,0,0,0.8);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
                     <h2 style="color:var(--verde);margin:0;font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:8px;">Personalización</h2>
@@ -16829,7 +17050,7 @@ async function exportarPDF() {
   window.abrirDescubrir = abrirDescubrir;
   window.cerrarDescubrir = cerrarDescubrir;
   window.buscarLugaresPorDestino = buscarLugaresPorDestino;
-  window.buscarLugaresWikiFeed = buscarLugaresWikiFeed;
+  if (typeof buscarLugaresWikiFeed !== 'undefined') window.buscarLugaresWikiFeed = buscarLugaresWikiFeed;
   window.añadirDesdeFeed = añadirDesdeFeed;
   window.abrirChatIA = abrirChatIA;
   window.cerrarChatIA = cerrarChatIA;
@@ -17016,7 +17237,7 @@ async function exportarPDF() {
         const tplName = (t.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
         const tplId = (t.id || '').toLowerCase().replace('oficial_', '').replace(/[\s\-_]/g, "");
         const destName = (t.destinos && t.destinos[0]?.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
-        return tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
+        return t.id === ciudadRaw || tplId === cClean || t.id === 'oficial_' + cClean || tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
       });
     }
 
@@ -17026,7 +17247,7 @@ async function exportarPDF() {
         const tplName = (t.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
         const tplId = (t.id || '').toLowerCase().replace('com_', '').replace(/[\s\-_]/g, "");
         const destName = (t.destinos && t.destinos[0]?.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
-        return tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
+        return t.id === ciudadRaw || tplId === cClean || tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
       });
     }
 
@@ -17036,7 +17257,7 @@ async function exportarPDF() {
         const tplName = (t.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
         const tplId = (t.id || '').toLowerCase().replace(/^(com_|tpl_)/, '').replace(/[\s\-_]/g, "");
         const destName = (t.destinos && t.destinos[0]?.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
-        return t.id === ciudadRaw || tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
+        return t.id === ciudadRaw || tplId === cClean || tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
       });
     }
 
@@ -17276,6 +17497,9 @@ async function exportarPDF() {
     renderDestinos();
     if (typeof generarSelloPasaporte === 'function') generarSelloPasaporte(matchedData ? matchedData.nombre : ciudadRaw);
     autoSave();
+    if (typeof empezar === 'function') empezar();
+    else if (typeof window.empezar === 'function') window.empezar();
+
     trackEvent('clone_template', {
       template_name: matchedData ? matchedData.nombre : ciudadRaw,
       source: 'preset_destination'
@@ -17286,12 +17510,14 @@ async function exportarPDF() {
   // Handle incoming routes (/plux/join/plantillas/..., /plux/join/CODE) and ?destino=... query parameters
   document.addEventListener('DOMContentLoaded', () => {
     let cityToLoad = null;
+    let tplToLoad = null;
     let codeToLoad = null;
 
     const path = window.location.pathname;
     if (path.includes('/join/')) {
       const parts = path.split('/join/')[1]?.split('/') || [];
       if (parts[0] === 'plantillas' && parts[1]) {
+        tplToLoad = parts[1];
         const rawCity = parts[1].replace(/-/g, ' ');
         cityToLoad = rawCity.charAt(0).toUpperCase() + rawCity.slice(1);
       } else if (parts[0] && parts[0].length >= 4) {
@@ -17300,13 +17526,16 @@ async function exportarPDF() {
     }
 
     const urlParams = new URLSearchParams(window.location.search);
+    const paramPlantilla = urlParams.get('plantilla') || urlParams.get('template');
     const paramDestino = urlParams.get('destino');
     const paramActividad = urlParams.get('actividad');
-    if (paramDestino) {
-      cityToLoad = paramDestino;
-    }
 
-    if (cityToLoad) {
+    if (paramPlantilla) tplToLoad = paramPlantilla;
+    if (paramDestino) cityToLoad = paramDestino;
+
+    const targetToLoad = tplToLoad || cityToLoad;
+
+    if (targetToLoad) {
       setTimeout(() => {
         if (typeof window.cerrarModalDecisionViaje === 'function') {
           window.cerrarModalDecisionViaje();
@@ -17316,14 +17545,16 @@ async function exportarPDF() {
         }
         if (typeof window.empezar === 'function') {
           window.empezar();
+        } else if (typeof empezar === 'function') {
+          empezar();
         }
-        cargarPlantillaCiudad(cityToLoad);
+        cargarPlantillaCiudad(targetToLoad);
         if (paramActividad && typeof window.añadirDesdeFeed === 'function') {
           setTimeout(() => {
             window.añadirDesdeFeed(paramActividad);
           }, 400);
         }
-      }, 300);
+      }, 250);
     } else if (codeToLoad) {
       setTimeout(() => {
         if (typeof window.cargarViajeCompartido === 'function') {

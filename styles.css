@@ -1,4 +1,9 @@
 /* ===== TEMAS ===== */
+    :root {
+      --verde: #34d399;
+      --azul: #3b82f6;
+      --rosa: #ec4899;
+    }
     .theme-claro {
       --fondo: #f1f5f9;
       --card: #ffffff;
@@ -269,6 +274,9 @@
       --border: #334155;
       --placeholder: #475569;
       --gris: #94a3b8;
+      --verde: #34d399;
+      --azul: #3b82f6;
+      --rosa: #ec4899;
     }
     /* Modificado para mayor contraste: Tokyo vibrante */
     .theme-tokyo {
@@ -278,6 +286,9 @@
       --border: #bb9af7;
       --placeholder: #565f89;
       --gris: #9aa5ce;
+      --verde: #34d399;
+      --azul: #3b82f6;
+      --rosa: #ec4899;
     }
     /* ============================
        THEME: THE GRID (Cyberpunk)
@@ -707,30 +718,59 @@
       box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
     }
 
-    .lang-es {
+    /* Cuando la casilla está desmarcada (sin lang-theme-active), queda IDÉNTICO a español */
+    body:not(.lang-theme-active),
+    body.lang-theme-active.lang-es {
       --verde: #34d399;
       --azul: #3b82f6;
       --rosa: #ec4899;
     }
-    .lang-en {
+    body.lang-theme-active.lang-en {
       --verde: #60a5fa;
       --azul: #8b5cf6;
       --rosa: #f472b6;
     }
-    .lang-fr {
+    body.lang-theme-active.lang-fr {
       --verde: #2563eb;
       --azul: #dc2626;
       --rosa: #fbbf24;
     }
-    .lang-de {
+    body.lang-theme-active.lang-de {
       --verde: #000000;
       --azul: #dd0000;
       --rosa: #ffce00;
     }
-    .lang-it {
+    body.lang-theme-active.lang-it {
       --verde: #008c45;
       --azul: #ffffff;
       --rosa: #cd212a;
+    }
+
+    /* Reglas de alto contraste para Italiano (pestañas activas con fondo blanco var(--azul) deben tener texto oscuro) */
+    body.lang-theme-active.lang-it #tabNCLogin[style*="var(--azul)"],
+    body.lang-theme-active.lang-it #tabNCRegister[style*="var(--azul)"],
+    body.lang-theme-active.lang-it #tab-login-btn[style*="var(--azul)"],
+    body.lang-theme-active.lang-it #tab-register-btn[style*="var(--azul)"],
+    body.lang-theme-active.lang-it .tab-btn.active {
+      color: #0f172a !important;
+    }
+
+    /* Reglas para Alemán: fondo negro-rojo con texto blanco nítido y acento dorado */
+    body.lang-theme-active.lang-de .btn-add-feed,
+    body.lang-theme-active.lang-de #btnNCLoginSubmit,
+    body.lang-theme-active.lang-de #btnNCRegisterSubmit,
+    body.lang-theme-active.lang-de #btnNickLoginSubmit,
+    body.lang-theme-active.lang-de #btnNickRegSubmit {
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 206, 0, 0.45) !important;
+      box-shadow: 0 4px 15px rgba(221, 0, 0, 0.35) !important;
+    }
+    body.lang-theme-active.lang-de .btn-add-feed:hover,
+    body.lang-theme-active.lang-de #btnNCLoginSubmit:hover,
+    body.lang-theme-active.lang-de #btnNCRegisterSubmit:hover,
+    body.lang-theme-active.lang-de #btnNickLoginSubmit:hover,
+    body.lang-theme-active.lang-de #btnNickRegSubmit:hover {
+      box-shadow: 0 0 20px rgba(255, 206, 0, 0.6) !important;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     html, body {
@@ -885,11 +925,12 @@
       right: 0;
       background: var(--card);
       border-radius: 14px;
-      padding: 4px 0;
+      padding: 6px;
       box-shadow: 0 16px 40px rgba(0,0,0,0.75);
       display: none;
       flex-direction: column;
-      min-width: 65px;
+      min-width: 200px;
+      width: max-content;
       border: 1px solid var(--border);
       backdrop-filter: blur(20px);
       animation: slideDown 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -915,17 +956,110 @@
     }
     .lang-dropdown.show, .theme-dropdown.show { display: flex !important; }
     .lang-option {
-      padding: 10px 14px;
+      padding: 8px 12px;
+      border-radius: 9px;
       cursor: pointer;
       color: var(--texto);
-      font-weight: 700;
-      font-size: 0.92rem;
+      font-weight: 600;
+      font-size: 0.86rem;
       transition: background 0.15s, color 0.15s;
       display: flex;
       align-items: center;
-      justify-content: center;
-      text-align: center;
+      justify-content: space-between;
       white-space: nowrap;
+      margin-bottom: 2px;
+    }
+    .lang-option:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .lang-option.active {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--verde);
+    }
+    .lang-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      opacity: 0.8;
+    }
+    .lang-dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 6px 2px;
+    }
+    .lang-theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--gris);
+      user-select: none;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+    .lang-theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--texto);
+    }
+    .lang-switch {
+      position: relative;
+      display: inline-block;
+      width: 32px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .lang-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .lang-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      transition: 0.25s;
+    }
+    .lang-slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.25s;
+    }
+    .lang-switch input:checked + .lang-slider {
+      background-color: var(--verde);
+    }
+    .lang-switch input:checked + .lang-slider:before {
+      transform: translateX(14px);
+    }
+    .theme-claro .lang-theme-toggle {
+      color: #64748b !important;
+    }
+    .theme-claro .lang-theme-toggle:hover {
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+    .theme-claro .lang-option:hover {
+      background: #f1f5f9 !important;
+    }
+    .theme-claro .lang-badge {
+      background: rgba(0,0,0,0.06);
+    }
+    .theme-claro .lang-slider {
+      background: #cbd5e1;
     }
     .theme-option {
       padding: 10px 16px;
@@ -2884,7 +3018,27 @@
 
 #modal-cuenta {
   position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px);
-  display:none; align-items:center; justify-content:center; z-index:300; padding:10px;
+  display:none; align-items:center; justify-content:center; z-index:1000; padding:10px;
+}
+
+/* Account sub-modals (must always appear on top of #modal-cuenta) */
+#modal-amigos,
+#modal-seguridad,
+#modal-info-personal,
+#modal-preferencias,
+#modal-support {
+  z-index: 2100 !important;
+}
+
+#modal-detalle-amigo,
+#modal-crear-grupo,
+#modal-nueva-conversacion {
+  z-index: 2200 !important;
+}
+
+.modal-plux-chat-social,
+#modal-plux-chat-social {
+  z-index: 2300 !important;
 }
 .close-panel,
 .close-modal,
@@ -3445,6 +3599,25 @@
   #modal-presentacion,
   #modal-colaboradores {
     z-index: 2200 !important;
+  }
+
+  #modal-amigos,
+  #modal-seguridad,
+  #modal-info-personal,
+  #modal-preferencias,
+  #modal-support {
+    z-index: 2100 !important;
+  }
+
+  #modal-detalle-amigo,
+  #modal-crear-grupo,
+  #modal-nueva-conversacion {
+    z-index: 2200 !important;
+  }
+
+  .modal-plux-chat-social,
+  #modal-plux-chat-social {
+    z-index: 2300 !important;
   }
 
   /* Float buttons positioned above bottom navigation */

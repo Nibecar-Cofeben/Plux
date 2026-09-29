@@ -2552,6 +2552,591 @@
     }
     window.renderThemeDropdown = renderThemeDropdown;
 
+    // ================== SISTEMA MULTIDIVISA (MONEDAS) ==================
+    const PLUX_CURRENCIES = [
+      { code: 'EUR', symbol: '€', name: 'Euro', badge: 'EUR' },
+      { code: 'USD', symbol: '$', name: 'Dolar USA', badge: 'USD' },
+      { code: 'ARS', symbol: '$', name: 'Peso Argentino', badge: 'ARS' },
+      { code: 'BRL', symbol: 'R$', name: 'Real Brasileño', badge: 'BRL' },
+      { code: 'GBP', symbol: '£', name: 'Libra Esterlina', badge: 'GBP' },
+      { code: 'JPY', symbol: '¥', name: 'Yen Japones', badge: 'JPY' },
+      { code: 'MXN', symbol: '$', name: 'Peso Mexicano', badge: 'MXN' },
+      { code: 'CLP', symbol: '$', name: 'Peso Chileno', badge: 'CLP' },
+      { code: 'COP', symbol: '$', name: 'Peso Colombiano', badge: 'COP' },
+      { code: 'PEN', symbol: 'S/', name: 'Sol Peruano', badge: 'PEN' },
+      { code: 'UYU', symbol: '$', name: 'Peso Uruguayo', badge: 'UYU' },
+      { code: 'CAD', symbol: '$', name: 'Dolar Canadiense', badge: 'CAD' },
+      { code: 'AUD', symbol: '$', name: 'Dolar Australiano', badge: 'AUD' },
+      { code: 'CHF', symbol: 'CHF', name: 'Franco Suizo', badge: 'CHF' }
+    ];
+
+    const TASAS_CAMBIO = {
+      USD: 1.0,
+      EUR: 0.92,
+      GBP: 0.79,
+      JPY: 155.0,
+      ARS: 1250.0,
+      BRL: 5.50,
+      MXN: 18.2,
+      CAD: 1.36,
+      AUD: 1.52,
+      CHF: 0.90,
+      CNY: 7.25,
+      CLP: 940.0,
+      COP: 4100.0,
+      PEN: 3.75,
+      UYU: 41.0
+    };
+
+    let monedaViajeActual = localStorage.getItem('plux_moneda') || 'EUR';
+
+    function getMonedaActiva() {
+      return monedaViajeActual || localStorage.getItem('plux_moneda') || 'EUR';
+    }
+    window.getMonedaActiva = getMonedaActiva;
+
+    function getSimboloMoneda(code) {
+      const curr = code || getMonedaActiva();
+      const item = PLUX_CURRENCIES.find(c => c.code === curr);
+      return item ? item.symbol : '€';
+    }
+    window.getSimboloMoneda = getSimboloMoneda;
+
+    function convertirDeEur(amountInEur, targetCurrency) {
+      const curr = targetCurrency || getMonedaActiva();
+      const valEur = parseFloat(amountInEur) || 0;
+      if (curr === 'EUR') return valEur;
+      const tasaEur = TASAS_CAMBIO['EUR'] || 0.92;
+      const tasaDest = TASAS_CAMBIO[curr] || 1.0;
+      const enUsd = valEur / tasaEur;
+      return enUsd * tasaDest;
+    }
+    window.convertirDeEur = convertirDeEur;
+
+    function formatMoneda(amountInEur, targetCurrency) {
+      const curr = targetCurrency || getMonedaActiva();
+      const val = convertirDeEur(amountInEur, curr);
+      const symbol = getSimboloMoneda(curr);
+      if (curr === 'ARS' || curr === 'JPY' || curr === 'CLP' || curr === 'COP') {
+        return `${symbol} ${Math.round(val).toLocaleString('es-ES')}`;
+      }
+      return `${symbol} ${val.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    }
+    window.formatMoneda = formatMoneda;
+
+    function setMonedaActiva(code, sync = true) {
+      if (!code || !TASAS_CAMBIO[code]) code = 'EUR';
+      monedaViajeActual = code;
+      localStorage.setItem('plux_moneda', code);
+      
+      const currBtn = document.getElementById('currencyButton');
+      if (currBtn) {
+        currBtn.textContent = `${code} ${getSimboloMoneda(code)}`;
+      }
+      const hdrTxt = document.getElementById('headerCurrencyTxt');
+      if (hdrTxt) {
+        hdrTxt.textContent = `${code} ${getSimboloMoneda(code)}`;
+      }
+      const sel = document.getElementById('monedaViajeSelect');
+      if (sel && sel.value !== code) {
+        sel.value = code;
+      }
+      
+      renderCurrencyDropdown();
+      
+      if (destinos && destinos.length > 0) {
+        renderDestinos();
+      }
+      const pantResumen = document.getElementById('pantalla-resumen');
+      if (pantResumen && pantResumen.style.display !== 'none') {
+        mostrarResumen();
+      }
+      if (sync && typeof autoSave === 'function') {
+        autoSave();
+      }
+      showToast(`Moneda activa: ${code} (${getSimboloMoneda(code)})`, 'info');
+    }
+    window.setMonedaActiva = setMonedaActiva;
+
+    function toggleCurrencyDropdown(e) {
+      if (e) {
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+      }
+      const ld = document.getElementById('langDropdown');
+      const td = document.getElementById('themeDropdown');
+      const cd = document.getElementById('currencyDropdown');
+      if (ld) { ld.classList.remove('show'); ld.style.display = 'none'; }
+      if (td) { td.classList.remove('show'); td.style.display = 'none'; }
+      if (cd) {
+        renderCurrencyDropdown();
+        const isVisible = cd.classList.contains('show') || cd.style.display === 'flex';
+        if (isVisible) {
+          cd.classList.remove('show');
+          cd.style.display = 'none';
+        } else {
+          cd.classList.add('show');
+          cd.style.display = 'flex';
+        }
+      }
+    }
+    window.toggleCurrencyDropdown = toggleCurrencyDropdown;
+
+    function renderCurrencyDropdown() {
+      const cd = document.getElementById('currencyDropdown');
+      const activeCurr = getMonedaActiva();
+      if (cd) {
+        cd.innerHTML = PLUX_CURRENCIES.map(c => {
+          const isActive = activeCurr === c.code;
+          return `
+            <div class="currency-option ${isActive ? 'active' : ''}" onclick="window.setMonedaActiva('${c.code}')">
+              <span>${c.name} (${c.symbol})</span>
+              <span class="currency-badge">${c.badge}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const sel = document.getElementById('monedaViajeSelect');
+      if (sel && sel.options.length === 0) {
+        sel.innerHTML = PLUX_CURRENCIES.map(c => {
+          return `<option value="${c.code}" ${c.code === activeCurr ? 'selected' : ''}>${c.code} (${c.symbol}) - ${c.name}</option>`;
+        }).join('');
+      }
+    }
+    window.renderCurrencyDropdown = renderCurrencyDropdown;
+
+    // ================== NOTAS FLOTANTES (CARTELITOS) Y HILITOS ==================
+    let cartelitosNotasViaje = [];
+    let hilitoDragState = null;
+    let cartelitoDragState = null;
+
+    function getCartelitosNotas() {
+      if (!Array.isArray(cartelitosNotasViaje)) {
+        cartelitosNotasViaje = [];
+      }
+      return cartelitosNotasViaje;
+    }
+    window.getCartelitosNotas = getCartelitosNotas;
+
+    function actualizarBadgeCartelitos() {
+      const count = getCartelitosNotas().length;
+      const b = document.getElementById('badgeCartelitosCount');
+      if (b) b.textContent = count;
+    }
+    window.actualizarBadgeCartelitos = actualizarBadgeCartelitos;
+
+    function crearNotaCartelito(texto = '', enlace = null, posX = null, posY = null) {
+      const notas = getCartelitosNotas();
+      const id = 'nota_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      const count = notas.length;
+
+      const x = (typeof posX === 'number') ? posX : Math.min(window.innerWidth - 260, Math.max(20, window.innerWidth - 270 - (count % 3) * 20));
+      const y = (typeof posY === 'number') ? posY : Math.min(window.innerHeight - 180, Math.max(90, 100 + (count % 4) * 45));
+
+      const nuevaNota = {
+        id,
+        texto: (typeof texto === 'string') ? texto : '',
+        x: Math.max(10, x),
+        y: Math.max(60, y),
+        enlace: enlace || null
+      };
+
+      notas.push(nuevaNota);
+      renderCartelitos();
+      actualizarBadgeCartelitos();
+      if (typeof autoSave === 'function') autoSave();
+
+      setTimeout(() => {
+        const el = document.getElementById(`cartelito-txt-${id}`);
+        if (el) el.focus();
+      }, 50);
+
+      showToast('Nota creada. Toca o arrastra su esquinita para conectar un hilito a un destino o actividad', 'info');
+      return nuevaNota;
+    }
+    window.crearNotaCartelito = crearNotaCartelito;
+    window.crearNuevaNotaRapida = function(tipo, tit, txt) { return crearNotaCartelito(txt || tit || ''); };
+    window.toggleTableroNotas = function() { crearNotaCartelito(); };
+
+    function renderCartelitos() {
+      const layer = document.getElementById('plux-cartelitos-layer');
+      if (!layer) return;
+
+      const appEl = document.getElementById('app');
+      const isAppVisible = appEl && appEl.style.display !== 'none';
+      if (!isAppVisible) {
+        layer.innerHTML = '';
+        actualizarHilitos();
+        return;
+      }
+
+      const notas = getCartelitosNotas();
+      actualizarBadgeCartelitos();
+
+      layer.innerHTML = notas.map(n => {
+        const hasLink = Boolean(n.enlace && n.enlace.label);
+        const linkLabel = hasLink ? n.enlace.label : 'Sin enlazar';
+        const linkClass = hasLink ? 'linked' : '';
+        const pinClass = hasLink ? 'has-link' : '';
+
+        return `
+          <div id="cartelito-${n.id}" class="cartelito-nota" style="left:${n.x}px; top:${n.y}px;">
+            <div id="pin-${n.id}" class="cartelito-corner-pin ${pinClass}" 
+                 data-nota-id="${n.id}" 
+                 title="${hasLink ? 'Conectado a ' + escapeHtml(linkLabel) + '. Arrastra para cambiar o toca para desconectar' : 'Toca o arrastra esta esquinita hasta la manija de un destino o actividad'}"
+                 onmousedown="window.iniciarArrastreHilito('${n.id}', event)"
+                 ontouchstart="window.iniciarArrastreHilito('${n.id}', event)">
+            </div>
+            <div class="cartelito-header"
+                 onmousedown="window.iniciarArrastreCartelito('${n.id}', event)"
+                 ontouchstart="window.iniciarArrastreCartelito('${n.id}', event)">
+              <span class="cartelito-handle">⠿</span>
+              <span class="cartelito-badge-enlace ${linkClass}" id="cartelito-label-${n.id}" title="${escapeHtml(linkLabel)}">
+                ${escapeHtml(linkLabel)}
+              </span>
+              <button class="cartelito-btn-close" onclick="window.eliminarNotaCartelito('${n.id}', event)" title="Eliminar nota">&times;</button>
+            </div>
+            <div class="cartelito-body">
+              <textarea id="cartelito-txt-${n.id}" class="cartelito-textarea" 
+                        placeholder="Escribe tu nota aqui..." 
+                        oninput="window.actualizarTextoCartelito('${n.id}', this.value)">${escapeHtml(n.texto || '')}</textarea>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      requestAnimationFrame(actualizarHilitos);
+    }
+    window.renderCartelitos = renderCartelitos;
+    window.renderTableroNotas = renderCartelitos;
+
+    function actualizarTextoCartelito(id, val) {
+      const nota = getCartelitosNotas().find(n => n.id === id);
+      if (nota) {
+        nota.texto = val;
+        if (typeof autoSave === 'function') autoSave();
+      }
+    }
+    window.actualizarTextoCartelito = actualizarTextoCartelito;
+
+    function eliminarNotaCartelito(id, e) {
+      if (e) e.stopPropagation();
+      const notas = getCartelitosNotas();
+      const idx = notas.findIndex(n => n.id === id);
+      if (idx !== -1) {
+        notas.splice(idx, 1);
+        renderCartelitos();
+        actualizarBadgeCartelitos();
+        actualizarHilitos();
+        if (typeof autoSave === 'function') autoSave();
+        showToast('Nota eliminada', 'info');
+      }
+    }
+    window.eliminarNotaCartelito = eliminarNotaCartelito;
+
+    function iniciarArrastreCartelito(notaId, e) {
+      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON' || e.target.classList.contains('cartelito-corner-pin')) {
+        return;
+      }
+      const nota = getCartelitosNotas().find(n => n.id === notaId);
+      if (!nota) return;
+
+      const el = document.getElementById(`cartelito-${notaId}`);
+      if (el) el.classList.add('dragging');
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      cartelitoDragState = {
+        notaId,
+        startX: clientX,
+        startY: clientY,
+        initX: nota.x,
+        initY: nota.y
+      };
+
+      document.addEventListener('mousemove', moverArrastreCartelito);
+      document.addEventListener('mouseup', finalizarArrastreCartelito);
+      document.addEventListener('touchmove', moverArrastreCartelito, { passive: false });
+      document.addEventListener('touchend', finalizarArrastreCartelito);
+    }
+    window.iniciarArrastreCartelito = iniciarArrastreCartelito;
+
+    function moverArrastreCartelito(e) {
+      if (!cartelitoDragState) return;
+      if (e.cancelable) e.preventDefault();
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const dx = clientX - cartelitoDragState.startX;
+      const dy = clientY - cartelitoDragState.startY;
+
+      const nota = getCartelitosNotas().find(n => n.id === cartelitoDragState.notaId);
+      if (nota) {
+        const maxX = window.innerWidth - 240;
+        const maxY = window.innerHeight - 130;
+        nota.x = Math.max(10, Math.min(maxX, cartelitoDragState.initX + dx));
+        nota.y = Math.max(50, Math.min(maxY, cartelitoDragState.initY + dy));
+
+        const el = document.getElementById(`cartelito-${cartelitoDragState.notaId}`);
+        if (el) {
+          el.style.left = `${nota.x}px`;
+          el.style.top = `${nota.y}px`;
+        }
+        actualizarHilitos();
+      }
+    }
+
+    function finalizarArrastreCartelito() {
+      if (cartelitoDragState) {
+        const el = document.getElementById(`cartelito-${cartelitoDragState.notaId}`);
+        if (el) el.classList.remove('dragging');
+        cartelitoDragState = null;
+        if (typeof autoSave === 'function') autoSave();
+      }
+      document.removeEventListener('mousemove', moverArrastreCartelito);
+      document.removeEventListener('mouseup', finalizarArrastreCartelito);
+      document.removeEventListener('touchmove', moverArrastreCartelito);
+      document.removeEventListener('touchend', finalizarArrastreCartelito);
+    }
+
+    // Arrastre interactivo de hilito desde la esquinita de la nota
+    function iniciarArrastreHilito(notaId, e) {
+      e.stopPropagation();
+      if (e.cancelable) e.preventDefault();
+
+      const nota = getCartelitosNotas().find(n => n.id === notaId);
+      if (!nota) return;
+
+      const pinEl = document.getElementById(`pin-${notaId}`);
+      if (!pinEl) return;
+      pinEl.classList.add('pulling');
+
+      const pinRect = pinEl.getBoundingClientRect();
+      const originX = pinRect.left + pinRect.width / 2;
+      const originY = pinRect.top + pinRect.height / 2;
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      hilitoDragState = {
+        notaId,
+        originX,
+        originY,
+        currentX: clientX,
+        currentY: clientY,
+        moved: false,
+        hoverEl: null
+      };
+
+      document.addEventListener('mousemove', moverArrastreHilito);
+      document.addEventListener('mouseup', finalizarArrastreHilito);
+      document.addEventListener('touchmove', moverArrastreHilito, { passive: false });
+      document.addEventListener('touchend', finalizarArrastreHilito);
+    }
+    window.iniciarArrastreHilito = iniciarArrastreHilito;
+
+    function moverArrastreHilito(e) {
+      if (!hilitoDragState) return;
+      if (e.cancelable) e.preventDefault();
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      hilitoDragState.currentX = clientX;
+      hilitoDragState.currentY = clientY;
+      hilitoDragState.moved = true;
+
+      if (hilitoDragState.hoverEl) {
+        hilitoDragState.hoverEl.classList.remove('hilito-drop-hover');
+        hilitoDragState.hoverEl = null;
+      }
+
+      const elemUnder = document.elementFromPoint(clientX, clientY);
+      if (elemUnder) {
+        const candidate = elemUnder.closest('.drag-handle-dest, .drag-handle-ev, .drag-handle-dia, .destino, .evento');
+        if (candidate) {
+          candidate.classList.add('hilito-drop-hover');
+          hilitoDragState.hoverEl = candidate;
+        }
+      }
+
+      dibujarHilitoEnArrastre(hilitoDragState.originX, hilitoDragState.originY, clientX, clientY);
+    }
+
+    function dibujarHilitoEnArrastre(x1, y1, x2, y2) {
+      const svg = document.getElementById('plux-hilitos-svg');
+      if (!svg) return;
+
+      let tempLine = document.getElementById('hilito-temp-drag');
+      if (!tempLine) {
+        tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        tempLine.setAttribute('id', 'hilito-temp-drag');
+        tempLine.setAttribute('class', 'hilito-svg-line active-drag');
+        svg.appendChild(tempLine);
+      }
+
+      const dist = Math.hypot(x2 - x1, y2 - y1);
+      const sag = Math.min(65, Math.max(15, dist * 0.1));
+      const cx = (x1 + x2) / 2;
+      const cy = (y1 + y2) / 2 + sag;
+
+      tempLine.setAttribute('d', `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`);
+    }
+
+    function finalizarArrastreHilito(e) {
+      if (!hilitoDragState) return;
+
+      const nota = getCartelitosNotas().find(n => n.id === hilitoDragState.notaId);
+      const pinEl = document.getElementById(`pin-${hilitoDragState.notaId}`);
+      if (pinEl) pinEl.classList.remove('pulling');
+
+      const tempLine = document.getElementById('hilito-temp-drag');
+      if (tempLine && tempLine.parentNode) {
+        tempLine.parentNode.removeChild(tempLine);
+      }
+
+      if (hilitoDragState.hoverEl) {
+        hilitoDragState.hoverEl.classList.remove('hilito-drop-hover');
+      }
+
+      const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+      const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+
+      if (!hilitoDragState.moved && nota) {
+        if (nota.enlace) {
+          nota.enlace = null;
+          showToast('Hilito desconectado', 'info');
+        } else {
+          showToast('Arrastra la esquinita hasta la manija de un destino o evento para conectar', 'info');
+        }
+      } else if (nota) {
+        const elemUnder = document.elementFromPoint(clientX, clientY);
+        if (elemUnder) {
+          const destHandle = elemUnder.closest('.drag-handle-dest, .destino');
+          const evHandle = elemUnder.closest('.drag-handle-ev, .evento');
+          const diaHandle = elemUnder.closest('.drag-handle-dia, .dia');
+
+          if (evHandle) {
+            const destId = evHandle.dataset.destId || evHandle.closest('[data-dest-id]')?.dataset.destId;
+            const diaId = evHandle.dataset.diaId || evHandle.closest('[data-dia-id]')?.dataset.diaId;
+            const evIdx = evHandle.dataset.evIdx || evHandle.closest('[data-ev-idx]')?.dataset.evIdx || 0;
+            const titEl = evHandle.querySelector('input[placeholder="Título"], .evento-title, h4') || evHandle;
+            const titText = (titEl.value || titEl.textContent || 'Actividad').trim().slice(0, 20);
+
+            nota.enlace = {
+              tipo: 'evento',
+              destId: destId || null,
+              diaId: diaId || null,
+              evIdx: Number(evIdx),
+              label: 'Actividad: ' + titText
+            };
+            showToast('Nota conectada a la actividad: ' + titText, 'success');
+          } else if (destHandle) {
+            const destId = destHandle.dataset.destId || destHandle.closest('[data-dest-id]')?.dataset.destId;
+            const destObj = (destinos || []).find(d => String(d.id) === String(destId));
+            const destName = destObj ? destObj.nombre : 'Destino';
+
+            nota.enlace = {
+              tipo: 'dest',
+              id: destId || (destObj ? destObj.id : null),
+              label: 'Destino: ' + destName
+            };
+            showToast('Nota conectada al destino: ' + destName, 'success');
+          } else if (diaHandle) {
+            const diaId = diaHandle.dataset.diaId || diaHandle.closest('[data-dia-id]')?.dataset.diaId;
+            nota.enlace = {
+              tipo: 'dia',
+              diaId: diaId || null,
+              label: 'Dia del viaje'
+            };
+            showToast('Nota conectada al dia del viaje', 'success');
+          } else {
+            if (nota.enlace) {
+              nota.enlace = null;
+              showToast('Hilito desconectado', 'info');
+            }
+          }
+        }
+      }
+
+      hilitoDragState = null;
+      renderCartelitos();
+      actualizarHilitos();
+      if (typeof autoSave === 'function') autoSave();
+
+      document.removeEventListener('mousemove', moverArrastreHilito);
+      document.removeEventListener('mouseup', finalizarArrastreHilito);
+      document.removeEventListener('touchmove', moverArrastreHilito);
+      document.removeEventListener('touchend', finalizarArrastreHilito);
+    }
+
+    function actualizarHilitos() {
+      const svg = document.getElementById('plux-hilitos-svg');
+      if (!svg) return;
+
+      const appEl = document.getElementById('app');
+      const isAppVisible = appEl && appEl.style.display !== 'none';
+      if (!isAppVisible) {
+        svg.innerHTML = '';
+        return;
+      }
+
+      const notas = getCartelitosNotas();
+      let pathsHtml = '';
+
+      notas.forEach(nota => {
+        if (!nota.enlace) return;
+
+        const pinEl = document.getElementById(`pin-${nota.id}`);
+        if (!pinEl) return;
+        const pinRect = pinEl.getBoundingClientRect();
+        if (pinRect.width === 0 && pinRect.height === 0) return;
+
+        const x1 = pinRect.left + pinRect.width / 2;
+        const y1 = pinRect.top + pinRect.height / 2;
+
+        let targetEl = null;
+        if (nota.enlace.tipo === 'dest') {
+          targetEl = document.querySelector(`.drag-handle-dest[data-dest-id="${nota.enlace.id}"]`) ||
+                     document.querySelector(`.destino[data-dest-id="${nota.enlace.id}"] .destino-header`) ||
+                     document.querySelector(`.destino[data-dest-id="${nota.enlace.id}"]`);
+        } else if (nota.enlace.tipo === 'evento') {
+          targetEl = document.querySelector(`.drag-handle-ev[data-dest-id="${nota.enlace.destId}"][data-dia-id="${nota.enlace.diaId}"][data-ev-idx="${nota.enlace.evIdx}"]`) ||
+                     document.querySelector(`.drag-handle-ev[data-ev-idx="${nota.enlace.evIdx}"]`) ||
+                     document.querySelector(`.evento[data-dest-id="${nota.enlace.destId}"]`);
+        } else if (nota.enlace.tipo === 'dia') {
+          targetEl = document.querySelector(`.drag-handle-dia[data-dia-id="${nota.enlace.diaId}"]`) ||
+                     document.querySelector(`.dia[data-dia-id="${nota.enlace.diaId}"]`);
+        }
+
+        if (!targetEl) return;
+        const targetRect = targetEl.getBoundingClientRect();
+        if (targetRect.width === 0 && targetRect.height === 0) return;
+
+        const x2 = targetRect.left + Math.min(18, targetRect.width / 2);
+        const y2 = targetRect.top + targetRect.height / 2;
+
+        const dist = Math.hypot(x2 - x1, y2 - y1);
+        const sag = Math.min(75, Math.max(18, dist * 0.12));
+        const cx = (x1 + x2) / 2;
+        const cy = (y1 + y2) / 2 + sag;
+
+        pathsHtml += `
+          <path d="M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}" class="hilito-svg-line" />
+          <circle cx="${x1}" cy="${y1}" r="3.5" class="hilito-anchor-dot" />
+          <circle cx="${x2}" cy="${y2}" r="4" class="hilito-anchor-dot" />
+        `;
+      });
+
+      svg.innerHTML = pathsHtml;
+    }
+    window.actualizarHilitos = actualizarHilitos;
+
+    window.addEventListener('scroll', () => { requestAnimationFrame(actualizarHilitos); }, { passive: true });
+    window.addEventListener('resize', () => { requestAnimationFrame(actualizarHilitos); }, { passive: true });
+
+
     function setLanguage(lang, sync = true, isManual = false) {
       if (!lang || !i18n[lang]) lang = 'es';
       currentLang = lang;
@@ -3090,7 +3675,9 @@
         vueltaPrecioGlobal: typeof vueltaPrecioGlobal !== 'undefined' ? vueltaPrecioGlobal : 0,
         vueltaCostosAdicionales: typeof vueltaCostosAdicionales !== 'undefined' ? vueltaCostosAdicionales : [],
         syncCode: syncCode || null,
-        userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : null
+        userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : null,
+        moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
+        cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : []
       };
 
       if (targetIndex !== -1) {
@@ -3561,6 +4148,10 @@ VISTAS Y HERRAMIENTAS:
 - [ACCION:ABRIR_CHECKLIST] → Genera checklist personalizada
 - [ACCION:VIAJE_ACTIVO] → Activa modo viaje activo (muestra itinerario del día actual)
 - [ACCION:INVITAR_COLABORADOR:Nickname] → Invita a un colaborador por nickname (ej: @maria)
+- [ACCION:CAMBIAR_MONEDA:Codigo] → Cambia la moneda en la que se visualizan todos los gastos del viaje (ej: [ACCION:CAMBIAR_MONEDA:USD] o [ACCION:CAMBIAR_MONEDA:ARS] o [ACCION:CAMBIAR_MONEDA:EUR] o [ACCION:CAMBIAR_MONEDA:BRL] o [ACCION:CAMBIAR_MONEDA:GBP])
+- [ACCION:CREAR_NOTA:Texto de la nota] → Crea una nota flotante en pantalla
+- [ACCION:CONECTAR_NOTA:TextoDeLaNota|NombreDestinoOEvento] → Conecta la nota con un hilito al destino o actividad
+- [ACCION:AGREGAR_CHECKLIST:Texto|Categoria] → Agrega una tarea directamente a la checklist general
 
 Tenés acceso al clima actual del viaje (OpenWeather) en el contexto del mensaje. Usalo para recomendar ropa, actividades o cambios de plan.
 
@@ -4429,6 +5020,67 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         accionesEjecutadas = true;
       }
 
+      // CAMBIAR_MONEDA
+      const accionMoneda = respuesta.match(/\[ACCION:(?:CAMBIAR_MONEDA|SET_MONEDA):([A-Z]{3})\]/i);
+      if (accionMoneda) {
+        const targetMon = accionMoneda[1].toUpperCase();
+        if (typeof setMonedaActiva === 'function') {
+          setMonedaActiva(targetMon);
+        }
+        accionesEjecutadas = true;
+      }
+
+      // CREAR_NOTA
+      const accionesNota = [...respuesta.matchAll(/\[ACCION:CREAR_NOTA:([^\]]+)\]/g)];
+      accionesNota.forEach((match) => {
+        const txt = match[1] ? match[1].trim() : '';
+        if (typeof crearNotaCartelito === 'function') {
+          crearNotaCartelito(txt);
+        }
+        accionesEjecutadas = true;
+      });
+
+      // CONECTAR_NOTA
+      const accionesConectar = [...respuesta.matchAll(/\[ACCION:CONECTAR_NOTA:([^\]]+)\]/g)];
+      accionesConectar.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 2) {
+          const queryNota = partes[0].trim().toLowerCase();
+          const queryDest = partes[1].trim().toLowerCase();
+          const notas = typeof getCartelitosNotas === 'function' ? getCartelitosNotas() : [];
+          const nota = notas.find(n => n.id === queryNota || (n.texto && n.texto.toLowerCase().includes(queryNota))) || notas[notas.length - 1];
+
+          const dest = (destinos || []).find(d => d.nombre && d.nombre.toLowerCase().includes(queryDest));
+          if (nota && dest) {
+            nota.enlace = { tipo: 'dest', id: dest.id, label: 'Destino: ' + dest.nombre };
+            if (typeof renderCartelitos === 'function') renderCartelitos();
+            if (typeof actualizarHilitos === 'function') actualizarHilitos();
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // ABRIR_NOTAS
+      if (respuesta.includes('[ACCION:ABRIR_NOTAS]')) {
+        setTimeout(() => { if (typeof crearNotaCartelito === 'function') crearNotaCartelito(); }, 600);
+        accionesEjecutadas = true;
+      }
+
+      // AGREGAR_CHECKLIST
+      const accionesAddChk = [...respuesta.matchAll(/\[ACCION:AGREGAR_CHECKLIST:([^\]]+)\]/g)];
+      accionesAddChk.forEach((match) => {
+        const partes = match[1].split('|');
+        const texto = partes[0].trim();
+        const categoria = partes[1] ? partes[1].trim() : 'Miscelánea';
+        if (typeof checklistData !== 'undefined') {
+          checklistData.push({ categoria, emoji: 'Item', item: texto, done: false, id: Date.now() + Math.floor(Math.random() * 500) });
+          localStorage.setItem('PluxChecklist_V2', JSON.stringify(checklistData));
+          if (typeof renderChecklist === 'function') renderChecklist();
+          if (typeof showToast === 'function') showToast(`Item "${texto}" añadido a la checklist`, 'success');
+        }
+        accionesEjecutadas = true;
+      });
+
       if (accionesEjecutadas && typeof autoSave === 'function') {
         autoSave();
       }
@@ -4924,6 +5576,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       else setTheme('theme-oscuro');
       setLanguage(savedLang);
 
+      const savedMoneda = localStorage.getItem('plux_moneda') || 'EUR';
+      if (typeof setMonedaActiva === 'function') setMonedaActiva(savedMoneda, false);
+      if (typeof actualizarBadgeNotas === 'function') actualizarBadgeNotas();
+
       // Actualizar display del usuario
       updateUserButtonDisplay();
 
@@ -5108,6 +5764,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         if (app) app.style.display = "block";
         if (typeof applyGlobalI18n === 'function') applyGlobalI18n();
         if (typeof renderDestinos === 'function') renderDestinos();
+        if (typeof renderCartelitos === 'function') renderCartelitos();
+        if (typeof actualizarHilitos === 'function') setTimeout(actualizarHilitos, 150);
       }, 400);
     }
 
@@ -5375,6 +6033,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (typeof aplicarRestriccionesInputs === 'function') {
         aplicarRestriccionesInputs();
       }
+      setTimeout(() => { if (typeof actualizarHilitos === 'function') actualizarHilitos(); }, 120);
     }
 
     // Tourist place keywords (at least one must appear in title OR it's a short proper noun)
@@ -6864,7 +7523,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             <input type="text" class="notas-input" value="${ev.notas || ''}" placeholder="${t('event_notes_placeholder')}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'notas', this.value)">
             <div class="detalles-evento">
               <div class="detalle-field">
-                <label>${t('event_cost_placeholder')}</label>
+                <label>${t('event_cost_placeholder')} (${getSimboloMoneda()})</label>
                 <input type="number" value="${ev.costo || 0}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'costo', parseFloat(this.value)||0)">
               </div>
               <div class="detalle-field">
@@ -7716,12 +8375,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           </div>
           <div class="stat-card stat-rosa">
             <div class="stat-badge">PRESUPUESTO TOTAL</div>
-            <div class="stat-value">${costoGlobal.toFixed(0)}€</div>
+            <div class="stat-value">${formatMoneda(costoGlobal)}</div>
             <div class="stat-label">Total estimado</div>
           </div>
           <div class="stat-card stat-azul">
             <div class="stat-badge">POR PERSONA</div>
-            <div class="stat-value">${numPersonas > 0 ? (costoGlobal / numPersonas).toFixed(0) : 0}€</div>
+            <div class="stat-value">${formatMoneda(numPersonas > 0 ? (costoGlobal / numPersonas) : 0)}</div>
             <div class="stat-label">${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</div>
           </div>
         `;
@@ -7753,7 +8412,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           if (mapContainer._leaflet_id) { mapContainer._leaflet_id = null; }
           const miniMap = L.map('resumen-map-mini', { zoomControl: true, scrollWheelZoom: false });
           window._resumenMap = miniMap;
-          L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '©OSM ©CARTO' }).addTo(miniMap);
+          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: 'Tiles &copy; Esri' }).addTo(miniMap);
           
           results.forEach((res, i) => {
             if (res.status === 'fulfilled' && res.value) {
@@ -8004,22 +8663,22 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         presupuestoKpiGrid.innerHTML = `
           <div class="stat-card stat-rosa">
             <div class="stat-badge">TOTAL ESTIMADO</div>
-            <div class="stat-value">${costoGlobal.toFixed(0)}€</div>
+            <div class="stat-value">${formatMoneda(costoGlobal)}</div>
             <div class="stat-label">Costo global del viaje</div>
           </div>
           <div class="stat-card stat-azul">
             <div class="stat-badge">POR PERSONA</div>
-            <div class="stat-value">${numPersonas > 0 ? (costoGlobal / numPersonas).toFixed(0) : 0}€</div>
+            <div class="stat-value">${formatMoneda(numPersonas > 0 ? (costoGlobal / numPersonas) : 0)}</div>
             <div class="stat-label">${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</div>
           </div>
           <div class="stat-card stat-verde">
             <div class="stat-badge">TOTAL PAGADO</div>
-            <div class="stat-value">${totalPagado.toFixed(0)}€</div>
+            <div class="stat-value">${formatMoneda(totalPagado)}</div>
             <div class="stat-label">${costoGlobal > 0 ? Math.round((totalPagado / costoGlobal) * 100) : 0}% completado</div>
           </div>
           <div class="stat-card stat-amarillo">
             <div class="stat-badge">PENDIENTE</div>
-            <div class="stat-value">${totalPendiente.toFixed(0)}€</div>
+            <div class="stat-value">${formatMoneda(totalPendiente)}</div>
             <div class="stat-label">Por abonar o liquidar</div>
           </div>
         `;
@@ -8062,28 +8721,28 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div class="breakdown-item">
                 <div class="breakdown-header">
                   <span><span class="breakdown-dot" style="background:#38bdf8;"></span>Transporte</span>
-                  <span class="breakdown-amt">${costoTransporte.toFixed(0)}€ <small>(${pctTransp}%)</small></span>
+                  <span class="breakdown-amt">${formatMoneda(costoTransporte)} <small>(${pctTransp}%)</small></span>
                 </div>
                 <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctTransp}%; background:#38bdf8;"></div></div>
               </div>
               <div class="breakdown-item">
                 <div class="breakdown-header">
                   <span><span class="breakdown-dot" style="background:#818cf8;"></span>Alojamiento</span>
-                  <span class="breakdown-amt">${costoAlojamiento.toFixed(0)}€ <small>(${pctAloj}%)</small></span>
+                  <span class="breakdown-amt">${formatMoneda(costoAlojamiento)} <small>(${pctAloj}%)</small></span>
                 </div>
                 <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctAloj}%; background:#818cf8;"></div></div>
               </div>
               <div class="breakdown-item">
                 <div class="breakdown-header">
                   <span><span class="breakdown-dot" style="background:#34d399;"></span>Actividades</span>
-                  <span class="breakdown-amt">${costoEventos.toFixed(0)}€ <small>(${pctAct}%)</small></span>
+                  <span class="breakdown-amt">${formatMoneda(costoEventos)} <small>(${pctAct}%)</small></span>
                 </div>
                 <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctAct}%; background:#34d399;"></div></div>
               </div>
               <div class="breakdown-item">
                 <div class="breakdown-header">
                   <span><span class="breakdown-dot" style="background:#f472b6;"></span>Extras</span>
-                  <span class="breakdown-amt">${costoOtros.toFixed(0)}€ <small>(${pctOtros}%)</small></span>
+                  <span class="breakdown-amt">${formatMoneda(costoOtros)} <small>(${pctOtros}%)</small></span>
                 </div>
                 <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctOtros}%; background:#f472b6;"></div></div>
               </div>
@@ -8099,7 +8758,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       // Vaca / Split bill & Balances
       const costEl = document.getElementById('costoGlobal');
       if (costEl) {
-        costEl.innerHTML = costoGlobal > 0 ? `<strong>Total del viaje: ${costoGlobal.toFixed(2)}€</strong>` : '';
+        costEl.innerHTML = costoGlobal > 0 ? `<strong>Total del viaje: ${formatMoneda(costoGlobal)}</strong>` : '';
       }
       const vacaGlobal = document.getElementById('vacaGlobal');
       const vacaToggle = document.getElementById('vaca-toggle');
@@ -8120,7 +8779,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       if (vacaGlobal && vacaToggle) {
         if (vacaToggle.checked && costoGlobal > 0 && numTotalV > 1) {
-          vacaGlobal.innerHTML = `Cuota equitativa por persona: ${(cuotaIndividual).toFixed(2)}€`;
+          vacaGlobal.innerHTML = `Cuota equitativa por persona: ${formatMoneda(cuotaIndividual)}`;
           vacaGlobal.style.display = 'block';
         } else {
           vacaGlobal.innerHTML = '';
@@ -8135,11 +8794,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             const pagado = aportesPorPersona[v] || 0;
             const balance = pagado - cuotaIndividual;
             const balColor = balance > 0.01 ? '#34d399' : (balance < -0.01 ? '#f87171' : 'var(--gris)');
-            const balTexto = balance > 0.01 ? `+${balance.toFixed(2)}€ (a favor)` : (balance < -0.01 ? `${balance.toFixed(2)}€ (debe)` : 'Al dia');
+            const balTexto = balance > 0.01 ? `+${formatMoneda(balance)} (a favor)` : (balance < -0.01 ? `${formatMoneda(Math.abs(balance))} (debe)` : 'Al dia');
             balHtml += `
               <div class="balance-person-card">
                 <div class="balance-person-name">${v}</div>
-                <div class="balance-person-stat"><span>Abonado:</span> <strong style="color:#f8fafc;">${pagado.toFixed(2)}€</strong></div>
+                <div class="balance-person-stat"><span>Abonado:</span> <strong style="color:#f8fafc;">${formatMoneda(pagado)}</strong></div>
                 <div class="balance-person-stat"><span>Balance:</span> <strong style="color:${balColor};">${balTexto}</strong></div>
               </div>
             `;
@@ -9583,8 +10242,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           zoomControl: true,
           attributionControl: false
         }).setView([40.4168, -3.7038], 4);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-          maxZoom: 19
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 16,
+          attribution: 'Tiles &copy; Esri'
         }).addTo(map);
         markersLayer = L.layerGroup().addTo(map);
       } else {
@@ -13330,6 +13990,27 @@ async function exportarPDF() {
       renderVueltaCostos();
       cerrarModalViajes();
       empezar();
+
+      if (viaje.moneda && typeof setMonedaActiva === 'function') {
+        setMonedaActiva(viaje.moneda, false);
+      }
+      if (Array.isArray(viaje.cartelitos)) {
+        cartelitosNotasViaje = [...viaje.cartelitos];
+      } else if (Array.isArray(viaje.notasFlotantes)) {
+        cartelitosNotasViaje = viaje.notasFlotantes.map(n => ({
+          id: n.id || ('nota_' + Date.now()),
+          x: n.x || 100,
+          y: n.y || 120,
+          texto: n.texto || n.titulo || '',
+          enlace: null
+        }));
+      } else {
+        cartelitosNotasViaje = [];
+      }
+      if (typeof renderCartelitos === 'function') {
+        renderCartelitos();
+      }
+
       showToast(`Viaje "${viaje.nombre}" cargado`, 'success');
     }
 
@@ -16945,6 +17626,9 @@ async function exportarPDF() {
       const destContainer = document.getElementById('destinos');
       if (destContainer) destContainer.innerHTML = '';
       
+      cartelitosNotasViaje = [];
+      if (typeof renderCartelitos === 'function') renderCartelitos();
+
       ocultarAdvertenciaSoloLectura();
       cerrarResumen();
     }
@@ -17118,6 +17802,22 @@ async function exportarPDF() {
   window.guardarComoPlantilla = guardarComoPlantilla;
   window.cargarPlantilla = cargarPlantilla;
   window.eliminarPlantilla = eliminarPlantilla;
+  window.getMonedaActiva = getMonedaActiva;
+  window.setMonedaActiva = setMonedaActiva;
+  window.formatMoneda = formatMoneda;
+  window.getSimboloMoneda = getSimboloMoneda;
+  window.toggleCurrencyDropdown = toggleCurrencyDropdown;
+  window.renderCurrencyDropdown = renderCurrencyDropdown;
+  window.toggleTableroNotas = toggleTableroNotas;
+  window.crearNotaCartelito = crearNotaCartelito;
+  window.renderCartelitos = renderCartelitos;
+  window.actualizarTextoCartelito = actualizarTextoCartelito;
+  window.eliminarNotaCartelito = eliminarNotaCartelito;
+  window.iniciarArrastreCartelito = iniciarArrastreCartelito;
+  window.iniciarArrastreHilito = iniciarArrastreHilito;
+  window.actualizarHilitos = actualizarHilitos;
+  window.getCartelitosNotas = getCartelitosNotas;
+  window.actualizarBadgeCartelitos = actualizarBadgeCartelitos;
   window.exportarViajeActual = exportarViajeActual;
   window.importarViaje = importarViaje;
   window.toggleTransportFields = toggleTransportFields;

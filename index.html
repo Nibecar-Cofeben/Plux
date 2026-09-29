@@ -177,6 +177,10 @@
         <div class="theme-button" id="themeButton" onclick="window.toggleThemeDropdown(event)" title="Tema">🎨</div>
         <div class="theme-dropdown" id="themeDropdown"></div>
       </div>
+      <div class="selector-wrapper" style="position:relative;">
+        <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR €</div>
+        <div class="currency-dropdown" id="currencyDropdown"></div>
+      </div>
       <div class="tour-button" id="tourButton" title="Tour guiado" onclick="window.iniciarTour()">🎯</div>
       <div class="user-button" id="cuentaButton" title="Tu perfil" onclick="window.abrirCuenta()">👤</div>
       <div class="chat-social-button" id="chatSocialBtn" title="Chat del Viaje & Amigos" onclick="window.abrirChatSocial()">
@@ -248,6 +252,7 @@
       <div class="herramientas-grid">
         <button class="herramienta-btn" onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; font-weight:bold; grid-column:span 2;">💬 Chat Grupal & Amigos</button>
         <button class="herramienta-btn" onclick="abrirCalendario()" id="btnCalendario">Calendario</button>
+        <button class="herramienta-btn" onclick="window.crearNotaCartelito(); window.cerrarPanelHerramientas();" id="btnHerramientaNotas" style="background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--texto); font-weight:bold;">+ Crear Nota</button>
         <button class="herramienta-btn" onclick="abrirConversor()" id="btnConversor">Conversor</button>
         <button class="herramienta-btn" onclick="abrirTraductor()" id="btnTraductor">Traductor</button>
         <button class="herramienta-btn" onclick="abrirChecklist()" id="btnChecklist">Checklist</button>
@@ -816,6 +821,13 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap:10px;">
         <h1 id="appTitle" style="margin:0;">Plux · Organiza tu aventura</h1>
         <div style="display:flex; gap:10px; align-items:center;">
+          <button id="btnNuevaNotaCartelito" onclick="window.crearNotaCartelito()" style="background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--texto); padding:8px 14px; border-radius:20px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;">
+            <span>+ Nota</span>
+            <span id="badgeCartelitosCount" style="background:rgba(255,255,255,0.15); padding:2px 7px; border-radius:10px; font-size:0.75rem;">0</span>
+          </button>
+          <button id="btnCurrencyHeader" onclick="window.toggleCurrencyDropdown(event)" style="background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--texto); padding:8px 14px; border-radius:20px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px;">
+            <span id="headerCurrencyTxt">EUR €</span>
+          </button>
           <button id="btnClonarHeader" class="btn-clonar-action" onclick="window.clonarViajeActual()" style="display:none; background:linear-gradient(135deg, #10b981, #0ea5e9); color:#030712; padding:8px 16px; border-radius:20px; font-weight:800; cursor:pointer; border:none; align-items:center; gap:6px; box-shadow:0 0 14px rgba(16,185,129,0.4); font-size:0.88rem;"><span id="btnClonarHeaderTxt">📋 Clonar Viaje</span></button>
           <button id="chatGrupalHeaderBtn" onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:6px; box-shadow:0 0 12px rgba(16,185,129,0.35);">💬 Chat Grupal</button>
           <button id="scratchBtnEditor" onclick="window.empezarDeCero()" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none;">Viaje desde cero 🆕</button>
@@ -860,6 +872,11 @@
         <div class="fila-dato">
           <label id="personasLabel">Cantidad de personas:</label>
           <input type="number" id="numPersonas" min="1" value="1">
+        </div>
+        <div class="fila-dato">
+          <label id="monedaViajeLabel">Moneda de visualización:</label>
+          <select id="monedaViajeSelect" onchange="window.setMonedaActiva(this.value)" style="flex:1; padding:8px 12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:var(--texto); font-weight:600;">
+          </select>
         </div>
         <div class="fila-dato" style="flex-direction:column; align-items:flex-start; gap:6px; margin-top:4px;">
           <label id="quienesVanLabel" style="font-size:0.9rem; font-weight:600; color:var(--texto);">👥 ¿Quiénes viajan? (Nombres o @usuarios):</label>
@@ -1084,6 +1101,9 @@
       <button id="conversorBtn" onclick="convertirMoneda()" style="width:100%;">Convertir</button>
     </div>
   </div>
+  <!-- Capa flotante de notas (cartelitos) y sus hilitos vinculados a destinos o eventos -->
+  <svg id="plux-hilitos-svg" class="plux-hilitos-svg" aria-hidden="true"></svg>
+  <div id="plux-cartelitos-layer" class="plux-cartelitos-layer"></div>
 
   <div id="modal-traductor" style="display:none;">
     <div class="traductor-content" style="max-width:760px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:24px; padding:24px; box-shadow:0 20px 80px rgba(0,0,0,0.6); border:1px solid var(--border); position:relative;">

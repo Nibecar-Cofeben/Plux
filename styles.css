@@ -6037,5 +6037,280 @@ body.mode-reader #mobileMenuCloneBtn {
   .comp-vs-badge {
     align-self: center;
   }
+
+/* ===== SELECTOR DE MONEDA GLOBAL & POR VIAJE ===== */
+.currency-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  border: 2px solid var(--texto);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  transition: transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.3s, background 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0;
+  flex-shrink: 0;
+}
+.currency-button:hover {
+  transform: scale(1.15) rotate(-5deg);
+  box-shadow: 0 0 25px var(--verde);
+}
+.currency-dropdown {
+  position: absolute;
+  top: 58px;
+  right: 0;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.75);
+  display: none;
+  flex-direction: column;
+  min-width: 220px;
+  max-height: 380px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  animation: slideDown 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1000 !important;
+}
+.currency-dropdown.show { display: flex !important; }
+.currency-option {
+  padding: 8px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  color: var(--texto);
+  font-weight: 600;
+  font-size: 0.86rem;
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+.currency-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.currency-option.active {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--verde);
+}
+.currency-badge {
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  font-weight: 700;
+  color: var(--gris);
+}
+.currency-option.active .currency-badge {
+  background: var(--verde);
+  color: #000;
+}
+
+/* ===== NOTAS FLOTANTES (CARTELITOS) & HILITOS ===== */
+.plux-hilitos-svg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9990;
+  overflow: visible;
+}
+
+.plux-cartelitos-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9995;
+  overflow: visible;
+}
+
+.cartelito-nota {
+  position: fixed;
+  pointer-events: auto;
+  width: 235px;
+  min-height: 125px;
+  border-radius: 12px;
+  background: rgba(17, 24, 39, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  user-select: none;
+  font-family: inherit;
+  z-index: 9996;
+}
+
+.cartelito-nota:hover {
+  border-color: rgba(255, 255, 255, 0.26);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.65);
+}
+
+.cartelito-nota.dragging {
+  cursor: grabbing !important;
+  z-index: 10000 !important;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8) !important;
+  transform: scale(1.02);
+}
+
+.cartelito-corner-pin {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #6366f1;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.8), 0 2px 5px rgba(0, 0, 0, 0.5);
+  cursor: crosshair;
+  z-index: 25;
+  transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
+}
+
+.cartelito-corner-pin:hover {
+  transform: scale(1.35);
+  background: #818cf8;
+  box-shadow: 0 0 14px rgba(129, 140, 248, 1);
+}
+
+.cartelito-corner-pin.pulling {
+  background: #ec4899 !important;
+  box-shadow: 0 0 16px rgba(236, 72, 153, 1) !important;
+  transform: scale(1.4) !important;
+}
+
+.cartelito-corner-pin.has-link {
+  background: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.85);
+}
+
+.cartelito-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px 6px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: grab;
+  background: rgba(255, 255, 255, 0.03);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  gap: 6px;
+}
+
+.cartelito-handle {
+  color: var(--gris, #94a3b8);
+  font-size: 0.85rem;
+  letter-spacing: -1px;
+}
+
+.cartelito-badge-enlace {
+  font-size: 0.72rem;
+  color: var(--gris, #94a3b8);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.cartelito-badge-enlace.linked {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.cartelito-btn-close {
+  background: transparent;
+  border: none;
+  color: var(--gris, #94a3b8);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.cartelito-btn-close:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.cartelito-body {
+  padding: 8px 10px 10px 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cartelito-textarea {
+  width: 100%;
+  min-height: 75px;
+  background: transparent;
+  border: none;
+  resize: vertical;
+  color: var(--texto, #f1f5f9);
+  font-family: inherit;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  outline: none;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.cartelito-textarea::placeholder {
+  color: rgba(148, 163, 184, 0.6);
+}
+
+.hilito-svg-line {
+  stroke: #6366f1;
+  stroke-width: 2.4;
+  stroke-dasharray: 6 4;
+  fill: none;
+  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.6));
+  animation: hilitoDash 30s linear infinite;
+}
+
+@keyframes hilitoDash {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 400; }
+}
+
+.hilito-svg-line.active-drag {
+  stroke: #ec4899;
+  stroke-width: 2.8;
+  stroke-dasharray: 4 3;
+  filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.85));
+}
+
+.hilito-anchor-dot {
+  fill: #6366f1;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.8));
+}
+
+.hilito-drop-hover {
+  outline: 3px solid #6366f1 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.75) !important;
+  transition: outline 0.1s ease;
 }
 

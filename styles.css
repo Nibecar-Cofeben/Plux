@@ -6037,6 +6037,7 @@ body.mode-reader #mobileMenuCloneBtn {
   .comp-vs-badge {
     align-self: center;
   }
+}
 
 /* ===== SELECTOR DE MONEDA GLOBAL & POR VIAJE ===== */
 .currency-button {
@@ -6062,25 +6063,37 @@ body.mode-reader #mobileMenuCloneBtn {
   transform: scale(1.15) rotate(-5deg);
   box-shadow: 0 0 25px var(--verde);
 }
-.currency-dropdown {
-  position: absolute;
-  top: 58px;
-  right: 0;
-  background: var(--card);
-  border-radius: 14px;
-  padding: 6px;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.75);
-  display: none;
-  flex-direction: column;
-  min-width: 220px;
-  max-height: 380px;
-  overflow-y: auto;
-  border: 1px solid var(--border);
-  backdrop-filter: blur(20px);
-  animation: slideDown 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 1000 !important;
+.top-selectors .selector-wrapper {
+  position: relative !important;
+  display: inline-block !important;
 }
-.currency-dropdown.show { display: flex !important; }
+
+#currencyDropdown,
+.currency-dropdown {
+  position: absolute !important;
+  top: 58px !important;
+  right: 0 !important;
+  background: var(--card) !important;
+  border-radius: 14px !important;
+  padding: 6px !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.75) !important;
+  display: none !important;
+  flex-direction: column !important;
+  min-width: 220px !important;
+  width: max-content !important;
+  max-height: 380px !important;
+  overflow-y: auto !important;
+  border: 1px solid var(--border) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  animation: slideDown 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 10000 !important;
+}
+#currencyDropdown.show,
+.currency-dropdown.show {
+  display: flex !important;
+  flex-direction: column !important;
+}
 .currency-option {
   padding: 8px 12px;
   border-radius: 9px;
@@ -6237,20 +6250,24 @@ body.mode-reader #mobileMenuCloneBtn {
 }
 
 .cartelito-btn-close {
-  background: transparent;
-  border: none;
-  color: var(--gris, #94a3b8);
-  font-size: 1.15rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 4px;
-  border-radius: 4px;
-  transition: color 0.15s, background 0.15s;
+  background: transparent !important;
+  border: none !important;
+  color: var(--gris, #94a3b8) !important;
+  font-size: 1.15rem !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  padding: 0 4px !important;
+  border-radius: 4px !important;
+  transition: color 0.15s, background 0.15s !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  box-shadow: none !important;
 }
 
 .cartelito-btn-close:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
 }
 
 .cartelito-body {
@@ -6261,22 +6278,23 @@ body.mode-reader #mobileMenuCloneBtn {
 }
 
 .cartelito-textarea {
-  width: 100%;
-  min-height: 75px;
-  background: transparent;
-  border: none;
-  resize: vertical;
-  color: var(--texto, #f1f5f9);
-  font-family: inherit;
-  font-size: 0.86rem;
-  line-height: 1.45;
-  outline: none;
-  padding: 0;
-  box-sizing: border-box;
+  width: 100% !important;
+  min-height: 75px !important;
+  background: transparent !important;
+  border: none !important;
+  resize: vertical !important;
+  color: var(--texto, #f1f5f9) !important;
+  font-family: inherit !important;
+  font-size: 0.86rem !important;
+  line-height: 1.45 !important;
+  outline: none !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
 }
 
 .cartelito-textarea::placeholder {
-  color: rgba(148, 163, 184, 0.6);
+  color: rgba(148, 163, 184, 0.6) !important;
 }
 
 .hilito-svg-line {

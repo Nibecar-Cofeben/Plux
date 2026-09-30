@@ -6037,6 +6037,38 @@ body.mode-reader #mobileMenuCloneBtn {
   .comp-vs-badge {
     align-self: center;
   }
+
+  .top-selectors {
+    top: 12px !important;
+    right: 12px !important;
+    gap: 6px !important;
+    max-width: calc(100vw - 24px) !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+  }
+  .top-selectors .lang-button,
+  .top-selectors .theme-button,
+  .top-selectors .currency-button,
+  .top-selectors .tour-button,
+  .top-selectors .user-button,
+  .top-selectors .chat-social-button {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    font-size: 0.82rem !important;
+  }
+  #currencyDropdown,
+  .currency-dropdown {
+    top: 48px !important;
+    right: 0 !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: 320px !important;
+  }
+  .cartelito-nota {
+    width: min(230px, 85vw) !important;
+    min-height: 100px !important;
+  }
 }
 
 /* ===== SELECTOR DE MONEDA GLOBAL & POR VIAJE ===== */
@@ -6048,7 +6080,9 @@ body.mode-reader #mobileMenuCloneBtn {
   border: 2px solid var(--texto);
   color: #ffffff;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 0.92rem;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   transition: transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.3s, background 0.3s;
@@ -6058,6 +6092,7 @@ body.mode-reader #mobileMenuCloneBtn {
   position: relative;
   padding: 0;
   flex-shrink: 0;
+  user-select: none;
 }
 .currency-button:hover {
   transform: scale(1.15) rotate(-5deg);
@@ -6093,6 +6128,66 @@ body.mode-reader #mobileMenuCloneBtn {
 .currency-dropdown.show {
   display: flex !important;
   flex-direction: column !important;
+}
+#currencyDropdown::-webkit-scrollbar,
+.currency-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+#currencyDropdown::-webkit-scrollbar-track,
+.currency-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+#currencyDropdown::-webkit-scrollbar-thumb,
+.currency-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+#currencyDropdown::-webkit-scrollbar-thumb:hover,
+.currency-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Opciones de selector de monedas en formularios */
+#monedaViajeSelect,
+.datos-generales select,
+select.plux-moneda-select {
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: #f8fafc !important;
+  border: 1px solid var(--border) !important;
+}
+#monedaViajeSelect option,
+.datos-generales select option,
+select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  padding: 8px 12px !important;
+}
+#monedaViajeSelect option:checked,
+select option:checked {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+/* Boton de notas para cabecera movil */
+.mobile-btn-nota {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  padding: 8px 14px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 0.84rem !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  transition: all 0.2s !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+.mobile-btn-nota:active {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(0.94);
 }
 .currency-option {
   padding: 8px 12px;

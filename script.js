@@ -2631,7 +2631,8 @@
       
       const currBtn = document.getElementById('currencyButton');
       if (currBtn) {
-        currBtn.textContent = `${code} ${getSimboloMoneda(code)}`;
+        currBtn.textContent = code;
+        currBtn.title = `Moneda: ${code} (${getSimboloMoneda(code)})`;
       }
       const hdrTxt = document.getElementById('headerCurrencyTxt');
       if (hdrTxt) {
@@ -4149,8 +4150,8 @@ VISTAS Y HERRAMIENTAS:
 - [ACCION:VIAJE_ACTIVO] → Activa modo viaje activo (muestra itinerario del día actual)
 - [ACCION:INVITAR_COLABORADOR:Nickname] → Invita a un colaborador por nickname (ej: @maria)
 - [ACCION:CAMBIAR_MONEDA:Codigo] → Cambia la moneda en la que se visualizan todos los gastos del viaje (ej: [ACCION:CAMBIAR_MONEDA:USD] o [ACCION:CAMBIAR_MONEDA:ARS] o [ACCION:CAMBIAR_MONEDA:EUR] o [ACCION:CAMBIAR_MONEDA:BRL] o [ACCION:CAMBIAR_MONEDA:GBP])
-- [ACCION:CREAR_NOTA:Texto de la nota] → Crea una nota flotante en pantalla
-- [ACCION:CONECTAR_NOTA:TextoDeLaNota|NombreDestinoOEvento] → Conecta la nota con un hilito al destino o actividad
+- [ACCION:CREAR_NOTA:Texto de la nota|NombreDestinoOpcional] → Crea una nota flotante en pantalla y opcionalmente la conecta con un hilito al destino
+- [ACCION:CONECTAR_NOTA:TextoDeLaNota|NombreDestinoOEvento] → Conecta una nota existente con un hilito al destino o actividad
 - [ACCION:AGREGAR_CHECKLIST:Texto|Categoria] → Agrega una tarea directamente a la checklist general
 
 Tenés acceso al clima actual del viaje (OpenWeather) en el contexto del mensaje. Usalo para recomendar ropa, actividades o cambios de plan.
@@ -5033,9 +5034,20 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       // CREAR_NOTA
       const accionesNota = [...respuesta.matchAll(/\[ACCION:CREAR_NOTA:([^\]]+)\]/g)];
       accionesNota.forEach((match) => {
-        const txt = match[1] ? match[1].trim() : '';
+        const partes = match[1].split('|');
+        const txt = partes[0] ? partes[0].trim() : '';
+        const targetDest = partes.length > 1 ? partes[1].trim().toLowerCase() : null;
+
+        let enlace = null;
+        if (targetDest && Array.isArray(destinos)) {
+          const dest = destinos.find(d => d.nombre && d.nombre.toLowerCase().includes(targetDest));
+          if (dest) {
+            enlace = { tipo: 'dest', id: dest.id, label: 'Destino: ' + dest.nombre };
+          }
+        }
+
         if (typeof crearNotaCartelito === 'function') {
-          crearNotaCartelito(txt);
+          crearNotaCartelito(txt, enlace);
         }
         accionesEjecutadas = true;
       });
@@ -5062,7 +5074,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       // ABRIR_NOTAS
       if (respuesta.includes('[ACCION:ABRIR_NOTAS]')) {
-        setTimeout(() => { if (typeof crearNotaCartelito === 'function') crearNotaCartelito(); }, 600);
+        const layer = document.getElementById('plux-cartelitos-layer');
+        if (layer) layer.scrollIntoView({ behavior: 'smooth' });
         accionesEjecutadas = true;
       }
 

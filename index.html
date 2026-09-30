@@ -114,7 +114,7 @@
   <meta http-equiv="Expires" content="0" />
 
   <base href="/" />
-  <link rel="stylesheet" href="/styles.css?v=1790010000009">
+  <link rel="stylesheet" href="/styles.css?v=1790010000010">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -132,7 +132,7 @@
   <script src="/firebase/firebase-auth-compat.js"></script>
   <script src="/firebase/firebase-database-compat.js"></script>
   <script src="/firebase/firebase-firestore-compat.js"></script>
-  <script defer src="/script.js?v=1790010000009"></script>
+  <script defer src="/script.js?v=1790010000010"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -178,7 +178,7 @@
         <div class="theme-dropdown" id="themeDropdown"></div>
       </div>
       <div class="selector-wrapper" style="position:relative;">
-        <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR €</div>
+        <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR</div>
         <div class="currency-dropdown" id="currencyDropdown"></div>
       </div>
       <div class="tour-button" id="tourButton" title="Tour guiado" onclick="window.iniciarTour()">🎯</div>
@@ -842,9 +842,12 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px; height:22px; display:block;"><polyline points="15 18 9 12 15 6"></polyline></svg>
       </button>
       <h2 id="appTitleMobile" class="mobile-header-title">Plan de Viaje</h2>
-      <button class="mobile-menu-trigger" onclick="window.toggleMobileTripMenu()" title="Menú de opciones" aria-label="Menú de opciones">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:20px; height:20px; display:block;"><circle cx="12" cy="12" r="2.2"></circle><circle cx="12" cy="5" r="2.2"></circle><circle cx="12" cy="19" r="2.2"></circle></svg>
-      </button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="mobile-btn-nota" onclick="window.crearNotaCartelito()" title="Crear Nota">+ Nota</button>
+        <button class="mobile-menu-trigger" onclick="window.toggleMobileTripMenu()" title="Menú de opciones" aria-label="Menú de opciones">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:20px; height:20px; display:block;"><circle cx="12" cy="12" r="2.2"></circle><circle cx="12" cy="5" r="2.2"></circle><circle cx="12" cy="19" r="2.2"></circle></svg>
+        </button>
+      </div>
     </div>
 
     <!-- BANNER MODO LECTOR & CLONAR VIAJE -->
@@ -1800,6 +1803,10 @@
         <button id="mobileMenuCloneBtn" class="mobile-drawer-item btn-clonar-action" onclick="window.mobileActionClonar()">
           <span class="icon">📋</span>
           <span id="mobileMenuCloneTxt">Clonar Viaje</span>
+        </button>
+        <button class="mobile-drawer-item" onclick="window.crearNotaCartelito(); window.toggleMobileTripMenu();">
+          <span class="icon">📝</span>
+          <span>Crear Nota Flotante</span>
         </button>
         <button class="mobile-drawer-item" onclick="window.mobileActionInvitar()">
           <span class="icon">👥</span>

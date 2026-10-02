@@ -178,7 +178,7 @@
         <div class="theme-dropdown" id="themeDropdown"></div>
       </div>
       <div class="selector-wrapper" style="position:relative;">
-        <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR</div>
+        <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR €</div>
         <div class="currency-dropdown" id="currencyDropdown"></div>
       </div>
       <div class="tour-button" id="tourButton" title="Tour guiado" onclick="window.iniciarTour()">🎯</div>
@@ -825,9 +825,12 @@
             <span>+ Nota</span>
             <span id="badgeCartelitosCount" style="background:rgba(255,255,255,0.15); padding:2px 7px; border-radius:10px; font-size:0.75rem;">0</span>
           </button>
-          <button id="btnCurrencyHeader" onclick="window.toggleCurrencyDropdown(event)" style="background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--texto); padding:8px 14px; border-radius:20px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px;">
-            <span id="headerCurrencyTxt">EUR €</span>
-          </button>
+          <div class="selector-wrapper" style="position:relative; display:inline-block;">
+            <button id="btnCurrencyHeader" onclick="window.toggleCurrencyDropdown(event)" style="background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--texto); padding:8px 14px; border-radius:20px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px;">
+              <span id="headerCurrencyTxt">EUR €</span>
+            </button>
+            <div class="currency-dropdown" id="currencyDropdown"></div>
+          </div>
           <button id="btnClonarHeader" class="btn-clonar-action" onclick="window.clonarViajeActual()" style="display:none; background:linear-gradient(135deg, #10b981, #0ea5e9); color:#030712; padding:8px 16px; border-radius:20px; font-weight:800; cursor:pointer; border:none; align-items:center; gap:6px; box-shadow:0 0 14px rgba(16,185,129,0.4); font-size:0.88rem;"><span id="btnClonarHeaderTxt">📋 Clonar Viaje</span></button>
           <button id="chatGrupalHeaderBtn" onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:6px; box-shadow:0 0 12px rgba(16,185,129,0.35);">💬 Chat Grupal</button>
           <button id="scratchBtnEditor" onclick="window.empezarDeCero()" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none;">Viaje desde cero 🆕</button>

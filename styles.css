@@ -6106,7 +6106,7 @@ body.mode-reader #mobileMenuCloneBtn {
 #currencyDropdown,
 .currency-dropdown {
   position: absolute !important;
-  top: 58px !important;
+  top: calc(100% + 8px) !important;
   right: 0 !important;
   background: var(--card) !important;
   border-radius: 14px !important;
@@ -6276,6 +6276,30 @@ select option:checked {
   z-index: 10000 !important;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8) !important;
   transform: scale(1.02);
+  animation: none !important;
+}
+
+@keyframes notitaFloatA {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(0.3deg); }
+}
+@keyframes notitaFloatB {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(-0.4deg); }
+}
+@keyframes notitaFloatC {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(0.2deg); }
+}
+
+.cartelito-nota:nth-child(3n+1) {
+  animation: notitaFloatA 4.8s ease-in-out infinite;
+}
+.cartelito-nota:nth-child(3n+2) {
+  animation: notitaFloatB 5.4s ease-in-out infinite;
+}
+.cartelito-nota:nth-child(3n) {
+  animation: notitaFloatC 4.2s ease-in-out infinite;
 }
 
 .cartelito-corner-pin {

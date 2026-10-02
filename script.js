@@ -2621,28 +2621,48 @@
     }
     window.redondearMoneda = redondearMoneda;
 
+    function renderCurrencyOptions(selectedCode) {
+      const current = selectedCode || getMonedaActiva();
+      return PLUX_CURRENCIES.map(c => 
+        `<option value="${c.code}" ${c.code === current ? 'selected' : ''}>${c.code} (${c.symbol})</option>`
+      ).join('');
+    }
+    window.renderCurrencyOptions = renderCurrencyOptions;
+
     function convertirTodosLosCostosViaje(monedaAnterior, monedaNueva) {
       if (!monedaAnterior || !monedaNueva || monedaAnterior === monedaNueva) return;
 
       if (Array.isArray(destinos)) {
         destinos.forEach(d => {
           if (d.transporte && typeof d.transporte.precio === 'number' && d.transporte.precio > 0) {
-            d.transporte.precio = redondearMoneda(convertirMonto(d.transporte.precio, monedaAnterior, monedaNueva), monedaNueva);
+            if (!d.transporte.moneda || d.transporte.moneda === monedaAnterior) {
+              d.transporte.precio = redondearMoneda(convertirMonto(d.transporte.precio, monedaAnterior, monedaNueva), monedaNueva);
+              d.transporte.moneda = monedaNueva;
+            }
           }
           if (Array.isArray(d.alojamientos)) {
             d.alojamientos.forEach(a => {
               if (typeof a.precio === 'number' && a.precio > 0) {
-                a.precio = redondearMoneda(convertirMonto(a.precio, monedaAnterior, monedaNueva), monedaNueva);
+                if (!a.moneda || a.moneda === monedaAnterior) {
+                  a.precio = redondearMoneda(convertirMonto(a.precio, monedaAnterior, monedaNueva), monedaNueva);
+                  a.moneda = monedaNueva;
+                }
               }
             });
           }
           if (Array.isArray(d.tramos)) {
             d.tramos.forEach(t => {
               if (typeof t.precio === 'number' && t.precio > 0) {
-                t.precio = redondearMoneda(convertirMonto(t.precio, monedaAnterior, monedaNueva), monedaNueva);
+                if (!t.moneda || t.moneda === monedaAnterior) {
+                  t.precio = redondearMoneda(convertirMonto(t.precio, monedaAnterior, monedaNueva), monedaNueva);
+                  t.moneda = monedaNueva;
+                }
               }
               if (typeof t.precioAlojamiento === 'number' && t.precioAlojamiento > 0) {
-                t.precioAlojamiento = redondearMoneda(convertirMonto(t.precioAlojamiento, monedaAnterior, monedaNueva), monedaNueva);
+                if (!t.monedaAlojamiento || t.monedaAlojamiento === monedaAnterior) {
+                  t.precioAlojamiento = redondearMoneda(convertirMonto(t.precioAlojamiento, monedaAnterior, monedaNueva), monedaNueva);
+                  t.monedaAlojamiento = monedaNueva;
+                }
               }
             });
           }
@@ -2651,14 +2671,20 @@
               if (Array.isArray(dia.eventos)) {
                 dia.eventos.forEach(ev => {
                   if (typeof ev.costo === 'number' && ev.costo > 0) {
-                    ev.costo = redondearMoneda(convertirMonto(ev.costo, monedaAnterior, monedaNueva), monedaNueva);
+                    if (!ev.moneda || ev.moneda === monedaAnterior) {
+                      ev.costo = redondearMoneda(convertirMonto(ev.costo, monedaAnterior, monedaNueva), monedaNueva);
+                      ev.moneda = monedaNueva;
+                    }
                   }
                 });
               }
               if (Array.isArray(dia.costosAdicionales)) {
                 dia.costosAdicionales.forEach(c => {
                   if (typeof c.precio === 'number' && c.precio > 0) {
-                    c.precio = redondearMoneda(convertirMonto(c.precio, monedaAnterior, monedaNueva), monedaNueva);
+                    if (!c.moneda || c.moneda === monedaAnterior) {
+                      c.precio = redondearMoneda(convertirMonto(c.precio, monedaAnterior, monedaNueva), monedaNueva);
+                      c.moneda = monedaNueva;
+                    }
                   }
                 });
               }
@@ -2668,12 +2694,18 @@
       }
 
       if (typeof vueltaPrecioGlobal === 'number' && vueltaPrecioGlobal > 0) {
-        vueltaPrecioGlobal = redondearMoneda(convertirMonto(vueltaPrecioGlobal, monedaAnterior, monedaNueva), monedaNueva);
+        if (!vueltaMonedaGlobal || vueltaMonedaGlobal === monedaAnterior) {
+          vueltaPrecioGlobal = redondearMoneda(convertirMonto(vueltaPrecioGlobal, monedaAnterior, monedaNueva), monedaNueva);
+          vueltaMonedaGlobal = monedaNueva;
+        }
       }
       if (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales)) {
         vueltaCostosAdicionales.forEach(c => {
           if (typeof c.precio === 'number' && c.precio > 0) {
-            c.precio = redondearMoneda(convertirMonto(c.precio, monedaAnterior, monedaNueva), monedaNueva);
+            if (!c.moneda || c.moneda === monedaAnterior) {
+              c.precio = redondearMoneda(convertirMonto(c.precio, monedaAnterior, monedaNueva), monedaNueva);
+              c.moneda = monedaNueva;
+            }
           }
         });
       }
@@ -2739,40 +2771,45 @@
       }
       const ld = document.getElementById('langDropdown');
       const td = document.getElementById('themeDropdown');
-      const cd = document.getElementById('currencyDropdown');
       if (ld) { ld.classList.remove('show'); ld.style.display = 'none'; }
       if (td) { td.classList.remove('show'); td.style.display = 'none'; }
-      if (cd) {
-        renderCurrencyDropdown();
-        const isVisible = cd.classList.contains('show') || cd.style.display === 'flex';
-        if (isVisible) {
-          cd.classList.remove('show');
-          cd.style.display = 'none';
-        } else {
-          cd.classList.add('show');
-          cd.style.display = 'flex';
+
+      const parentWrapper = e?.target ? e.target.closest('.selector-wrapper') : null;
+      const targetDropdown = parentWrapper ? parentWrapper.querySelector('.currency-dropdown') : document.getElementById('currencyDropdown');
+
+      const allDropdowns = document.querySelectorAll('.currency-dropdown');
+      renderCurrencyDropdown();
+
+      if (targetDropdown) {
+        const isVisible = targetDropdown.classList.contains('show') || targetDropdown.style.display === 'flex';
+        allDropdowns.forEach(d => { d.classList.remove('show'); d.style.display = 'none'; });
+        if (!isVisible) {
+          targetDropdown.classList.add('show');
+          targetDropdown.style.display = 'flex';
         }
       }
     }
     window.toggleCurrencyDropdown = toggleCurrencyDropdown;
 
     function renderCurrencyDropdown() {
-      const cd = document.getElementById('currencyDropdown');
       const activeCurr = getMonedaActiva();
-      if (cd) {
-        cd.innerHTML = PLUX_CURRENCIES.map(c => {
-          const isActive = activeCurr === c.code;
-          return `
-            <div class="currency-option ${isActive ? 'active' : ''}" onclick="window.setMonedaActiva('${c.code}')">
-              <span>${c.name} (${c.symbol})</span>
-              <span class="currency-badge">${c.badge}</span>
-            </div>
-          `;
-        }).join('');
-      }
+      const allDropdowns = document.querySelectorAll('.currency-dropdown');
+      const optionsHtml = PLUX_CURRENCIES.map(c => {
+        const isActive = activeCurr === c.code;
+        return `
+          <div class="currency-option ${isActive ? 'active' : ''}" onclick="window.setMonedaActiva('${c.code}')">
+            <span>${c.name} (${c.symbol})</span>
+            <span class="currency-badge">${c.badge}</span>
+          </div>
+        `;
+      }).join('');
+
+      allDropdowns.forEach(cd => {
+        cd.innerHTML = optionsHtml;
+      });
 
       const sel = document.getElementById('monedaViajeSelect');
-      if (sel && sel.options.length === 0) {
+      if (sel) {
         sel.innerHTML = PLUX_CURRENCIES.map(c => {
           return `<option value="${c.code}" ${c.code === activeCurr ? 'selected' : ''}>${c.code} (${c.symbol}) - ${c.name}</option>`;
         }).join('');
@@ -3327,6 +3364,13 @@
           td.classList.remove('show');
           td.style.display = 'none';
         }
+      }
+      const isCurr = e.target.closest('#currencyButton') || e.target.closest('#btnCurrencyHeader') || e.target.closest('.currency-dropdown');
+      if (!isCurr) {
+        document.querySelectorAll('.currency-dropdown').forEach(cd => {
+          cd.classList.remove('show');
+          cd.style.display = 'none';
+        });
       }
     });
 
@@ -7348,8 +7392,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div id="dropdown-transporte-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:99999;"></div>
             </div>
             <div class="field-boa">
-              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('transport_price') || 'PRECIO TRANSPORTE'}</label>
-              <input type="number" id="tramo-precio-${destId}-${ida}" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('transport_price') || 'PRECIO TRANSPORTE'} (${getSimboloMoneda(tramo.moneda || getMonedaActiva())})</label>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <input type="number" id="tramo-precio-${destId}-${ida}" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="flex:1; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+                <select class="plux-moneda-select" onchange="actualizarTramo(${destId}, ${ida}, 'moneda', this.value)" style="width:78px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.8rem; font-weight:600;" title="Moneda transporte">
+                  ${renderCurrencyOptions(tramo.moneda || getMonedaActiva())}
+                </select>
+              </div>
             </div>
             <div class="field-boa" style="grid-column: 1 / -1; position:relative;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
@@ -7362,8 +7411,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div id="dropdown-hoteles-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:99999;"></div>
             </div>
             <div class="field-boa" style="grid-column: 1 / -1;">
-              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('precio_alojamiento_label')}</label>
-              <input type="number" id="tramo-precioAlojamiento-${destId}-${ida}" placeholder="0.00" value="${tramo.precioAlojamiento || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precioAlojamiento', parseFloat(this.value)||0)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('precio_alojamiento_label')} (${getSimboloMoneda(tramo.monedaAlojamiento || getMonedaActiva())})</label>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <input type="number" id="tramo-precioAlojamiento-${destId}-${ida}" placeholder="0.00" value="${tramo.precioAlojamiento || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precioAlojamiento', parseFloat(this.value)||0)" style="flex:1; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+                <select class="plux-moneda-select" onchange="actualizarTramo(${destId}, ${ida}, 'monedaAlojamiento', this.value)" style="width:78px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.8rem; font-weight:600;" title="Moneda alojamiento">
+                  ${renderCurrencyOptions(tramo.monedaAlojamiento || getMonedaActiva())}
+                </select>
+              </div>
             </div>
           </div>
           <div class="escalas-container" id="escalas-${destId}-${ida}" style="margin-top:12px;"></div>
@@ -7421,6 +7475,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (!checkEditPermission()) return;
       const dest = destinos.find(d => d.id === destId);
       dest.tramos[tramoIda][campo] = valor;
+      if (campo === 'moneda' || campo === 'monedaAlojamiento') {
+        renderTramos(destId);
+        const pantResumen = document.getElementById('pantalla-resumen');
+        if (pantResumen && pantResumen.style.display !== 'none') mostrarResumen();
+      }
       autoSave();
     }
 
@@ -7609,8 +7668,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             <input type="text" class="notas-input" value="${ev.notas || ''}" placeholder="${t('event_notes_placeholder')}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'notas', this.value)">
             <div class="detalles-evento">
               <div class="detalle-field">
-                <label>${t('event_cost_placeholder')} (${getSimboloMoneda()})</label>
-                <input type="number" value="${ev.costo || 0}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'costo', parseFloat(this.value)||0)">
+                <label>${t('event_cost_placeholder')} (${getSimboloMoneda(ev.moneda || getMonedaActiva())})</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <input type="number" value="${ev.costo || 0}" style="flex:1;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'costo', parseFloat(this.value)||0)">
+                  <select class="plux-moneda-select" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'moneda', this.value)" style="width:78px; padding:6px 4px; font-size:0.8rem; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:6px; color:#fff;" title="Moneda de este gasto">
+                    ${renderCurrencyOptions(ev.moneda || getMonedaActiva())}
+                  </select>
+                </div>
               </div>
               <div class="detalle-field">
                 <label>${t('event_duration_placeholder')} (min)</label>
@@ -8018,6 +8082,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const dia = dest?.dias?.find(d => d.id === diaId);
       if (!dia || !dia.eventos[evId]) return;
       dia.eventos[evId][campo] = valor;
+      if (campo === 'moneda') {
+        const lbl = document.querySelector(`.evento[data-dest-id="${destId}"][data-dia-id="${diaId}"][data-ev-idx="${evId}"] .detalle-field label`);
+        if (lbl) {
+          lbl.textContent = `${t('event_cost_placeholder')} (${getSimboloMoneda(valor)})`;
+        }
+        const pantResumen = document.getElementById('pantalla-resumen');
+        if (pantResumen && pantResumen.style.display !== 'none') mostrarResumen();
+      }
       autoSave();
     }
 
@@ -8102,8 +8174,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const div = document.createElement("div");
           div.className = "costo-adicional-item";
           div.innerHTML = `
-            <input type="text" placeholder="${t('costo_desc')}" value="${costo.descripcion}" onchange="actualizarCostoAdicional(${destId}, ${diaId}, ${ida}, 'descripcion', this.value)">
-            <input type="number" placeholder="€" value="${costo.precio}" onchange="actualizarCostoAdicional(${destId}, ${diaId}, ${ida}, 'precio', parseFloat(this.value)||0)">
+            <input type="text" placeholder="${t('costo_desc')}" value="${costo.descripcion || costo.concepto || ''}" onchange="actualizarCostoAdicional(${destId}, ${diaId}, ${ida}, 'descripcion', this.value)" style="flex:1;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="number" placeholder="0" value="${costo.precio || 0}" style="width:80px;" onchange="actualizarCostoAdicional(${destId}, ${diaId}, ${ida}, 'precio', parseFloat(this.value)||0)">
+              <select class="plux-moneda-select" onchange="actualizarCostoAdicional(${destId}, ${diaId}, ${ida}, 'moneda', this.value)" style="width:74px; padding:6px 4px; font-size:0.78rem; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:6px; color:#fff;" title="Moneda de este costo">
+                ${renderCurrencyOptions(costo.moneda || getMonedaActiva())}
+              </select>
+            </div>
             <button class="close-icon" onclick="eliminarCostoAdicional(${destId}, ${diaId}, ${ida})">×</button>
           `;
           container.appendChild(div);
@@ -8116,6 +8193,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const dest = destinos.find(d => d.id === destId);
       const dia = dest.dias.find(d => d.id === diaId);
       dia.costosAdicionales[ida][campo] = valor;
+      if (campo === 'moneda') {
+        const pantResumen = document.getElementById('pantalla-resumen');
+        if (pantResumen && pantResumen.style.display !== 'none') mostrarResumen();
+      }
       autoSave();
     }
 
@@ -8275,9 +8356,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         totalDias += numDiasDest;
         let costoDest = 0;
 
+        const monedaActiva = getMonedaActiva();
+
         (dest.tramos || []).forEach((tramo, tramoIdx) => {
-          const precioTransp = Number(tramo.precio) || 0;
-          const precioAloj = Number(tramo.precioAlojamiento) || 0;
+          const precioTranspRaw = Number(tramo.precio) || 0;
+          const precioAlojRaw = Number(tramo.precioAlojamiento) || 0;
+          const precioTransp = convertirMonto(precioTranspRaw, tramo.moneda || monedaActiva, monedaActiva);
+          const precioAloj = convertirMonto(precioAlojRaw, tramo.monedaAlojamiento || monedaActiva, monedaActiva);
+
           if (precioTransp > 0) {
             const cTransp = precioTransp * numPersonas;
             costoGlobal += cTransp;
@@ -8328,7 +8414,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           totalEventos += dia.eventos ? dia.eventos.length : 0;
           (dia.eventos || []).forEach((ev, evIdx) => {
             if (ev.costo) {
-              const c = (Number(ev.costo) || 0) * numPersonas;
+              const evCostoUnit = convertirMonto(Number(ev.costo) || 0, ev.moneda || monedaActiva, monedaActiva);
+              const c = evCostoUnit * numPersonas;
               costoGlobal += c;
               costoEventos += c;
               costoDest += c;
@@ -8343,7 +8430,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 itemIndex: evIdx,
                 concepto: ev.titulo || t('untitled_event') || 'Actividad',
                 categoria: 'Actividades',
-                costoUnitario: Number(ev.costo) || 0,
+                costoUnitario: evCostoUnit,
                 costoTotal: c,
                 pagadoPor: ev.pagadoPor || 'Todos',
                 pagado: isPaid,
@@ -8353,7 +8440,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           });
           (dia.costosAdicionales || []).forEach((c, cIdx) => {
             if (c.precio) {
-              const p = Number(c.precio) || 0;
+              const p = convertirMonto(Number(c.precio) || 0, c.moneda || monedaActiva, monedaActiva);
               costoGlobal += p;
               costoOtros += p;
               costoDest += p;
@@ -8381,8 +8468,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         costosPorDestino.push({ id: dest.id, nombre: dest.nombre, costo: costoDest, diasCount: numDiasDest });
       });
 
+      const monedaActivaGlobal = getMonedaActiva();
       if (vueltaPrecioGlobal) {
-        const vCost = (Number(vueltaPrecioGlobal) || 0) * numPersonas;
+        const vUnit = convertirMonto(Number(vueltaPrecioGlobal) || 0, (typeof vueltaMonedaGlobal !== 'undefined' && vueltaMonedaGlobal) || monedaActivaGlobal, monedaActivaGlobal);
+        const vCost = vUnit * numPersonas;
         costoGlobal += vCost;
         costoTransporte += vCost;
         const isPaid = (typeof vueltaPagado !== 'undefined') ? vueltaPagado === true : false;
@@ -8395,7 +8484,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           itemIndex: null,
           concepto: `Regreso / Vuelta (${vueltaGlobal || 'Retorno'})`,
           categoria: 'Transporte',
-          costoUnitario: Number(vueltaPrecioGlobal) || 0,
+          costoUnitario: vUnit,
           costoTotal: vCost,
           pagadoPor: (typeof vueltaPagadoPor !== 'undefined') ? vueltaPagadoPor : 'Todos',
           pagado: isPaid,
@@ -8405,7 +8494,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales) ? vueltaCostosAdicionales : []).forEach((vc, vcIdx) => {
         if (vc.precio) {
-          const p = Number(vc.precio) || 0;
+          const p = convertirMonto(Number(vc.precio) || 0, vc.moneda || monedaActivaGlobal, monedaActivaGlobal);
           costoGlobal += p;
           costoOtros += p;
           const isPaid = vc.pagado === true;

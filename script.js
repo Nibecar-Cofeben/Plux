@@ -2602,20 +2602,87 @@
     }
     window.getSimboloMoneda = getSimboloMoneda;
 
-    function convertirDeEur(amountInEur, targetCurrency) {
-      const curr = targetCurrency || getMonedaActiva();
-      const valEur = parseFloat(amountInEur) || 0;
-      if (curr === 'EUR') return valEur;
-      const tasaEur = TASAS_CAMBIO['EUR'] || 0.92;
-      const tasaDest = TASAS_CAMBIO[curr] || 1.0;
-      const enUsd = valEur / tasaEur;
-      return enUsd * tasaDest;
+    function convertirMonto(monto, monedaOrigen, monedaDestino) {
+      const val = parseFloat(monto);
+      if (isNaN(val) || val <= 0) return 0;
+      if (!monedaOrigen || !monedaDestino || monedaOrigen === monedaDestino) return val;
+      const tasaOrigen = TASAS_CAMBIO[monedaOrigen] || 1.0;
+      const tasaDestino = TASAS_CAMBIO[monedaDestino] || 1.0;
+      const enUsd = val / tasaOrigen;
+      return enUsd * tasaDestino;
     }
-    window.convertirDeEur = convertirDeEur;
+    window.convertirMonto = convertirMonto;
 
-    function formatMoneda(amountInEur, targetCurrency) {
+    function redondearMoneda(val, moneda) {
+      if (moneda === 'ARS' || moneda === 'JPY' || moneda === 'CLP' || moneda === 'COP') {
+        return Math.round(val);
+      }
+      return Number(val.toFixed(2));
+    }
+    window.redondearMoneda = redondearMoneda;
+
+    function convertirTodosLosCostosViaje(monedaAnterior, monedaNueva) {
+      if (!monedaAnterior || !monedaNueva || monedaAnterior === monedaNueva) return;
+
+      if (Array.isArray(destinos)) {
+        destinos.forEach(d => {
+          if (d.transporte && typeof d.transporte.precio === 'number' && d.transporte.precio > 0) {
+            d.transporte.precio = redondearMoneda(convertirMonto(d.transporte.precio, monedaAnterior, monedaNueva), monedaNueva);
+          }
+          if (Array.isArray(d.alojamientos)) {
+            d.alojamientos.forEach(a => {
+              if (typeof a.precio === 'number' && a.precio > 0) {
+                a.precio = redondearMoneda(convertirMonto(a.precio, monedaAnterior, monedaNueva), monedaNueva);
+              }
+            });
+          }
+          if (Array.isArray(d.tramos)) {
+            d.tramos.forEach(t => {
+              if (typeof t.precio === 'number' && t.precio > 0) {
+                t.precio = redondearMoneda(convertirMonto(t.precio, monedaAnterior, monedaNueva), monedaNueva);
+              }
+              if (typeof t.precioAlojamiento === 'number' && t.precioAlojamiento > 0) {
+                t.precioAlojamiento = redondearMoneda(convertirMonto(t.precioAlojamiento, monedaAnterior, monedaNueva), monedaNueva);
+              }
+            });
+          }
+          if (Array.isArray(d.dias)) {
+            d.dias.forEach(dia => {
+              if (Array.isArray(dia.eventos)) {
+                dia.eventos.forEach(ev => {
+                  if (typeof ev.costo === 'number' && ev.costo > 0) {
+                    ev.costo = redondearMoneda(convertirMonto(ev.costo, monedaAnterior, monedaNueva), monedaNueva);
+                  }
+                });
+              }
+              if (Array.isArray(dia.costosAdicionales)) {
+                dia.costosAdicionales.forEach(c => {
+                  if (typeof c.precio === 'number' && c.precio > 0) {
+                    c.precio = redondearMoneda(convertirMonto(c.precio, monedaAnterior, monedaNueva), monedaNueva);
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+
+      if (typeof vueltaPrecioGlobal === 'number' && vueltaPrecioGlobal > 0) {
+        vueltaPrecioGlobal = redondearMoneda(convertirMonto(vueltaPrecioGlobal, monedaAnterior, monedaNueva), monedaNueva);
+      }
+      if (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales)) {
+        vueltaCostosAdicionales.forEach(c => {
+          if (typeof c.precio === 'number' && c.precio > 0) {
+            c.precio = redondearMoneda(convertirMonto(c.precio, monedaAnterior, monedaNueva), monedaNueva);
+          }
+        });
+      }
+    }
+    window.convertirTodosLosCostosViaje = convertirTodosLosCostosViaje;
+
+    function formatMoneda(amount, targetCurrency) {
       const curr = targetCurrency || getMonedaActiva();
-      const val = convertirDeEur(amountInEur, curr);
+      const val = parseFloat(amount) || 0;
       const symbol = getSimboloMoneda(curr);
       if (curr === 'ARS' || curr === 'JPY' || curr === 'CLP' || curr === 'COP') {
         return `${symbol} ${Math.round(val).toLocaleString('es-ES')}`;
@@ -2624,8 +2691,14 @@
     }
     window.formatMoneda = formatMoneda;
 
-    function setMonedaActiva(code, sync = true) {
+    function setMonedaActiva(code, sync = true, convertValues = true) {
       if (!code || !TASAS_CAMBIO[code]) code = 'EUR';
+      const monedaAnterior = monedaViajeActual || 'EUR';
+
+      if (convertValues && monedaAnterior !== code) {
+        convertirTodosLosCostosViaje(monedaAnterior, code);
+      }
+
       monedaViajeActual = code;
       localStorage.setItem('plux_moneda', code);
       
@@ -8506,7 +8579,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                     <div class="ev-info">
                       <strong style="color:#f8fafc; font-size:0.95rem;">${ev.titulo || t('untitled_event')}</strong>
                       ${ev.duracion ? `<small style="color:var(--gris); margin-left:8px;">[${ev.duracion} min]</small>` : ''}
-                      ${ev.costo ? `<small style="color:#fbbf24; margin-left:8px; font-weight:700;">${(ev.costo * numPersonas).toFixed(2)}€</small>` : ''}
+                      ${ev.costo ? `<small style="color:#fbbf24; margin-left:8px; font-weight:700;">${formatMoneda(ev.costo * numPersonas)}</small>` : ''}
                       ${ev.lugar ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.82rem;">Ubicacion: ${ev.lugar}</p>` : ''}
                       ${ev.notas ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.85rem;">↳ ${ev.notas}</p>` : ''}
                     </div>
@@ -8520,7 +8593,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 html += `
                   <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--gris); padding:4px 0; border-top:1px dashed rgba(255,255,255,0.05); margin-top:6px;">
                     <span>Costo adicional: ${c.concepto || 'Extra'}</span>
-                    <span style="color:#f472b6; font-weight:600;">${(Number(c.precio) || 0).toFixed(2)}€</span>
+                    <span style="color:#f472b6; font-weight:600;">${formatMoneda(Number(c.precio) || 0)}</span>
                   </div>
                 `;
               }
@@ -8537,7 +8610,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           let vueltaHtml = `
             <div class="ciudad-block timeline" style="border-left:none; margin-top:20px;">
               <h3 style="color:#f472b6; margin:0 0 8px 0; font-size:1.15rem; font-weight:700;">Regreso / Vuelta</h3>
-              <div><strong style="color:#f8fafc;">${vueltaGlobal || 'Viaje de retorno'}</strong>${vueltaPrecioGlobal ? ` — <span style="color:#f472b6; font-weight:700;">${(vueltaPrecioGlobal * numPersonas).toFixed(2)}€</span>` : ''}</div>
+              <div><strong style="color:#f8fafc;">${vueltaGlobal || 'Viaje de retorno'}</strong>${vueltaPrecioGlobal ? ` — <span style="color:#f472b6; font-weight:700;">${formatMoneda(vueltaPrecioGlobal * numPersonas)}</span>` : ''}</div>
             </div>
           `;
           cont.innerHTML += vueltaHtml;
@@ -8566,7 +8639,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                   <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#f8fafc;">${dest.nombre}</h3>
                 </div>
                 <div style="font-size:0.82rem; color:var(--gris); font-weight:500;">
-                  ${destStats.diasCount} ${destStats.diasCount === 1 ? 'dia' : 'dias'}${destStats.costo > 0 ? ` • <span style="color:#34d399; font-weight:600;">${destStats.costo.toFixed(0)}€</span>` : ''}
+                  ${destStats.diasCount} ${destStats.diasCount === 1 ? 'dia' : 'dias'}${destStats.costo > 0 ? ` • <span style="color:#34d399; font-weight:600;">${formatMoneda(destStats.costo)}</span>` : ''}
                 </div>
               </div>
               <div id="resumen-dest-body-${dest.id}" style="display:${isDestCollapsed ? 'none' : 'block'}; padding: 12px 16px 16px;">
@@ -8582,7 +8655,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                     <strong>Transporte / Estancia ${i + 1}:</strong> ${tramo.medio || 'Trayecto'}
                     ${tramo.alojamiento ? `<span style="color:var(--gris);"> • Alojamiento: ${tramo.alojamiento}</span>` : ''}
                   </div>
-                  ${sum ? `<span style="color:#38bdf8; font-weight:600; font-size:0.85rem;">${(sum * numPersonas).toFixed(2)}€</span>` : ''}
+                  ${sum ? `<span style="color:#38bdf8; font-weight:600; font-size:0.85rem;">${formatMoneda(sum * numPersonas)}</span>` : ''}
                 </div>
               </div>
             `;
@@ -8623,7 +8696,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                       <span class="ev-time">${ev.hora || '--:--'}</span>
                       <span class="ev-title">${ev.titulo || t('untitled_event')}</span>
                       ${ev.duracion ? `<span class="ev-dur">${ev.duracion} min</span>` : ''}
-                      ${ev.costo ? `<span class="ev-cost">${(ev.costo * numPersonas).toFixed(2)}€</span>` : ''}
+                      ${ev.costo ? `<span class="ev-cost">${formatMoneda(ev.costo * numPersonas)}</span>` : ''}
                     </div>
                     ${hasDetails ? `
                       <div class="ev-details">
@@ -8641,7 +8714,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 html += `
                   <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--gris); padding:4px 8px; border-top:1px dashed rgba(255,255,255,0.05); margin-top:4px;">
                     <span>Costo adicional: ${c.concepto || 'Extra'}</span>
-                    <span style="color:#f472b6; font-weight:600;">${(Number(c.precio) || 0).toFixed(2)}€</span>
+                    <span style="color:#f472b6; font-weight:600;">${formatMoneda(Number(c.precio) || 0)}</span>
                   </div>
                 `;
               }
@@ -8660,7 +8733,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#f472b6; font-weight:700;">REGRESO / VUELTA</div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
                 <div style="font-weight:600; color:#f8fafc; font-size:1rem;">${vueltaGlobal || 'Viaje de vuelta'}</div>
-                ${vueltaPrecioGlobal ? `<span style="color:#f472b6; font-weight:700; font-size:1rem;">${(vueltaPrecioGlobal * numPersonas).toFixed(2)}€</span>` : ''}
+                ${vueltaPrecioGlobal ? `<span style="color:#f472b6; font-weight:700; font-size:1rem;">${formatMoneda(vueltaPrecioGlobal * numPersonas)}</span>` : ''}
               </div>
             </div>
           `;
@@ -14005,7 +14078,7 @@ async function exportarPDF() {
       empezar();
 
       if (viaje.moneda && typeof setMonedaActiva === 'function') {
-        setMonedaActiva(viaje.moneda, false);
+        setMonedaActiva(viaje.moneda, false, false);
       }
       if (Array.isArray(viaje.cartelitos)) {
         cartelitosNotasViaje = [...viaje.cartelitos];

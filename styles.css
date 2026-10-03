@@ -3682,7 +3682,18 @@
 }
 .city-autocomplete-item:last-child { border-bottom: none; }
 .city-autocomplete-item:hover { background: rgba(52,211,153,0.1); }
-.city-ac-flag { font-size: 1.3rem; min-width: 28px; text-align: center; }
+.city-ac-flag {
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.city-ac-flag-svg {
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  display: inline-block;
+}
 .city-ac-info { flex: 1; text-align: left; }
 .city-ac-name { font-weight: 600; color: var(--texto); font-size: 0.95rem; }
 .city-ac-country { font-size: 0.78rem; color: var(--gris); margin-top: 2px; }

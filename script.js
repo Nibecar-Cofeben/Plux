@@ -5413,13 +5413,36 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     // ================== CITY AUTOCOMPLETE ==================
     let citySearchTimeout = null;
-    function getCountryEmoji(countryCode) {
-      if (!countryCode || countryCode.length !== 2) return '📍';
-      const codePoints = countryCode
-        .toUpperCase()
-        .split('')
-        .map(char => 127397 + char.charCodeAt(0));
-      return String.fromCodePoint(...codePoints);
+
+    function isMalvinasQuery(query) {
+      if (!query) return false;
+      const clean = query.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .trim();
+      return (
+        clean.includes('falk') ||
+        clean.includes('malvin') ||
+        clean.includes('alvin') ||
+        clean.includes('puerto argentino')
+      );
+    }
+
+    const MALVINAS_DESTINO_ARG = {
+      name: 'Islas Malvinas',
+      country: 'Argentina',
+      country_code: 'AR',
+      admin1: 'Tierra del Fuego, Antartida e Islas del Atlantico Sur',
+      latitude: -51.7963,
+      longitude: -59.5236,
+      isSpecialMalvinas: true
+    };
+
+    function getCountryFlagSvg(countryCode) {
+      const code = (countryCode || '').toUpperCase();
+      if (code === 'AR') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="22" height="15" style="border-radius:2px; box-shadow:0 0 2px rgba(0,0,0,0.6); vertical-align:middle; display:inline-block; flex-shrink:0;"><rect width="900" height="600" fill="#74acdf"/><rect y="200" width="900" height="200" fill="#ffffff"/><circle cx="450" cy="300" r="45" fill="#f6b40e"/></svg>`;
+      }
+      return `<span class="city-ac-flag-pill" style="font-size:0.68rem; font-weight:800; padding:2px 5px; border-radius:4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:var(--texto); letter-spacing:0.5px;">${code || 'LOC'}</span>`;
     }
 
     function attachGenericCityAutocomplete(inputId, dropdownId) {
@@ -5438,30 +5461,65 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         }
 
         dropdown.style.display = 'block';
-        dropdown.innerHTML = `<div class="city-autocomplete-loading">🔍 Buscando "${val}"...</div>`;
+        dropdown.innerHTML = `<div class="city-autocomplete-loading">Buscando "${escapeHtml(val)}"...</div>`;
 
         timer = setTimeout(async () => {
           try {
+            const isMalv = isMalvinasQuery(val);
+            const isFalkSearch = val.toLowerCase().includes('falk');
+
             const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=6&language=${currentLang || 'es'}&format=json`;
-            const res = await fetch(url);
-            if (!res.ok) return;
-            const data = await res.json();
-            if (!data.results || data.results.length === 0) {
+            const res = await fetch(url).catch(() => null);
+            let results = [];
+            if (res && res.ok) {
+              const data = await res.json().catch(() => ({}));
+              results = Array.isArray(data.results) ? data.results : [];
+            }
+
+            if (isMalv) {
+              results = results.filter(item => {
+                const nameLow = (item.name || '').toLowerCase();
+                const countryLow = (item.country || '').toLowerCase();
+                const codeUpper = (item.country_code || '').toUpperCase();
+                return !(nameLow.includes('falkland') || countryLow.includes('falkland') || codeUpper === 'FK');
+              });
+
+              const malvItem = {
+                ...MALVINAS_DESTINO_ARG,
+                recommendationLabel: isFalkSearch ? 'Recomendado: Islas Malvinas (Argentina)' : 'Islas Malvinas (Argentina)'
+              };
+              results.unshift(malvItem);
+            }
+
+            if (results.length === 0) {
               dropdown.innerHTML = `<div class="city-autocomplete-loading">No se encontraron ciudades</div>`;
               return;
             }
 
             let html = '';
-            data.results.forEach(item => {
+            results.forEach(item => {
               const countryCode = (item.country_code || '').toUpperCase();
               const countryName = item.country || item.country_code || '';
               const stateName = item.admin1 ? `${item.admin1}, ` : '';
-              const fullFormatted = countryName ? `${item.name}, ${countryName}` : item.name;
+              const isMalvItem = item.isSpecialMalvinas === true;
+
+              const displayName = item.name;
+              const displaySub = isMalvItem
+                ? (item.recommendationLabel ? `<span style="color:#38bdf8; font-weight:700;">${item.recommendationLabel}</span> • Tierra del Fuego, Argentina (AR)` : `Tierra del Fuego, Argentina (AR)`)
+                : `${stateName}${countryName} (${countryCode})`;
+
+              const fullFormatted = isMalvItem
+                ? 'Islas Malvinas, Argentina'
+                : (countryName ? `${item.name}, ${countryName}` : item.name);
+
+              const flagIcon = getCountryFlagSvg(countryCode);
+
               html += `
-                <div class="city-autocomplete-item" onclick="window._handleCitySelection('${inputId}', '${dropdownId}', '${item.name.replace(/'/g, "\\'")}', '${countryCode}', '${fullFormatted.replace(/'/g, "\\'")}')">
+                <div class="city-autocomplete-item" onclick="window._handleCitySelection('${inputId}', '${dropdownId}', '${displayName.replace(/'/g, "\\'")}', '${countryCode}', '${fullFormatted.replace(/'/g, "\\'")}')">
+                  <div class="city-ac-flag">${flagIcon}</div>
                   <div class="city-ac-info">
-                    <div class="city-ac-name">${item.name}</div>
-                    <div class="city-ac-country">${stateName}${countryName} (${countryCode})</div>
+                    <div class="city-ac-name">${escapeHtml(displayName)}</div>
+                    <div class="city-ac-country">${displaySub}</div>
                   </div>
                 </div>`;
             });
@@ -5470,7 +5528,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             console.warn('City autocomplete error:', err);
             dropdown.style.display = 'none';
           }
-        }, 300);
+        }, 250);
       });
 
       document.addEventListener('click', (e) => {
@@ -9713,6 +9771,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     async function geocode(lugar) {
       if (!lugar) return null;
       const cleanLugar = lugar.trim();
+
+      if (typeof isMalvinasQuery === 'function' && isMalvinasQuery(cleanLugar)) {
+        return {
+          lat: -51.7963,
+          lon: -59.5236,
+          display_name: 'Islas Malvinas, Argentina'
+        };
+      }
 
       // 1. Open-Meteo Geocoding API (100% CORS-friendly)
       try {

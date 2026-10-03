@@ -6168,6 +6168,434 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       container.appendChild(stamp);
     }
 
+    let modalDestinoActivo = { nombre: '', destId: null, tab: 'desc' };
+    const _wikiSummaryCache = {};
+
+    function getDestinoAdvisory(nombre) {
+      if (!nombre) return null;
+      const clean = nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+      // 1. ISLAS MALVINAS (ESPECIFICO)
+      if (typeof isMalvinasQuery === 'function' && isMalvinasQuery(nombre)) {
+        return {
+          type: 'malvinas',
+          title: 'Islas Malvinas (Territorio Argentino)',
+          shortBadge: 'Son argentinas · Aviso',
+          countryCode: 'AR',
+          soberania: 'Territorio insular argentino bajo reclamo legítimo e imprescriptible de soberanía nacional.',
+          alertaTitulo: 'Aviso y requisitos de viaje a las Islas Malvinas',
+          alertaDesc: 'Son argentinas. Para ingresar debes llevar pasaporte vigente: debido a la ocupación colonial e ilegítima del Reino Unido sobre las islas, las autoridades locales de facto exigen pasaporte para el desembarco y estancia. Plux te permite planificar tu viaje al territorio insular argentino con total libertad y normalidad.',
+          passportRequirement: 'Lleva pasaporte vigente obligatorio (exigencia de las autoridades coloniales locales).',
+          safetyLevel: 'Seguro / Territorio insular bajo control británico de facto',
+          moneda: 'Libra de las Islas Malvinas (FKP) / Tarjetas de crédito internacionales',
+          idioma: 'Español (de jure oficial) / Inglés (de facto)',
+          clima: 'Oceánico subpolar frío, ventoso y cambiante (temporada recomendada: noviembre a marzo).',
+          faunaYAtractivos: 'Puerto Argentino, Isla Soledad, Isla Gran Malvina, colonias de pingüinos rey, de Magallanes y papúa, elefantes marinos y paisajes vírgenes australes.'
+        };
+      }
+
+      // 2. PAISES CON ALERTAS DE SEGURIDAD / CONFLICTO / RED FLAGS
+      const highRiskAdvisories = [
+        {
+          keys: ['corea del norte', 'north korea', 'pyongyang'],
+          name: 'Corea del Norte',
+          countryCode: 'KP',
+          type: 'danger',
+          shortBadge: 'Alerta: Máximo riesgo',
+          alertaTitulo: 'Aviso consular: Destino con severas restricciones y vigilancia',
+          alertaDesc: 'País con régimen totalitario de extrema vigilancia. Viajes permitidos conceptualmente en Plux, pero solo posibles mediante tours estatales autorizados. Riesgo severo de arresto arbitrario, incomunicación y nula asistencia consular.',
+          passportRequirement: 'Pasaporte visado y autorización gubernamental estatal previa.',
+          safetyLevel: 'Riesgo Crítico / Evitar viajes no esenciales'
+        },
+        {
+          keys: ['ucrania', 'ukraine', 'kiev', 'kyiv', 'kharkiv', 'odesa'],
+          name: 'Ucrania',
+          countryCode: 'UA',
+          type: 'danger',
+          shortBadge: 'Zona de conflicto activo',
+          alertaTitulo: 'Alerta de seguridad: Conflicto bélico activo',
+          alertaDesc: 'Espacio aéreo civil cerrado. Riesgo constante de ataques aéreos, misiles e infraestructura civil dañada. Se recomienda evitar todo viaje.',
+          passportRequirement: 'Pasaporte con más de 6 meses de vigencia y seguro con cobertura bélica.',
+          safetyLevel: 'Peligro Extremo / Zona de guerra'
+        },
+        {
+          keys: ['siria', 'syria', 'damasco'],
+          name: 'Siria',
+          countryCode: 'SY',
+          type: 'danger',
+          shortBadge: 'Alerta: Máximo riesgo',
+          alertaTitulo: 'Aviso de seguridad: Conflicto armado y terrorismo',
+          alertaDesc: 'Zona de inestabilidad bélica prolongada y secuestros. Se desaconseja todo viaje bajo cualquier circunstancia.',
+          passportRequirement: 'Pasaporte y visado de seguridad obligatorio.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['afganistan', 'afghanistan', 'kabul'],
+          name: 'Afganistán',
+          countryCode: 'AF',
+          type: 'danger',
+          shortBadge: 'Alerta: Máximo riesgo',
+          alertaTitulo: 'Aviso consular: Sin reconocimiento diplomático',
+          alertaDesc: 'Sin protección consular de la mayoría de países. Amenaza severa de atentados terroristas y detenciones.',
+          passportRequirement: 'Pasaporte con visado de facto.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['haiti', 'puerto principe'],
+          name: 'Haití',
+          countryCode: 'HT',
+          type: 'danger',
+          shortBadge: 'Alerta: Violencia extrema',
+          alertaTitulo: 'Aviso de seguridad: Colapso de orden civil',
+          alertaDesc: 'Violencia generalizada de bandas armadas, secuestros y escasez crítica de servicios médicos y suministros.',
+          passportRequirement: 'Pasaporte vigente.',
+          safetyLevel: 'Riesgo Extremo'
+        },
+        {
+          keys: ['yemen', 'sana'],
+          name: 'Yemen',
+          countryCode: 'YE',
+          type: 'danger',
+          shortBadge: 'Alerta: Máximo riesgo',
+          alertaTitulo: 'Aviso de seguridad: Conflicto armado activo',
+          alertaDesc: 'Crisis humanitaria severa y operaciones militares continuas. Evitar cualquier desplazamiento.',
+          passportRequirement: 'Pasaporte vigente.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['venezuela', 'caracas'],
+          name: 'Venezuela',
+          countryCode: 'VE',
+          type: 'warning',
+          shortBadge: 'Precaución recomendada',
+          alertaTitulo: 'Recomendaciones consulares para viajeros',
+          alertaDesc: 'Se recomienda extremar precauciones de seguridad personal, utilizar transporte oficial y contar con seguro de viaje con cobertura médica completa.',
+          passportRequirement: 'Pasaporte con vigencia mínima de 6 meses.',
+          safetyLevel: 'Precaución Elevada'
+        },
+        {
+          keys: ['libano', 'lebanon', 'beirut'],
+          name: 'Líbano',
+          countryCode: 'LB',
+          type: 'danger',
+          shortBadge: 'Alerta: Zona inestable',
+          alertaTitulo: 'Aviso de seguridad: Hostilidades militares fronterizas',
+          alertaDesc: 'Inestabilidad militar en la región y riesgo de ataques aéreos. Se aconseja posponer viajes no esenciales.',
+          passportRequirement: 'Pasaporte con más de 6 meses de validez.',
+          safetyLevel: 'Riesgo Alto'
+        }
+      ];
+
+      for (const item of highRiskAdvisories) {
+        if (item.keys.some(k => clean.includes(k))) {
+          return item;
+        }
+      }
+
+      return null;
+    }
+
+    function abrirModalInfoDestino(nombre, destId, defaultTab = 'desc') {
+      modalDestinoActivo = { nombre, destId, tab: defaultTab };
+      const modal = document.getElementById('modal-destino-info');
+      const titleEl = document.getElementById('destino-info-title');
+      const flagEl = document.getElementById('destino-info-flag');
+      if (!modal) return;
+
+      const advisory = getDestinoAdvisory(nombre);
+      const isMalv = advisory && advisory.type === 'malvinas';
+
+      if (titleEl) {
+        titleEl.textContent = isMalv ? 'Islas Malvinas (Argentina)' : nombre;
+      }
+
+      if (flagEl) {
+        if (isMalv) {
+          flagEl.innerHTML = `<svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="26" height="18" style="border-radius:3px; box-shadow:0 0 4px rgba(0,0,0,0.6); vertical-align:middle; display:inline-block;"><rect width="900" height="600" fill="#74acdf"/><rect y="200" width="900" height="200" fill="#ffffff"/><circle cx="450" cy="300" r="45" fill="#f6b40e"/></svg>`;
+        } else if (advisory && advisory.countryCode) {
+          flagEl.innerHTML = getCountryFlagSvg(advisory.countryCode);
+        } else {
+          flagEl.innerHTML = `<i class="fa-solid fa-location-dot" style="color:#38bdf8; font-size:1.1rem;"></i>`;
+        }
+      }
+
+      cambiarTabDestinoInfo(defaultTab);
+      modal.style.display = 'flex';
+    }
+    window.abrirModalInfoDestino = abrirModalInfoDestino;
+
+    function cerrarModalInfoDestino() {
+      const modal = document.getElementById('modal-destino-info');
+      if (modal) modal.style.display = 'none';
+    }
+    window.cerrarModalInfoDestino = cerrarModalInfoDestino;
+
+    function cambiarTabDestinoInfo(tab) {
+      modalDestinoActivo.tab = tab;
+      const btnDesc = document.getElementById('btn-tab-info-desc');
+      const btnAdv = document.getElementById('btn-tab-info-advisory');
+      if (btnDesc) btnDesc.classList.toggle('active', tab === 'desc');
+      if (btnAdv) btnAdv.classList.toggle('active', tab === 'advisory');
+      renderContenidoDestinoInfo(modalDestinoActivo.nombre, modalDestinoActivo.destId);
+    }
+    window.cambiarTabDestinoInfo = cambiarTabDestinoInfo;
+
+    async function renderContenidoDestinoInfo(nombre, destId) {
+      const body = document.getElementById('destino-info-body');
+      if (!body) return;
+
+      const advisory = getDestinoAdvisory(nombre);
+      const isMalv = advisory && advisory.type === 'malvinas';
+
+      // Buscar si coincide con catalogo curado
+      const normNombre = (nombre || '').toLowerCase().trim();
+      let curated = null;
+      if (typeof PLUX_CURATED_DESTINATIONS !== 'undefined') {
+        curated = PLUX_CURATED_DESTINATIONS.find(d => 
+          d.nombre.toLowerCase() === normNombre || normNombre.includes(d.nombre.toLowerCase())
+        );
+      }
+
+      if (modalDestinoActivo.tab === 'advisory') {
+        // PESTAÑA 2: AVISOS Y REQUISITOS (RED FLAGS Y RECOMENDACIONES)
+        if (isMalv) {
+          body.innerHTML = `
+            <div class="alerta-box-card alerta-box-malvinas">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="30" height="20" style="border-radius:3px; box-shadow:0 0 4px rgba(0,0,0,0.6);"><rect width="900" height="600" fill="#74acdf"/><rect y="200" width="900" height="200" fill="#ffffff"/><circle cx="450" cy="300" r="45" fill="#f6b40e"/></svg>
+                <h4 style="margin:0; font-size:1.05rem; color:#74acdf; font-weight:700;">${advisory.alertaTitulo}</h4>
+              </div>
+              <p style="margin:0 0 12px 0; font-size:0.92rem; line-height:1.55; color:#f1f5f9;">
+                <strong>${advisory.soberania}</strong>
+              </p>
+              <div style="background:rgba(0,0,0,0.25); border-left:3px solid #74acdf; padding:12px 14px; border-radius:0 10px 10px 0; margin-bottom:12px;">
+                <div style="font-size:0.85rem; font-weight:700; color:#38bdf8; margin-bottom:4px;">Requisito de Documentación:</div>
+                <div style="font-size:0.9rem; line-height:1.5; color:#e2e8f0;">${advisory.alertaDesc}</div>
+              </div>
+              <div style="font-size:0.82rem; color:var(--gris); line-height:1.5;">
+                <i class="fa-solid fa-circle-check" style="color:#10b981; margin-right:6px;"></i>
+                Plux te permite agregar, organizar y personalizar tu viaje a las Islas Malvinas con total normalidad.
+              </div>
+            </div>
+
+            <div class="destino-info-grid" style="margin-top:0;">
+              <div class="destino-info-grid-item">
+                <div class="destino-info-grid-label">Documento Exigido</div>
+                <div class="destino-info-grid-val" style="color:#fcd34d;">Pasaporte Vigente</div>
+              </div>
+              <div class="destino-info-grid-item">
+                <div class="destino-info-grid-label">Seguridad</div>
+                <div class="destino-info-grid-val" style="color:#10b981;">Seguro / Pacífico</div>
+              </div>
+              <div class="destino-info-grid-item">
+                <div class="destino-info-grid-label">Moneda en circulación</div>
+                <div class="destino-info-grid-val">${advisory.moneda}</div>
+              </div>
+              <div class="destino-info-grid-item">
+                <div class="destino-info-grid-label">Acceso habitual</div>
+                <div class="destino-info-grid-val">Vuelos australes o cruceros</div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (advisory && advisory.type === 'danger') {
+          body.innerHTML = `
+            <div class="alerta-box-card alerta-box-danger">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; font-size:1.3rem;"></i>
+                <h4 style="margin:0; font-size:1.05rem; color:#f87171; font-weight:700;">${advisory.alertaTitulo}</h4>
+              </div>
+              <p style="margin:0 0 12px 0; font-size:0.92rem; line-height:1.55; color:#f1f5f9;">
+                ${advisory.alertaDesc}
+              </p>
+              <div style="background:rgba(0,0,0,0.3); border-left:3px solid #ef4444; padding:10px 14px; border-radius:0 10px 10px 0; margin-bottom:10px;">
+                <div style="font-size:0.82rem; font-weight:700; color:#fca5a5; margin-bottom:2px;">Requisitos y Restricciones:</div>
+                <div style="font-size:0.88rem; color:#ffffff;">${advisory.passportRequirement}</div>
+              </div>
+              <div style="font-size:0.82rem; color:var(--gris);">
+                Nivel de advertencia: <span style="color:#f87171; font-weight:700;">${advisory.safetyLevel}</span>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (advisory && advisory.type === 'warning') {
+          body.innerHTML = `
+            <div class="alerta-box-card alerta-box-warning">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <i class="fa-solid fa-circle-exclamation" style="color:#f59e0b; font-size:1.3rem;"></i>
+                <h4 style="margin:0; font-size:1.05rem; color:#fbbf24; font-weight:700;">${advisory.alertaTitulo}</h4>
+              </div>
+              <p style="margin:0 0 12px 0; font-size:0.92rem; line-height:1.55; color:#f1f5f9;">
+                ${advisory.alertaDesc}
+              </p>
+              <div style="background:rgba(0,0,0,0.3); border-left:3px solid #f59e0b; padding:10px 14px; border-radius:0 10px 10px 0; margin-bottom:10px;">
+                <div style="font-size:0.82rem; font-weight:700; color:#fcd34d; margin-bottom:2px;">Consejo de Documentación:</div>
+                <div style="font-size:0.88rem; color:#ffffff;">${advisory.passportRequirement}</div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // Destino comun / estandar
+        body.innerHTML = `
+          <div class="alerta-box-card alerta-box-info">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+              <i class="fa-solid fa-shield-halved" style="color:#38bdf8; font-size:1.3rem;"></i>
+              <h4 style="margin:0; font-size:1.05rem; color:#38bdf8; font-weight:700;">Recomendaciones de viaje estándar</h4>
+            </div>
+            <p style="margin:0 0 12px 0; font-size:0.92rem; line-height:1.55; color:#f1f5f9;">
+              Destino seguro para viajes turísticos. Se recomienda mantener las precauciones habituales sobre pertenencias personales en zonas concurridas y transporte público.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; color:#cbd5e1;">
+              <div><i class="fa-solid fa-passport" style="color:#38bdf8; margin-right:8px;"></i> <strong>Pasaporte:</strong> Vigencia mínima recomendada de 6 meses desde la fecha de salida.</div>
+              <div><i class="fa-solid fa-notes-medical" style="color:#10b981; margin-right:8px;"></i> <strong>Seguro médico:</strong> Se recomienda contar con póliza de asistencia internacional al viajero.</div>
+              <div><i class="fa-solid fa-address-card" style="color:#f59e0b; margin-right:8px;"></i> <strong>Visados:</strong> Revisa los acuerdos de entrada según tu nacionalidad de origen.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // PESTAÑA 1: FICHA Y RESUMEN DEL DESTINO
+      if (isMalv) {
+        body.innerHTML = `
+          <div style="margin-bottom:16px;">
+            <div style="font-size:0.95rem; line-height:1.6; color:#e2e8f0;">
+              Archipiélago insular en el extremo sur del mar argentino. Cuenta con paisajes australes de inmensa pureza, costas acantiladas, playas de arena blanca y colonias marinas de pingüinos rey, pingüinos papúa y lobos marinos. Territorio histórico bajo legítimo reclamo soberano de la República Argentina.
+            </div>
+          </div>
+          <div class="destino-info-grid">
+            <div class="destino-info-grid-item">
+              <div class="destino-info-grid-label">Soberanía de jure</div>
+              <div class="destino-info-grid-val" style="color:#74acdf;">Argentina (Tierra del Fuego)</div>
+            </div>
+            <div class="destino-info-grid-item">
+              <div class="destino-info-grid-label">Mejor época</div>
+              <div class="destino-info-grid-val">Noviembre a Marzo</div>
+            </div>
+            <div class="destino-info-grid-item">
+              <div class="destino-info-grid-label">Idioma</div>
+              <div class="destino-info-grid-val">Español / Inglés</div>
+            </div>
+            <div class="destino-info-grid-item">
+              <div class="destino-info-grid-label">Moneda</div>
+              <div class="destino-info-grid-val">FKP / Tarjetas</div>
+            </div>
+          </div>
+          <div style="margin-top:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:12px 14px; border-radius:12px;">
+            <div class="destino-info-grid-label">Lugares destacados</div>
+            <div style="font-size:0.88rem; color:#f1f5f9; line-height:1.5; margin-top:4px;">
+              ${advisory.faunaYAtractivos}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (curated) {
+        const keyPlaces = Array.isArray(curated.lugaresClave) ? curated.lugaresClave.join(' · ') : '';
+        body.innerHTML = `
+          ${curated.img ? `<img src="${curated.img}" alt="${escapeHtml(curated.nombre)}" class="destino-info-hero-img">` : ''}
+          <div style="font-size:0.95rem; line-height:1.6; color:#e2e8f0; margin-bottom:16px;">
+            ${escapeHtml(curated.descripcion)}
+          </div>
+          <div class="destino-info-grid">
+            <div class="destino-info-grid-item">
+              <div class="destino-info-grid-label">País</div>
+              <div class="destino-info-grid-val">${escapeHtml(curated.pais)} (${curated.codigoPais || ''})</div>
+            </div>
+            <div class="destino-info-grid-item">
+              <div class="destino-info-grid-label">Presupuesto estimado</div>
+              <div class="destino-info-grid-val">~$${curated.presupuestoDia || 80} USD / día</div>
+            </div>
+            <div class="destino-info-grid-item">
+              <div class="destino-info-grid-label">Mejor época</div>
+              <div class="destino-info-grid-val">${escapeHtml(curated.mejorEpoca || 'Todo el año')}</div>
+            </div>
+            <div class="destino-info-grid-item">
+              <div class="destino-info-grid-label">Moneda habitual</div>
+              <div class="destino-info-grid-val">${escapeHtml(curated.moneda || 'Moneda local')}</div>
+            </div>
+          </div>
+          ${keyPlaces ? `
+            <div style="margin-top:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:12px 14px; border-radius:12px;">
+              <div class="destino-info-grid-label">Imperdibles para visitar</div>
+              <div style="font-size:0.88rem; color:#f1f5f9; line-height:1.5; margin-top:4px;">${escapeHtml(keyPlaces)}</div>
+            </div>
+          ` : ''}
+        `;
+        return;
+      }
+
+      // Si no es curado, buscar en Wikipedia o mostrar ficha estandar
+      body.innerHTML = `
+        <div style="color:var(--gris); font-size:0.9rem; text-align:center; padding:20px 0;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#38bdf8; margin-bottom:10px; display:block;"></i>
+          Cargando información y ficha de ${escapeHtml(nombre)}...
+        </div>
+      `;
+
+      try {
+        let extract = _wikiSummaryCache[normNombre];
+        let thumbUrl = null;
+        if (!extract) {
+          const wikiUrl = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(nombre)}`;
+          const res = await fetch(wikiUrl);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.extract) {
+              extract = data.extract;
+              thumbUrl = data.thumbnail ? data.thumbnail.source : null;
+              _wikiSummaryCache[normNombre] = { extract, thumbUrl };
+            }
+          }
+        } else if (typeof extract === 'object') {
+          thumbUrl = extract.thumbUrl;
+          extract = extract.extract;
+        }
+
+        if (modalDestinoActivo.tab === 'desc') {
+          if (extract) {
+            body.innerHTML = `
+              ${thumbUrl ? `<img src="${thumbUrl}" alt="${escapeHtml(nombre)}" class="destino-info-hero-img">` : ''}
+              <div style="font-size:0.92rem; line-height:1.6; color:#e2e8f0; margin-bottom:16px;">
+                ${escapeHtml(extract)}
+              </div>
+              <div class="destino-info-grid">
+                <div class="destino-info-grid-item">
+                  <div class="destino-info-grid-label">Destino</div>
+                  <div class="destino-info-grid-val">${escapeHtml(nombre)}</div>
+                </div>
+                <div class="destino-info-grid-item">
+                  <div class="destino-info-grid-label">Itinerario</div>
+                  <div class="destino-info-grid-val">Plan activo en Plux</div>
+                </div>
+              </div>
+            `;
+          } else {
+            body.innerHTML = `
+              <div style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; font-size:0.92rem; line-height:1.6; color:#cbd5e1;">
+                Destino turístico seleccionado: <strong>${escapeHtml(nombre)}</strong>. Puedes agregar tus actividades día por día, transporte y notas flotantes vinculadas.
+              </div>
+            `;
+          }
+        }
+      } catch (err) {
+        if (modalDestinoActivo.tab === 'desc') {
+          body.innerHTML = `
+            <div style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; font-size:0.92rem; line-height:1.6; color:#cbd5e1;">
+              Destino en el itinerario: <strong>${escapeHtml(nombre)}</strong>.
+            </div>
+          `;
+        }
+      }
+    }
+
     function renderDestinos() {
       // Sync openTransportDestIds with current DOM state before clearing
       destinos.forEach(d => {
@@ -6187,14 +6615,43 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         div.draggable = true;
         const isTransportOpen = openTransportDestIds.has(d.id);
         const numDiasDest = (d.dias || []).length;
+
+        const advisory = getDestinoAdvisory(d.nombre);
+        let advisoryBtnHtml = '';
+        if (advisory) {
+          if (advisory.type === 'malvinas') {
+            advisoryBtnHtml = `
+              <button class="badge-alerta-viaje badge-malvinas" onclick="event.stopPropagation(); window.abrirModalInfoDestino('${escapeHtml(d.nombre)}', ${d.id}, 'advisory')" title="Aviso importante: Islas Malvinas">
+                <svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="16" height="11" style="border-radius:2px; vertical-align:middle; display:inline-block;"><rect width="900" height="600" fill="#74acdf"/><rect y="200" width="900" height="200" fill="#ffffff"/><circle cx="450" cy="300" r="45" fill="#f6b40e"/></svg>
+                <span>Son argentinas · Aviso</span>
+              </button>`;
+          } else if (advisory.type === 'danger') {
+            advisoryBtnHtml = `
+              <button class="badge-alerta-viaje badge-danger" onclick="event.stopPropagation(); window.abrirModalInfoDestino('${escapeHtml(d.nombre)}', ${d.id}, 'advisory')" title="${escapeHtml(advisory.shortBadge)}">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>${escapeHtml(advisory.shortBadge)}</span>
+              </button>`;
+          } else if (advisory.type === 'warning') {
+            advisoryBtnHtml = `
+              <button class="badge-alerta-viaje badge-warning" onclick="event.stopPropagation(); window.abrirModalInfoDestino('${escapeHtml(d.nombre)}', ${d.id}, 'advisory')" title="${escapeHtml(advisory.shortBadge)}">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>${escapeHtml(advisory.shortBadge)}</span>
+              </button>`;
+          }
+        }
+
         div.innerHTML = `
-          <div class="destino-header" onclick="toggleEditorDestino(${d.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+          <div class="destino-header" onclick="toggleEditorDestino(${d.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; flex-wrap:wrap;">
               <span class="drag-handle drag-handle-dest" data-drag-type="dest" data-dest-id="${d.id}" data-dest-idx="${destIdx}" title="Arrastra o mantén presionado para reordenar destino" onclick="event.stopPropagation()">⠿</span>
               <span id="editor-dest-chev-${d.id}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.85rem;">▼</span>
               <div class="bubble-name">${d.nombre.slice(0,3).toUpperCase()}</div>
               <h2 style="margin:0; font-size:1.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.nombre}</h2>
               <span style="font-size:0.75rem; font-weight:600; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:999px; white-space:nowrap;">${numDiasDest} ${numDiasDest === 1 ? 'día' : 'días'}</span>
+              <button class="btn-dest-info" onclick="event.stopPropagation(); window.abrirModalInfoDestino('${escapeHtml(d.nombre)}', ${d.id}, 'desc')" title="Ver descripción y guía de ${escapeHtml(d.nombre)}">
+                <i class="fa-solid fa-circle-info"></i>
+              </button>
+              ${advisoryBtnHtml}
             </div>
             <button class="close-icon" onclick="eliminarDestino(${d.id})">×</button>
           </div>

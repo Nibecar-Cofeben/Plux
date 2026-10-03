@@ -1996,6 +1996,29 @@
           </div>
         </div>
       </div>
+  <!-- Modal Ficha y Recomendaciones de Destino (Descripciones + Alertas de Viaje) -->
+  <div id="modal-destino-info" style="display:none;" onclick="if(event.target === this) window.cerrarModalInfoDestino()">
+    <div class="destino-info-modal-card">
+      <div class="destino-info-header">
+        <div class="destino-info-title-box">
+          <div id="destino-info-flag" style="display:flex; align-items:center;"></div>
+          <h3 id="destino-info-title">Destino</h3>
+        </div>
+        <button class="close-icon" onclick="window.cerrarModalInfoDestino()" style="background:none; border:none; color:var(--gris); font-size:1.4rem; cursor:pointer; padding:4px 8px; border-radius:8px; line-height:1;">×</button>
+      </div>
+
+      <div class="destino-info-tabs">
+        <button id="btn-tab-info-desc" class="destino-info-tab-btn active" onclick="window.cambiarTabDestinoInfo('desc')">
+          <i class="fa-solid fa-circle-info"></i> Ficha y Resumen
+        </button>
+        <button id="btn-tab-info-advisory" class="destino-info-tab-btn" onclick="window.cambiarTabDestinoInfo('advisory')">
+          <i class="fa-solid fa-shield-halved"></i> Avisos y Requisitos
+        </button>
+      </div>
+
+      <div id="destino-info-body" class="destino-info-body">
+        <!-- Contenido dinamico inyectado por script.js -->
+      </div>
     </div>
   </div>
 

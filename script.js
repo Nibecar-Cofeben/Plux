@@ -6194,8 +6194,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         };
       }
 
-      // 2. PAISES CON ALERTAS DE SEGURIDAD / CONFLICTO / RED FLAGS
-      const highRiskAdvisories = [
+      // 2. PAISES CON ALERTAS DE SEGURIDAD / CONFLICTO / RED FLAGS / REQUISITOS
+      const worldTravelAdvisories = [
+        // NIVEL: DANGER (Riesgo Crítico / Máximo Riesgo / Zona de Guerra o Conflicto Activo)
         {
           keys: ['corea del norte', 'north korea', 'pyongyang'],
           name: 'Corea del Norte',
@@ -6208,85 +6209,351 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           safetyLevel: 'Riesgo Crítico / Evitar viajes no esenciales'
         },
         {
-          keys: ['ucrania', 'ukraine', 'kiev', 'kyiv', 'kharkiv', 'odesa'],
+          keys: ['ucrania', 'ukraine', 'kiev', 'kyiv', 'kharkiv', 'odesa', 'donetsk', 'luhansk', 'crimea', 'lviv'],
           name: 'Ucrania',
           countryCode: 'UA',
           type: 'danger',
-          shortBadge: 'Zona de conflicto activo',
+          shortBadge: 'Zona de conflicto bélico',
           alertaTitulo: 'Alerta de seguridad: Conflicto bélico activo',
-          alertaDesc: 'Espacio aéreo civil cerrado. Riesgo constante de ataques aéreos, misiles e infraestructura civil dañada. Se recomienda evitar todo viaje.',
-          passportRequirement: 'Pasaporte con más de 6 meses de vigencia y seguro con cobertura bélica.',
+          alertaDesc: 'Espacio aéreo civil cerrado. Riesgo constante de ataques con misiles, drones e infraestructura civil comprometida. Se desaconseja todo viaje.',
+          passportRequirement: 'Pasaporte con más de 6 meses de vigencia y póliza con cobertura bélica explícita.',
           safetyLevel: 'Peligro Extremo / Zona de guerra'
         },
         {
-          keys: ['siria', 'syria', 'damasco'],
+          keys: ['rusia', 'russia', 'moscu', 'moscow', 'san petersburgo', 'st petersburg', 'kazan', 'sochi', 'vladivostok'],
+          name: 'Rusia',
+          countryCode: 'RU',
+          type: 'danger',
+          shortBadge: 'Alerta: Restricciones y sanciones',
+          alertaTitulo: 'Aviso de seguridad y restricciones operativas',
+          alertaDesc: 'Restricciones severas de vuelos directos desde múltiples países por sanciones internacionales. Tarjetas de crédito occidentales deshabilitadas (redes Visa/Mastercard no operativas para cuentas extranjeras). Riesgo de detenciones por normas locales.',
+          passportRequirement: 'Pasaporte vigente con visado consular y seguro médico emitido por aseguradoras reconocidas.',
+          safetyLevel: 'Riesgo Elevado / Sanciones activas'
+        },
+        {
+          keys: ['siria', 'syria', 'damasco', 'damascus', 'alepo', 'aleppo'],
           name: 'Siria',
           countryCode: 'SY',
           type: 'danger',
           shortBadge: 'Alerta: Máximo riesgo',
           alertaTitulo: 'Aviso de seguridad: Conflicto armado y terrorismo',
-          alertaDesc: 'Zona de inestabilidad bélica prolongada y secuestros. Se desaconseja todo viaje bajo cualquier circunstancia.',
-          passportRequirement: 'Pasaporte y visado de seguridad obligatorio.',
+          alertaDesc: 'Inestabilidad bélica prolongada, presencia militar extranjera, minas terrestres y riesgo de secuestros. Se desaconseja todo viaje.',
+          passportRequirement: 'Pasaporte y visado de seguridad con aprobación previa del Ministerio de Turismo.',
           safetyLevel: 'Riesgo Crítico'
         },
         {
-          keys: ['afganistan', 'afghanistan', 'kabul'],
+          keys: ['afganistan', 'afghanistan', 'kabul', 'kandahar'],
           name: 'Afganistán',
           countryCode: 'AF',
           type: 'danger',
           shortBadge: 'Alerta: Máximo riesgo',
           alertaTitulo: 'Aviso consular: Sin reconocimiento diplomático',
-          alertaDesc: 'Sin protección consular de la mayoría de países. Amenaza severa de atentados terroristas y detenciones.',
-          passportRequirement: 'Pasaporte con visado de facto.',
+          alertaDesc: 'Sin protección consular oficial en el terreno. Amenaza permanente de atentados, detención por fuerzas locales y restricciones severas.',
+          passportRequirement: 'Pasaporte con visado emitido por autoridades consulares afganas.',
           safetyLevel: 'Riesgo Crítico'
         },
         {
-          keys: ['haiti', 'puerto principe'],
+          keys: ['haiti', 'puerto principe', 'port-au-prince', 'cap-haitien'],
           name: 'Haití',
           countryCode: 'HT',
           type: 'danger',
           shortBadge: 'Alerta: Violencia extrema',
-          alertaTitulo: 'Aviso de seguridad: Colapso de orden civil',
-          alertaDesc: 'Violencia generalizada de bandas armadas, secuestros y escasez crítica de servicios médicos y suministros.',
+          alertaTitulo: 'Aviso de seguridad: Colapso de orden civil y bandas armadas',
+          alertaDesc: 'Control de amplias zonas por pandillas criminales armadas, secuestros extorsivos a extranjeros y servicios de emergencia inoperativos.',
           passportRequirement: 'Pasaporte vigente.',
           safetyLevel: 'Riesgo Extremo'
         },
         {
-          keys: ['yemen', 'sana'],
+          keys: ['yemen', 'sana', 'aden', 'socotra'],
           name: 'Yemen',
           countryCode: 'YE',
           type: 'danger',
           shortBadge: 'Alerta: Máximo riesgo',
-          alertaTitulo: 'Aviso de seguridad: Conflicto armado activo',
-          alertaDesc: 'Crisis humanitaria severa y operaciones militares continuas. Evitar cualquier desplazamiento.',
+          alertaTitulo: 'Aviso de seguridad: Conflicto armado y bloqueo',
+          alertaDesc: 'Guerra civil activa, ataques navales y aéreos en el Mar Rojo y zonas costeras. Movilidad civil severamente restringida.',
+          passportRequirement: 'Pasaporte vigente y visado especial.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['somalia', 'mogadiscio', 'mogadishu', 'hargeisa'],
+          name: 'Somalia',
+          countryCode: 'SO',
+          type: 'danger',
+          shortBadge: 'Alerta: Máximo riesgo',
+          alertaTitulo: 'Aviso consular: Terrorismo y piratería',
+          alertaDesc: 'Actividad de grupos terroristas armados (Al-Shabaab), secuestros, piratería marítima y ausencia de estado de derecho.',
+          passportRequirement: 'Pasaporte vigente y visado.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['sudan del sur', 'south sudan', 'yuba', 'juba'],
+          name: 'Sudán del Sur',
+          countryCode: 'SS',
+          type: 'danger',
+          shortBadge: 'Alerta: Máximo riesgo',
+          alertaTitulo: 'Aviso de seguridad: Conflictos étnicos y violencia armada',
+          alertaDesc: 'Inestabilidad política extrema, saqueos armados y falta absoluta de infraestructura turística médica.',
+          passportRequirement: 'Pasaporte con visado.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['sudan', 'jartum', 'khartoum', 'port sudan'],
+          name: 'Sudán',
+          countryCode: 'SD',
+          type: 'danger',
+          shortBadge: 'Alerta: Guerra civil',
+          alertaTitulo: 'Aviso de seguridad: Guerra civil activa',
+          alertaDesc: 'Enfrentamientos armados entre el ejército y fuerzas paramilitares. Aeropuertos cerrados o bajo asedio. Evitar todo viaje.',
           passportRequirement: 'Pasaporte vigente.',
           safetyLevel: 'Riesgo Crítico'
         },
         {
-          keys: ['venezuela', 'caracas'],
+          keys: ['libia', 'libya', 'tripoli', 'bengasi', 'benghazi'],
+          name: 'Libia',
+          countryCode: 'LY',
+          type: 'danger',
+          shortBadge: 'Alerta: Máximo riesgo',
+          alertaTitulo: 'Aviso consular: Milicias armadas y secuestros',
+          alertaDesc: 'División institucional profunda, presencia de mercenarios y milicias autónomas armadas con control de pasos fronterizos.',
+          passportRequirement: 'Pasaporte con visado.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['myanmar', 'birmania', 'naypyidaw', 'yangon', 'rangun', 'mandalay'],
+          name: 'Myanmar (Birmania)',
+          countryCode: 'MM',
+          type: 'danger',
+          shortBadge: 'Alerta: Conflicto civil',
+          alertaTitulo: 'Aviso de seguridad: Guerra civil y régimen militar',
+          alertaDesc: 'Guerra civil generalizada entre la junta militar y grupos rebeldes. Toques de queda, cortes de telecomunicaciones y bloqueos.',
+          passportRequirement: 'Pasaporte con eVisa oficial para zonas permitidas.',
+          safetyLevel: 'Riesgo Muy Alto'
+        },
+        {
+          keys: ['mali', 'bamako', 'tombuctu'],
+          name: 'Malí',
+          countryCode: 'ML',
+          type: 'danger',
+          shortBadge: 'Alerta: Terrorismo activo',
+          alertaTitulo: 'Aviso consular: Insurgencia yihadista',
+          alertaDesc: 'Actividad armada insurgente recurrente en el Sahel, secuestros de extranjeros y presencia de mercenarios armados.',
+          passportRequirement: 'Pasaporte y visado consular.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['burkina faso', 'uagadugu', 'ouagadougou'],
+          name: 'Burkina Faso',
+          countryCode: 'BF',
+          type: 'danger',
+          shortBadge: 'Alerta: Máximo riesgo',
+          alertaTitulo: 'Aviso de seguridad: Crisis terrorista',
+          alertaDesc: 'Más del 40% del territorio fuera de control gubernamental efectivo por milicias yihadistas.',
+          passportRequirement: 'Pasaporte y visado.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['republica centroafricana', 'central african republic', 'bangui'],
+          name: 'República Centroafricana',
+          countryCode: 'CF',
+          type: 'danger',
+          shortBadge: 'Alerta: Violencia armada',
+          alertaTitulo: 'Aviso consular: Grupos rebeldes',
+          alertaDesc: 'Violencia indiscriminada fuera de la capital y carreteras intransitables sin escolta armada.',
+          passportRequirement: 'Pasaporte vigente.',
+          safetyLevel: 'Riesgo Crítico'
+        },
+        {
+          keys: ['niger', 'niamey'],
+          name: 'Níger',
+          countryCode: 'NE',
+          type: 'danger',
+          shortBadge: 'Alerta: Inestabilidad',
+          alertaTitulo: 'Aviso consular: Crisis política e insurgencia',
+          alertaDesc: 'Golpe militar reciente, fronteras cerradas intermitentemente y amenaza yihadista en el oeste y sur.',
+          passportRequirement: 'Pasaporte con visado.',
+          safetyLevel: 'Riesgo Alto'
+        },
+        {
+          keys: ['irak', 'iraq', 'bagdad', 'baghdad', 'erbil', 'basora'],
+          name: 'Irak',
+          countryCode: 'IQ',
+          type: 'danger',
+          shortBadge: 'Alerta: Riesgo armado',
+          alertaTitulo: 'Aviso consular: Terrorismo residual y milicias',
+          alertaDesc: 'Riesgo de ataques terroristas y cohetes hacia bases o embajadas. Región de Kurdistán iraquí más estable pero sujeta a tensiones transfronterizas.',
+          passportRequirement: 'Pasaporte y visado electrónico previo.',
+          safetyLevel: 'Riesgo Alto'
+        },
+        {
+          keys: ['iran', 'teheran', 'tehran', 'isfahan', 'shiraz'],
+          name: 'Irán',
+          countryCode: 'IR',
+          type: 'danger',
+          shortBadge: 'Alerta: Detenciones y tensión',
+          alertaTitulo: 'Aviso de seguridad: Riesgo de detención arbitraria',
+          alertaDesc: 'Riesgo de detención por acusaciones de espionaje o infracciones a la ley islámica. Restricciones severas en redes sociales y vestimenta. Tensiones militares regionales.',
+          passportRequirement: 'Pasaporte con al menos 6 meses de validez y visado previo obligatorio.',
+          safetyLevel: 'Riesgo Alto'
+        },
+        {
+          keys: ['israel', 'palestina', 'gaza', 'cisjordania', 'west bank', 'tel aviv', 'jerusalen', 'jerusalem', 'haifa', 'eilat'],
+          name: 'Israel y Territorios Palestinos',
+          countryCode: 'IL',
+          type: 'danger',
+          shortBadge: 'Alerta: Conflicto bélico activo',
+          alertaTitulo: 'Aviso de seguridad: Hostilidades militares y bombardeos',
+          alertaDesc: 'Conflicto militar activo en la Franja de Gaza y ataques transfronterizos de misiles y drones. Se aconseja evitar viajes no imprescindibles y acatar las alertas de sirenas y refugios antiaéreos del Comando del Frente Doméstico.',
+          passportRequirement: 'Pasaporte vigente y formulario ETA-IL previo para turistas.',
+          safetyLevel: 'Peligro Bélico / Atención a alertas'
+        },
+        {
+          keys: ['libano', 'lebanon', 'beirut', 'tripoli libano'],
+          name: 'Líbano',
+          countryCode: 'LB',
+          type: 'danger',
+          shortBadge: 'Alerta: Zona inestable',
+          alertaTitulo: 'Aviso de seguridad: Hostilidades militares y bombardeos',
+          alertaDesc: 'Bombardeos y operaciones militares activas en el sur y suburbios de Beirut. Espacio aéreo sujeto a cancelaciones repentinas.',
+          passportRequirement: 'Pasaporte con más de 6 meses de validez (sin sellos de Israel).',
+          safetyLevel: 'Riesgo Crítico'
+        },
+
+        // NIVEL: WARNING (Precaución Elevada / Precaución Recomendada / Atención Reforzada)
+        {
+          keys: ['venezuela', 'caracas', 'maracaibo', 'margarita', 'valencia venezuela'],
           name: 'Venezuela',
           countryCode: 'VE',
           type: 'warning',
           shortBadge: 'Precaución recomendada',
           alertaTitulo: 'Recomendaciones consulares para viajeros',
-          alertaDesc: 'Se recomienda extremar precauciones de seguridad personal, utilizar transporte oficial y contar con seguro de viaje con cobertura médica completa.',
+          alertaDesc: 'Se recomienda extremar precauciones de seguridad personal, utilizar únicamente taxis oficiales o de hotel, no ostentar pertenencias y contar con seguro de viaje con cobertura médica internacional completa en dólares.',
           passportRequirement: 'Pasaporte con vigencia mínima de 6 meses.',
           safetyLevel: 'Precaución Elevada'
         },
         {
-          keys: ['libano', 'lebanon', 'beirut'],
-          name: 'Líbano',
-          countryCode: 'LB',
-          type: 'danger',
-          shortBadge: 'Alerta: Zona inestable',
-          alertaTitulo: 'Aviso de seguridad: Hostilidades militares fronterizas',
-          alertaDesc: 'Inestabilidad militar en la región y riesgo de ataques aéreos. Se aconseja posponer viajes no esenciales.',
-          passportRequirement: 'Pasaporte con más de 6 meses de validez.',
-          safetyLevel: 'Riesgo Alto'
+          keys: ['ecuador', 'quito', 'guayaquil', 'esmeraldas', 'manta', 'cuenca'],
+          name: 'Ecuador',
+          countryCode: 'EC',
+          type: 'warning',
+          shortBadge: 'Alerta: Estado de excepción',
+          alertaTitulo: 'Aviso de seguridad: Conflicto armado interno',
+          alertaDesc: 'Presencia militar y estados de excepción en zonas costeras (Guayaquil, Esmeraldas, Manabí) por narcotráfico y bandas criminales. Zonas serranas (Quito, Cuenca) e Islas Galápagos se mantienen seguras con precauciones habituales.',
+          passportRequirement: 'Pasaporte vigente o DNI para países Mercosur.',
+          safetyLevel: 'Precaución Reforzada'
+        },
+        {
+          keys: ['colombia', 'bogota', 'medellin', 'cartagena', 'cali', 'santa marta', 'barranquilla', 'san andres'],
+          name: 'Colombia',
+          countryCode: 'CO',
+          type: 'warning',
+          shortBadge: 'Precaución urbana habitual',
+          alertaTitulo: 'Consejos de seguridad y turismo en Colombia',
+          alertaDesc: 'Destino fascinante y muy turístico. Se aconseja no ostentar objetos de valor en la vía pública ("no dar papaya"), utilizar aplicaciones de transporte oficiales (Uber/Cabify) en lugar de taxis de la calle por la noche, y evitar zonas rurales fronterizas.',
+          passportRequirement: 'Pasaporte vigente o DNI para Mercosur + Check-Mig online.',
+          safetyLevel: 'Turismo con Precaución'
+        },
+        {
+          keys: ['mexico', 'ciudad de mexico', 'cdmx', 'cancun', 'guadalajara', 'monterrey', 'tijuana', 'playa del carmen', 'tulum', 'los cabos', 'puerto vallarta'],
+          name: 'México',
+          countryCode: 'MX',
+          type: 'warning',
+          shortBadge: 'Precaución en traslados',
+          alertaTitulo: 'Consejos de seguridad para viajeros a México',
+          alertaDesc: 'Los destinos turísticos (Cancún, Riviera Maya, Los Cabos, Ciudad de México centro/Roma/Condesa) cuentan con alta vigilancia. Se aconseja utilizar autopistas de cuota de día, evitar carreteras secundarias de noche y usar transporte por aplicación oficial.',
+          passportRequirement: 'Pasaporte vigente y boleto de salida del país con hospedaje reservado.',
+          safetyLevel: 'Precaución en Carreteras y Noche'
+        },
+        {
+          keys: ['brasil', 'brazil', 'rio de janeiro', 'sao paulo', 'salvador de bahia', 'fortaleza', 'florianopolis', 'recife'],
+          name: 'Brasil',
+          countryCode: 'BR',
+          type: 'warning',
+          shortBadge: 'Precaución por hurtos urbanos',
+          alertaTitulo: 'Recomendaciones de seguridad en Brasil',
+          alertaDesc: 'Destino con increíble belleza natural y cultural. Precaución con robos oportunistas en playas concurridas (Copacabana, Ipanema) al anochecer, no transitar favelas sin guías locales comunitarios certificados y utilizar tarjetas virtuales o pagos con contactless.',
+          passportRequirement: 'Pasaporte o DNI (Mercosur) y certificado de fiebre amarilla recomendado en ciertas regiones.',
+          safetyLevel: 'Precaución Urbana Estándar'
+        },
+        {
+          keys: ['peru', 'lima', 'cusco', 'arequipa', 'machu picchu', 'puno', 'iquitos'],
+          name: 'Perú',
+          countryCode: 'PE',
+          type: 'warning',
+          shortBadge: 'Atención a huelgas y clima',
+          alertaTitulo: 'Consejos de viaje a Perú',
+          alertaDesc: 'Destino arqueológico y gastronómico mundial. Prever días de adaptación para el mal de altura (soroche) en Cusco y Puno. Monitorear posibles bloqueos de vías férreas o carreteras en fechas de protestas gremiales.',
+          passportRequirement: 'Pasaporte vigente o DNI Mercosur.',
+          safetyLevel: 'Seguro con Precaución en Rutas'
+        },
+        {
+          keys: ['egipto', 'egypt', 'el cairo', 'cairo', 'giza', 'luxor', 'aswan', 'sharm el sheij', 'hurghada'],
+          name: 'Egipto',
+          countryCode: 'EG',
+          type: 'warning',
+          shortBadge: 'Turismo en zonas vigiladas',
+          alertaTitulo: 'Aviso de seguridad para viajeros en Egipto',
+          alertaDesc: 'Destinos patrimoniales y balnearios del Mar Rojo cuentan con rigurosos controles de seguridad policial. Evitar viajes independientes a la península del Sinaí norte y desierto occidental junto a la frontera con Libia.',
+          passportRequirement: 'Pasaporte con al menos 6 meses de vigencia y visa a la llegada (Visa on Arrival o eVisa).',
+          safetyLevel: 'Precaución en Zonas Aisladas'
+        },
+        {
+          keys: ['turquia', 'turkey', 'estambul', 'istanbul', 'ankara', 'capadocia', 'antalya', 'izmir'],
+          name: 'Turquía',
+          countryCode: 'TR',
+          type: 'warning',
+          shortBadge: 'Seguro en circuitos turísticos',
+          alertaTitulo: 'Recomendaciones de viaje a Turquía',
+          alertaDesc: 'Estambul, Capadocia y la costa mediterránea son muy seguras y reciben millones de turistas anualmente. Mantener distancia de zonas fronterizas con Siria e Irak en el sureste.',
+          passportRequirement: 'Pasaporte con al menos 150 días de validez.',
+          safetyLevel: 'Seguro con Alerta Fronteriza'
+        },
+        {
+          keys: ['sudafrica', 'south africa', 'johannesburgo', 'ciudad del cabo', 'cape town', 'durban', 'kruger'],
+          name: 'Sudáfrica',
+          countryCode: 'ZA',
+          type: 'warning',
+          shortBadge: 'Precaución nocturna urbana',
+          alertaTitulo: 'Aviso de seguridad para Sudáfrica',
+          alertaDesc: 'Paisajes y safaris excepcionales. No caminar solo de noche en centros urbanos (Johannesburgo centro, Durban). Utilizar siempre vehículos cerrados y transporte privado de confianza.',
+          passportRequirement: 'Pasaporte con al menos 2 páginas en blanco y 30 días tras la estancia.',
+          safetyLevel: 'Precaución Elevada de Noche'
+        },
+        {
+          keys: ['india', 'nueva delhi', 'new delhi', 'mumbai', 'bombay', 'jaipur', 'agra', 'goa', 'varanasi', 'bengaluru'],
+          name: 'India',
+          countryCode: 'IN',
+          type: 'warning',
+          shortBadge: 'Precaución sanitaria y cultural',
+          alertaTitulo: 'Consejos consulares para viajeros a la India',
+          alertaDesc: 'Consumir estrictamente agua embotellada sellada y alimentos cocidos para evitar trastornos estomacales. Mujeres viajeras deben tomar recaudos adicionales en transporte nocturno y vestir de forma conservadora en sitios religiosos.',
+          passportRequirement: 'Pasaporte con al menos 6 meses de validez y eVisa previa.',
+          safetyLevel: 'Precaución Sanitaria y Logística'
+        },
+        {
+          keys: ['pakistan', 'islamabad', 'karachi', 'lahore'],
+          name: 'Pakistán',
+          countryCode: 'PK',
+          type: 'warning',
+          shortBadge: 'Precaución en áreas aisladas',
+          alertaTitulo: 'Aviso consular para Pakistán',
+          alertaDesc: 'Zonas turísticas del norte (Hunza, Gilgit) son pacíficas y hospitalarias. Evitar viajar a Baluchistán y zonas fronterizas con Afganistán.',
+          passportRequirement: 'Pasaporte y eVisa aprobada.',
+          safetyLevel: 'Precaución Reforzada'
+        },
+        {
+          keys: ['nigeria', 'lagos', 'abuja'],
+          name: 'Nigeria',
+          countryCode: 'NG',
+          type: 'warning',
+          shortBadge: 'Precaución urbana y traslados',
+          alertaTitulo: 'Aviso de seguridad para Nigeria',
+          alertaDesc: 'Seguridad variable. Lagos y Abuya requieren transporte de confianza y hospedaje en zonas con seguridad privada. Riesgo de insurgencia armada en estados del norte.',
+          passportRequirement: 'Pasaporte con visado.',
+          safetyLevel: 'Precaución Elevada'
         }
       ];
 
-      for (const item of highRiskAdvisories) {
+      for (const item of worldTravelAdvisories) {
         if (item.keys.some(k => clean.includes(k))) {
           return item;
         }
@@ -6295,18 +6562,28 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       return null;
     }
 
+    function abrirModalInfoDestinoPorId(destId, defaultTab = 'desc') {
+      const dest = destinos.find(d => d.id === destId);
+      const nombre = dest ? dest.nombre : '';
+      abrirModalInfoDestino(nombre, destId, defaultTab);
+    }
+    window.abrirModalInfoDestinoPorId = abrirModalInfoDestinoPorId;
+
     function abrirModalInfoDestino(nombre, destId, defaultTab = 'desc') {
       modalDestinoActivo = { nombre, destId, tab: defaultTab };
       const modal = document.getElementById('modal-destino-info');
       const titleEl = document.getElementById('destino-info-title');
       const flagEl = document.getElementById('destino-info-flag');
-      if (!modal) return;
+      if (!modal) {
+        console.error('Modal modal-destino-info no encontrado en el DOM');
+        return;
+      }
 
       const advisory = getDestinoAdvisory(nombre);
       const isMalv = advisory && advisory.type === 'malvinas';
 
       if (titleEl) {
-        titleEl.textContent = isMalv ? 'Islas Malvinas (Argentina)' : nombre;
+        titleEl.textContent = isMalv ? 'Islas Malvinas (Argentina)' : (nombre || 'Destino');
       }
 
       if (flagEl) {
@@ -6621,19 +6898,19 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         if (advisory) {
           if (advisory.type === 'malvinas') {
             advisoryBtnHtml = `
-              <button class="badge-alerta-viaje badge-malvinas" onclick="event.stopPropagation(); window.abrirModalInfoDestino('${escapeHtml(d.nombre)}', ${d.id}, 'advisory')" title="Aviso importante: Islas Malvinas">
+              <button type="button" class="badge-alerta-viaje badge-malvinas" onclick="event.stopPropagation(); window.abrirModalInfoDestinoPorId(${d.id}, 'advisory')" title="Aviso importante: Islas Malvinas">
                 <svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="16" height="11" style="border-radius:2px; vertical-align:middle; display:inline-block;"><rect width="900" height="600" fill="#74acdf"/><rect y="200" width="900" height="200" fill="#ffffff"/><circle cx="450" cy="300" r="45" fill="#f6b40e"/></svg>
                 <span>Son argentinas · Aviso</span>
               </button>`;
           } else if (advisory.type === 'danger') {
             advisoryBtnHtml = `
-              <button class="badge-alerta-viaje badge-danger" onclick="event.stopPropagation(); window.abrirModalInfoDestino('${escapeHtml(d.nombre)}', ${d.id}, 'advisory')" title="${escapeHtml(advisory.shortBadge)}">
+              <button type="button" class="badge-alerta-viaje badge-danger" onclick="event.stopPropagation(); window.abrirModalInfoDestinoPorId(${d.id}, 'advisory')" title="${escapeHtml(advisory.shortBadge)}">
                 <i class="fa-solid fa-triangle-exclamation"></i>
                 <span>${escapeHtml(advisory.shortBadge)}</span>
               </button>`;
           } else if (advisory.type === 'warning') {
             advisoryBtnHtml = `
-              <button class="badge-alerta-viaje badge-warning" onclick="event.stopPropagation(); window.abrirModalInfoDestino('${escapeHtml(d.nombre)}', ${d.id}, 'advisory')" title="${escapeHtml(advisory.shortBadge)}">
+              <button type="button" class="badge-alerta-viaje badge-warning" onclick="event.stopPropagation(); window.abrirModalInfoDestinoPorId(${d.id}, 'advisory')" title="${escapeHtml(advisory.shortBadge)}">
                 <i class="fa-solid fa-circle-exclamation"></i>
                 <span>${escapeHtml(advisory.shortBadge)}</span>
               </button>`;
@@ -6646,18 +6923,19 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <span class="drag-handle drag-handle-dest" data-drag-type="dest" data-dest-id="${d.id}" data-dest-idx="${destIdx}" title="Arrastra o mantén presionado para reordenar destino" onclick="event.stopPropagation()">⠿</span>
               <span id="editor-dest-chev-${d.id}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.85rem;">▼</span>
               <div class="bubble-name">${d.nombre.slice(0,3).toUpperCase()}</div>
-              <h2 style="margin:0; font-size:1.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.nombre}</h2>
-              <span style="font-size:0.75rem; font-weight:600; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:999px; white-space:nowrap;">${numDiasDest} ${numDiasDest === 1 ? 'día' : 'días'}</span>
-              <button class="btn-dest-info" onclick="event.stopPropagation(); window.abrirModalInfoDestino('${escapeHtml(d.nombre)}', ${d.id}, 'desc')" title="Ver descripción y guía de ${escapeHtml(d.nombre)}">
+              <h2 style="margin:0; font-size:1.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(d.nombre)}</h2>
+              <button type="button" class="btn-dest-info" onclick="event.stopPropagation(); window.abrirModalInfoDestinoPorId(${d.id}, 'desc')" title="Ver ficha y recomendaciones de ${escapeHtml(d.nombre)}">
                 <i class="fa-solid fa-circle-info"></i>
+                <span>Ficha</span>
               </button>
               ${advisoryBtnHtml}
+              <span style="font-size:0.75rem; font-weight:600; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:999px; white-space:nowrap;">${numDiasDest} ${numDiasDest === 1 ? 'día' : 'días'}</span>
             </div>
             <button class="close-icon" onclick="eliminarDestino(${d.id})">×</button>
           </div>
           <div id="editor-dest-body-${d.id}" style="display:${isCollapsed ? 'none' : 'block'};">
             <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap;">
-              <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;">✈</div>
+              <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;"><i class="fa-solid fa-plane"></i></div>
               <button onclick="generarItinerarioAuto(${d.id})" style="padding:6px 14px; font-size:0.8rem; background:linear-gradient(135deg, #6366f1, #8b5cf6); border:none; color:white; border-radius:8px; cursor:pointer;">${t('generar_itinerario_btn')}</button>
             </div>
             <div class="transport-fields ${isTransportOpen ? 'show' : ''}" id="transport-${d.id}">

@@ -2950,16 +2950,19 @@
 
 /* ===== END SUPPORT STYLES ===== */
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   #app.container {
-    width: min(100% - 16px, 100%);
-    padding: 16px 10px 24px;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px 6px 95px 6px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
   }
 
   #app h1 {
     padding: 68px 0 0;
-    margin-bottom: 20px;
-    font-size: 1.8rem;
+    margin-bottom: 16px;
+    font-size: 1.6rem;
   }
 
   #app .fila-dato,
@@ -2974,12 +2977,25 @@
   #app .dia,
   #app .evento,
   #app .datos-generales {
-    padding: 14px;
+    padding: 12px 10px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-radius: 14px !important;
   }
 
-  #app .destino-header,
+  #app .destino-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
   #app .dia-header {
-    align-items: flex-start;
+    display: flex;
+    align-items: center !important;
+    justify-content: space-between;
+    gap: 6px;
   }
 
   #app .bubble-name {
@@ -6818,5 +6834,140 @@ select option:checked {
   background: rgba(56, 189, 248, 0.08);
   border-color: rgba(56, 189, 248, 0.35);
 }
+
+/* Chat Polls (Encuestas) */
+.plux-poll-card {
+  min-width: 250px;
+  max-width: 340px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.plux-poll-option {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  padding: 8px 10px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.plux-poll-option:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.plux-poll-option.voted {
+  border-color: #38bdf8;
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.plux-poll-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plux-poll-option.voted .plux-poll-progress {
+  background: rgba(56, 189, 248, 0.25);
+}
+
+.chevron-indicator {
+  user-select: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Cartelito Notita Checklist Mode */
+.cartelito-btn-mode {
+  background: transparent;
+  border: none;
+  color: var(--gris);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cartelito-btn-mode:hover {
+  color: #38bdf8;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cartelito-checklist-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 4px 6px;
+  box-sizing: border-box;
+}
+
+.cartelito-chk-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #e2e8f0;
+}
+
+.cartelito-chk-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.cartelito-chk-done {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.cartelito-chk-del {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.cartelito-chk-del:hover {
+  color: #ef4444;
+}
+
+.cartelito-add-item-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  margin-top: 4px;
+}
+
 
 

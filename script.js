@@ -2890,12 +2890,38 @@
         const linkLabel = hasLink ? n.enlace.label : 'Sin enlazar';
         const linkClass = hasLink ? 'linked' : '';
         const pinClass = hasLink ? 'has-link' : '';
+        const isChk = Boolean(n.isChecklist);
+        const items = Array.isArray(n.items) ? n.items : [];
+
+        let bodyHtml = '';
+        if (isChk) {
+          bodyHtml = `
+            <div class="cartelito-checklist-container">
+              ${items.map((it, idx) => `
+                <div class="cartelito-chk-row">
+                  <label class="cartelito-chk-label">
+                    <input type="checkbox" ${it.done ? 'checked' : ''} onclick="window.toggleItemChecklistNota('${n.id}', ${idx}, event)" style="cursor:pointer; accent-color:#38bdf8;">
+                    <span class="${it.done ? 'cartelito-chk-done' : ''}">${escapeHtml(it.text)}</span>
+                  </label>
+                  <button class="cartelito-chk-del" onclick="window.eliminarItemChecklistNota('${n.id}', ${idx}, event)" title="Eliminar tarea">&times;</button>
+                </div>
+              `).join('')}
+              <input type="text" class="cartelito-add-item-input" placeholder="+ Añadir tarea (Enter)" onkeydown="window.agregarItemChecklistNota('${n.id}', this, event)">
+            </div>
+          `;
+        } else {
+          bodyHtml = `
+            <textarea id="cartelito-txt-${n.id}" class="cartelito-textarea" 
+                      placeholder="Escribe tu nota aqui..." 
+                      oninput="window.actualizarTextoCartelito('${n.id}', this.value)">${escapeHtml(n.texto || '')}</textarea>
+          `;
+        }
 
         return `
           <div id="cartelito-${n.id}" class="cartelito-nota" style="left:${n.x}px; top:${n.y}px;">
             <div id="pin-${n.id}" class="cartelito-corner-pin ${pinClass}" 
                  data-nota-id="${n.id}" 
-                 title="${hasLink ? 'Conectado a ' + escapeHtml(linkLabel) + '. Arrastra para cambiar o toca para desconectar' : 'Toca o arrastra esta esquinita hasta la manija de un destino o actividad'}"
+                 title="${hasLink ? 'Conectado a ' + escapeHtml(linkLabel) + '. Arrastra para cambiar o toca para desconectar' : 'Toca o arrastra esta esquinita hasta la manija de un destino, actividad o a otra nota'}"
                  onmousedown="window.iniciarArrastreHilito('${n.id}', event)"
                  ontouchstart="window.iniciarArrastreHilito('${n.id}', event)">
             </div>
@@ -2906,12 +2932,15 @@
               <span class="cartelito-badge-enlace ${linkClass}" id="cartelito-label-${n.id}" title="${escapeHtml(linkLabel)}">
                 ${escapeHtml(linkLabel)}
               </span>
-              <button class="cartelito-btn-close" onclick="window.eliminarNotaCartelito('${n.id}', event)" title="Eliminar nota">&times;</button>
+              <div style="display:flex; align-items:center; gap:2px;">
+                <button class="cartelito-btn-mode" onclick="window.toggleModoChecklistNota('${n.id}', event)" title="${isChk ? 'Cambiar a nota de texto' : 'Convertir en checklist'}">
+                  <i class="fa-solid ${isChk ? 'fa-align-left' : 'fa-list-check'}"></i>
+                </button>
+                <button class="cartelito-btn-close" onclick="window.eliminarNotaCartelito('${n.id}', event)" title="Eliminar nota">&times;</button>
+              </div>
             </div>
             <div class="cartelito-body">
-              <textarea id="cartelito-txt-${n.id}" class="cartelito-textarea" 
-                        placeholder="Escribe tu nota aqui..." 
-                        oninput="window.actualizarTextoCartelito('${n.id}', this.value)">${escapeHtml(n.texto || '')}</textarea>
+              ${bodyHtml}
             </div>
           </div>
         `;
@@ -2921,6 +2950,58 @@
     }
     window.renderCartelitos = renderCartelitos;
     window.renderTableroNotas = renderCartelitos;
+
+    function toggleModoChecklistNota(id, e) {
+      if (e) e.stopPropagation();
+      const nota = getCartelitosNotas().find(n => n.id === id);
+      if (!nota) return;
+      nota.isChecklist = !nota.isChecklist;
+      if (nota.isChecklist && (!Array.isArray(nota.items) || nota.items.length === 0)) {
+        if (nota.texto && nota.texto.trim()) {
+          nota.items = nota.texto.split('\n').filter(l => l.trim()).map(t => ({ text: t.trim(), done: false }));
+        } else {
+          nota.items = [{ text: 'Tarea 1', done: false }];
+        }
+      }
+      renderCartelitos();
+      if (typeof autoSave === 'function') autoSave();
+    }
+    window.toggleModoChecklistNota = toggleModoChecklistNota;
+
+    function toggleItemChecklistNota(notaId, itemIdx, e) {
+      if (e) e.stopPropagation();
+      const nota = getCartelitosNotas().find(n => n.id === notaId);
+      if (!nota || !Array.isArray(nota.items) || !nota.items[itemIdx]) return;
+      nota.items[itemIdx].done = !nota.items[itemIdx].done;
+      renderCartelitos();
+      if (typeof autoSave === 'function') autoSave();
+    }
+    window.toggleItemChecklistNota = toggleItemChecklistNota;
+
+    function agregarItemChecklistNota(notaId, inputEl, e) {
+      if (e && e.key && e.key !== 'Enter') return;
+      if (!inputEl) return;
+      const text = inputEl.value.trim();
+      if (!text) return;
+      const nota = getCartelitosNotas().find(n => n.id === notaId);
+      if (!nota) return;
+      if (!Array.isArray(nota.items)) nota.items = [];
+      nota.items.push({ text, done: false });
+      inputEl.value = '';
+      renderCartelitos();
+      if (typeof autoSave === 'function') autoSave();
+    }
+    window.agregarItemChecklistNota = agregarItemChecklistNota;
+
+    function eliminarItemChecklistNota(notaId, itemIdx, e) {
+      if (e) e.stopPropagation();
+      const nota = getCartelitosNotas().find(n => n.id === notaId);
+      if (!nota || !Array.isArray(nota.items)) return;
+      nota.items.splice(itemIdx, 1);
+      renderCartelitos();
+      if (typeof autoSave === 'function') autoSave();
+    }
+    window.eliminarItemChecklistNota = eliminarItemChecklistNota;
 
     function actualizarTextoCartelito(id, val) {
       const nota = getCartelitosNotas().find(n => n.id === id);
@@ -3124,11 +3205,29 @@
       } else if (nota) {
         const elemUnder = document.elementFromPoint(clientX, clientY);
         if (elemUnder) {
+          const otherNotaEl = elemUnder.closest('.cartelito-nota');
+          const chkEl = elemUnder.closest('#btnChecklist, #btnChecklistHeader, .btn-checklist, #checklistContenido, #modal-checklist, [data-action="checklist"]');
           const destHandle = elemUnder.closest('.drag-handle-dest, .destino');
           const evHandle = elemUnder.closest('.drag-handle-ev, .evento');
           const diaHandle = elemUnder.closest('.drag-handle-dia, .dia');
 
-          if (evHandle) {
+          if (otherNotaEl && otherNotaEl.id !== `cartelito-${nota.id}`) {
+            const otherId = otherNotaEl.id.replace('cartelito-', '');
+            const otherNota = getCartelitosNotas().find(n => n.id === otherId);
+            const otherTit = (otherNota?.texto || 'Nota').trim().slice(0, 18);
+            nota.enlace = {
+              tipo: 'nota',
+              id: otherId,
+              label: 'Nota: ' + (otherTit || 'Enlazada')
+            };
+            showToast('Nota conectada a otra nota', 'success');
+          } else if (chkEl) {
+            nota.enlace = {
+              tipo: 'checklist',
+              label: 'Checklist del viaje'
+            };
+            showToast('Nota conectada a la checklist general', 'success');
+          } else if (evHandle) {
             const destId = evHandle.dataset.destId || evHandle.closest('[data-dest-id]')?.dataset.destId;
             const diaId = evHandle.dataset.diaId || evHandle.closest('[data-dia-id]')?.dataset.diaId;
             const evIdx = evHandle.dataset.evIdx || evHandle.closest('[data-ev-idx]')?.dataset.evIdx || 0;
@@ -3208,7 +3307,11 @@
         const y1 = pinRect.top + pinRect.height / 2;
 
         let targetEl = null;
-        if (nota.enlace.tipo === 'dest') {
+        if (nota.enlace.tipo === 'nota') {
+          targetEl = document.getElementById(`pin-${nota.enlace.id}`) || document.getElementById(`cartelito-${nota.enlace.id}`);
+        } else if (nota.enlace.tipo === 'checklist') {
+          targetEl = document.getElementById('btnChecklist') || document.getElementById('btnChecklistHeader') || document.querySelector('.btn-checklist');
+        } else if (nota.enlace.tipo === 'dest') {
           targetEl = document.querySelector(`.drag-handle-dest[data-dest-id="${nota.enlace.id}"]`) ||
                      document.querySelector(`.destino[data-dest-id="${nota.enlace.id}"] .destino-header`) ||
                      document.querySelector(`.destino[data-dest-id="${nota.enlace.id}"]`);
@@ -4268,8 +4371,11 @@ VISTAS Y HERRAMIENTAS:
 - [ACCION:INVITAR_COLABORADOR:Nickname] → Invita a un colaborador por nickname (ej: @maria)
 - [ACCION:CAMBIAR_MONEDA:Codigo] → Cambia la moneda en la que se visualizan todos los gastos del viaje (ej: [ACCION:CAMBIAR_MONEDA:USD] o [ACCION:CAMBIAR_MONEDA:ARS] o [ACCION:CAMBIAR_MONEDA:EUR] o [ACCION:CAMBIAR_MONEDA:BRL] o [ACCION:CAMBIAR_MONEDA:GBP])
 - [ACCION:CREAR_NOTA:Texto de la nota|NombreDestinoOpcional] → Crea una nota flotante en pantalla y opcionalmente la conecta con un hilito al destino
+- [ACCION:CREAR_CHECKLIST_NOTA:Titulo|item1,item2,item3] → Crea una notita flotante tipo checklist con tareas interactivas tachables
 - [ACCION:CONECTAR_NOTA:TextoDeLaNota|NombreDestinoOEvento] → Conecta una nota existente con un hilito al destino o actividad
+- [ACCION:CONECTAR_NOTAS:TextoNotaA|TextoNotaB] → Conecta dos notas flotantes entre sí con un hilito orgánico
 - [ACCION:AGREGAR_CHECKLIST:Texto|Categoria] → Agrega una tarea directamente a la checklist general
+- [ACCION:ABRIR_NOTAS] → Muestra y desplaza la vista hacia las notas flotantes
 
 Tenés acceso al clima actual del viaje (OpenWeather) en el contexto del mensaje. Usalo para recomendar ropa, actividades o cambios de plan.
 
@@ -5169,7 +5275,26 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         accionesEjecutadas = true;
       });
 
-      // CONECTAR_NOTA
+      // CREAR_CHECKLIST_NOTA
+      const accionesChkNota = [...respuesta.matchAll(/\[ACCION:CREAR_CHECKLIST_NOTA:([^\]]+)\]/g)];
+      accionesChkNota.forEach((match) => {
+        const partes = match[1].split('|');
+        const tit = partes[0] ? partes[0].trim() : 'Checklist';
+        const rawItems = partes[1] ? partes[1].split(',') : [];
+        const items = rawItems.map(it => ({ text: it.trim(), done: false })).filter(it => it.text);
+        if (typeof crearNotaCartelito === 'function') {
+          const nota = crearNotaCartelito(tit);
+          if (nota) {
+            nota.isChecklist = true;
+            nota.items = items.length > 0 ? items : [{ text: 'Tarea 1', done: false }];
+            if (typeof renderCartelitos === 'function') renderCartelitos();
+            if (typeof autoSave === 'function') autoSave();
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // CONECTAR_NOTA (a destino o actividad)
       const accionesConectar = [...respuesta.matchAll(/\[ACCION:CONECTAR_NOTA:([^\]]+)\]/g)];
       accionesConectar.forEach((match) => {
         const partes = match[1].split('|');
@@ -5184,6 +5309,30 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             nota.enlace = { tipo: 'dest', id: dest.id, label: 'Destino: ' + dest.nombre };
             if (typeof renderCartelitos === 'function') renderCartelitos();
             if (typeof actualizarHilitos === 'function') actualizarHilitos();
+          }
+        }
+        accionesEjecutadas = true;
+      });
+
+      // CONECTAR_NOTAS (nota con otra nota)
+      const accionesConectarNotas = [...respuesta.matchAll(/\[ACCION:CONECTAR_NOTAS:([^\]]+)\]/g)];
+      accionesConectarNotas.forEach((match) => {
+        const partes = match[1].split('|');
+        if (partes.length >= 2) {
+          const qA = partes[0].trim().toLowerCase();
+          const qB = partes[1].trim().toLowerCase();
+          const notas = typeof getCartelitosNotas === 'function' ? getCartelitosNotas() : [];
+          const notaA = notas.find(n => n.id === qA || (n.texto && n.texto.toLowerCase().includes(qA)));
+          const notaB = notas.find(n => n.id === qB || (n.texto && n.texto.toLowerCase().includes(qB)));
+          if (notaA && notaB && notaA.id !== notaB.id) {
+            notaA.enlace = {
+              tipo: 'nota',
+              id: notaB.id,
+              label: 'Nota: ' + (notaB.texto || 'Nota').trim().slice(0, 16)
+            };
+            if (typeof renderCartelitos === 'function') renderCartelitos();
+            if (typeof actualizarHilitos === 'function') actualizarHilitos();
+            if (typeof autoSave === 'function') autoSave();
           }
         }
         accionesEjecutadas = true;
@@ -7110,12 +7259,19 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         }
 
         div.innerHTML = `
-          <div class="destino-header" onclick="toggleEditorDestino(${d.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; flex-wrap:wrap;">
-              <span class="drag-handle drag-handle-dest" data-drag-type="dest" data-dest-id="${d.id}" data-dest-idx="${destIdx}" title="Arrastra o mantén presionado para reordenar destino" onclick="event.stopPropagation()">⠿</span>
-              <span id="editor-dest-chev-${d.id}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.85rem;">▼</span>
-              <div class="bubble-name">${d.nombre.slice(0,3).toUpperCase()}</div>
-              <h2 style="margin:0; font-size:1.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(d.nombre)}</h2>
+          <div class="destino-header" onclick="toggleEditorDestino(${d.id}, event)" style="cursor:pointer; user-select:none;">
+            <div class="destino-header-top-row" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;">
+              <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden;">
+                <span class="drag-handle drag-handle-dest" data-drag-type="dest" data-dest-id="${d.id}" data-dest-idx="${destIdx}" title="Arrastra o mantén presionado para reordenar destino" onclick="event.stopPropagation()">⠿</span>
+                <div class="bubble-name" style="flex-shrink:0;">${d.nombre.slice(0,3).toUpperCase()}</div>
+                <h2 style="margin:0; font-size:1.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${escapeHtml(d.nombre)}</h2>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                <span id="editor-dest-chev-${d.id}" class="chevron-indicator" style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,0.06); transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.75rem;" title="Plegar / Expandir">▼</span>
+                <button class="close-icon" onclick="event.stopPropagation(); eliminarDestino(${d.id});" style="font-size:1.8rem; line-height:1; padding:0 4px;" title="Eliminar destino">×</button>
+              </div>
+            </div>
+            <div class="destino-header-badges-row" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:8px; padding-left:36px;">
               <button type="button" class="btn-dest-info" onclick="event.stopPropagation(); window.abrirModalInfoDestinoPorId(${d.id}, 'desc')" title="Ver ficha y recomendaciones de ${escapeHtml(d.nombre)}">
                 <i class="fa-solid fa-circle-info"></i>
                 <span>Ficha</span>
@@ -7123,7 +7279,6 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               ${advisoryBtnHtml}
               <span style="font-size:0.75rem; font-weight:600; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:999px; white-space:nowrap;">${numDiasDest} ${numDiasDest === 1 ? 'día' : 'días'}</span>
             </div>
-            <button class="close-icon" onclick="eliminarDestino(${d.id})">×</button>
           </div>
           <div id="editor-dest-body-${d.id}" style="display:${isCollapsed ? 'none' : 'block'};">
             <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap;">
@@ -8530,20 +8685,20 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         diaDiv.dataset.diaIdx = diaIdx;
         diaDiv.draggable = true;
         diaDiv.innerHTML = `
-          <div class="dia-header" onclick="toggleEditorDia(${destId}, ${dia.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+          <div class="dia-header" onclick="toggleEditorDia(${destId}, ${dia.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; gap:6px;">
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; overflow:hidden;">
               <span class="drag-handle drag-handle-dia" data-drag-type="dia" data-dest-id="${destId}" data-dia-id="${dia.id}" data-dia-idx="${diaIdx}" title="Arrastra o mantén presionado para reordenar día" onclick="event.stopPropagation()">⠿</span>
-              <span id="editor-dia-chev-${destId}-${dia.id}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.8rem;">▼</span>
-              <h4 style="margin:0; white-space:nowrap;">${t('day_prefix')} ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris);font-weight:normal">(${daySched.dateLabel})</small>` : ''}</h4>
-              <span id="editor-dia-ev-badge-${destId}-${dia.id}" style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:999px; white-space:nowrap;">${evCount} ${evCount === 1 ? 'actividad' : 'actividades'}</span>
+              <h4 style="margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t('day_prefix')} ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris);font-weight:normal">(${daySched.dateLabel})</small>` : ''}</h4>
+              <span id="editor-dia-ev-badge-${destId}-${dia.id}" style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:999px; white-space:nowrap; flex-shrink:0;">${evCount}</span>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
               <div id="weather-day-${destId}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-day-${destId}-${dia.id}')" title="Clima del día">
                 <div class="weather-chip-row"><span class="weather-chip-icon"><i class="fa-solid fa-cloud-sun"></i></span><span class="weather-chip-temp">...</span></div>
               </div>
-              <div class="dia-actions">
-                <span class="copy-icon" onclick="duplicarDia(${destId}, ${dia.id})" title="${t('copy_button')}">⎘</span>
-                <button class="close-icon" onclick="eliminarDia(${destId}, ${dia.id})">×</button>
+              <span id="editor-dia-chev-${destId}-${dia.id}" class="chevron-indicator" style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; background:rgba(255,255,255,0.06); transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.72rem;" title="Plegar / Expandir">▼</span>
+              <div class="dia-actions" style="display:flex; align-items:center; gap:3px;">
+                <span class="copy-icon" onclick="event.stopPropagation(); duplicarDia(${destId}, ${dia.id});" title="${t('copy_button')}" style="padding:2px 4px;">⎘</span>
+                <button class="close-icon" onclick="event.stopPropagation(); eliminarDia(${destId}, ${dia.id});" style="font-size:1.6rem; line-height:1; padding:0 2px;">×</button>
               </div>
             </div>
           </div>
@@ -20128,6 +20283,47 @@ async function exportarPDF() {
             </div>
           </div>
         `;
+      } else if (m.cardType === 'poll_card' && m.cardData) {
+        const poll = m.cardData;
+        const totalVotes = (poll.options || []).reduce((acc, opt) => acc + (opt.votes ? opt.votes.length : 0), 0);
+        const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Viajero';
+
+        cardHtml = `
+          <div class="plux-msg-rich-card plux-poll-card" id="poll-card-${m.id}" style="min-width:250px; max-width:340px; background:rgba(15,23,42,0.75); border:1px solid rgba(56,189,248,0.25); border-radius:14px; padding:12px; box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+            <div class="plux-rich-card-header" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">
+              <span class="plux-rich-card-badge poll" style="align-self:flex-start; background:rgba(14,165,233,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.3); font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;">
+                <i class="fa-solid fa-square-poll-vertical"></i> Encuesta de grupo
+              </span>
+              <span class="plux-rich-card-title" style="font-size:0.95rem; font-weight:800; color:#fff; line-height:1.35;">${escapeHtml(poll.question)}</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+              ${(poll.options || []).map((opt, optIdx) => {
+                const votes = opt.votes || [];
+                const count = votes.length;
+                const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                const hasVoted = votes.includes(myNick);
+                return `
+                  <div class="plux-poll-option ${hasVoted ? 'voted' : ''}" onclick="window.votarEncuestaChat('${m.id}', ${optIdx})" style="position:relative; background:rgba(255,255,255,0.04); border:1px solid ${hasVoted ? '#38bdf8' : 'rgba(255,255,255,0.1)'}; border-radius:9px; padding:8px 10px; cursor:pointer; overflow:hidden; transition:all 0.2s ease;">
+                    <div class="plux-poll-progress" style="position:absolute; top:0; left:0; bottom:0; width:${pct}%; background:${hasVoted ? 'rgba(56,189,248,0.28)' : 'rgba(255,255,255,0.08)'}; pointer-events:none; transition:width 0.3s ease;"></div>
+                    <div style="position:relative; z-index:1; display:flex; justify-content:space-between; align-items:center; font-size:0.84rem; font-weight:600;">
+                      <span style="display:flex; align-items:center; gap:6px; color:#f1f5f9;">
+                        ${hasVoted ? '<i class="fa-solid fa-circle-check" style="color:#38bdf8;"></i>' : '<i class="fa-regular fa-circle" style="color:var(--gris);"></i>'}
+                        ${escapeHtml(opt.text)}
+                      </span>
+                      <span style="font-weight:700; color:${hasVoted ? '#38bdf8' : '#94a3b8'}; font-size:0.78rem;">
+                        ${pct}% (${count})
+                      </span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:0.72rem; color:var(--gris);">
+              <span>${totalVotes} ${totalVotes === 1 ? 'voto' : 'votos'}</span>
+              <span>Toca para votar</span>
+            </div>
+          </div>
+        `;
       } else if ((m.cardType === 'photo_card' || m.imageUrl) && (m.imageUrl || m.cardData?.url)) {
         const photoUrl = m.imageUrl || m.cardData?.url || '';
         const caption = m.cardData?.caption || 'Foto del viaje';
@@ -20513,6 +20709,110 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     }
   }
   window.toggleChecklistItemInChat = toggleChecklistItemInChat;
+
+  function votarEncuestaChat(msgId, optIdx) {
+    const chat = pluxSocialChats[pluxActiveChatId] || getActiveTripChat();
+    if (!chat || !chat.messages) return;
+    const msg = chat.messages.find(m => m.id === msgId);
+    if (!msg || !msg.cardData || !Array.isArray(msg.cardData.options)) return;
+
+    const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Viajero';
+    const opt = msg.cardData.options[optIdx];
+    if (!opt) return;
+
+    if (!Array.isArray(opt.votes)) opt.votes = [];
+
+    // Alternar voto o cambiar opción seleccionada
+    if (opt.votes.includes(myNick)) {
+      opt.votes = opt.votes.filter(n => n !== myNick);
+    } else {
+      msg.cardData.options.forEach(o => {
+        if (!Array.isArray(o.votes)) o.votes = [];
+        o.votes = o.votes.filter(n => n !== myNick);
+      });
+      opt.votes.push(myNick);
+    }
+
+    localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
+    renderChatMessages();
+
+    try {
+      if (typeof db !== 'undefined' && db && pluxActiveChatId) {
+        db.collection("plux_social_messages").doc(msgId).set({
+          cardData: msg.cardData
+        }, { merge: true }).catch(() => {});
+      }
+    } catch(e){}
+  }
+  window.votarEncuestaChat = votarEncuestaChat;
+
+  function abrirModalCrearEncuestaChat() {
+    mostrarMenuAdjuntosChat();
+    const modal = document.getElementById('modal-crear-encuesta-chat');
+    if (modal) {
+      modal.style.display = 'flex';
+      const qInput = document.getElementById('pollQuestionInput');
+      if (qInput) { qInput.value = ''; qInput.focus(); }
+      const container = document.getElementById('pollOptionsContainer');
+      if (container) {
+        container.innerHTML = `
+          <input type="text" class="poll-option-input" placeholder="Opción 1" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:9px 12px; color:#fff; font-size:0.88rem;">
+          <input type="text" class="poll-option-input" placeholder="Opción 2" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:9px 12px; color:#fff; font-size:0.88rem;">
+        `;
+      }
+    }
+  }
+  window.abrirModalCrearEncuestaChat = abrirModalCrearEncuestaChat;
+
+  function cerrarModalCrearEncuestaChat() {
+    const modal = document.getElementById('modal-crear-encuesta-chat');
+    if (modal) modal.style.display = 'none';
+  }
+  window.cerrarModalCrearEncuestaChat = cerrarModalCrearEncuestaChat;
+
+  function agregarOpcionEncuestaInput() {
+    const container = document.getElementById('pollOptionsContainer');
+    if (!container) return;
+    const count = container.querySelectorAll('.poll-option-input').length + 1;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'poll-option-input';
+    input.placeholder = `Opción ${count}`;
+    input.style.cssText = 'width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:9px 12px; color:#fff; font-size:0.88rem;';
+    container.appendChild(input);
+    input.focus();
+  }
+  window.agregarOpcionEncuestaInput = agregarOpcionEncuestaInput;
+
+  function publicarEncuestaChat() {
+    const qInput = document.getElementById('pollQuestionInput');
+    const question = qInput ? qInput.value.trim() : '';
+    if (!question) {
+      if (typeof showToast === 'function') showToast('Escribe una pregunta para la encuesta', 'info');
+      return;
+    }
+    const container = document.getElementById('pollOptionsContainer');
+    const inputs = container ? Array.from(container.querySelectorAll('.poll-option-input')) : [];
+    const validOptions = inputs.map(inp => inp.value.trim()).filter(Boolean);
+    if (validOptions.length < 2) {
+      if (typeof showToast === 'function') showToast('Ingresa al menos 2 opciones de votación', 'info');
+      return;
+    }
+
+    cerrarModalCrearEncuestaChat();
+
+    enviarCardChatSocial({
+      introText: 'Nueva encuesta de grupo:',
+      cardType: 'poll_card',
+      cardData: {
+        question: question,
+        options: validOptions.map((optText, idx) => ({ id: idx, text: optText, votes: [] }))
+      }
+    });
+
+    if (typeof showToast === 'function') showToast('Encuesta publicada en el chat', 'success');
+  }
+  window.publicarEncuestaChat = publicarEncuestaChat;
 
   function abrirModalNuevaConversacion() {
     const modal = document.getElementById('modal-nueva-conversacion');

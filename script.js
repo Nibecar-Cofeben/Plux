@@ -5439,8 +5439,42 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     function getCountryFlagSvg(countryCode) {
       const code = (countryCode || '').toUpperCase();
+      const style = 'border-radius:2px; box-shadow:0 0 2px rgba(0,0,0,0.6); vertical-align:middle; display:inline-block; flex-shrink:0;';
       if (code === 'AR') {
-        return `<svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="22" height="15" style="border-radius:2px; box-shadow:0 0 2px rgba(0,0,0,0.6); vertical-align:middle; display:inline-block; flex-shrink:0;"><rect width="900" height="600" fill="#74acdf"/><rect y="200" width="900" height="200" fill="#ffffff"/><circle cx="450" cy="300" r="45" fill="#f6b40e"/></svg>`;
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="22" height="15" style="${style}"><rect width="900" height="600" fill="#74acdf"/><rect y="200" width="900" height="200" fill="#ffffff"/><circle cx="450" cy="300" r="45" fill="#f6b40e"/></svg>`;
+      }
+      if (code === 'BR') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 1000 700" width="22" height="15" style="${style}"><rect width="1000" height="700" fill="#009c3b"/><polygon points="500,84 916,350 500,616 84,350" fill="#ffdf00"/><circle cx="500" cy="350" r="175" fill="#002776"/></svg>`;
+      }
+      if (code === 'ES') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 750 500" width="22" height="15" style="${style}"><rect width="750" height="500" fill="#aa151b"/><rect y="125" width="750" height="250" fill="#f1bf00"/></svg>`;
+      }
+      if (code === 'IT') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 1500 1000" width="22" height="15" style="${style}"><rect width="500" height="1000" fill="#009246"/><rect x="500" width="500" height="1000" fill="#ffffff"/><rect x="1000" width="500" height="1000" fill="#ce2b37"/></svg>`;
+      }
+      if (code === 'FR') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="22" height="15" style="${style}"><rect width="300" height="600" fill="#002654"/><rect x="300" width="300" height="600" fill="#ffffff"/><rect x="600" width="300" height="600" fill="#ce1126"/></svg>`;
+      }
+      if (code === 'US') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 7410 3900" width="22" height="15" style="${style}"><rect width="7410" height="3900" fill="#b22234"/><rect y="300" width="7410" height="300" fill="#fff"/><rect y="900" width="7410" height="300" fill="#fff"/><rect y="1500" width="7410" height="300" fill="#fff"/><rect y="2100" width="7410" height="300" fill="#fff"/><rect y="2700" width="7410" height="300" fill="#fff"/><rect y="3300" width="7410" height="300" fill="#fff"/><rect width="2964" height="2100" fill="#3c3b6e"/></svg>`;
+      }
+      if (code === 'GB') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 60 30" width="22" height="15" style="${style}"><clipPath id="s"><path d="M0,0 v30 h60 v-30 z"/></clipPath><clipPath id="t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><g clip-path="url(#s)"><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#t)" stroke="#c8102e" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#c8102e" stroke-width="6"/></g></svg>`;
+      }
+      if (code === 'DE') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 5 3" width="22" height="15" style="${style}"><rect width="5" height="3" fill="#ffce00"/><rect width="5" height="2" fill="#dd0000"/><rect width="5" height="1" fill="#000000"/></svg>`;
+      }
+      if (code === 'UY') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="22" height="15" style="${style}"><rect width="900" height="600" fill="#fff"/><rect y="66" width="900" height="66" fill="#0038a8"/><rect y="200" width="900" height="66" fill="#0038a8"/><rect y="333" width="900" height="66" fill="#0038a8"/><rect y="466" width="900" height="66" fill="#0038a8"/><rect width="300" height="266" fill="#fff"/><circle cx="150" cy="133" r="45" fill="#fcd116"/></svg>`;
+      }
+      if (code === 'CL') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="22" height="15" style="${style}"><rect width="900" height="600" fill="#d52b1e"/><rect width="900" height="300" fill="#fff"/><rect width="300" height="300" fill="#0039a6"/><polygon points="150,80 167,135 224,135 178,169 196,224 150,190 104,224 122,169 76,135 133,135" fill="#fff"/></svg>`;
+      }
+      if (code === 'MX') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 2100 1200" width="22" height="15" style="${style}"><rect width="700" height="1200" fill="#006847"/><rect x="700" width="700" height="1200" fill="#fff"/><rect x="1400" width="700" height="1200" fill="#ce1126"/><circle cx="1050" cy="600" r="90" fill="#8b5a2b"/></svg>`;
+      }
+      if (code === 'JP') {
+        return `<svg class="city-ac-flag-svg" viewBox="0 0 900 600" width="22" height="15" style="${style}"><rect width="900" height="600" fill="#fff"/><circle cx="450" cy="300" r="180" fill="#bc002d"/></svg>`;
       }
       return `<span class="city-ac-flag-pill" style="font-size:0.68rem; font-weight:800; padding:2px 5px; border-radius:4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:var(--texto); letter-spacing:0.5px;">${code || 'LOC'}</span>`;
     }
@@ -6624,13 +6658,35 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const advisory = getDestinoAdvisory(nombre);
       const isMalv = advisory && advisory.type === 'malvinas';
 
-      // Buscar si coincide con catalogo curado
-      const normNombre = (nombre || '').toLowerCase().trim();
+      // 1. Limpieza y analisis del nombre ingresado
+      const rawNombre = (nombre || '').trim();
+      const parts = rawNombre.split(/[,-]/);
+      const cleanCity = (parts[0] || '').trim();
+      const detectedCountry = parts.length > 1 ? parts[parts.length - 1].trim() : '';
+
+      const normNombre = rawNombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const normCity = cleanCity.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+      // 2. Buscar en catalogo curado
       let curated = null;
-      if (typeof PLUX_CURATED_DESTINATIONS !== 'undefined') {
-        curated = PLUX_CURATED_DESTINATIONS.find(d => 
-          d.nombre.toLowerCase() === normNombre || normNombre.includes(d.nombre.toLowerCase())
-        );
+      let curatedList = [];
+      try {
+        if (typeof window !== 'undefined' && window.PLUX_CURATED_DESTINATIONS && Array.isArray(window.PLUX_CURATED_DESTINATIONS)) {
+          curatedList = window.PLUX_CURATED_DESTINATIONS;
+        } else if (typeof PLUX_CURATED_DESTINATIONS !== 'undefined' && Array.isArray(PLUX_CURATED_DESTINATIONS)) {
+          curatedList = PLUX_CURATED_DESTINATIONS;
+        }
+      } catch (e) {
+        curatedList = [];
+      }
+
+      if (curatedList && curatedList.length > 0) {
+        curated = curatedList.find(d => {
+          const dName = (d.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+          const dId = (d.id || '').toLowerCase().trim();
+          return normCity === dName || normCity === dId || 
+                 normNombre === dName || normNombre.includes(dName) || dName.includes(normCity);
+        });
       }
 
       if (modalDestinoActivo.tab === 'advisory') {
@@ -6774,99 +6830,235 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         return;
       }
 
+      // Si coincide con curado, renderizar ficha completa y hermosa
       if (curated) {
-        const keyPlaces = Array.isArray(curated.lugaresClave) ? curated.lugaresClave.join(' · ') : '';
+        const flagSvg = getCountryFlagSvg(curated.codigoPais || 'LOC');
+        const keyPlaces = Array.isArray(curated.lugaresClave) ? curated.lugaresClave : [];
+        const gastronomy = Array.isArray(curated.gastronomia) ? curated.gastronomia : [];
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(curated.nombre + ' ' + (curated.pais || ''))}`;
+
         body.innerHTML = `
-          ${curated.img ? `<img src="${curated.img}" alt="${escapeHtml(curated.nombre)}" class="destino-info-hero-img">` : ''}
-          <div style="font-size:0.95rem; line-height:1.6; color:#e2e8f0; margin-bottom:16px;">
+          <div class="destino-info-hero-container">
+            <img src="${curated.img}" alt="${escapeHtml(curated.nombre)}" class="destino-info-hero-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80';">
+            <div class="destino-info-hero-overlay">
+              <div class="destino-info-hero-badges">
+                <span class="hero-badge hero-badge-country">${flagSvg} ${escapeHtml(curated.pais || '')}</span>
+                <span class="hero-badge hero-badge-vibe"><i class="fa-solid fa-compass"></i> ${escapeHtml(curated.vibe || curated.estilo || 'Turismo')}</span>
+                ${curated.rating ? `<span class="hero-badge" style="color:#fbbf24;"><i class="fa-solid fa-star"></i> ${curated.rating}</span>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="destino-info-desc-text">
             ${escapeHtml(curated.descripcion)}
           </div>
+
           <div class="destino-info-grid">
             <div class="destino-info-grid-item">
-              <div class="destino-info-grid-label">País</div>
-              <div class="destino-info-grid-val">${escapeHtml(curated.pais)} (${curated.codigoPais || ''})</div>
+              <div class="destino-info-grid-label"><i class="fa-solid fa-wallet" style="color:#38bdf8;"></i> Presupuesto Estimado</div>
+              <div class="destino-info-grid-val" style="color:#38bdf8;">~$${curated.presupuestoDia || 50} USD / día</div>
             </div>
             <div class="destino-info-grid-item">
-              <div class="destino-info-grid-label">Presupuesto estimado</div>
-              <div class="destino-info-grid-val">~$${curated.presupuestoDia || 80} USD / día</div>
-            </div>
-            <div class="destino-info-grid-item">
-              <div class="destino-info-grid-label">Mejor época</div>
+              <div class="destino-info-grid-label"><i class="fa-solid fa-calendar-check" style="color:#10b981;"></i> Mejor Época</div>
               <div class="destino-info-grid-val">${escapeHtml(curated.mejorEpoca || 'Todo el año')}</div>
             </div>
             <div class="destino-info-grid-item">
-              <div class="destino-info-grid-label">Moneda habitual</div>
+              <div class="destino-info-grid-label"><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> Moneda Local</div>
               <div class="destino-info-grid-val">${escapeHtml(curated.moneda || 'Moneda local')}</div>
             </div>
+            <div class="destino-info-grid-item">
+              <div class="destino-info-grid-label"><i class="fa-solid fa-language" style="color:#a855f7;"></i> Idioma</div>
+              <div class="destino-info-grid-val">${escapeHtml(curated.idioma || 'Español')}</div>
+            </div>
           </div>
-          ${keyPlaces ? `
-            <div style="margin-top:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:12px 14px; border-radius:12px;">
-              <div class="destino-info-grid-label">Imperdibles para visitar</div>
-              <div style="font-size:0.88rem; color:#f1f5f9; line-height:1.5; margin-top:4px;">${escapeHtml(keyPlaces)}</div>
+
+          ${keyPlaces.length > 0 ? `
+            <div class="destino-info-section-title"><i class="fa-solid fa-location-dot"></i> Atractivos Imperdibles</div>
+            <div class="destino-info-chips-wrap">
+              ${keyPlaces.map(p => `<span class="destino-info-chip"><i class="fa-solid fa-check" style="color:#38bdf8; font-size:0.7rem;"></i> ${escapeHtml(p)}</span>`).join('')}
             </div>
           ` : ''}
+
+          ${gastronomy.length > 0 ? `
+            <div class="destino-info-section-title"><i class="fa-solid fa-utensils"></i> Gastronomía Típica</div>
+            <div class="destino-info-chips-wrap">
+              ${gastronomy.map(g => `<span class="destino-info-chip"><i class="fa-solid fa-bowl-food" style="color:#f59e0b; font-size:0.7rem;"></i> ${escapeHtml(g)}</span>`).join('')}
+            </div>
+          ` : ''}
+
+          ${curated.transporte ? `
+            <div class="destino-info-section-title"><i class="fa-solid fa-bus"></i> Movilidad y Transporte</div>
+            <div style="font-size:0.86rem; color:#cbd5e1; background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); line-height:1.5;">
+              ${escapeHtml(curated.transporte)}
+            </div>
+          ` : ''}
+
+          <div class="destino-info-actions">
+            <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="btn-destino-action primary">
+              <i class="fa-solid fa-map-location-dot"></i> Explorar en Google Maps
+            </a>
+            <button type="button" class="btn-destino-action secondary" onclick="window.cerrarModalInfoDestino();">
+              <i class="fa-solid fa-circle-check"></i> Continuar Planificando
+            </button>
+          </div>
         `;
         return;
       }
 
-      // Si no es curado, buscar en Wikipedia o mostrar ficha estandar
+      // Si no es curado, buscar con MediaWiki generator search API
       body.innerHTML = `
-        <div style="color:var(--gris); font-size:0.9rem; text-align:center; padding:20px 0;">
-          <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#38bdf8; margin-bottom:10px; display:block;"></i>
-          Cargando información y ficha de ${escapeHtml(nombre)}...
+        <div style="color:var(--gris); font-size:0.9rem; text-align:center; padding:35px 0;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size:1.8rem; color:#38bdf8; margin-bottom:12px; display:block;"></i>
+          Cargando guía completa de ${escapeHtml(cleanCity || rawNombre)}...
         </div>
       `;
 
       try {
-        let extract = _wikiSummaryCache[normNombre];
+        let cached = _wikiSummaryCache[normNombre] || _wikiSummaryCache[normCity];
+        let extract = null;
         let thumbUrl = null;
-        if (!extract) {
-          const wikiUrl = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(nombre)}`;
-          const res = await fetch(wikiUrl);
+        let articleTitle = cleanCity || rawNombre;
+
+        if (cached) {
+          extract = cached.extract;
+          thumbUrl = cached.thumbUrl;
+          articleTitle = cached.title || articleTitle;
+        } else {
+          const wikiSearchUrl = `https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(rawNombre)}&gsrlimit=1&prop=extracts|pageimages&exintro=1&explaintext=1&piprop=thumbnail&pithumbsize=900&format=json&origin=*`;
+          const res = await fetch(wikiSearchUrl);
           if (res.ok) {
             const data = await res.json();
-            if (data && data.extract) {
-              extract = data.extract;
-              thumbUrl = data.thumbnail ? data.thumbnail.source : null;
-              _wikiSummaryCache[normNombre] = { extract, thumbUrl };
+            const pages = data && data.query ? data.query.pages : null;
+            if (pages) {
+              const pid = Object.keys(pages)[0];
+              if (pid && pages[pid]) {
+                const page = pages[pid];
+                extract = page.extract || null;
+                thumbUrl = page.thumbnail ? page.thumbnail.source : null;
+                articleTitle = page.title || articleTitle;
+                _wikiSummaryCache[normNombre] = { extract, thumbUrl, title: articleTitle };
+                _wikiSummaryCache[normCity] = { extract, thumbUrl, title: articleTitle };
+              }
             }
           }
-        } else if (typeof extract === 'object') {
-          thumbUrl = extract.thumbUrl;
-          extract = extract.extract;
+        }
+
+        // Si la búsqueda general no dio extract, probar con cleanCity directamente
+        if (!extract && cleanCity !== rawNombre) {
+          const wikiUrl2 = `https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanCity)}&gsrlimit=1&prop=extracts|pageimages&exintro=1&explaintext=1&piprop=thumbnail&pithumbsize=900&format=json&origin=*`;
+          const res2 = await fetch(wikiUrl2);
+          if (res2.ok) {
+            const data2 = await res2.json();
+            const pages2 = data2 && data2.query ? data2.query.pages : null;
+            if (pages2) {
+              const pid2 = Object.keys(pages2)[0];
+              if (pid2 && pages2[pid2]) {
+                extract = pages2[pid2].extract || null;
+                thumbUrl = pages2[pid2].thumbnail ? pages2[pid2].thumbnail.source : null;
+                articleTitle = pages2[pid2].title || articleTitle;
+                _wikiSummaryCache[normNombre] = { extract, thumbUrl, title: articleTitle };
+                _wikiSummaryCache[normCity] = { extract, thumbUrl, title: articleTitle };
+              }
+            }
+          }
         }
 
         if (modalDestinoActivo.tab === 'desc') {
-          if (extract) {
-            body.innerHTML = `
-              ${thumbUrl ? `<img src="${thumbUrl}" alt="${escapeHtml(nombre)}" class="destino-info-hero-img">` : ''}
-              <div style="font-size:0.92rem; line-height:1.6; color:#e2e8f0; margin-bottom:16px;">
-                ${escapeHtml(extract)}
-              </div>
-              <div class="destino-info-grid">
-                <div class="destino-info-grid-item">
-                  <div class="destino-info-grid-label">Destino</div>
-                  <div class="destino-info-grid-val">${escapeHtml(nombre)}</div>
+          // Detectar país para bandera
+          let countryCode = 'LOC';
+          const fullTextSearch = (rawNombre + ' ' + (extract || '')).toLowerCase();
+          if (fullTextSearch.includes('argentina') || fullTextSearch.includes('buenos aires') || fullTextSearch.includes('patagonia')) countryCode = 'AR';
+          else if (fullTextSearch.includes('españa') || fullTextSearch.includes('spain')) countryCode = 'ES';
+          else if (fullTextSearch.includes('italia') || fullTextSearch.includes('italy')) countryCode = 'IT';
+          else if (fullTextSearch.includes('francia') || fullTextSearch.includes('france')) countryCode = 'FR';
+          else if (fullTextSearch.includes('brasil') || fullTextSearch.includes('brazil')) countryCode = 'BR';
+          else if (fullTextSearch.includes('uruguay')) countryCode = 'UY';
+          else if (fullTextSearch.includes('chile')) countryCode = 'CL';
+          else if (fullTextSearch.includes('mexico') || fullTextSearch.includes('méxico')) countryCode = 'MX';
+          else if (fullTextSearch.includes('estados unidos') || fullTextSearch.includes('united states') || fullTextSearch.includes('usa')) countryCode = 'US';
+          else if (fullTextSearch.includes('reino unido') || fullTextSearch.includes('united kingdom') || fullTextSearch.includes('inglaterra')) countryCode = 'GB';
+
+          const flagSvg = getCountryFlagSvg(countryCode);
+          const finalImg = thumbUrl || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80';
+          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(rawNombre)}`;
+
+          const descText = extract 
+            ? extract.slice(0, 750) + (extract.length > 750 ? '...' : '') 
+            : `Destino turístico seleccionado: ${rawNombre}. Cuenta con atractivos turísticos, actividades culturales y opciones gastronómicas para explorar durante tu itinerario.`;
+
+          body.innerHTML = `
+            <div class="destino-info-hero-container">
+              <img src="${finalImg}" alt="${escapeHtml(articleTitle)}" class="destino-info-hero-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80';">
+              <div class="destino-info-hero-overlay">
+                <div class="destino-info-hero-badges">
+                  <span class="hero-badge hero-badge-country">${flagSvg} ${escapeHtml(detectedCountry || articleTitle)}</span>
+                  <span class="hero-badge hero-badge-vibe"><i class="fa-solid fa-map-pin"></i> Destino del viaje</span>
                 </div>
-                <div class="destino-info-grid-item">
-                  <div class="destino-info-grid-label">Itinerario</div>
-                  <div class="destino-info-grid-val">Plan activo en Plux</div>
-                </div>
               </div>
-            `;
-          } else {
-            body.innerHTML = `
-              <div style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; font-size:0.92rem; line-height:1.6; color:#cbd5e1;">
-                Destino turístico seleccionado: <strong>${escapeHtml(nombre)}</strong>. Puedes agregar tus actividades día por día, transporte y notas flotantes vinculadas.
+            </div>
+
+            <div class="destino-info-desc-text">
+              ${escapeHtml(descText)}
+            </div>
+
+            <div class="destino-info-grid">
+              <div class="destino-info-grid-item">
+                <div class="destino-info-grid-label"><i class="fa-solid fa-earth-americas" style="color:#38bdf8;"></i> Destino</div>
+                <div class="destino-info-grid-val">${escapeHtml(articleTitle)}</div>
               </div>
-            `;
-          }
+              <div class="destino-info-grid-item">
+                <div class="destino-info-grid-label"><i class="fa-solid fa-passport" style="color:#10b981;"></i> Documentación</div>
+                <div class="destino-info-grid-val">DNI / Pasaporte Vigente</div>
+              </div>
+              <div class="destino-info-grid-item">
+                <div class="destino-info-grid-label"><i class="fa-solid fa-wallet" style="color:#f59e0b;"></i> Presupuesto Estimado</div>
+                <div class="destino-info-grid-val" style="color:#38bdf8;">~$50-90 USD / día</div>
+              </div>
+              <div class="destino-info-grid-item">
+                <div class="destino-info-grid-label"><i class="fa-solid fa-shield-halved" style="color:#a855f7;"></i> Asistencia</div>
+                <div class="destino-info-grid-val">Seguro de Viaje Recomendado</div>
+              </div>
+            </div>
+
+            <div class="destino-info-section-title"><i class="fa-solid fa-lightbulb"></i> Consejos para tu Estadía</div>
+            <div class="destino-info-chips-wrap">
+              <span class="destino-info-chip"><i class="fa-solid fa-clock" style="color:#38bdf8; font-size:0.7rem;"></i> Planifica días enteros por zona</span>
+              <span class="destino-info-chip"><i class="fa-solid fa-credit-card" style="color:#10b981; font-size:0.7rem;"></i> Lleva tarjetas y efectivo local</span>
+              <span class="destino-info-chip"><i class="fa-solid fa-cloud-sun" style="color:#f59e0b; font-size:0.7rem;"></i> Revisa el pronóstico del clima</span>
+            </div>
+
+            <div class="destino-info-actions">
+              <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="btn-destino-action primary">
+                <i class="fa-solid fa-map-location-dot"></i> Explorar en Google Maps
+              </a>
+              <button type="button" class="btn-destino-action secondary" onclick="window.cerrarModalInfoDestino();">
+                <i class="fa-solid fa-circle-check"></i> Continuar Planificando
+              </button>
+            </div>
+          `;
         }
       } catch (err) {
         if (modalDestinoActivo.tab === 'desc') {
+          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(rawNombre)}`;
           body.innerHTML = `
-            <div style="padding:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; font-size:0.92rem; line-height:1.6; color:#cbd5e1;">
-              Destino en el itinerario: <strong>${escapeHtml(nombre)}</strong>.
+            <div class="destino-info-hero-container">
+              <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80" alt="${escapeHtml(rawNombre)}" class="destino-info-hero-img">
+              <div class="destino-info-hero-overlay">
+                <div class="destino-info-hero-badges">
+                  <span class="hero-badge hero-badge-country">${getCountryFlagSvg('LOC')} Destino Activo</span>
+                </div>
+              </div>
+            </div>
+            <div class="destino-info-desc-text">
+              Destino en el itinerario: <strong>${escapeHtml(rawNombre)}</strong>. Organiza tus actividades día por día, medios de transporte y gastos para tener una experiencia inolvidable.
+            </div>
+            <div class="destino-info-actions">
+              <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="btn-destino-action primary">
+                <i class="fa-solid fa-map-location-dot"></i> Explorar en Google Maps
+              </a>
+              <button type="button" class="btn-destino-action secondary" onclick="window.cerrarModalInfoDestino();">
+                <i class="fa-solid fa-circle-check"></i> Continuar Planificando
+              </button>
             </div>
           `;
         }
@@ -15362,6 +15554,153 @@ async function exportarPDF() {
         guiaUrl: '/destinies/buenosaires/'
       },
       {
+        id: 'mardelplata',
+        nombre: 'Mar del Plata',
+        pais: 'Argentina',
+        codigoPais: 'AR',
+        continente: 'América del Sur',
+        estilo: 'playa',
+        img: 'https://images.unsplash.com/photo-1612294037637-ec328d0e075e?w=800&q=80',
+        presupuestoDia: 40,
+        mejorEpoca: 'Diciembre a Marzo (verano de playa) o todo el año',
+        vibe: 'Costero, Rambla Histórica, Gastronomía Marina, Teatros',
+        idioma: 'Español',
+        moneda: 'ARS ($)',
+        transporte: 'Colectivos con tarjeta SUBE, taxis y caminatas por la costa',
+        seguridad: 'Buena (precauciones estándar en zonas comerciales concurridas)',
+        rating: 4.8,
+        descripcion: 'La Perla del Atlántico combina kilómetros de costas, la icónica Rambla con los monumentos a los lobos marinos, cartelera teatral destacada, paseos boscosos y la mejor oferta de pescados y mariscos del país.',
+        lugaresClave: ['Rambla Casino y Escultura de Lobos Marinos', 'Playa Grande y Playa Varese', 'Puerto y Banquina de Pescadores', 'Bosque Peralta Ramos', 'Torre Tanque y Barrio Los Troncos', 'Paseo de Compras Calle Güemes'],
+        gastronomia: ['Pescados y mariscos en el puerto', 'Medialunas marplatenses', 'Rabas y cazuelas', 'Alfajores artesanales'],
+        guiaUrl: '/destinies/mardelplata/'
+      },
+      {
+        id: 'bariloche',
+        nombre: 'Bariloche',
+        pais: 'Argentina',
+        codigoPais: 'AR',
+        continente: 'América del Sur',
+        estilo: 'aventura',
+        img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&q=80',
+        presupuestoDia: 55,
+        mejorEpoca: 'Julio a Septiembre (temporada de nieve) / Diciembre a Marzo (lagos y senderos)',
+        vibe: 'Montaña, Lagos Glaciares, Nieve, Chocolaterías Artesanales',
+        idioma: 'Español',
+        moneda: 'ARS ($)',
+        transporte: 'Colectivos urbanos (SUBE), transfers turísticos y excursiones lacustres',
+        seguridad: 'Muy buena',
+        rating: 4.9,
+        descripcion: 'Capital patagónica de los lagos y el turismo de aventura. Rodeada por el Parque Nacional Nahuel Huapi, ofrece paisajes andinos espectaculares, pistas de esquí en Cerro Catedral y gastronomía de montaña.',
+        lugaresClave: ['Circuito Chico y Punto Panorámico', 'Cerro Campanario', 'Cerro Catedral', 'Centro Cívico', 'Colonia Suiza', 'Navegación a Puerto Blest'],
+        gastronomia: ['Trucha patagónica a la manteca', 'Cordero al asador', 'Chocolates en rama', 'Cervezas artesanales'],
+        guiaUrl: '/destinies/bariloche/'
+      },
+      {
+        id: 'mendoza',
+        nombre: 'Mendoza',
+        pais: 'Argentina',
+        codigoPais: 'AR',
+        continente: 'América del Sur',
+        estilo: 'cultura',
+        img: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800&q=80',
+        presupuestoDia: 50,
+        mejorEpoca: 'Octubre a Mayo (Fiesta de la Vendimia en marzo)',
+        vibe: 'Enoturismo, Cordillera de los Andes, Bodegas, Aconcagua',
+        idioma: 'Español',
+        moneda: 'ARS ($)',
+        transporte: 'Tours a bodegas, tranvía urbano y autos de alquiler',
+        seguridad: 'Buena',
+        rating: 4.9,
+        descripcion: 'Capital internacional del vino Malbec al pie de los Andes. Célebre por sus valles vitivinícolas de Uco, Luján y Maipú, parques arbolados y la ruta de alta montaña hacia el cerro Aconcagua.',
+        lugaresClave: ['Ruta del Vino y Bodegas en Valle de Uco', 'Parque General San Martín', 'Circuito de Alta Montaña y Aconcagua', 'Puente del Inca', 'Termas de Cacheuta'],
+        gastronomia: ['Cata de vinos Malbec', 'Carne a la masa', 'Empanadas mendocinas', 'Chivo al asador'],
+        guiaUrl: '/destinies/mendoza/'
+      },
+      {
+        id: 'iguazu',
+        nombre: 'Cataratas del Iguazú',
+        pais: 'Argentina',
+        codigoPais: 'AR',
+        continente: 'América del Sur',
+        estilo: 'naturaleza',
+        img: 'https://images.unsplash.com/photo-1589556264800-08ae9e129a8c?w=800&q=80',
+        presupuestoDia: 45,
+        mejorEpoca: 'Marzo a Mayo / Agosto a Noviembre',
+        vibe: 'Selva Paranaense, Maravilla Natural, Cascadas Gigantes',
+        idioma: 'Español / Portugués',
+        moneda: 'ARS ($)',
+        transporte: 'Buses al parque nacional, taxis y tren ecológico de la selva',
+        seguridad: 'Muy buena',
+        rating: 5.0,
+        descripcion: 'Una de las 7 Maravillas Naturales del Mundo, con un conjunto de 275 saltos de agua en plena selva subtropical, coronadas por la sobrecogedora Garganta del Diablo.',
+        lugaresClave: ['Garganta del Diablo', 'Circuito Superior e Inferior', 'Paseo Náutico Gran Aventura', 'Hito Tres Fronteras', 'Parque de las Aves'],
+        gastronomia: ['Pescados de río (pacú y surubí)', 'Chipá calentito', 'Mbeju misionero', 'Helados de yerba mate'],
+        guiaUrl: '/destinies/iguazu/'
+      },
+      {
+        id: 'ushuaia',
+        nombre: 'Ushuaia',
+        pais: 'Argentina',
+        codigoPais: 'AR',
+        continente: 'América del Sur',
+        estilo: 'aventura',
+        img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=800&q=80',
+        presupuestoDia: 60,
+        mejorEpoca: 'Noviembre a Marzo (verano de navegaciones) / Junio a Septiembre (nieve)',
+        vibe: 'Fin del Mundo, Glaciares, Canal Beagle, Pingüineras',
+        idioma: 'Español',
+        moneda: 'ARS ($)',
+        transporte: 'Transfers turísticos, colectivos y catamaranes',
+        seguridad: 'Excelente',
+        rating: 4.9,
+        descripcion: 'La ciudad más austral del planeta. Ofrece travesías por el Canal Beagle, caminatas en la Laguna Esmeralda, el histórico Tren del Fin del Mundo y pistas de esquí en Cerro Castor.',
+        lugaresClave: ['Parque Nacional Tierra del Fuego', 'Navegación Canal Beagle y Faro Les Eclaireurs', 'Laguna Esmeralda', 'Tren del Fin del Mundo', 'Cerro Castor'],
+        gastronomia: ['Centolla fresca fueguina', 'Merluza negra', 'Cordero patagónico', 'Chocolates artesanales'],
+        guiaUrl: '/destinies/ushuaia/'
+      },
+      {
+        id: 'riodejaneiro',
+        nombre: 'Río de Janeiro',
+        pais: 'Brasil',
+        codigoPais: 'BR',
+        continente: 'América del Sur',
+        estilo: 'playa',
+        img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80',
+        presupuestoDia: 55,
+        mejorEpoca: 'Mayo a Octubre (clima templado) / Diciembre a Marzo (verano)',
+        vibe: 'Samba, Playas Icónicas, Pan de Azúcar, Cristo Redentor',
+        idioma: 'Portugués',
+        moneda: 'BRL (R$)',
+        transporte: 'Metro, VLT y aplicaciones oficiales de transporte',
+        seguridad: 'Moderada (atención con hurtos en playas y de noche)',
+        rating: 4.8,
+        descripcion: 'La Ciudad Maravillosa fusiona naturaleza exuberante, playas legendarias como Copacabana e Ipanema, y monumentos célebres como el Cristo Redentor y el Pan de Azúcar.',
+        lugaresClave: ['Cristo Redentor en el Corcovado', 'Pan de Azúcar', 'Playas de Ipanema y Copacabana', 'Escadaria Selarón en Lapa', 'Jardín Botánico'],
+        gastronomia: ['Feijoada completa', 'Pão de queijo', 'Caipirinha en la playa', 'Açaí bowl'],
+        guiaUrl: '/destinies/riodejaneiro/'
+      },
+      {
+        id: 'cancun',
+        nombre: 'Cancún y Riviera Maya',
+        pais: 'México',
+        codigoPais: 'MX',
+        continente: 'América del Norte',
+        estilo: 'playa',
+        img: 'https://images.unsplash.com/photo-1510097467424-192d713fd8b2?w=800&q=80',
+        presupuestoDia: 75,
+        mejorEpoca: 'Diciembre a Abril',
+        vibe: 'Mar Caribe, Cenotes Místicos, Ruinas Mayas, All Inclusive',
+        idioma: 'Español',
+        moneda: 'MXN ($) / USD',
+        transporte: 'Vans (colectivos), taxis turísticos y transfers',
+        seguridad: 'Buena en zona hotelera y parques turísticos',
+        rating: 4.9,
+        descripcion: 'Aguas turquesas del Caribe mexicano, playas de arena coralina blanca, cenotes sagrados subterráneos y acceso directo a maravillas arqueológicas como Chichén Itzá y Tulum.',
+        lugaresClave: ['Zona Hotelera y Playa Delfines', 'Excursión a Chichén Itzá', 'Ruinas de Tulum sobre el mar', 'Isla Mujeres en catamarán', 'Cenotes de la Riviera'],
+        gastronomia: ['Tacos de pescado al pastor', 'Cochinita pibil', 'Ceviche caribeño', 'Margaritas artesanales'],
+        guiaUrl: '/destinies/cancun/'
+      },
+      {
         id: 'londres',
         nombre: 'Londres',
         pais: 'Reino Unido',
@@ -16002,6 +16341,7 @@ async function exportarPDF() {
         guiaUrl: null
       }
     ];
+    window.PLUX_CURATED_DESTINATIONS = PLUX_CURATED_DESTINATIONS;
 
     const PLUX_CURATED_ACTIVITIES = [
       {

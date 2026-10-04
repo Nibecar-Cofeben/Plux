@@ -4063,7 +4063,7 @@
       let icon = 'info';
       if(type === 'success') icon = 'ok';
       if(type === 'error') icon = 'error';
-      toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+      toast.innerHTML = `<span>${icon}</span> <span>${typeof escapeHtml === 'function' ? escapeHtml(msg) : msg}</span>`;
       container.appendChild(toast);
       setTimeout(() => {
         toast.style.animation = 'slideUpFade 0.3s ease-in reverse forwards';
@@ -6597,14 +6597,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     }
 
     function renderDestinos() {
-      // Sync openTransportDestIds with current DOM state before clearing
-      destinos.forEach(d => {
-        const el = document.getElementById(`transport-${d.id}`);
-        if (el && el.classList.contains('show')) {
-          openTransportDestIds.add(d.id);
-        }
-      });
       const cont = document.getElementById("destinos");
+      if (!cont) return;
+      // Sync openTransportDestIds with current DOM state before clearing
+      const openTransports = cont.querySelectorAll('.transport-section.show');
+      openTransports.forEach(el => {
+        const did = parseInt(el.id.replace('transport-', ''), 10);
+        if (!isNaN(did)) openTransportDestIds.add(did);
+      });
       cont.innerHTML = "";
       destinos.forEach((d, destIdx) => {
         const isCollapsed = collapsedEditorDestinos.has(d.id);
@@ -7892,7 +7892,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         tramoDiv.style = "background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:15px; margin-bottom:15px; position:relative;";
         tramoDiv.innerHTML = `
           <div class="tramo-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h6 style="margin:0; color:var(--rosa); font-weight:700; letter-spacing:0.5px;">✈️ ${t('transport').toUpperCase()} Y ${t('accommodation').toUpperCase()} #${ida+1}</h6>
+            <h6 style="margin:0; color:var(--rosa); font-weight:700; letter-spacing:0.5px;"><i class="fa-solid fa-plane" style="margin-right:6px;"></i> ${t('transport').toUpperCase()} Y ${t('accommodation').toUpperCase()} #${ida+1}</h6>
             <button class="close-icon" onclick="eliminarTramo(${destId}, ${ida})">×</button>
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
@@ -7900,10 +7900,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
                 <label style="font-size:0.75rem; font-weight:700; color:var(--gris); margin:0;">${t('transport').toUpperCase()}</label>
                 <button type="button" class="btn-live-search" onclick="window.abrirBusquedaTransporteTramo(${destId}, ${ida}, event)">
-                  🧭 <span>Buscar transporte</span>
+                  <i class="fa-solid fa-compass" style="margin-right:4px;"></i> <span>Buscar transporte</span>
                 </button>
               </div>
-              <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="Avión, Tren, Bus, Auto..." value="${tramo.medio || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="Avión, Tren, Bus, Auto..." value="${escapeHtml(tramo.medio || '')}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
               <div id="dropdown-transporte-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:99999;"></div>
             </div>
             <div class="field-boa">
@@ -7919,10 +7919,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
                 <label style="font-size:0.75rem; font-weight:700; color:var(--gris); margin:0;">${t('alojamiento_label')}</label>
                 <button type="button" class="btn-live-search hotel-btn" onclick="window.abrirBusquedaHotelesTramo(${destId}, ${ida}, event)">
-                  🏡 <span>Buscar alojamiento</span>
+                  <i class="fa-solid fa-hotel" style="margin-right:4px;"></i> <span>Buscar alojamiento</span>
                 </button>
               </div>
-              <input type="text" id="tramo-alojamiento-${destId}-${ida}" placeholder="${t('alojamiento_ph')}" value="${tramo.alojamiento || ''}" onchange="actualizarTramo(${destId}, ${ida}, 'alojamiento', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <input type="text" id="tramo-alojamiento-${destId}-${ida}" placeholder="${t('alojamiento_ph')}" value="${escapeHtml(tramo.alojamiento || '')}" onchange="actualizarTramo(${destId}, ${ida}, 'alojamiento', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
               <div id="dropdown-hoteles-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:99999;"></div>
             </div>
             <div class="field-boa" style="grid-column: 1 / -1;">
@@ -7955,7 +7955,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const escalaDiv = document.createElement("div");
         escalaDiv.className = "escala-item";
         escalaDiv.innerHTML = `
-          <input type="text" value="${escala}" placeholder="${t('escala')}" onchange="actualizarEscala(${destId}, ${tramoIda}, ${ida}, this.value)">
+          <input type="text" value="${escapeHtml(escala || '')}" placeholder="${t('escala')}" onchange="actualizarEscala(${destId}, ${tramoIda}, ${ida}, this.value)">
           <button class="close-icon" onclick="eliminarEscala(${destId}, ${tramoIda}, ${ida})">×</button>
         `;
         container.appendChild(escalaDiv);
@@ -8069,7 +8069,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
               <div id="weather-day-${destId}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-day-${destId}-${dia.id}')" title="Clima del día">
-                <div class="weather-chip-row"><span class="weather-chip-icon">🌤️</span><span class="weather-chip-temp">...</span></div>
+                <div class="weather-chip-row"><span class="weather-chip-icon"><i class="fa-solid fa-cloud-sun"></i></span><span class="weather-chip-temp">...</span></div>
               </div>
               <div class="dia-actions">
                 <span class="copy-icon" onclick="duplicarDia(${destId}, ${dia.id})" title="${t('copy_button')}">⎘</span>
@@ -8176,11 +8176,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             <span class="drag-handle drag-handle-ev" data-drag-type="evento" data-dest-id="${destId}" data-dia-id="${diaId}" data-ev-idx="${ida}" title="Arrastra o mantén presionado para reordenar actividad" onclick="event.stopPropagation()">⠿</span>
             <span id="editor-ev-chev-${destId}-${diaId}-${ida}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isEvCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.75rem; cursor:pointer;" onclick="toggleEditorEvento(${destId}, ${diaId}, ${ida}, event)" title="Plegar / Expandir detalles">▼</span>
             <input type="time" value="${ev.hora || ''}" style="width:105px; min-width:95px;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'hora', this.value)" title="Hora del evento">
-            <input type="text" value="${ev.titulo || ''}" placeholder="${t('event_title_placeholder')}" style="flex:1;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'titulo', this.value)">
+            <input type="text" value="${escapeHtml(ev.titulo || '')}" placeholder="${t('event_title_placeholder')}" style="flex:1;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'titulo', this.value)">
             <button class="close-icon" onclick="eliminarEvento(${destId}, ${diaId}, ${ida})" style="margin-left:auto;">×</button>
           </div>
           <div id="editor-ev-body-${destId}-${diaId}-${ida}" style="display:${isEvCollapsed ? 'none' : 'block'}; margin-top:8px;">
-            <input type="text" class="notas-input" value="${ev.notas || ''}" placeholder="${t('event_notes_placeholder')}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'notas', this.value)">
+            <input type="text" class="notas-input" value="${escapeHtml(ev.notas || '')}" placeholder="${t('event_notes_placeholder')}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'notas', this.value)">
             <div class="detalles-evento">
               <div class="detalle-field">
                 <label>${t('event_cost_placeholder')} (${getSimboloMoneda(ev.moneda || getMonedaActiva())})</label>
@@ -8689,7 +8689,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const div = document.createElement("div");
           div.className = "costo-adicional-item";
           div.innerHTML = `
-            <input type="text" placeholder="${t('costo_desc')}" value="${costo.descripcion || costo.concepto || ''}" onchange="actualizarCostoAdicional(${destId}, ${diaId}, ${ida}, 'descripcion', this.value)" style="flex:1;">
+            <input type="text" placeholder="${t('costo_desc')}" value="${escapeHtml(costo.descripcion || costo.concepto || '')}" onchange="actualizarCostoAdicional(${destId}, ${diaId}, ${ida}, 'descripcion', this.value)" style="flex:1;">
             <div style="display:flex; align-items:center; gap:6px;">
               <input type="number" placeholder="0" value="${costo.precio || 0}" style="width:80px;" onchange="actualizarCostoAdicional(${destId}, ${diaId}, ${ida}, 'precio', parseFloat(this.value)||0)">
               <select class="plux-moneda-select" onchange="actualizarCostoAdicional(${destId}, ${diaId}, ${ida}, 'moneda', this.value)" style="width:74px; padding:6px 4px; font-size:0.78rem; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:6px; color:#fff;" title="Moneda de este costo">

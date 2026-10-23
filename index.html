@@ -25,10 +25,9 @@
   <!-- SEO Básico -->
   <meta name="description" content="Plux es la app inteligente para organizar viajes colaborativos día a día, calcular presupuestos multidivisa y explorar guías turísticas interactivas." />
   <meta name="keywords" content="planificador de viajes, organizar itinerario, viajes colaborativos, presupuesto de viaje, mapa de ruta, turismo, guías de viaje, plux" />
-  <meta name="author" content="Nibecar Cofeben" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://plux.nibecarcofeben.com/" />
-  <link rel="icon" type="image/ico" href="/favico.ico" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
   <!-- Open Graph / Redes Sociales (Facebook, WhatsApp, Telegram, LinkedIn) -->
   <meta property="og:type" content="website" />
@@ -109,40 +108,185 @@
     };
   </script>
 
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-
   <base href="/" />
-  <link rel="stylesheet" href="/styles.css?v=1790010000011">
+  <link rel="stylesheet" href="/styles.css?v=1790010000022">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000022">
   
   <!-- Firebase (compat) Local Offline SDK -->
-  <script src="/firebase/firebase-app-compat.js"></script>
-  <script src="/firebase/firebase-auth-compat.js"></script>
-  <script src="/firebase/firebase-database-compat.js"></script>
-  <script src="/firebase/firebase-firestore-compat.js"></script>
-  <script defer src="/script.js?v=1790010000011"></script>
+  <script defer src="/firebase/firebase-app-compat.js"></script>
+  <script defer src="/firebase/firebase-auth-compat.js"></script>
+  <script defer src="/firebase/firebase-database-compat.js"></script>
+  <script defer src="/firebase/firebase-firestore-compat.js"></script>
+  <!-- Plux Modular Architecture -->
+  <script defer src="/js/plux-i18n.js?v=1790010000022"></script>
+  <script defer src="/script.js?v=1790010000022"></script>
+  <script defer src="/js/plux-export-cards.js?v=1790010000022"></script>
+  <script defer src="/js/plux-templates.js?v=1790010000022"></script>
+  <script defer src="/js/plux-discover.js?v=1790010000022"></script>
+  <script defer src="/js/plux-social-chat.js?v=1790010000022"></script>
+  <script defer src="/js/plux-collab.js?v=1790010000022"></script>
+  <script defer src="/js/plux-doodles.js?v=1790010000022"></script>
+  <script defer src="/plux-pro.js?v=1790010000022"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
   <div id="ares-esc-banner">PRESIONA ESC PARA SALIR DE ARES</div>
   <div id="bg-parallax"></div>
+  <!-- Canvas global de particulas de Pluxees (Doodles) -->
+  <canvas id="doodle-canvas"></canvas>
+
+  <!-- OVERLAYS INTERACTIVOS INMERSIVOS -->
+  <div class="chrono-toast-banner" id="chronoToast"></div>
+  
+  <div class="chrono-terminal-hud" id="chronoTerminal">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #22c55e; padding-bottom:6px; margin-bottom:10px; font-weight:bold;">
+      <span>ARPANET IMP-UCLA [TTY-33]</span>
+      <span style="cursor:pointer; color:#ef4444;" onclick="window.cerrarTerminalARPANET()">✕ CERRAR</span>
+    </div>
+    <div id="chronoTerminalContent" style="min-height:90px; white-space:pre-wrap;"></div>
+
+  <!-- TERMINAL DE TELEMETRÍA SPUTNIK 2 (LAIKA 1957) -->
+  <!-- ESCOTILLA ESPACIAL SPUTNIK 2 (LAIKA 1957) -->
+  <div class="laika-viewport-overlay" id="laikaTerminal">
+    <div class="laika-viewport-modal">
+      <div class="laika-modal-header">
+        <div class="laika-modal-title">
+          <span style="color:#ef4444; font-size:1.15rem;">★</span> 
+          <span>СССР 1957 · ESCOTILLA ORBITAL SPUTNIK-2</span>
+        </div>
+        <button class="laika-modal-close" onclick="window.cerrarTerminalLaika()">✕ Salir de Órbita</button>
+      </div>
+      <div class="laika-viewport-body">
+        <div class="laika-side-gauge">
+          <div class="gauge-title">📻 BALIZA RADIAL</div>
+          <div class="gauge-display">20.005 MHz</div>
+          <div class="gauge-status">ONDA CORTA: ACTIVA</div>
+          <button class="gauge-btn" onclick="window.sintonizarRadioSputnik()">
+            <span>Sintonizar Señal</span>
+          </button>
+        </div>
+        <div class="laika-capsule-porthole">
+          <div class="porthole-outer-rim">
+            <div class="porthole-glass-view">
+              <div class="space-stars-bg"></div>
+              <div class="earth-horizon-curve"></div>
+              <div class="satellite-orbit-dot">🛰️</div>
+              <div class="laika-hero-silhouette">🐾</div>
+            </div>
+          </div>
+          <div class="porthole-caption">ORBITANDO A 28.968 KM/H · ALTITUD 1.660 KM</div>
+        </div>
+        <div class="laika-side-gauge">
+          <div class="gauge-title">💓 BIOMÉTRICA</div>
+          <div class="gauge-display" id="laikaBpmDisplay">102 BPM</div>
+          <div class="gauge-status">RITMO CARDÍACO ESTABLE</div>
+          <button class="gauge-btn" onclick="window.latidoCardiacoLaika()">
+            <span>Escuchar Latidos</span>
+          </button>
+        </div>
+      </div>
+      <div class="laika-viewport-footer">
+        <div class="laika-memorial-txt">
+          «El 3 de noviembre de 1957, Laika fue la primera tripulante de la Tierra en mirar nuestro planeta desde el cosmos.»
+        </div>
+        <div class="laika-footer-actions">
+          <button class="laika-action-star" onclick="window.enviarEstrellasLaika()">
+            ✨ Enviar una Caricia al Cosmos
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>>
+  </div>
+
+  <div class="chrono-shockwave" id="chronoShockwave"></div>
+
+  <div class="chrono-fire-tracks" id="chronoFireTracks">
+    <div class="chrono-fire-line"></div>
+    <div class="chrono-fire-line"></div>
+  </div>
+
+  <!-- BARRA HUD DE MINECRAFT ULTRA PROFUNDA -->
+  <div class="mc-hud-container" id="mcHudContainer">
+    <div class="mc-status-bars">
+      <div class="mc-hearts" title="Vida: 20/20">
+        <span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span>
+      </div>
+      <div class="mc-hunger" title="Comida: 20/20">
+        <span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span>
+      </div>
+    </div>
+    <div class="mc-xp-bar-wrap">
+      <div class="mc-xp-fill"></div>
+      <div class="mc-xp-level">64</div>
+    </div>
+    <div class="mc-hotbar" id="mcHotbar">
+      <div class="mc-slot active" data-slot="1" onclick="window.selectHotbarSlot(1)" title="[1] Pico de Diamante">⛏️<span class="mc-slot-num">1</span></div>
+      <div class="mc-slot" data-slot="2" onclick="window.selectHotbarSlot(2)" title="[2] Manzana Dorada (Clic para comer)">🍎<span class="mc-slot-num">2</span></div>
+      <div class="mc-slot" data-slot="3" onclick="window.selectHotbarSlot(3)" title="[3] Espada de Netherite">⚔️<span class="mc-slot-num">3</span></div>
+      <div class="mc-slot" data-slot="4" onclick="window.selectHotbarSlot(4)" title="[4] Bloque de Césped">🧱<span class="mc-slot-num">4</span></div>
+      <div class="mc-slot" data-slot="5" onclick="window.selectHotbarSlot(5)" title="[5] TNT (¡Creeper Explosion!)">🧨<span class="mc-slot-num">5</span></div>
+      <div class="mc-slot" data-slot="6" onclick="window.selectHotbarSlot(6)" title="[6] Ender Pearl (Teletransporte)">🔮<span class="mc-slot-num">6</span></div>
+      <div class="mc-slot" data-slot="7" onclick="window.selectHotbarSlot(7)" title="[7] Pan Horneado (Comer)">🍞<span class="mc-slot-num">7</span></div>
+      <div class="mc-slot" data-slot="8" onclick="window.selectHotbarSlot(8)" title="[8] Antorcha">🕯️<span class="mc-slot-num">8</span></div>
+      <div class="mc-slot" data-slot="9" onclick="window.selectHotbarSlot(9)" title="[9] Mapa de Plux">🗺️<span class="mc-slot-num">9</span></div>
+    </div>
+  </div>
+
+    
+
+  <div class="tradicion-action-banner" id="tradicionActionBanner"></div>
+
+  <!-- VENTANA RETRO WINDOWS 95 DE BILL GATES -->
+  <div class="win95-window-overlay" id="win95Window">
+    <div class="win95-titlebar">
+      <div class="win95-title-text">
+        <span>💾</span>
+        <span>Microsoft Windows 95 - Asistente de Cumpleaños</span>
+      </div>
+      <div class="win95-btn-close" onclick="window.cerrarWin95()">✕</div>
+    </div>
+    <div class="win95-body">
+      <div class="win95-clippy-row">
+        <div style="font-size:2.4rem; line-height:1;">📎</div>
+        <div class="win95-clippy-bubble">
+          <strong>¡Hola! Soy Clippy.</strong><br>
+          Parece que estás celebrando el 69º cumpleaños de <strong>Bill Gates</strong>. ¿Qué deseas hacer hoy?
+        </div>
+      </div>
+      <div class="win95-actions">
+        <button class="win95-btn" onclick="window.cantarCumpleBill()">🎂 Cantar Cumpleaños Feliz (Chiptune 8-Bit)</button>
+        <button class="win95-btn" onclick="window.instalarWin95()">💾 Instalar Windows 95 en Plux (Simulación)</button>
+        <button class="win95-btn" onclick="window.pantallaAzulMuerte()">💀 Provocar Pantalla Azul de la Muerte (BSOD)</button>
+        <button class="win95-btn" onclick="window.cerrarWin95()">✕ Cerrar y Seguir Festejando</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANTALLA AZUL DE LA MUERTE (BSOD) DIVERTIDA -->
+  <div class="win95-bsod" id="win95Bsod" onclick="window.cerrarBsod()">
+    <p>*** STOP: 0x000000BD (FELIZ_CUMPLE_BILL_GATES) ***</p>
+    <p>Se ha producido una excepción fatal en 0028:C0011E36 en PLUX.EXE.</p>
+    <br>
+    <p>* Motivo: Festejo desmedido por el nacimiento de William Henry Gates III (1955).</p>
+    <p>* Estado: Memoria RAM llena de torta, confeti y globos retro.</p>
+    <p>* Presione cualquier tecla o haga clic aquí para reiniciar Windows y volver a Plux...</p>
+  </div>
+
   <div class="welcome" id="welcome">
     <div class="top-selectors">
       <div class="selector-wrapper" style="position:relative;">
         <div class="lang-button" id="langButton" onclick="window.toggleLangDropdown(event)" title="Idioma">ES</div>
-        <div class="lang-dropdown" id="langDropdown">
+        <div class="lang-dropdown" id="langDropdown" style="display:none;">
           <div class="lang-option active" data-lang="es" onclick="window.setLanguage('es')">
             <span class="lang-name">Español</span>
             <span class="lang-badge">ES</span>
@@ -175,11 +319,11 @@
       </div>
       <div class="selector-wrapper" style="position:relative;">
         <div class="theme-button" id="themeButton" onclick="window.toggleThemeDropdown(event)" title="Tema">🎨</div>
-        <div class="theme-dropdown" id="themeDropdown"></div>
+        <div class="theme-dropdown" id="themeDropdown" style="display:none;"></div>
       </div>
       <div class="selector-wrapper" style="position:relative;">
-        <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR €</div>
-        <div class="currency-dropdown" id="currencyDropdown"></div>
+        <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR</div>
+        <div class="currency-dropdown" id="currencyDropdown" style="display:none;"></div>
       </div>
       <div class="tour-button" id="tourButton" title="Tour guiado" onclick="window.iniciarTour()">🎯</div>
       <div class="user-button" id="cuentaButton" title="Tu perfil" onclick="window.abrirCuenta()">👤</div>
@@ -190,7 +334,83 @@
         <span id="chatSocialUnreadBadge" class="chat-unread-dot" style="display:none;"></span>
       </div>
     </div>
-    <div class="logo-bubble">PLUX</div>
+    
+    <!-- ESCENARIO HERO PANORAMICO: COSTADOS Y CENTRO EQUILIBRADOS -->
+    <div class="doodle-panoramic-stage disabled" id="doodlePanoramicStage">
+      
+      <!-- COSTADO IZQUIERDO: ILUSTRACION FLOTANDO COMO PARTE DEL FONDO (SIN BORDES) -->
+      <div class="doodle-wing-left">
+        <div class="doodle-art-seamless" onclick="window.dispararAccionActual()" title="Haz clic en la ilustración para activar la interacción">
+          <div class="party-hat-element" id="gatesPartyHat">
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+              <polygon points="50,5 20,85 80,85" fill="#f43f5e" stroke="#ffe4e6" stroke-width="3"/>
+              <circle cx="50" cy="5" r="7" fill="#facc15"/>
+              <circle cx="35" cy="45" r="4" fill="#38bdf8"/>
+              <circle cx="65" cy="45" r="4" fill="#a855f7"/>
+              <circle cx="50" cy="70" r="5" fill="#4ade80"/>
+              <ellipse cx="50" cy="85" rx="30" ry="7" fill="#fb7185"/>
+            </svg>
+          </div>
+          
+          <!-- ELEMENTOS MODULARES DÍA DE LA TRADICIÓN: BANDERA ARGENTINA CON MÁSTIL Y VAPOR -->
+          <div class="modular-art-overlay tradicion-modular" id="tradicionModularOverlay">
+            <div class="mate-steam"></div>
+            <div class="mate-steam"></div>
+            <div class="mate-steam"></div>
+            <div class="arg-flag-mast" onclick="event.stopPropagation(); window.cebarMateTradicion();" title="¡Viva la Patria! Bandera Argentina 🇦🇷 (Haz clic para cebar un mate)">
+              <div class="arg-flag-finial"></div>
+              <div class="arg-flag-pole"></div>
+              <div class="arg-flag-cloth">
+                <div class="arg-flag-sun"></div>
+              </div>
+            </div>
+          </div>
+          <img id="doodleImgAsset" src="static/doodles/concorde.jpg" alt="Pluxee Art" />
+        </div>
+      </div>
+
+      <!-- CENTRO: LOGO PLUX ORIGINAL LIMPIO CON AIRE -->
+      <div class="doodle-center-logo">
+        <div class="logo-bubble" id="mainLogoBubble">
+          PLUX
+          <!-- ESCARAPELA NACIONAL ARGENTINA CON SOL DE MAYO -->
+          <div class="arg-escarapela-badge" id="argEscarapelaBadge" title="Escarapela Nacional Argentina 🇦🇷" onclick="event.stopPropagation(); window.cebarMateTradicion();">
+            <div class="escarapela-ring ring-outer"></div>
+            <div class="escarapela-ring ring-middle"></div>
+            <div class="escarapela-ring ring-inner"></div>
+            <div class="escarapela-sun">☀️</div>
+            <div class="escarapela-ribbon ribbon-left"></div>
+            <div class="escarapela-ribbon ribbon-right"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COSTADO DERECHO: FICHA CONTEXTUAL DELICADA -->
+      <div class="doodle-wing-right">
+        <div class="doodle-info-card">
+          <button class="btn-card-dismiss" onclick="window.desactivarDoodle()" title="Ocultar Pluxee">✕</button>
+          <div class="doodle-card-date" id="doodleCardDate">
+            <span>✈️ 24 DE OCTUBRE</span>
+          </div>
+          <div class="doodle-card-title" id="doodleCardTitle">
+            Último Vuelo del Concorde
+          </div>
+          <div class="doodle-card-desc" id="doodleCardDesc">
+            En 2003 concluyó la era comercial supersónica: Londres a Nueva York en solo 3 horas y media.
+          </div>
+          <div class="doodle-card-actions">
+            <button class="btn-card-info" onclick="window.abrirModalInfo()">
+              <span>ℹ️ Historia</span>
+            </button>
+            <button class="btn-card-action" id="btnCardAction" onclick="window.dispararAccionActual()" title="Activar interacción">
+              <span id="btnCardActionText">✨ Probar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
 
     <div class="main-buttons">
       <button class="main-btn" id="startBtn" onclick="window.onStartBtnClick()" style="flex: 1 1 45%;">Empieza tu viaje</button>
@@ -829,12 +1049,12 @@
             <button id="btnCurrencyHeader" onclick="window.toggleCurrencyDropdown(event)" style="background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--texto); padding:8px 14px; border-radius:20px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px;">
               <span id="headerCurrencyTxt">EUR €</span>
             </button>
-            <div class="currency-dropdown" id="currencyDropdown"></div>
+            <div class="currency-dropdown" id="currencyDropdownHeader" style="display:none;"></div>
           </div>
           <button id="btnClonarHeader" class="btn-clonar-action" onclick="window.clonarViajeActual()" style="display:none; background:linear-gradient(135deg, #10b981, #0ea5e9); color:#030712; padding:8px 16px; border-radius:20px; font-weight:800; cursor:pointer; border:none; align-items:center; gap:6px; box-shadow:0 0 14px rgba(16,185,129,0.4); font-size:0.88rem;"><span id="btnClonarHeaderTxt">📋 Clonar Viaje</span></button>
           <button id="chatGrupalHeaderBtn" onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:6px; box-shadow:0 0 12px rgba(16,185,129,0.35);">💬 Chat Grupal</button>
           <button id="scratchBtnEditor" onclick="window.empezarDeCero()" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none;">Viaje desde cero 🆕</button>
-          <button id="invitarHeaderBtn" onclick="document.getElementById('modal-colaboradores').style.display='flex'" style="background:var(--verde); color:black; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:8px;">Invitar</button>
+          <button id="invitarHeaderBtn" onclick="window.abrirColaboradores()" style="background:var(--verde); color:black; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:8px;">Invitar</button>
         </div>
       </div>
     </div>
@@ -1966,10 +2186,10 @@
         <img id="photoLightboxImg" src="" alt="Foto en grande">
       </div>
       <div class="photo-lightbox-footer">
-        <a id="photoLightboxDownload" href="#" target="_blank" class="photo-lightbox-btn">
+        <button id="photoLightboxDownload" type="button" class="photo-lightbox-btn" onclick="const url = this.getAttribute('data-url'); if (url) window.open(url, '_blank');">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           <span>Abrir original</span>
-        </a>
+        </button>
       </div>
     </div>
   </div>
@@ -2056,6 +2276,71 @@
     </div>
   </div>
 
+
+  <!-- MODAL DE INFORMACION Y CONTEXTO HISTORICO (PLUXEES) -->
+  <div class="doodle-modal-backdrop" id="doodleModal" onclick="window.cerrarModalClickAfuera(event)">
+    <div class="doodle-modal-card">
+      <button class="doodle-modal-close" onclick="window.cerrarModalInfo()">×</button>
+      <div class="doodle-modal-tag" id="modalTag">Efeméride Histórica</div>
+      <h2 class="doodle-modal-title" id="modalTitle">Título</h2>
+      <div class="doodle-modal-body" id="modalBody">
+        Contenido
+      </div>
+      <div class="doodle-modal-footer">
+        <button class="doodle-modal-btn-close" onclick="window.cerrarModalInfo()">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+
+<!-- MODAL DEEP INTERACTIVO: FOGÓN CRIOLLO & MATERÍA (10 DE NOVIEMBRE) -->
+  <div class="tradicion-fogon-overlay" id="tradicionFogonModal">
+    <div class="tradicion-fogon-modal">
+      <div class="tradicion-header">
+        <div class="tradicion-title-group">
+          <span style="font-size: 26px;">🧉</span>
+          <h3>10 DE NOVIEMBRE · DÍA DE LA TRADICIÓN (FOGÓN CRIOLLO & MATE)</h3>
+        </div>
+        <button class="tradicion-close-btn" onclick="cerrarModalTradicion()">✕ Guardar Mate</button>
+      </div>
+
+      <!-- TELEMETRÍA GAUCHA -->
+      <div class="tradicion-telemetry-row">
+        <div class="tradicion-stat-box">
+          <span class="label">Homenaje Nacional</span>
+          <span class="val">JOSÉ HERNÁNDEZ (1834)</span>
+        </div>
+        <div class="tradicion-stat-box">
+          <span class="label">Temperatura del Agua</span>
+          <span class="val" id="tradicionTempAgua">78°C · PUNTO MATE</span>
+        </div>
+        <div class="tradicion-stat-box">
+          <span class="label">Ronda Compartida</span>
+          <span class="val" id="tradicionRondaContador">MATE #1 · CEBADO</span>
+        </div>
+      </div>
+
+      <!-- VISOR DEL FOGÓN PAMPEANO Y MATE DE CALABAZA -->
+      <div class="tradicion-fogon-stage">
+        <div class="fogon-flames-wrap">
+          <div class="fogon-flame"></div>
+          <div class="fogon-flame"></div>
+          <div class="fogon-flame"></div>
+        </div>
+
+        <div class="mate-calabaza-visual" onclick="cebarMateTradicion()" title="¡Toca el mate para cebar!">
+          <div class="bombilla-silver"></div>
+          <div class="calabaza-virola"></div>
+          <div class="calabaza-body"></div>
+          <div class="calabaza-bubble-count" id="calabazaBubbleText">¡CHRRR!</div>
+        </div>
+
+        <div style="font-size:12px; color:#fde68a; font-family:monospace; line-height:1.4; text-align:right;">
+          <div style="color:#75aadb; font-weight:700;">🇦🇷 LA PAMPA INFINITA</div>
+          <div>VIENTOS DEL SUR: 14 KM/H</div>
+          <div>FOGÓN ENCENDIDO</div>
+        </div>
+      </div>
 </body>
 </html>
 

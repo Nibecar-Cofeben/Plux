@@ -1684,9 +1684,7 @@
     @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
     /* Animaciones extra */
     @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
-    .destino:hover .bubble-name { animation: float 1s ease infinite; }
-    button { animation: pulseSoft 2s infinite; }
-    @keyframes pulseSoft { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.3); } 70% { box-shadow: 0 0 0 10px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
+    /* pulseSoft removed for mobile performance and responsive stability */
 
     /* ZERO GRAVITY / PARALLAX */
     .zero-gravity { transition: transform 0.1s ease-out; }
@@ -6064,6 +6062,13 @@ body.mode-reader #mobileMenuCloneBtn {
   .comp-vs-badge {
     align-self: center;
   }
+  .welcome {
+    justify-content: flex-start !important;
+    padding-top: 65px !important;
+    padding-bottom: 50px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
 
   .top-selectors {
     top: 12px !important;
@@ -6083,17 +6088,22 @@ body.mode-reader #mobileMenuCloneBtn {
     height: 40px !important;
     min-width: 40px !important;
     min-height: 40px !important;
-    font-size: 0.82rem !important;
+    font-size: 0.76rem !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    line-height: 1 !important;
   }
   #currencyDropdown,
   .currency-dropdown {
     top: 48px !important;
     right: 0 !important;
-    max-width: calc(100vw - 24px) !important;
+    max-width: min(280px, calc(100vw - 24px)) !important;
     max-height: 320px !important;
   }
   .cartelito-nota {
-    width: min(230px, 85vw) !important;
+    width: min(260px, calc(100vw - 32px)) !important;
     min-height: 100px !important;
   }
 }
@@ -6107,9 +6117,11 @@ body.mode-reader #mobileMenuCloneBtn {
   border: 2px solid var(--texto);
   color: #ffffff;
   font-weight: 800;
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   letter-spacing: -0.5px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   transition: transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.3s, background 0.3s;
@@ -6117,13 +6129,18 @@ body.mode-reader #mobileMenuCloneBtn {
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 0;
+  padding: 0 4px;
   flex-shrink: 0;
   user-select: none;
 }
-.currency-button:hover {
-  transform: scale(1.15) rotate(-5deg);
-  box-shadow: 0 0 25px var(--verde);
+@media (hover: hover) and (pointer: fine) {
+  .currency-button:hover {
+    transform: scale(1.15) rotate(-5deg);
+    box-shadow: 0 0 25px var(--verde);
+  }
+}
+.currency-button:active {
+  transform: scale(0.95);
 }
 .top-selectors .selector-wrapper {
   position: relative !important;
@@ -6143,6 +6160,7 @@ body.mode-reader #mobileMenuCloneBtn {
   flex-direction: column !important;
   min-width: 220px !important;
   width: max-content !important;
+  max-width: min(290px, calc(100vw - 24px)) !important;
   max-height: 380px !important;
   overflow-y: auto !important;
   border: 1px solid var(--border) !important;
@@ -6150,6 +6168,8 @@ body.mode-reader #mobileMenuCloneBtn {
   -webkit-backdrop-filter: blur(20px) !important;
   animation: slideDown 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 10000 !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent !important;
 }
 #currencyDropdown.show,
 .currency-dropdown.show {
@@ -6166,33 +6186,44 @@ body.mode-reader #mobileMenuCloneBtn {
 }
 #currencyDropdown::-webkit-scrollbar-thumb,
 .currency-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 6px;
 }
 #currencyDropdown::-webkit-scrollbar-thumb:hover,
 .currency-dropdown::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* Opciones de selector de monedas en formularios */
+select,
 #monedaViajeSelect,
 .datos-generales select,
 select.plux-moneda-select {
-  background: rgba(15, 23, 42, 0.95) !important;
+  color-scheme: dark !important;
+  background-color: #0f172a !important;
+  background: #0f172a !important;
   color: #f8fafc !important;
   border: 1px solid var(--border) !important;
 }
+select option,
 #monedaViajeSelect option,
-.datos-generales select option,
-select option {
+.datos-generales select option {
+  color-scheme: dark !important;
+  background-color: #0f172a !important;
   background: #0f172a !important;
   color: #f8fafc !important;
   padding: 8px 12px !important;
 }
-#monedaViajeSelect option:checked,
-select option:checked {
+select option:checked,
+#monedaViajeSelect option:checked {
   background: #0284c7 !important;
   color: #ffffff !important;
+}
+.theme-claro select,
+.theme-claro select option {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 /* Boton de notas para cabecera movil */
@@ -6303,30 +6334,6 @@ select option:checked {
   z-index: 10000 !important;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8) !important;
   transform: scale(1.02);
-  animation: none !important;
-}
-
-@keyframes notitaFloatA {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-4px) rotate(0.3deg); }
-}
-@keyframes notitaFloatB {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-6px) rotate(-0.4deg); }
-}
-@keyframes notitaFloatC {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-3px) rotate(0.2deg); }
-}
-
-.cartelito-nota:nth-child(3n+1) {
-  animation: notitaFloatA 4.8s ease-in-out infinite;
-}
-.cartelito-nota:nth-child(3n+2) {
-  animation: notitaFloatB 5.4s ease-in-out infinite;
-}
-.cartelito-nota:nth-child(3n) {
-  animation: notitaFloatC 4.2s ease-in-out infinite;
 }
 
 .cartelito-corner-pin {
@@ -6922,20 +6929,42 @@ select option:checked {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
-  font-size: 0.82rem;
-  color: #e2e8f0;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: #f8fafc;
+  padding: 3px 2px;
 }
 
 .cartelito-chk-label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: flex-start;
+  gap: 8px;
   cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.cartelito-chk-label input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 0 0 16px !important;
+  cursor: pointer;
+  accent-color: #38bdf8;
+}
+
+.cartelito-chk-label span {
+  flex: 1;
+  min-width: 0;
+  color: #f8fafc;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .cartelito-chk-done {

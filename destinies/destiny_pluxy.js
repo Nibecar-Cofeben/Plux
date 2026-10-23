@@ -11,7 +11,6 @@
 
   let currentLang = localStorage.getItem('pluxUserLanguage') || 'es';
   let currentTheme = localStorage.getItem('PluxTheme') || 'theme-oscuro';
-  let GEMINI_KEY = '';
 
   const dict = {
     es: {
@@ -141,23 +140,8 @@
     }
   };
 
-  async function loadKeys() {
-    try {
-      let resp = await fetch('/sapi.txt');
-      if (!resp.ok) resp = await fetch('sapi.txt');
-      const text = await resp.text();
-      const lines = text.split('\n').map(l => l.trim());
-      for (const line of lines) {
-        if (line.startsWith('AIzaSy')) {
-          GEMINI_KEY = line;
-          break;
-        }
-      }
-    } catch (e) {
-      console.warn('Could not load sapi.txt:', e);
-    }
-  }
-  loadKeys();
+  // La IA opera de manera 100% segura mediante Cloudflare Worker (sin claves en el cliente)
+
 
   function setTheme(t) {
     if (!t) t = 'theme-oscuro';
@@ -407,29 +391,6 @@
       console.warn('Worker fetch fallback:', e);
     }
 
-    // 2. Fallback de contingencia a Gemini directo si el Worker no responde
-    if (!GEMINI_KEY) await loadKeys();
-    if (GEMINI_KEY) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
-        const resp = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ parts: [{ text: userQuery }] }]
-          })
-        });
-
-        if (resp.ok) {
-          const data = await resp.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) return text;
-        }
-      } catch (e) {
-        console.warn('Gemini direct fallback error:', e);
-      }
-    }
 
     return `¡Excelente consulta sobre ${city}! Te sugiero explorar los puntos emblemáticos temprano en la mañana para evitar multitudes y probar la gastronomía típica al mediodía. ¿Quieres armar el itinerario de ${city} en Plux?`;
   }

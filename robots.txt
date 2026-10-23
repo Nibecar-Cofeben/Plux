@@ -14,3 +14,14 @@ Allow: /
 
 # Canonical Sitemap
 Sitemap: https://plux.nibecarcofeben.com/sitemap.xml
+
+# LLM & AI Agents Plain Markdown Documentation (llms.txt standard)
+# https://llmstxt.org/
+User-agent: GPTBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: CCBot
+Allow: /

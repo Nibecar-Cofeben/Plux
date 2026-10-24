@@ -327,9 +327,6 @@
         <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR</div>
         <div class="currency-dropdown" id="currencyDropdown" style="display:none;"></div>
       </div>
-            <div class="tour-button" id="topBtnLogros" title="Logros y Hitos del Viaje (50)" onclick="window.abrirModalLogros()" style="display:flex; align-items:center; justify-content:center; cursor:pointer;">
-        <i class="fa-solid fa-trophy" style="color:#f59e0b; font-size:1.05rem;"></i>
-      </div>
       <div class="tour-button" id="tourButton" title="Tour guiado" onclick="window.iniciarTour()">🎯</div>
       <div class="user-button" id="cuentaButton" title="Tu perfil" onclick="window.abrirCuenta()">👤</div>
       <div class="chat-social-button" id="chatSocialBtn" title="Chat del Viaje & Amigos" onclick="window.abrirChatSocial()">
@@ -485,8 +482,9 @@
         <button class="herramienta-btn" onclick="abrirClima()" id="btnClima"><i class="fa-solid fa-cloud-sun" style="margin-right:8px; opacity:0.8;"></i> Clima</button>
         <button class="herramienta-btn" onclick="window.abrirModalBitacora()" id="btnBitacora"><i class="fa-solid fa-book-bookmark" style="margin-right:8px; opacity:0.8;"></i> Bitácora</button>
         <button class="herramienta-btn" onclick="window.abrirModalRuleta()" id="btnRuleta"><i class="fa-solid fa-dharmachakra" style="margin-right:8px; opacity:0.8;"></i> Ruleta</button>
+        <button class="herramienta-btn" onclick="window.abrirModalLogros()" id="btnHerramientaLogros"><i class="fa-solid fa-trophy" style="margin-right:8px; opacity:0.8; color:#f59e0b;"></i> Logros (50)</button>
         <button class="herramienta-btn" id="btnPreferencias" onclick="abrirPreferencias()"><i class="fa-solid fa-sliders" style="margin-right:8px; opacity:0.8;"></i> Preferencias</button>
-        <button class="herramienta-btn" id="btnViajeActivo" style="grid-column:span 2; background:var(--rosa); border-color:var(--rosa); font-weight:bold; color:white;" onclick="window.toggleViajeActivo()">Modo Viaje Activo</button>
+        <button class="herramienta-btn" id="btnViajeActivo" style="background:var(--rosa); border-color:var(--rosa); font-weight:bold; color:white;" onclick="window.toggleViajeActivo()">Modo Viaje Activo</button>
       </div>
       <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
         <p id="joinHintHerramientas" style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación? No hace falta registrarse.</p>

@@ -525,27 +525,6 @@
   color: #fff;
 }
 
-/* Header Top Button de Logros */
-#topBtnLogros {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-#topBtnLogros:hover {
-  background: rgba(245, 158, 11, 0.2);
-  border-color: #f59e0b;
-  transform: scale(1.08);
-}
-
-
 /* Grilla perfecta de 2 columnas para el panel de herramientas */
 #modal-panel-herramientas .panel-herramientas-content {
   max-width: 720px !important;

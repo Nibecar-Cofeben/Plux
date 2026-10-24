@@ -1399,7 +1399,9 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
       formData.append('timestamp', timestamp.toString());
       formData.append('signature', signature);
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      const isVideo = file.type && file.type.startsWith('video/');
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? 'video' : 'auto'}/upload`;
+      const res = await fetch(uploadUrl, {
         method: 'POST',
         body: formData
       });

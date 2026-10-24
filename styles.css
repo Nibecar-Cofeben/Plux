@@ -1446,9 +1446,10 @@
     .close-panel:hover, .close-calendario:hover, .close-modal:hover, .close-conversor:hover, .close-clima:hover, .close-mapa:hover, .close-resumen:hover, .close-colaboradores:hover, .close-descubrir:hover, .close-traductor:hover, .close-icon:hover {
       opacity: 1; color: #ef4444; transform: scale(1.2) rotate(90deg);
     }
-    .herramientas-grid { display:flex; flex-direction:column; gap:15px; }
-    .herramienta-btn { padding:15px 20px; font-size:1.2rem; background:var(--card); border:1px solid var(--border); border-radius:16px; color:var(--texto); cursor:pointer; text-align:left; }
-    .herramienta-btn:hover { background:var(--fondo); transform:translateX(8px) scale(1.02); }
+    .herramientas-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
+    @media (max-width: 640px) { .herramientas-grid { grid-template-columns: 1fr; } }
+    .herramienta-btn { padding:13px 18px; font-size:1.05rem; background:var(--card); border:1px solid var(--border); border-radius:14px; color:var(--texto); cursor:pointer; text-align:left; display:flex; align-items:center; transition:all 0.2s ease; }
+    .herramienta-btn:hover { background:var(--fondo); border-color:rgba(255,255,255,0.25); transform:translateY(-2px); }
 
     .trad-chip {
       background: rgba(255, 255, 255, 0.05) !important;
@@ -7000,3 +7001,71 @@ select option:checked,
 
 
 
+
+
+
+/* =========================================================
+   JERARQUÍA SUPREMA DE CAPAS (Z-INDEX):
+   TODOS LOS POPUPS, MODALES Y OVERLAYS SIEMPRE ARRIBA DE TODO,
+   POR ENCIMA DE CARTELITOS (9995), DROPDOWNS Y ELEMENTOS DEL CANVAS
+   ========================================================= */
+
+.doodle-modal-backdrop,
+.tradicion-fogon-overlay,
+.laika-viewport-overlay,
+.chrono-terminal-hud,
+.win95-window-overlay,
+.muertos-ofrenda-overlay,
+.philae-landing-overlay,
+.philae-telemetry-overlay,
+.nellie-route-overlay,
+.unesco-passport-overlay,
+.iss-cupola-overlay,
+.montgolfier-flight-overlay,
+.curiosity-mars-overlay,
+.magallanes-overlay,
+.magallanes-expedition-overlay,
+.twain-overlay,
+.twain-typewriter-overlay,
+.doodle-modal-backdrop.active,
+.tradicion-fogon-overlay.active,
+.laika-viewport-overlay.active,
+#modal-panel-herramientas,
+#modal-calendario,
+#modal-viajes,
+#modal-presentacion,
+#modal-mapa,
+#modal-conversor,
+#modal-clima,
+#modal-colaboradores,
+#modal-viaje-activo,
+#modal-traductor,
+#modal-decision-viaje,
+#modal-cuenta,
+#modal-support,
+#modal-chat-ia,
+#modal-checklist,
+#modal-amigos,
+#modal-detalle-amigo,
+#modal-crear-grupo,
+#modal-seguridad,
+#modal-info-personal,
+#modal-confirmar-logout,
+#modal-descubrir,
+#modal-destino-info,
+#modal-detalle-lugar,
+#modal-travel-card,
+#modal-pdf-preview,
+.photo-lightbox-modal,
+.modal-como-empezar,
+.modal-plux-chat-social,
+[id^="modal-"] {
+  z-index: 999999 !important;
+}
+
+/* Notificaciones y Toasts flotantes por encima de cualquier modal */
+.chrono-toast-banner,
+.pluxee-toast,
+#toast-container {
+  z-index: 9999999 !important;
+}

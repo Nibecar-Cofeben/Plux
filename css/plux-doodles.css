@@ -502,7 +502,7 @@
       border-right: 2px solid #000000;
       border-bottom: 2px solid #000000;
       box-shadow: 4px 4px 0 rgba(0,0,0,0.6), 0 20px 40px rgba(0,0,0,0.8);
-      z-index: 6500;
+      z-index: 999999 !important;
       font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, sans-serif;
       color: #000000;
       display: none;
@@ -654,7 +654,7 @@
       top: 25px;
       left: 50%;
       transform: translateX(-50%) translateY(-100px);
-      z-index: 6000;
+      z-index: 9999999 !important;
       background: rgba(15, 23, 42, 0.95);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 999px;
@@ -691,7 +691,7 @@
       font-size: 0.88rem;
       line-height: 1.5;
       box-shadow: 0 0 35px rgba(34, 197, 94, 0.45);
-      z-index: 6000;
+      z-index: 999999 !important;
       display: none;
       opacity: 0;
       transition: all 0.3s ease;
@@ -765,7 +765,7 @@
       background: rgba(0, 0, 0, 0.82);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      z-index: 5000;
+      z-index: 999999 !important;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1128,25 +1128,6 @@
       position: relative !important;
     }
 
-    /* ESCARAPELA NACIONAL ARGENTINA (ÚNICA EN TODA LA APLICACIÓN) */
-    body.tradicion-mode .arg-escarapela-badge {
-      display: block !important;
-      position: absolute;
-      top: -14px;
-      right: -14px;
-      width: 44px;
-      height: 44px;
-      z-index: 10;
-      cursor: pointer;
-      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)) drop-shadow(0 0 12px rgba(246, 180, 14, 0.8));
-      animation: escarapelaGlow 2.5s ease-in-out infinite alternate;
-    }
-
-    @keyframes escarapelaGlow {
-      0% { transform: scale(1); filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4)) drop-shadow(0 0 8px rgba(246, 180, 14, 0.6)); }
-      100% { transform: scale(1.08); filter: drop-shadow(0 4px 14px rgba(0,0,0,0.6)) drop-shadow(0 0 18px rgba(246, 180, 14, 0.95)); }
-    }
-
     /* BOTONES PRINCIPALES DE PLUX VESTIDOS DE CELESTE Y BLANCO */
 
     
@@ -1267,7 +1248,7 @@
       background: rgba(10, 8, 5, 0.88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      z-index: 6000;
+      z-index: 999999 !important;
       display: none;
       align-items: center;
       justify-content: center;
@@ -1291,7 +1272,7 @@
       background: rgba(3, 10, 24, 0.9);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      z-index: 6000;
+      z-index: 999999 !important;
       display: none;
       align-items: center;
       justify-content: center;
@@ -1787,3 +1768,150 @@
       opacity: 0.85;
     }
 
+
+
+
+    /* =========================================================
+       ESCARAPELA NACIONAL ARGENTINA CON SOL DE MAYO 🇦🇷
+       (ESTRICTAMENTE EXCLUSIVA: OCULTA POR DEFECTO EN TODA LA APP,
+        SOLO VISIBLE CUANDO ESTÁ ACTIVO EL DÍA DE LA TRADICIÓN)
+       ========================================================= */
+    .arg-escarapela-badge {
+      display: none !important;
+      position: absolute;
+      top: -14px;
+      right: -14px;
+      width: 46px;
+      height: 46px;
+      z-index: 25;
+      cursor: pointer;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));
+      animation: escarapelaGlow 3s ease-in-out infinite alternate;
+    }
+    body.tradicion-mode .arg-escarapela-badge,
+    body.tradicion-active .arg-escarapela-badge {
+      display: block !important;
+    }
+    @keyframes escarapelaGlow {
+      0% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 3px 8px rgba(117, 170, 219, 0.7)); }
+      100% { transform: scale(1.08) rotate(3deg); filter: drop-shadow(0 5px 16px rgba(246, 180, 14, 0.9)); }
+    }
+    .escarapela-ring {
+      position: absolute;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .ring-outer {
+      width: 44px;
+      height: 44px;
+      background: radial-gradient(circle, #75aadb 60%, #4a90e2 100%);
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.25), 0 0 10px rgba(117, 170, 219, 0.6);
+    }
+    .ring-middle {
+      width: 30px;
+      height: 30px;
+      background: #ffffff;
+      box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+    }
+    .ring-inner {
+      width: 18px;
+      height: 18px;
+      background: radial-gradient(circle, #75aadb 60%, #357abd 100%);
+    }
+    .escarapela-sun {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 13px;
+      line-height: 1;
+      filter: drop-shadow(0 0 3px rgba(246, 180, 14, 0.8));
+    }
+    .escarapela-ribbon {
+      position: absolute;
+      bottom: -10px;
+      width: 8px;
+      height: 18px;
+      border-radius: 2px;
+      background: linear-gradient(to right, #75aadb 33%, #ffffff 33%, #ffffff 66%, #75aadb 66%);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      z-index: -1;
+    }
+    .ribbon-left {
+      left: 10px;
+      transform: rotate(20deg);
+    }
+    .ribbon-right {
+      right: 10px;
+      transform: rotate(-20deg);
+    }
+
+
+
+/* =========================================================
+   JERARQUÍA SUPREMA DE CAPAS (Z-INDEX):
+   TODOS LOS POPUPS, MODALES Y OVERLAYS SIEMPRE ARRIBA DE TODO,
+   POR ENCIMA DE CARTELITOS (9995), DROPDOWNS Y ELEMENTOS DEL CANVAS
+   ========================================================= */
+
+.doodle-modal-backdrop,
+.tradicion-fogon-overlay,
+.laika-viewport-overlay,
+.chrono-terminal-hud,
+.win95-window-overlay,
+.muertos-ofrenda-overlay,
+.philae-landing-overlay,
+.philae-telemetry-overlay,
+.nellie-route-overlay,
+.unesco-passport-overlay,
+.iss-cupola-overlay,
+.montgolfier-flight-overlay,
+.curiosity-mars-overlay,
+.magallanes-overlay,
+.magallanes-expedition-overlay,
+.twain-overlay,
+.twain-typewriter-overlay,
+.doodle-modal-backdrop.active,
+.tradicion-fogon-overlay.active,
+.laika-viewport-overlay.active,
+#modal-panel-herramientas,
+#modal-calendario,
+#modal-viajes,
+#modal-presentacion,
+#modal-mapa,
+#modal-conversor,
+#modal-clima,
+#modal-colaboradores,
+#modal-viaje-activo,
+#modal-traductor,
+#modal-decision-viaje,
+#modal-cuenta,
+#modal-support,
+#modal-chat-ia,
+#modal-checklist,
+#modal-amigos,
+#modal-detalle-amigo,
+#modal-crear-grupo,
+#modal-seguridad,
+#modal-info-personal,
+#modal-confirmar-logout,
+#modal-descubrir,
+#modal-destino-info,
+#modal-detalle-lugar,
+#modal-travel-card,
+#modal-pdf-preview,
+.photo-lightbox-modal,
+.modal-como-empezar,
+.modal-plux-chat-social,
+[id^="modal-"] {
+  z-index: 999999 !important;
+}
+
+/* Notificaciones y Toasts flotantes por encima de cualquier modal */
+.chrono-toast-banner,
+.pluxee-toast,
+#toast-container {
+  z-index: 9999999 !important;
+}

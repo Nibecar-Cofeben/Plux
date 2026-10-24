@@ -109,6 +109,7 @@
   </script>
 
   <base href="/" />
+  <link rel="stylesheet" href="/css/plux-herramientas.css">
   <link rel="stylesheet" href="/styles.css?v=1790010000022">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -135,7 +136,8 @@
   <script defer src="/js/plux-social-chat.js?v=1790010000022"></script>
   <script defer src="/js/plux-collab.js?v=1790010000022"></script>
   <script defer src="/js/plux-doodles.js?v=1790010000022"></script>
-  <script defer src="/plux-pro.js?v=1790010000022"></script>
+    <script defer src="/js/plux-herramientas.js?v=1790010000022"></script>
+<script defer src="/plux-pro.js?v=1790010000022"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -325,6 +327,9 @@
         <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR</div>
         <div class="currency-dropdown" id="currencyDropdown" style="display:none;"></div>
       </div>
+            <div class="tour-button" id="topBtnLogros" title="Logros y Hitos del Viaje (50)" onclick="window.abrirModalLogros()" style="display:flex; align-items:center; justify-content:center; cursor:pointer;">
+        <i class="fa-solid fa-trophy" style="color:#f59e0b; font-size:1.05rem;"></i>
+      </div>
       <div class="tour-button" id="tourButton" title="Tour guiado" onclick="window.iniciarTour()">🎯</div>
       <div class="user-button" id="cuentaButton" title="Tu perfil" onclick="window.abrirCuenta()">👤</div>
       <div class="chat-social-button" id="chatSocialBtn" title="Chat del Viaje & Amigos" onclick="window.abrirChatSocial()">
@@ -471,15 +476,17 @@
       </div>
       <div class="herramientas-grid">
         <button class="herramienta-btn" onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; font-weight:bold; grid-column:span 2;">💬 Chat Grupal & Amigos</button>
-        <button class="herramienta-btn" onclick="abrirCalendario()" id="btnCalendario">Calendario</button>
-        <button class="herramienta-btn" onclick="window.crearNotaCartelito(); window.cerrarPanelHerramientas();" id="btnHerramientaNotas" style="background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--texto); font-weight:bold;">+ Crear Nota</button>
-        <button class="herramienta-btn" onclick="abrirConversor()" id="btnConversor">Conversor</button>
-        <button class="herramienta-btn" onclick="abrirTraductor()" id="btnTraductor">Traductor</button>
-        <button class="herramienta-btn" onclick="abrirChecklist()" id="btnChecklist">Checklist</button>
-        <button class="herramienta-btn" onclick="abrirMapa()" id="btnMapa">Ver mapa</button>
-        <button class="herramienta-btn" onclick="abrirClima()" id="btnClima">Clima</button>
-        <button class="herramienta-btn" id="btnPreferencias" onclick="abrirPreferencias()" style="background:var(--azul);">Preferencias</button>
-        <button class="herramienta-btn" id="btnViajeActivo" style="background:var(--rosa); border-color:var(--rosa);" onclick="window.toggleViajeActivo()">Modo Viaje Activo</button>
+        <button class="herramienta-btn" onclick="abrirCalendario()" id="btnCalendario"><i class="fa-solid fa-calendar-days" style="margin-right:8px; opacity:0.8;"></i> Calendario</button>
+        <button class="herramienta-btn" onclick="window.crearNotaCartelito(); window.cerrarPanelHerramientas();" id="btnHerramientaNotas"><i class="fa-solid fa-note-sticky" style="margin-right:8px; opacity:0.8;"></i> Crear Nota</button>
+        <button class="herramienta-btn" onclick="abrirConversor()" id="btnConversor"><i class="fa-solid fa-money-bill-transfer" style="margin-right:8px; opacity:0.8;"></i> Conversor</button>
+        <button class="herramienta-btn" onclick="abrirTraductor()" id="btnTraductor"><i class="fa-solid fa-language" style="margin-right:8px; opacity:0.8;"></i> Traductor</button>
+        <button class="herramienta-btn" onclick="abrirChecklist()" id="btnChecklist"><i class="fa-solid fa-list-check" style="margin-right:8px; opacity:0.8;"></i> Checklist</button>
+        <button class="herramienta-btn" onclick="abrirMapa()" id="btnMapa"><i class="fa-solid fa-map-location-dot" style="margin-right:8px; opacity:0.8;"></i> Ver mapa</button>
+        <button class="herramienta-btn" onclick="abrirClima()" id="btnClima"><i class="fa-solid fa-cloud-sun" style="margin-right:8px; opacity:0.8;"></i> Clima</button>
+        <button class="herramienta-btn" onclick="window.abrirModalBitacora()" id="btnBitacora"><i class="fa-solid fa-book-bookmark" style="margin-right:8px; opacity:0.8;"></i> Bitácora</button>
+        <button class="herramienta-btn" onclick="window.abrirModalRuleta()" id="btnRuleta"><i class="fa-solid fa-dharmachakra" style="margin-right:8px; opacity:0.8;"></i> Ruleta</button>
+        <button class="herramienta-btn" id="btnPreferencias" onclick="abrirPreferencias()"><i class="fa-solid fa-sliders" style="margin-right:8px; opacity:0.8;"></i> Preferencias</button>
+        <button class="herramienta-btn" id="btnViajeActivo" style="grid-column:span 2; background:var(--rosa); border-color:var(--rosa); font-weight:bold; color:white;" onclick="window.toggleViajeActivo()">Modo Viaje Activo</button>
       </div>
       <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
         <p id="joinHintHerramientas" style="color:var(--gris); font-size:0.8rem; margin-bottom:10px;">¿Tienes un código de invitación? No hace falta registrarse.</p>
@@ -599,7 +606,7 @@
   </div>
 
   <!-- Modal de decisión de viaje -->
-  <div id="modal-decision-viaje" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 1050; align-items: center; justify-content: center;">
+  <div id="modal-decision-viaje" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center;">
     <div class="modal-content" style="max-width: 450px; text-align: center; padding: 30px;">
       <span class="close-modal" onclick="window.cerrarModalDecisionViaje()">×</span>
       <h2 id="decisionModalTitle" style="color: var(--verde); margin-bottom: 20px;">Empieza tu viaje</h2>
@@ -906,7 +913,7 @@
   </div>
 
   <!-- Modal Detalle Lugar (Descubrir) -->
-  <div id="modal-detalle-lugar" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; display:none; align-items:center; justify-content:center; padding:20px;">
+  <div id="modal-detalle-lugar" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:999999; display:none; align-items:center; justify-content:center; padding:20px;">
     <div class="detalle-lugar-content" style="background:var(--card); border:1px solid var(--border); border-radius:24px; max-width:600px; width:100%; max-height:80vh; overflow-y:auto; padding:25px; position:relative;">
         <span class="close-panel" onclick="document.getElementById('modal-detalle-lugar').style.display='none'" style="position:absolute; top:15px; right:20px; font-size:2rem; cursor:pointer;">×</span>
         <div id="detalleLugarBody"></div>
@@ -919,7 +926,7 @@
   </button>
 
   <!-- MODAL: SUPPORT & SUGGESTIONS -->
-  <div id="modal-support" onclick="if(event.target===this)cerrarSupport()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2100; align-items:center; justify-content:center; padding:20px;">
+  <div id="modal-support" onclick="if(event.target===this)cerrarSupport()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999999; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card); border:1px solid var(--border); border-radius:20px; max-width:500px; width:100%; padding:30px; box-shadow:0 10px 40px rgba(0,0,0,0.3); position:relative;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h2 id="supportTitle" style="margin:0; color:var(--texto);">Soporte</h2>
@@ -1696,7 +1703,7 @@
   </div>
 
   <!-- MODAL: CONFIRMAR CIERRE DE SESIÓN Y GESTIÓN DE CHATS -->
-  <div id="modal-confirmar-logout" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:2100; align-items:center; justify-content:center; backdrop-filter:blur(8px);" onclick="if(event.target===this) window.cancelarCerrarSesion()">
+  <div id="modal-confirmar-logout" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:999999; align-items:center; justify-content:center; backdrop-filter:blur(8px);" onclick="if(event.target===this) window.cancelarCerrarSesion()">
     <div class="modal-content" style="max-width:440px; width:92%; text-align:center; padding:28px; background:var(--card); border:1px solid var(--border); border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.7); position:relative;">
       <div style="font-size:2.8rem; margin-bottom:12px;">🔒</div>
       <h3 id="logoutConfirmTitle" style="color:var(--texto); margin:0 0 10px 0; font-size:1.3rem; font-weight:700;">¿Cerrar sesión?</h3>
@@ -1718,7 +1725,7 @@
   </div>
 
   <!-- Modal Amigos (Familia y Amigos) -->
-  <div id="modal-amigos" onclick="if(event.target===this) window.cerrarAmigos()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2100; padding:10px;">
+  <div id="modal-amigos" onclick="if(event.target===this) window.cerrarAmigos()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:999999; padding:10px;">
     <div class="cuenta-content" style="max-width:460px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
       
       <!-- Modal Header -->
@@ -1755,7 +1762,7 @@
   </div>
 
   <!-- Modal Detalle de Amigo -->
-  <div id="modal-detalle-amigo" onclick="if(event.target===this) window.cerrarDetalleAmigo()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2200; padding:10px;">
+  <div id="modal-detalle-amigo" onclick="if(event.target===this) window.cerrarDetalleAmigo()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:999999; padding:10px;">
     <div class="cuenta-content" style="max-width:440px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px; max-height:88vh; overflow-y:auto;">
       
       <!-- Header -->
@@ -1856,7 +1863,7 @@
   </div>
 
   <!-- Modal Crear Grupo -->
-  <div id="modal-crear-grupo" onclick="if(event.target===this) window.cerrarModalCrearGrupo()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2200; padding:10px;">
+  <div id="modal-crear-grupo" onclick="if(event.target===this) window.cerrarModalCrearGrupo()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:999999; padding:10px;">
     <div class="cuenta-content" style="max-width:440px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <button onclick="window.cerrarModalCrearGrupo()" style="background:none; border:none; color:var(--verde); font-size:0.95rem; display:flex; align-items:center; gap:4px; cursor:pointer; padding:6px 8px;">
@@ -1885,7 +1892,7 @@
   </div>
 
   <!-- Modal Seguridad -->
-  <div id="modal-seguridad" onclick="if(event.target===this) window.cerrarSeguridad()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2100; padding:10px;">
+  <div id="modal-seguridad" onclick="if(event.target===this) window.cerrarSeguridad()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:999999; padding:10px;">
     <div class="cuenta-content" style="max-width:420px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <button onclick="window.cerrarSeguridad()" style="background:none; border:none; color:var(--verde); font-size:0.95rem; display:flex; align-items:center; gap:4px; cursor:pointer; padding:6px 8px;">
@@ -1920,7 +1927,7 @@
   </div>
 
   <!-- Modal Información Personal -->
-  <div id="modal-info-personal" onclick="if(event.target===this) window.cerrarInfoPersonal()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:2100; padding:10px;">
+  <div id="modal-info-personal" onclick="if(event.target===this) window.cerrarInfoPersonal()" style="position:fixed; inset:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:999999; padding:10px;">
     <div class="cuenta-content" style="max-width:460px; width:95%; background:linear-gradient(135deg,var(--card),var(--fondo)); border-radius:28px; padding:24px; box-shadow:0 25px 100px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border); display:flex; flex-direction:column; gap:16px; max-height:90vh; overflow-y:auto;">
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <button onclick="window.cerrarInfoPersonal()" style="background:none; border:none; color:var(--verde); font-size:0.95rem; display:flex; align-items:center; gap:4px; cursor:pointer; padding:6px 8px;">
@@ -2146,7 +2153,7 @@
   </div>
 
   <!-- Modal Crear Encuesta en el Chat -->
-  <div id="modal-crear-encuesta-chat" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:100000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;">
+  <div id="modal-crear-encuesta-chat" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:999999; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;">
     <div style="background:linear-gradient(180deg, #111827 0%, #0b0f19 100%); border:1px solid rgba(255,255,255,0.15); border-radius:20px; width:100%; max-width:480px; padding:22px; box-shadow:0 20px 50px rgba(0,0,0,0.6); display:flex; flex-direction:column; gap:16px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <h3 style="margin:0; font-size:1.15rem; color:#fff; font-weight:700; display:flex; align-items:center; gap:8px;">
@@ -2276,6 +2283,156 @@
     </div>
   </div>
 
+
+  
+  <!-- =========================================================
+       MODALES DE HERRAMIENTAS: RULETA, BITÁCORA Y LOGROS
+       ========================================================= -->
+
+  <!-- MODAL: RULETA DEL VIAJERO -->
+  <div id="modal-ruleta" onclick="if(event.target===this) window.cerrarModalRuleta()">
+    <div class="plux-tool-modal-card">
+      <div class="plux-tool-header">
+        <h2><i class="fa-solid fa-dharmachakra"></i> Ruleta de Decisiones</h2>
+        <button class="plux-tool-close-btn" onclick="window.cerrarModalRuleta()">&times;</button>
+      </div>
+      <div class="ruleta-layout">
+        <div class="ruleta-canvas-box">
+          <div class="ruleta-pointer"></div>
+          <canvas id="ruleta-canvas" width="310" height="310"></canvas>
+          <button id="btn-spin-ruleta" class="ruleta-spin-btn" onclick="window.girarRuleta()">
+            <i class="fa-solid fa-rotate-right"></i> Girar Ruleta
+          </button>
+          <div id="ruleta-winner-banner" class="ruleta-winner-banner" style="margin-top:16px;"></div>
+        </div>
+
+        <div class="ruleta-sidebar">
+          <div>
+            <label style="font-size:0.75rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:8px;">Categorías</label>
+            <div class="ruleta-presets">
+              <button class="ruleta-preset-btn" onclick="window.setPresetRuleta('gastronomia')">Gastronomía</button>
+              <button class="ruleta-preset-btn" onclick="window.setPresetRuleta('actividades')">Actividades</button>
+              <button class="ruleta-preset-btn" onclick="window.setPresetRuleta('pago')">Turnos de pago</button>
+              <button class="ruleta-preset-btn" onclick="window.setPresetRuleta('destinos')">Destinos</button>
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:0.75rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:8px;">Opciones activas</label>
+            <div id="ruleta-options-container" class="ruleta-options-list"></div>
+          </div>
+
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="ruleta-input-nueva-opcion" placeholder="Añadir opción..." style="flex:1; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:#fff; font-size:0.85rem;" onkeydown="if(event.key==='Enter') window.agregarOpcionRuleta()">
+            <button onclick="window.agregarOpcionRuleta()" style="background:var(--verde); border:none; color:white; border-radius:8px; padding:8px 14px; font-weight:bold; cursor:pointer;">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BITÁCORA Y DIARIO DE VIAJE -->
+  <div id="modal-bitacora" onclick="if(event.target===this) window.cerrarModalBitacora()">
+    <div class="plux-tool-modal-card bitacora-container">
+      <div class="plux-tool-header">
+        <h2><i class="fa-solid fa-book-bookmark"></i> Bitácora de Viaje</h2>
+        <button class="plux-tool-close-btn" onclick="window.cerrarModalBitacora()">&times;</button>
+      </div>
+
+      <div class="bitacora-toolbar">
+        <div style="color:var(--gris); font-size:0.85rem;">Registro de memorias, notas de ruta y multimedia.</div>
+        <button id="bitacora-btn-nueva" class="bitacora-btn-primary" onclick="window.mostrarEditorBitacora()">
+          <i class="fa-solid fa-pen" style="margin-right:6px;"></i> Nuevo Registro
+        </button>
+      </div>
+
+      <!-- Editor de Entrada (Sin Moods) -->
+      <div id="bitacora-editor-container" style="display:none; padding:20px 24px; overflow-y:auto; flex-direction:column; gap:14px; border-bottom:1px solid var(--border); background:rgba(0,0,0,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:1rem; color:#fff; font-weight:600;">Escribir registro de viaje</h3>
+          <button onclick="window.ocultarEditorBitacora()" style="background:transparent; border:none; color:var(--gris); cursor:pointer; font-size:1.2rem;">&times;</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div>
+            <label style="font-size:0.75rem; font-weight:700; color:var(--gris); text-transform:uppercase; margin-bottom:4px; display:block;">Título</label>
+            <input type="text" id="bitacora-input-titulo" placeholder="Ej: Visita al centro histórico..." style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:#fff; font-size:0.9rem;">
+          </div>
+          <div>
+            <label style="font-size:0.75rem; font-weight:700; color:var(--gris); text-transform:uppercase; margin-bottom:4px; display:block;">Fecha</label>
+            <input type="date" id="bitacora-input-fecha" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:#fff; font-size:0.9rem;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:0.75rem; font-weight:700; color:var(--gris); text-transform:uppercase; margin-bottom:4px; display:block;">Destino Relacionado</label>
+          <select id="bitacora-select-destino" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:#fff; font-size:0.9rem;">
+            <option value="">(Destino general)</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:0.75rem; font-weight:700; color:var(--gris); text-transform:uppercase; margin-bottom:4px; display:block;">Relato o Anotaciones</label>
+          <textarea id="bitacora-input-texto" rows="4" placeholder="Describe lo acontecido, observaciones o recomendaciones del día..." style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px; padding:12px; color:#fff; font-family:inherit; font-size:0.9rem; line-height:1.5; resize:vertical;"></textarea>
+        </div>
+
+        <!-- Carga Cloudinary -->
+        <div>
+          <label style="font-size:0.75rem; font-weight:700; color:var(--gris); text-transform:uppercase; margin-bottom:6px; display:block;">Fotografías y Videos (Cloudinary)</label>
+          <div class="bitacora-upload-zone" onclick="document.getElementById('bitacora-file-input').click()">
+            <input type="file" id="bitacora-file-input" accept="image/*,video/*" multiple style="display:none;" onchange="window.handleArchivosMultimediaBitacora(event)">
+            <div style="font-size:1.3rem; margin-bottom:4px; color:#38bdf8;"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <div style="font-weight:600; font-size:0.85rem; color:#fff;">Seleccionar fotos o videos</div>
+            <div style="font-size:0.75rem; color:var(--gris); margin-top:2px;">Almacenamiento en la nube</div>
+          </div>
+          <div id="bitacora-upload-status" style="font-size:0.8rem; color:#10b981; margin-top:6px; font-weight:600;"></div>
+          <div id="bitacora-preview-media" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+          <button onclick="window.ocultarEditorBitacora()" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); color:#fff; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; font-size:0.88rem;">Cancelar</button>
+          <button onclick="window.guardarEntradaBitacora()" class="bitacora-btn-primary">Guardar Registro</button>
+        </div>
+      </div>
+
+      <div id="bitacora-feed-container" class="bitacora-feed"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: LOGROS Y HITOS DE VIAJE -->
+  <div id="modal-logros" onclick="if(event.target===this) window.cerrarModalLogros()">
+    <div class="plux-tool-modal-card">
+      <div class="plux-tool-header">
+        <h2><i class="fa-solid fa-trophy" style="color:#f59e0b;"></i> Logros y Hitos del Viaje (50)</h2>
+        <button class="plux-tool-close-btn" onclick="window.cerrarModalLogros()">&times;</button>
+      </div>
+      <div class="logros-container">
+        <!-- Progress Card -->
+        <div class="logros-progress-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:1rem; color:#fff; font-weight:600;">Progreso de Expedición (50 Hitos)</h3>
+            <span id="logros-progress-text" style="font-weight:600; font-size:0.85rem; color:var(--verde);">0 de 50 hitos alcanzados (0%)</span>
+          </div>
+          <div class="logros-progress-bar-bg">
+            <div id="logros-progress-fill" class="logros-progress-bar-fill"></div>
+          </div>
+        </div>
+
+        <!-- Categorías -->
+        <div class="logros-tabs-nav">
+          <button class="logros-cat-tab active" data-cat="Todos" onclick="window.filtrarLogrosPorCategoria('Todos')">Todos (50)</button>
+          <button class="logros-cat-tab" data-cat="Ruta" onclick="window.filtrarLogrosPorCategoria('Ruta')">Ruta (10)</button>
+          <button class="logros-cat-tab" data-cat="Exploración" onclick="window.filtrarLogrosPorCategoria('Exploración')">Exploración (10)</button>
+          <button class="logros-cat-tab" data-cat="Bitácora" onclick="window.filtrarLogrosPorCategoria('Bitácora')">Bitácora (10)</button>
+          <button class="logros-cat-tab" data-cat="Grupo" onclick="window.filtrarLogrosPorCategoria('Grupo')">Grupo & Azar (10)</button>
+          <button class="logros-cat-tab" data-cat="Canvas" onclick="window.filtrarLogrosPorCategoria('Canvas')">Canvas & Útiles (10)</button>
+        </div>
+
+        <!-- Grid de Logros -->
+        <div id="logros-grid-container" class="logros-grid"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL DE INFORMACION Y CONTEXTO HISTORICO (PLUXEES) -->
   <div class="doodle-modal-backdrop" id="doodleModal" onclick="window.cerrarModalClickAfuera(event)">

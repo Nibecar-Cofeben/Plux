@@ -1706,13 +1706,48 @@ window.compartirTravelCard = compartirTravelCard;
 
 
 // ================== EXPORTAR PDF (DOSSIER EDITORIAL PLUX) ==================
+async function asegurarJsPDF() {
+  if (typeof window.jspdf !== 'undefined' && window.jspdf && window.jspdf.jsPDF) {
+    return window.jspdf.jsPDF;
+  }
+  if (typeof window.jsPDF === 'function') {
+    window.jspdf = { jsPDF: window.jsPDF };
+    return window.jsPDF;
+  }
+  const sources = [
+    '/js/jspdf.umd.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+  ];
+  for (const src of sources) {
+    try {
+      const ok = await new Promise((resolve) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = () => resolve(true);
+        s.onerror = () => resolve(false);
+        document.head.appendChild(s);
+      });
+      if (ok && typeof window.jspdf !== 'undefined' && window.jspdf && window.jspdf.jsPDF) {
+        return window.jspdf.jsPDF;
+      }
+      if (ok && typeof window.jsPDF === 'function') {
+        window.jspdf = { jsPDF: window.jsPDF };
+        return window.jsPDF;
+      }
+    } catch (e) {
+      console.warn('Error cargando jsPDF:', src, e);
+    }
+  }
+  return null;
+}
+
 async function exportarPDF() {
-  if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
-    if (typeof showToast === 'function') showToast('Librería PDF no disponible', 'error');
+  const jsPDF = await asegurarJsPDF();
+  if (!jsPDF) {
+    if (typeof showToast === 'function') showToast('Librería PDF no disponible. Por favor recarga la página.', 'error');
     return;
   }
 
-  const { jsPDF } = window.jspdf;
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',

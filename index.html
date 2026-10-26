@@ -110,6 +110,7 @@
 
   <base href="/" />
   <link rel="stylesheet" href="/css/plux-herramientas.css">
+  <link rel="stylesheet" href="/css/plux-wrapped.css">
   <link rel="stylesheet" href="/styles.css?v=1790010000022">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -138,6 +139,7 @@
   <script defer src="/js/plux-collab.js?v=1790010000022"></script>
   <script defer src="/js/plux-doodles.js?v=1790010000022"></script>
     <script defer src="/js/plux-herramientas.js?v=1790010000022"></script>
+  <script defer src="/js/plux-wrapped.js?v=1790010000022"></script>
 <script defer src="/plux-pro.js?v=1790010000022"></script>
 </head>
 <body class="theme-oscuro lang-es">
@@ -1262,6 +1264,7 @@
       <div class="resumen-tab-panel" id="resumen-tab-transporte" style="display:none;">
         <div id="resumen-transporte-content"></div>
       </div>
+
     </div>
   </div>
 
@@ -2339,7 +2342,14 @@
       </div>
 
       <div class="bitacora-toolbar">
-        <div style="color:var(--gris); font-size:0.85rem;">Registro de memorias, notas de ruta y multimedia.</div>
+        <div class="bitacora-tabs-nav">
+          <button type="button" class="bitacora-tab-btn active" id="bitacora-tab-btn-feed" onclick="window.switchBitacoraTab('feed')">
+            <i class="fa-solid fa-book-open"></i> Registros de Viaje
+          </button>
+          <button type="button" class="bitacora-tab-btn" id="bitacora-tab-btn-wrapped" onclick="window.switchBitacoraTab('wrapped')">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Plux Wrapped
+          </button>
+        </div>
         <button id="bitacora-btn-nueva" class="bitacora-btn-primary" onclick="window.mostrarEditorBitacora()">
           <i class="fa-solid fa-pen" style="margin-right:6px;"></i> Nuevo Registro
         </button>
@@ -2395,6 +2405,7 @@
       </div>
 
       <div id="bitacora-feed-container" class="bitacora-feed"></div>
+      <div id="bitacora-wrapped-container" class="bitacora-wrapped-content" style="display:none; padding:24px; overflow-y:auto; flex:1;"></div>
     </div>
   </div>
 
@@ -2497,6 +2508,29 @@
           <div>FOGÓN ENCENDIDO</div>
         </div>
       </div>
+
+  <!-- MODAL INMERSIVO DE STORIES (PLUX WRAPPED) -->
+  <div id="modal-wrapped-stories" style="display:none;">
+    <div class="wrapped-stories-viewport">
+      <div class="stories-header">
+        <div class="stories-progress-bars" id="storiesProgressBars">
+          <div class="story-progress-item"><div class="story-progress-fill"></div></div>
+          <div class="story-progress-item"><div class="story-progress-fill"></div></div>
+          <div class="story-progress-item"><div class="story-progress-fill"></div></div>
+          <div class="story-progress-item"><div class="story-progress-fill"></div></div>
+          <div class="story-progress-item"><div class="story-progress-fill"></div></div>
+        </div>
+        <div class="stories-top-controls">
+          <div class="stories-brand">✨ <span>PLUX WRAPPED</span></div>
+          <button type="button" class="stories-close-btn" onclick="window.cerrarWrappedStories()" title="Cerrar">&times;</button>
+        </div>
+      </div>
+      <div class="story-tap-area story-tap-left" onclick="window.storyPrev(event)"></div>
+      <div class="story-tap-area story-tap-right" onclick="window.storyNext(event)"></div>
+      <div class="stories-slide-container" id="storiesSlidesWrapper"></div>
+    </div>
+  </div>
+
 </body>
 </html>
 

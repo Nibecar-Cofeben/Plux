@@ -1915,3 +1915,39 @@
 #toast-container {
   z-index: 9999999 !important;
 }
+
+
+/* =========================================================
+   ELEMENTOS DE HALLOWEEN: CALABAZA INTERACTIVA EN EL LOGO
+   ========================================================= */
+.halloween-pumpkin-badge {
+  display: none;
+  position: absolute;
+  top: -12px;
+  right: -14px;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.85));
+  animation: halloweenFloat 2.6s ease-in-out infinite;
+  z-index: 5;
+  transition: transform 0.2s ease;
+  user-select: none;
+}
+
+.halloween-pumpkin-badge:hover {
+  transform: scale(1.25) rotate(12deg);
+}
+
+body.halloween-active .halloween-pumpkin-badge {
+  display: block;
+}
+
+@keyframes halloweenFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(8deg) scale(1.08);
+  }
+}

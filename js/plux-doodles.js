@@ -531,6 +531,47 @@
           }, 240);
           animateEqBars(1100);
         }
+        else if (type === 'halloween-spooky') {
+          // Progresion de organo gotico y atmosfera de noche de brujas
+          const organChords = [
+            { time: 0.0, freqs: [146.83, 220.0, 261.63, 349.23], dur: 0.8 },
+            { time: 0.55, freqs: [130.81, 196.0, 246.94, 329.63], dur: 0.8 },
+            { time: 1.15, freqs: [110.00, 164.81, 220.0, 329.63, 440.0], dur: 1.4 }
+          ];
+          organChords.forEach(chord => {
+            chord.freqs.forEach(freq => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'sawtooth';
+              const t = now + chord.time;
+              osc.frequency.setValueAtTime(freq, t);
+              osc.detune.setValueAtTime((Math.random() - 0.5) * 6, t);
+              gain.gain.setValueAtTime(0.001, t);
+              gain.gain.linearRampToValueAtTime(0.07, t + 0.05);
+              gain.gain.exponentialRampToValueAtTime(0.001, t + chord.dur);
+              const filter = ctx.createBiquadFilter();
+              filter.type = 'lowpass';
+              filter.frequency.setValueAtTime(820, t);
+              osc.connect(filter);
+              filter.connect(gain);
+              gain.connect(out);
+              osc.start(t);
+              osc.stop(t + chord.dur);
+            });
+          });
+          const chimeOsc = ctx.createOscillator();
+          const chimeGain = ctx.createGain();
+          chimeOsc.type = 'sine';
+          chimeOsc.frequency.setValueAtTime(1174.66, now);
+          chimeOsc.frequency.exponentialRampToValueAtTime(587.33, now + 1.8);
+          chimeGain.gain.setValueAtTime(0.12, now);
+          chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+          chimeOsc.connect(chimeGain);
+          chimeGain.connect(out);
+          chimeOsc.start(now);
+          chimeOsc.stop(now + 1.8);
+          animateEqBars(2000);
+        }
       } catch (e) {
         console.warn('Audio FX no soportado o bloqueado:', e);
       }
@@ -661,6 +702,70 @@
           ctx.arc(0, 0, s * 0.15, 0, Math.PI * 2);
           ctx.fillStyle = '#f59e0b';
           ctx.fill();
+        } else if (p.type === 'pumpkin') {
+          // Calabaza tallada Jack-o'-lantern brillante
+          const s = p.size;
+          ctx.fillStyle = '#ea580c';
+          ctx.beginPath();
+          ctx.arc(0, 0, s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#22c55e';
+          ctx.fillRect(-s * 0.15, -s * 1.3, s * 0.3, s * 0.4);
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath();
+          ctx.moveTo(-s * 0.45, -s * 0.2);
+          ctx.lineTo(-s * 0.2, -s * 0.4);
+          ctx.lineTo(-s * 0.1, -s * 0.15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(s * 0.45, -s * 0.2);
+          ctx.lineTo(s * 0.2, -s * 0.4);
+          ctx.lineTo(s * 0.1, -s * 0.15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, s * 0.15, s * 0.5, 0.2, Math.PI - 0.2);
+          ctx.lineTo(0, s * 0.35);
+          ctx.closePath();
+          ctx.fill();
+        } else if (p.type === 'bat') {
+          // Murcielago aleteando en vuelo nocturno
+          const s = p.size;
+          ctx.fillStyle = '#1e1b4b';
+          ctx.beginPath();
+          ctx.arc(0, 0, s * 0.35, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(-s * 0.2, -s * 0.3);
+          ctx.lineTo(-s * 0.35, -s * 0.7);
+          ctx.lineTo(-s * 0.05, -s * 0.4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(s * 0.2, -s * 0.3);
+          ctx.lineTo(s * 0.35, -s * 0.7);
+          ctx.lineTo(s * 0.05, -s * 0.4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(-s * 0.2, 0);
+          ctx.quadraticCurveTo(-s * 1.2, -s * 0.8, -s * 1.6, -s * 0.2);
+          ctx.quadraticCurveTo(-s * 1.0, s * 0.4, -s * 0.2, s * 0.2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(s * 0.2, 0);
+          ctx.quadraticCurveTo(s * 1.2, -s * 0.8, s * 1.6, -s * 0.2);
+          ctx.quadraticCurveTo(s * 1.0, s * 0.4, s * 0.2, s * 0.2);
+          ctx.closePath();
+          ctx.fill();
+        } else if (p.type === 'autumn-leaf') {
+          const s = p.size;
+          ctx.fillStyle = p.color || '#d97706';
+          ctx.beginPath();
+          ctx.ellipse(0, 0, s, s * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
         } else if (p.type === 'ribbon') {
           ctx.fillStyle = p.color || '#75aadb';
           ctx.fillRect(-p.size / 2, -p.size * 0.25, p.size, p.size * 0.5);
@@ -682,6 +787,78 @@
       if (!animationFrameId) {
         animationFrameId = requestAnimationFrame(runParticleLoop);
       }
+    }
+
+
+    // 16. HALLOWEEN: Noche de Brujas, murcielagos, calabazas y leyendas
+    function dispararHalloween() {
+      playSound('halloween-spooky');
+      const shock = document.getElementById('chronoShockwave');
+      if (shock) {
+        shock.classList.remove('active');
+        void shock.offsetWidth;
+        shock.classList.add('active');
+      }
+
+      const pList = [];
+      const cx = window.innerWidth * 0.5;
+      const cy = window.innerHeight * 0.4;
+
+      // Murcielagos nocturnos
+      for (let i = 0; i < 20; i++) {
+        pList.push({
+          x: cx + (Math.random() - 0.5) * 380,
+          y: cy + (Math.random() - 0.5) * 140,
+          vx: (Math.random() - 0.5) * 9,
+          vy: -3.5 - Math.random() * 4.5,
+          gravity: -0.04,
+          size: 15 + Math.random() * 10,
+          alpha: 1,
+          fade: 0.012,
+          rotation: (Math.random() - 0.5) * 0.6,
+          vRot: (Math.random() - 0.5) * 0.08,
+          type: 'bat'
+        });
+      }
+
+      // Calabazas talladas Jack-o'-lantern
+      for (let i = 0; i < 15; i++) {
+        pList.push({
+          x: cx + (Math.random() - 0.5) * 480,
+          y: cy + 40 + Math.random() * 110,
+          vx: (Math.random() - 0.5) * 5,
+          vy: -2 - Math.random() * 3.5,
+          gravity: 0.05,
+          size: 16 + Math.random() * 8,
+          alpha: 1,
+          fade: 0.011,
+          rotation: (Math.random() - 0.5) * 0.4,
+          vRot: (Math.random() - 0.5) * 0.04,
+          type: 'pumpkin'
+        });
+      }
+
+      // Hojas de otono
+      const leafColors = ['#ea580c', '#d97706', '#b45309', '#f59e0b', '#7c2d12'];
+      for (let i = 0; i < 28; i++) {
+        pList.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * (window.innerHeight * 0.5),
+          vx: (Math.random() - 0.5) * 4,
+          vy: 1.5 + Math.random() * 3,
+          gravity: 0.02,
+          size: 7 + Math.random() * 7,
+          alpha: 0.95,
+          fade: 0.01,
+          rotation: Math.random() * Math.PI * 2,
+          vRot: (Math.random() - 0.5) * 0.1,
+          color: leafColors[Math.floor(Math.random() * leafColors.length)],
+          type: 'autumn-leaf'
+        });
+      }
+
+      addParticles(pList);
+      showPluxeeToast('🎃 <strong>¡FELIZ NOCHE DE BRUJAS & HALLOWEEN!</strong> · Linternas talladas, mitos y leyendas del mundo');
     }
 
     // =========================================================
@@ -1786,6 +1963,26 @@ function abrirTerminalARPANET() {
         }
       },
 
+      halloween: {
+        img: 'static/doodles/halloween.jpg',
+        dateText: '🎃 31 DE OCTUBRE',
+        title: 'Noche de Brujas & Halloween',
+        desc: 'Antigua noche de Samhain: mitos, linternas de calabaza y misterios iluminando el viaje.',
+        btnText: '🎃 Hechizo & Murciélagos',
+        signatureSound: 'halloween-spooky',
+        modalTag: 'Pluxee Especial de Mitos y Leyendas',
+        modalTitle: 'Noche de Brujas & Tradición de Samhain (31 de Octubre)',
+        modalBody: `
+          <p>El <strong>31 de octubre</strong> se celebra <strong>Halloween</strong> en todo el mundo, con orígenes que se remontan al milenario festival celta de <em>Samhain</em>.</p>
+          <p>Marcaba el paso de las estaciones y el encendido de linternas talladas (<em>Jack-o'-lanterns</em>) para alumbrar las noches de viaje y proteger los hogares.</p>
+          <p>En <strong>Plux</strong> celebramos la magia de explorar callejuelas medievales, castillos legendarios y las historias populares de cada cultura.</p>
+          <p><em>¡Haz clic en "Hechizo & Murciélagos" para despertar los murciélagos nocturnos y las calabazas resplandecientes!</em></p>
+        `,
+        action: () => {
+          dispararHalloween();
+        }
+      },
+
       bitcoin: {
         img: 'static/doodles/bitcoin.jpg',
         dateText: '₿ 31 DE OCTUBRE',
@@ -2168,6 +2365,7 @@ function abrirTerminalARPANET() {
       lastActiveKey = key;
 
       document.body.classList.toggle('tradicion-active', key === 'tradicion');
+      document.body.classList.toggle('halloween-active', key === 'halloween');
       document.body.classList.toggle('tradicion-mode', key === 'tradicion');
 
       // Desactivar modo minecraft si cambiamos de Pluxee
@@ -2301,7 +2499,7 @@ function abrirTerminalARPANET() {
         else if (date === 24) matchedKey = 'concorde';
         else if (date === 28) matchedKey = 'gates';
         else if (date === 29) matchedKey = 'arpanet';
-        else if (date === 31) matchedKey = 'bitcoin';
+        else if (date === 31) matchedKey = 'halloween';
       } else if (month === 10) { // Noviembre
         if (date === 1) matchedKey = 'muertos';
         else if (date === 3) matchedKey = 'laika';
@@ -2333,6 +2531,7 @@ function abrirTerminalARPANET() {
     }
 
 // Global window bindings for interactive elements
+window.dispararHalloween = dispararHalloween;
 window.seleccionarDoodle = seleccionarDoodle;
 window.desactivarDoodle = desactivarDoodle;
 window.reactivarDoodle = reactivarDoodle;

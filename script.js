@@ -4714,9 +4714,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     }
 
     // Abrir descubrir (delegar a implementación unificada)
-    function abrirDescubrir() {
+    function abrirDescubrir(initialTab) {
       if (typeof window.abrirDescubrirModalUnified === 'function') {
-        window.abrirDescubrirModalUnified();
+        window.abrirDescubrirModalUnified(initialTab);
       }
     }
 
@@ -6411,9 +6411,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             </div>
           </div>
           <div id="editor-dest-body-${d.id}" style="display:${isCollapsed ? 'none' : 'block'};">
-            <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap;">
-              <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;"><i class="fa-solid fa-plane"></i></div>
+            <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; align-items:center;">
+              <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;" title="Transporte y alojamiento"><i class="fa-solid fa-plane"></i></div>
               <button onclick="generarItinerarioAuto(${d.id})" style="padding:6px 14px; font-size:0.8rem; background:linear-gradient(135deg, #6366f1, #8b5cf6); border:none; color:white; border-radius:8px; cursor:pointer;">${t('generar_itinerario_btn')}</button>
+              <button type="button" onclick="window.abrirImportadorParaDestino && window.abrirImportadorParaDestino('${escapeHtml(d.nombre)}')" style="padding:6px 12px; font-size:0.78rem; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.32); color:#38bdf8; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-weight:700;" title="Importar vuelo, hotel, tren o entrada para ${escapeHtml(d.nombre)}">
+                <i class="fa-solid fa-file-import"></i> Importar reserva
+              </button>
             </div>
             <div class="transport-fields ${isTransportOpen ? 'show' : ''}" id="transport-${d.id}">
               <div class="tramos-container" id="tramos-${d.id}"></div>

@@ -111,7 +111,7 @@
   <base href="/" />
   <link rel="stylesheet" href="/css/plux-herramientas.css">
   <link rel="stylesheet" href="/css/plux-wrapped.css">
-  <link rel="stylesheet" href="/styles.css?v=1790010000022">
+  <link rel="stylesheet" href="/styles.css?v=1790010000025">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -122,7 +122,7 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000022">
+  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000025">
   
   <!-- Firebase (compat) Local Offline SDK -->
   <script defer src="/firebase/firebase-app-compat.js"></script>
@@ -130,17 +130,17 @@
   <script defer src="/firebase/firebase-database-compat.js"></script>
   <script defer src="/firebase/firebase-firestore-compat.js"></script>
   <!-- Plux Modular Architecture -->
-  <script defer src="/js/plux-i18n.js?v=1790010000022"></script>
-  <script defer src="/script.js?v=1790010000022"></script>
-  <script defer src="/js/plux-export-cards.js?v=1790010000022"></script>
-  <script defer src="/js/plux-templates.js?v=1790010000022"></script>
-  <script defer src="/js/plux-discover.js?v=1790010000022"></script>
-  <script defer src="/js/plux-social-chat.js?v=1790010000022"></script>
-  <script defer src="/js/plux-collab.js?v=1790010000022"></script>
-  <script defer src="/js/plux-doodles.js?v=1790010000022"></script>
-    <script defer src="/js/plux-herramientas.js?v=1790010000022"></script>
-  <script defer src="/js/plux-wrapped.js?v=1790010000022"></script>
-<script defer src="/plux-pro.js?v=1790010000022"></script>
+  <script defer src="/js/plux-i18n.js?v=1790010000027"></script>
+  <script defer src="/script.js?v=1790010000027"></script>
+  <script defer src="/js/plux-export-cards.js?v=1790010000027"></script>
+  <script defer src="/js/plux-templates.js?v=1790010000027"></script>
+  <script defer src="/js/plux-discover.js?v=1790010000027"></script>
+  <script defer src="/js/plux-social-chat.js?v=1790010000027"></script>
+  <script defer src="/js/plux-collab.js?v=1790010000027"></script>
+  <script defer src="/js/plux-doodles.js?v=1790010000027"></script>
+    <script defer src="/js/plux-herramientas.js?v=1790010000025"></script>
+  <script defer src="/js/plux-wrapped.js?v=1790010000025"></script>
+<script defer src="/plux-pro.js?v=1790010000025"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -468,7 +468,7 @@
       </div>
     </div>
 
-    <div class="version">vD6.7 · 100% Gratis</div>
+    <div class="version">vD7.0 · 100% Gratis</div>
     <div class="footer-logo">nibecar cofeben</div>
   </div>
 
@@ -490,6 +490,7 @@
         <button class="herramienta-btn" onclick="window.abrirModalBitacora()" id="btnBitacora"><i class="fa-solid fa-book-bookmark" style="margin-right:8px; opacity:0.8;"></i> Bitácora</button>
         <button class="herramienta-btn" onclick="window.abrirModalRuleta()" id="btnRuleta"><i class="fa-solid fa-dharmachakra" style="margin-right:8px; opacity:0.8;"></i> Ruleta</button>
         <button class="herramienta-btn" onclick="window.abrirModalLogros()" id="btnHerramientaLogros"><i class="fa-solid fa-trophy" style="margin-right:8px; opacity:0.8; color:#f59e0b;"></i> Logros (50)</button>
+        <button class="herramienta-btn" onclick="window.cerrarPanelHerramientas(); window.abrirDescubrir('reservas');" id="btnHerramientaReservas"><i class="fa-solid fa-file-import" style="margin-right:8px; opacity:0.8; color:#38bdf8;"></i> Importar Reservas</button>
         <button class="herramienta-btn" id="btnPreferencias" onclick="abrirPreferencias()"><i class="fa-solid fa-sliders" style="margin-right:8px; opacity:0.8;"></i> Preferencias</button>
         <button class="herramienta-btn" id="btnViajeActivo" style="background:var(--rosa); border-color:var(--rosa); font-weight:bold; color:white;" onclick="window.toggleViajeActivo()">Modo Viaje Activo</button>
       </div>
@@ -650,7 +651,7 @@
           </button>
           <div class="descubrir-title-group">
             <h2 id="descubrirTitle"><i class="fa-solid fa-compass" style="color:var(--verde); margin-right:8px;"></i>Descubrir</h2>
-            <span class="descubrir-subtitle" id="descubrirSubtitle">Inspiración, itinerarios inteligentes y comparador</span>
+            <span class="descubrir-subtitle" id="descubrirSubtitle">Inspiración, comparador, importar reservas y comunidad de viajeros</span>
           </div>
         </div>
         <span class="close-panel" onclick="window.cerrarDescubrir()">&times;</span>
@@ -673,6 +674,14 @@
         <button class="descubrir-tab-btn" id="tabBtn-comparador" onclick="window.cambiarTabDescubrir('comparador')">
           <i class="fa-solid fa-code-compare"></i>
           <span id="txtTabComparador">Comparador</span>
+        </button>
+        <button class="descubrir-tab-btn" id="tabBtn-reservas" onclick="window.cambiarTabDescubrir('reservas')">
+          <i class="fa-solid fa-file-import"></i>
+          <span id="txtTabReservas">Importar Reservas</span>
+        </button>
+        <button class="descubrir-tab-btn" id="tabBtn-comunidad" onclick="window.cambiarTabDescubrir('comunidad')">
+          <i class="fa-solid fa-comments"></i>
+          <span id="txtTabComunidad">Comunidad y Foros</span>
         </button>
       </div>
 
@@ -771,6 +780,16 @@
             <div id="comparador-actividades-resultado" class="comparador-resultado-container"></div>
           </div>
 
+        </div>
+
+        <!-- Tab 5: Importar Mails y Reservas -->
+        <div class="descubrir-tab-pane" id="pane-descubrir-reservas">
+          <div id="descubrir-reservas-content"></div>
+        </div>
+
+        <!-- Tab 6: Comunidad: Foros y Más -->
+        <div class="descubrir-tab-pane" id="pane-descubrir-comunidad">
+          <div id="descubrir-comunidad-content"></div>
         </div>
 
       </div>

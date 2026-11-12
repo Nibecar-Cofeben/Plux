@@ -677,6 +677,9 @@
             });
             firestoreCommunityTemplates = list;
             renderPlantillasComunidad();
+            if (typeof window.refrescarPlantillasSincronizadasDescubrir === 'function') {
+              window.refrescarPlantillasSincronizadasDescubrir();
+            }
           }, (err) => {
             console.warn("Snapshot error en plantillas comunidad:", err);
           });
@@ -939,6 +942,11 @@
       if (countEl && item) {
         countEl.textContent = item.likes;
       }
+      renderPlantillasOficiales();
+      renderPlantillasComunidad();
+      if (typeof window.refrescarPlantillasSincronizadasDescubrir === 'function') {
+        window.refrescarPlantillasSincronizadasDescubrir();
+      }
     }
     window.toggleLikePlantilla = toggleLikePlantilla;
 
@@ -965,6 +973,9 @@
       templates.push(copy);
       saveTemplates(templates);
       renderMisPlantillas();
+      if (typeof window.refrescarPlantillasSincronizadasDescubrir === 'function') {
+        window.refrescarPlantillasSincronizadasDescubrir();
+      }
       showToast(`Plantilla "${tpl.nombre}" guardada en Mis Plantillas ✨`, 'success');
     }
     window.guardarPlantillaEnMisPlantillas = guardarPlantillaEnMisPlantillas;
@@ -1019,6 +1030,9 @@
       myTemplates.push(newTemplate);
       saveTemplates(myTemplates, true);
       renderMisPlantillas();
+      if (typeof window.refrescarPlantillasSincronizadasDescubrir === 'function') {
+        window.refrescarPlantillasSincronizadasDescubrir();
+      }
 
       if (isPublic) {
         if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
@@ -1064,6 +1078,9 @@
       const removed = templates.splice(index, 1)[0];
       saveTemplates(templates, true);
       renderMisPlantillas();
+      if (typeof window.refrescarPlantillasSincronizadasDescubrir === 'function') {
+        window.refrescarPlantillasSincronizadasDescubrir();
+      }
       if (removed?.id && db) {
         db.collection("plux_plantillas_comunidad").doc(removed.id).delete().catch(() => {});
       }
@@ -1166,6 +1183,9 @@
       renderDestinos();
       renderVueltaCostos();
       cerrarModalViajes();
+      if (typeof window.cerrarDescubrir === 'function') {
+        window.cerrarDescubrir();
+      }
       empezar();
 
       if (typeof generarSelloPasaporte === 'function' && destinos[0]?.nombre) {
@@ -1181,4 +1201,23 @@
       });
     }
     window.clonarPlantillaCompleta = clonarPlantillaCompleta;
+
+    function getPluxSyncedTemplatesData() {
+      const map = new Map();
+      PLUX_COMUNIDAD_SEEDS.forEach(t => map.set(t.id, t));
+      firestoreCommunityTemplates.forEach(t => map.set(t.id, t));
+      const comunidadList = Array.from(map.values()).sort((a, b) => (b.likes || 0) - (a.likes || 0));
+
+      return {
+        oficiales: PLUX_OFICIAL_TEMPLATES,
+        comunidad: comunidadList,
+        mias: typeof getStoredTemplates === 'function' ? getStoredTemplates() : [],
+        likedSet: getLikedTemplatesSet()
+      };
+    }
+    window.getPluxSyncedTemplatesData = getPluxSyncedTemplatesData;
+    window.getHeartSvg = getHeartSvg;
+    window.getCreatorBadgeHtml = getCreatorBadgeHtml;
+    window.PLUX_OFICIAL_TEMPLATES = PLUX_OFICIAL_TEMPLATES;
+    window.PLUX_COMUNIDAD_SEEDS = PLUX_COMUNIDAD_SEEDS;
 

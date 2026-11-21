@@ -9,7 +9,278 @@
       return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
     }
 
+    function getEmbajadorSealSvg(size = 14) {
+      return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" style="display:inline-block; vertical-align:middle; flex-shrink:0;" aria-hidden="true"><path d="M12 2l2.39 2.15 3.19-.28.88 3.09 2.75 1.65-.92 3.07.92 3.07-2.75 1.65-.88 3.09-3.19-.28L12 22l-2.39-2.15-3.19.28-.88-3.09-2.75-1.65.92-3.07-.92-3.07 2.75-1.65.88-3.09 3.19.28L12 2z" fill="#10b981"/><path d="M9 12.2l2 2 4.2-4.4" stroke="#04120c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+
+    const PLUX_EMBAJADORES = [
+      {
+        slug: 'mochila-al-hombro',
+        numero: 1,
+        nombre: 'Mochila al Hombro',
+        subtitulo: "De aquí pa' allá!",
+        lema: 'Se descubre andando.',
+        especialidad: 'Carretera Austral · Patagonia Chilena',
+        avatar: '/static/embajadores/mochila-al-hombro.jpg',
+        cover: 'https://images.unsplash.com/photo-1518182170546-07661fd94144?w=1200&q=80',
+        nicknames: ['mochilaalhombro', 'mochila-al-hombro', 'mochilaalhombrodeaquipaalla'],
+        email: 'mochilaalhombrodeaquipaalla@gmail.com',
+        bio: "Propuesta audiovisual dedicada a recorrer, descubrir y contar Chile desde una perspectiva cercana, aventurera y auténtica. Rutas reales por la Carretera Austral y parques nacionales australes pensadas para viajar incluso sin señal.",
+        redes: [
+          {
+            tipo: 'youtube',
+            label: 'YouTube',
+            url: 'https://www.youtube.com/@mochilaalhombrodeaquipaalla?utm_source=plux&utm_medium=embajador'
+          },
+          {
+            tipo: 'instagram',
+            label: 'Instagram',
+            url: 'https://www.instagram.com/mochilaalhombrodeaquipaalla/?utm_source=plux&utm_medium=embajador'
+          }
+        ]
+      }
+    ];
+
+    function getEmbajadorBySlug(slug) {
+      if (!slug) return null;
+      return PLUX_EMBAJADORES.find(e => e.slug === slug) || null;
+    }
+
+    function getEmbajadorByAccount(nickname, email) {
+      const cleanNick = String(nickname || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cleanEmail = String(email || '').trim().toLowerCase();
+      if (!cleanNick && !cleanEmail) return null;
+      return PLUX_EMBAJADORES.find(e =>
+        (cleanNick && Array.isArray(e.nicknames) && e.nicknames.some(n => String(n).toLowerCase().replace(/[^a-z0-9]/g, '') === cleanNick)) ||
+        (cleanEmail && e.email && e.email.toLowerCase() === cleanEmail)
+      ) || null;
+    }
+
+    function getCurrentEmbajador() {
+      const nick = (typeof currentNickname !== 'undefined' && currentNickname) || localStorage.getItem('Plux_Nickname') || '';
+      const mail = (typeof firebaseUser !== 'undefined' && firebaseUser && firebaseUser.email) ? firebaseUser.email : '';
+      return getEmbajadorByAccount(nick, mail);
+    }
+
+    function getEmbajadorBadgeHtml(tpl) {
+      if (!tpl || !tpl.embajadorSlug) return '';
+      const emb = getEmbajadorBySlug(tpl.embajadorSlug);
+      if (!emb) return '';
+      const numStr = String(emb.numero).padStart(2, '0');
+      return `<span class="embajador-inline-pill" onclick="event.stopPropagation(); window.abrirPerfilEmbajador && window.abrirPerfilEmbajador('${escapeHtml(emb.slug)}')" title="Ver perfil oficial de ${escapeHtml(emb.nombre)}">${getEmbajadorSealSvg(13)}<span>Embajador #${numStr} · ${escapeHtml(emb.nombre)}</span></span>`;
+    }
+
     const PLUX_OFICIAL_TEMPLATES = [
+      {
+        id: 'oficial_carretera_austral_mochila',
+        embajadorSlug: 'mochila-al-hombro',
+        destacadaOficial: true,
+        coverImg: 'https://images.unsplash.com/photo-1518182170546-07661fd94144?w=900&q=80',
+        nombre: 'Carretera Austral · Ruta 7 (Cap. 2 al 12)',
+        descripcion: 'Itinerario 100% fiel a la Temporada 1 de Mochila al Hombro: Pumalín, Puyuhuapi, Queulat, Cerro McKay (Coyhaique), travesía Cerro Castillo (Laguna Duff y Paso Morro Negro), Capillas de Mármol, Gran Travesía Tamango y Caleta Tortel.',
+        tags: ['9 Días', 'Oficial Destacada', 'Temp. 1 · Offline'],
+        presupuestoAprox: '260€',
+        likes: 194,
+        destinos: [
+          {
+            nombre: 'Chaitén',
+            tramos: [
+              { origen: 'Caleta Gonzalo', destino: 'Chaitén', medio: 'Barcaza a Caleta Gonzalo + Ruta 7', precio: 26, alojamiento: 'Camping Parque Pumalín / Chaitén', precioAlojamiento: 16 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '08:30', titulo: 'Desembarco en Caleta Gonzalo & Parque Nacional Pumalín', notas: 'Cap. Nº2: Ingreso al Parque Nacional Pumalín Douglas Tompkins tras desembarcar en Caleta Gonzalo.', costo: 0, duracion: 90 },
+                  { hora: '10:30', titulo: 'Trekking y Ascenso al Volcán Chaitén', notas: 'Cap. Nº2: Ascenso al mirador del Volcán Chaitén entre bosques en recuperación.', costo: 0, duracion: 180 },
+                  { hora: '14:30', titulo: 'Sendero del Alerce Milenario', notas: 'Cap. Nº2: Caminata interpretativa entre alerces milenarios del bosque templado lluvioso.', costo: 0, duracion: 90 },
+                  { hora: '17:00', titulo: 'Recorrido por Lago Blanco y Lago Negro → Chaitén', notas: 'Cap. Nº2 y Nº3: Parada en Lago Blanco y Lago Negro antes de llegar a Chaitén.', costo: 10, duracion: 120 }
+                ]
+              }
+            ]
+          },
+          {
+            nombre: 'Puyuhuapi',
+            tramos: [
+              { origen: 'Chaitén', destino: 'Puyuhuapi', medio: 'Ruta 7 rumbo a Aysén', precio: 14, alojamiento: 'Hospedaje en Fiordo Puyuhuapi', precioAlojamiento: 20 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '08:30', titulo: 'Fiordo Puyuhuapi · Entrada a la Región de Aysén', notas: 'Cap. Nº4: Travesía desde Chaitén hacia Puyuhuapi recorriendo el fiordo.', costo: 0, duracion: 180 },
+                  { hora: '12:30', titulo: 'Parque Nacional Queulat: Puente Colgante del Río Témpanos', notas: 'Cap. Nº5: Ingreso al parque (entrada CONAF ~11€) y cruce del icónico puente colgante sobre el Río Témpanos.', costo: 11, duracion: 90 },
+                  { hora: '14:00', titulo: 'Sendero Laguna Témpanos & Sendero Interpretativo El Aluvión', notas: 'Cap. Nº5: Recorrido por el mirador de Laguna Témpanos y el sendero interpretativo El Aluvión.', costo: 0, duracion: 120 },
+                  { hora: '16:30', titulo: 'Sendero Mirador Panorámico hacia el Ventisquero Colgante', notas: 'Cap. Nº5: Ascenso al mirador panorámico del Ventisquero Colgante (llevar mapa offline, sin señal).', costo: 0, duracion: 150 }
+                ]
+              }
+            ]
+          },
+          {
+            nombre: 'Coyhaique',
+            tramos: [
+              { origen: 'Puyuhuapi', destino: 'Coyhaique', medio: 'Ruta 7 hacia Coyhaique', precio: 16, alojamiento: 'Hostal en Coyhaique', precioAlojamiento: 20 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Ruta 7 hacia Coyhaique & Reabastecimiento', notas: 'Cap. Nº6: Tramo hacia la capital de Aysén y recarga de equipo y provisiones para la montaña.', costo: 14, duracion: 240 },
+                  { hora: '15:00', titulo: 'Coyhaique: Ascenso y Mirador Cerro McKay', notas: 'Cap. Carretera Austral: Recorrido por el icónico Cerro McKay con vista panorámica sobre Coyhaique.', costo: 0, duracion: 180 }
+                ]
+              }
+            ]
+          },
+          {
+            nombre: 'Cerro Castillo',
+            tramos: [
+              { origen: 'Coyhaique', destino: 'Villa Cerro Castillo', medio: 'Traslado Ruta 7 a Villa Cerro Castillo', precio: 10, alojamiento: 'Camping Laguna Duff / Campamento Neozelandés', precioAlojamiento: 16 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '08:00', titulo: 'Ingreso al Parque Nacional Cerro Castillo desde Villa Cerro Castillo', notas: 'Cap. Nº7: Inicio del gran circuito de alta montaña de la Temporada 1 (entrada ~16€).', costo: 16, duracion: 120 },
+                  { hora: '10:30', titulo: 'Ascenso y Campamento en la Remota Laguna Duff', notas: 'Cap. Nº7: Tramo exigente hacia la salvaje Laguna Duff; campamento bajo paredes de roca y hielo.', costo: 0, duracion: 330 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '07:30', titulo: 'Salida desde Campamento Neozelandés & Paso El Morro Negro', notas: 'Cap. Nº8: El tramo más exigente y espectacular de la travesía superando el viento y la roca del Paso El Morro Negro.', costo: 0, duracion: 270 },
+                  { hora: '13:30', titulo: 'Vistas al Valle del Río Ibáñez & Laguna Cerro Castillo', notas: 'Cap. Nº8: Descenso panorámico con vistas al Valle del Río Ibáñez y las aguas turquesas de la Laguna Cerro Castillo.', costo: 0, duracion: 210 }
+                ]
+              }
+            ]
+          },
+          {
+            nombre: 'Puerto Río Tranquilo',
+            tramos: [
+              { origen: 'Villa Cerro Castillo', destino: 'Puerto Río Tranquilo', medio: 'Ruta 7 hacia Lago Chelenko', precio: 12, alojamiento: 'Hospedaje / Camping Puerto Río Tranquilo', precioAlojamiento: 18 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:30', titulo: 'Llegada a Puerto Río Tranquilo & Riberas del Lago Chelenko', notas: 'Cap. Nº9: Recorrido por las orillas del Lago Chelenko (Lago General Carrera) y entorno del Río Tranquilo.', costo: 0, duracion: 120 },
+                  { hora: '13:30', titulo: 'Navegación al Santuario de la Naturaleza Capillas de Mármol', notas: 'Cap. Nº9: Embarque hacia las cavernas de mármol talladas por el agua durante miles de años.', costo: 20, duracion: 120 }
+                ]
+              }
+            ]
+          },
+          {
+            nombre: 'Cochrane',
+            tramos: [
+              { origen: 'Puerto Río Tranquilo', destino: 'Cochrane', medio: 'Ruta 7 bordeando el Río Baker', precio: 14, alojamiento: 'Campamento El Húngaro / Cochrane', precioAlojamiento: 16 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '08:30', titulo: 'Río Baker & Ingreso a Parque Nacional Patagonia (Sector Tamango)', notas: 'Cap. Nº10: Llegada a Cochrane bordeando el Río Baker e inicio de "La Gran Travesía Tamango" (entrada ~10€).', costo: 10, duracion: 120 },
+                  { hora: '11:00', titulo: 'Sendero Las Águilas & Sendero Los Huemules', notas: 'Cap. Nº10: Caminata de avistamiento de fauna autóctona bordeando las aguas cristalinas del Lago Cochrane.', costo: 0, duracion: 210 },
+                  { hora: '15:30', titulo: 'Descenso por Los Ciruelillos → Campamento El Húngaro', notas: 'Cap. Nº10: Tramo final de la primera jornada de la travesía hasta el Campamento El Húngaro.', costo: 0, duracion: 150 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Sendero Los Coigües junto al Río Cochrane', notas: 'Cap. Nº11: Trekking inmersivo bajo árboles nativos acompañados por la fuerza del Río Cochrane.', costo: 0, duracion: 180 },
+                  { hora: '14:00', titulo: 'Sendero Los Carpinteros · Interior del Bosque Patagónico', notas: 'Cap. Nº11: Cierre de la etapa en el corazón del bosque austral en desconexión total.', costo: 0, duracion: 150 }
+                ]
+              }
+            ]
+          },
+          {
+            nombre: 'Caleta Tortel',
+            tramos: [
+              { origen: 'Cochrane', destino: 'Caleta Tortel', medio: 'Ruta 7 sur hacia Puerto Yungay & Caleta Tortel', precio: 14, alojamiento: 'Hospedaje sobre pasarelas en Caleta Tortel', precioAlojamiento: 20 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Puerto Yungay & Barcaza Fiordo Mitchell', notas: 'Cap. Nº12: Hito sur del trazado continental de la Carretera Austral frente al Fiordo Mitchell (paso hacia Río Bravo / Villa O\'Higgins).', costo: 0, duracion: 180 },
+                  { hora: '14:30', titulo: 'Caleta Tortel: Pasarelas de Ciprés de las Guaitecas', notas: 'Cap. Nº12: Recorrido por el pueblo sin calles y sus famosas pasarelas de ciprés a orillas del mar, celebrando el fin de la Carretera Austral.', costo: 12, duracion: 210 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oficial_torres_del_paine_mochila',
+        embajadorSlug: 'mochila-al-hombro',
+        destacadaOficial: true,
+        coverImg: 'https://images.unsplash.com/photo-1531761535209-180857e963b9?w=900&q=80',
+        nombre: 'Fiordos, Torres del Paine & Punta Arenas (Cap. 13 al 17)',
+        descripcion: 'Segunda parte fiel de la Temporada 1 de Mochila al Hombro: navegación por Fiordos Patagónicos y Puerto Edén (Canal Messier), Puerto Natales, Torres del Paine (Paine Grande, Puentes Colgantes, Glaciar Grey y Base Torres) y cierre en Punta Arenas.',
+        tags: ['6 Días', 'Oficial Destacada', 'Temp. 1 · Offline'],
+        presupuestoAprox: '285€',
+        likes: 172,
+        destinos: [
+          {
+            nombre: 'Puerto Edén',
+            tramos: [
+              { origen: 'Caleta Tortel / Yungay', destino: 'Puerto Natales', medio: 'Ferry por Fiordos Patagónicos (Canal Messier)', precio: 95, alojamiento: 'Travesía marítima a bordo', precioAlojamiento: 0 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '09:00', titulo: 'Navegando la Patagonia Profunda · Canales y Fiordos', notas: 'Cap. Nº13: Travesía marítima adentrándose en el laberinto de canales, glaciares y fiordos patagónicos.', costo: 0, duracion: 240 },
+                  { hora: '15:00', titulo: 'Escala en Puerto Edén (Canal Messier · Pueblo Kawésqar)', notas: 'Cap. Nº13: Parada en el aislado e histórico caserío de Puerto Edén, habitado por familias herederas del pueblo Kawésqar.', costo: 0, duracion: 150 }
+                ]
+              }
+            ]
+          },
+          {
+            nombre: 'Puerto Natales',
+            tramos: [
+              { origen: 'Puerto Natales', destino: 'Sector Pudeto', medio: 'Bus Puerto Natales → Sector Pudeto', precio: 16, alojamiento: 'Hostal en Puerto Natales', precioAlojamiento: 22 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Desembarco en Puerto Natales · Bienvenida a Magallanes', notas: 'Cap. Nº13: Llegada a la Región de Magallanes y de la Antártica Chilena y preparación de equipo para Torres del Paine.', costo: 15, duracion: 180 },
+                  { hora: '16:00', titulo: 'Abastecimiento & Preparación Modo Offline para el Parque', notas: 'Cap. Nº14: Compra de raciones, chequeo de entradas y descarga de mapas sin señal antes de salir hacia Sector Pudeto.', costo: 14, duracion: 120 }
+                ]
+              }
+            ]
+          },
+          {
+            nombre: 'Torres del Paine',
+            tramos: [
+              { origen: 'Sector Pudeto', destino: 'Sector Paine Grande', medio: 'Catamarán Lago Pehoé (Pudeto → Paine Grande)', precio: 28, alojamiento: 'Campamentos Torres del Paine', precioAlojamiento: 26 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '08:30', titulo: 'Traslado a Sector Pudeto & Catamarán por el Lago Pehoé', notas: 'Cap. Nº14: Navegación por el Lago Pehoé hacia Sector Paine Grande (pase ingreso parque ~48€).', costo: 48, duracion: 150 },
+                  { hora: '11:30', titulo: 'Trekking hacia Campamento Italiano (Lagos Skottsberg y Nordenskjöld)', notas: 'Cap. Nº14: Caminata bordeando los lagos Skottsberg y Nordenskjöld en el corazón del macizo.', costo: 0, duracion: 270 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '08:30', titulo: 'Cruzando los Puentes Colgantes del Parque', notas: 'Corto Torres del Paine: Recorrido por los espectaculares puentes colgantes sobre quebradas glaciares.', costo: 0, duracion: 180 },
+                  { hora: '13:00', titulo: 'Vistas Panorámicas y Grietas del Imponente Glaciar Grey', notas: 'Corto Torres del Paine: Miradores frontales a las grietas y témpanos del Glaciar Grey.', costo: 0, duracion: 210 }
+                ]
+              },
+              {
+                eventos: [
+                  { hora: '07:30', titulo: 'Ascenso al Mirador Base Torres y Laguna Glacial', notas: 'Corto Torres del Paine: Llegada al icónico Mirador Base Torres enfrentando la fuerza del clima y el viento de la alta Patagonia.', costo: 0, duracion: 420 }
+                ]
+              }
+            ]
+          },
+          {
+            nombre: 'Punta Arenas',
+            tramos: [
+              { origen: 'Puerto Natales', destino: 'Punta Arenas', medio: 'Bus Puerto Natales → Punta Arenas', precio: 14, alojamiento: 'Hospedaje en Punta Arenas', precioAlojamiento: 22 }
+            ],
+            dias: [
+              {
+                eventos: [
+                  { hora: '10:00', titulo: 'Plaza Muñoz Gamero (Tradición del Pie del Indio Auca)', notas: 'Cap. Nº17: Recorrido por la plaza central de la capital de Magallanes cumpliendo la tradición viajera.', costo: 0, duracion: 90 },
+                  { hora: '12:00', titulo: 'Cementerio Municipal Sara Braun', notas: 'Cap. Nº17: Exploración de la arquitectura histórica y cipreses del Cementerio Municipal Sara Braun.', costo: 0, duracion: 90 },
+                  { hora: '14:00', titulo: 'Gastronomía en el Mercado Municipal de Punta Arenas', notas: 'Cap. Nº17: Almuerzo tradicional magallánico en el Mercado Municipal.', costo: 18, duracion: 90 },
+                  { hora: '17:00', titulo: 'Costanera y Estrecho de Magallanes · Cierre de Temporada', notas: 'Cap. Nº17: Contemplación del legendario Estrecho de Magallanes celebrando el cierre de la travesía.', costo: 0, duracion: 120 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
       {
         id: 'oficial_buenosaires',
         nombre: 'Buenos Aires Cultural & Gastronómico',
@@ -774,25 +1045,29 @@
 
       const likedSet = getLikedTemplatesSet();
 
-      PLUX_OFICIAL_TEMPLATES.forEach(tpl => {
+      getAllOfficialTemplatesWithEmbajadores().forEach(tpl => {
         const isLiked = likedSet.has(tpl.id);
         const card = document.createElement('div');
-        card.className = 'plantilla-card-premium';
-        const daysCount = (tpl.destinos[0]?.dias || []).length;
-        const eventsCount = (tpl.destinos[0]?.dias || []).reduce((acc, d) => acc + (d.eventos?.length || 0), 0);
+        card.className = 'plantilla-card-premium' + (tpl.destacadaOficial ? ' plantilla-oficial-destacada' : '');
+        const daysCount = (tpl.destinos || []).reduce((acc, d) => acc + ((d.dias || []).length || 0), 0);
+        const eventsCount = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + (dia.eventos?.length || 0), 0), 0);
         const votes = (tpl.likes || 0) + (isLiked ? 1 : 0);
+        const embBadge = getEmbajadorBadgeHtml(tpl);
+        const originType = (tpl.id && tpl.id.startsWith('emb_')) ? 'comunidad' : 'oficial';
 
         card.innerHTML = `
           <div>
+            ${tpl.coverImg ? `<div class="tpl-cover-thumb" style="background-image:url('${escapeHtml(tpl.coverImg)}');"></div>` : ''}
             <div class="tpl-header">
-              <span class="plantilla-badge-oficial">Plux Oficial</span>
+              <span class="plantilla-badge-oficial">${tpl.destacadaOficial ? 'Oficial Destacada' : 'Plux Oficial'}</span>
               <span style="font-size:0.75rem; color:var(--gris);">${tpl.presupuestoAprox ? 'Aprox. ' + tpl.presupuestoAprox : ''}</span>
             </div>
+            ${embBadge ? `<div style="margin-top:6px;">${embBadge}</div>` : ''}
             <h4 class="tpl-title" style="margin-top:8px;">${escapeHtml(tpl.nombre)}</h4>
             <p style="font-size:0.82rem; color:var(--gris); margin:4px 0 8px; line-height:1.4;">${escapeHtml(tpl.descripcion)}</p>
             <div class="plantilla-tags">
               ${(tpl.tags || []).map(t => `<span class="plantilla-tag">${escapeHtml(t)}</span>`).join('')}
-              <span class="plantilla-tag" style="background:rgba(52,211,153,0.1); color:#34d399; border-color:rgba(52,211,153,0.2);">${eventsCount} actividades</span>
+              <span class="plantilla-tag" style="background:rgba(52,211,153,0.1); color:#34d399; border-color:rgba(52,211,153,0.2);">${daysCount}d · ${eventsCount} actividades</span>
             </div>
           </div>
           <div class="plantilla-footer" style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
@@ -801,11 +1076,11 @@
               <span id="like-count-${tpl.id}" style="font-weight:700;">${votes}</span> <span style="font-size:0.75rem; color:var(--gris);">votos</span>
             </button>
             <div style="display:flex; gap:6px;">
-              <button class="plantilla-save-btn" onclick="window.guardarPlantillaEnMisPlantillas('${tpl.id}', 'oficial', event)" title="Guardar copia en Mis Plantillas" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+              <button class="plantilla-save-btn" onclick="window.guardarPlantillaEnMisPlantillas('${tpl.id}', '${originType}', event)" title="Guardar copia en Mis Plantillas" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                 <span>Guardar</span>
               </button>
-              <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', 'oficial')">
+              <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', '${originType}')">
                 Clonar
               </button>
             </div>
@@ -999,9 +1274,10 @@
 
       const chkPublicar = document.getElementById('chkPublicarComunidad');
       const isPublic = chkPublicar ? chkPublicar.checked : true;
-      const autor = currentNickname ? `@${currentNickname.replace('@','')}` : 'Viajero Anónimo';
-      const isExp = isExperiencedCreator(currentNickname);
-      const tplId = 'com_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5);
+      const activeEmb = getCurrentEmbajador();
+      const autor = activeEmb ? activeEmb.nombre : (currentNickname ? `@${currentNickname.replace('@','')}` : 'Viajero Anónimo');
+      const isExp = activeEmb ? true : isExperiencedCreator(currentNickname);
+      const tplId = (activeEmb ? 'emb_' : 'com_') + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5);
       const daysTotal = destinos.reduce((acc, d) => acc + (d.dias?.length || 0), 0);
       const eventsTotal = destinos.reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + (dia.eventos?.length || 0), 0), 0);
 
@@ -1012,12 +1288,17 @@
         tags: [
           `${daysTotal} ${daysTotal === 1 ? 'Día' : 'Días'}`,
           destinos[0]?.nombre || 'Viaje',
-          'Comunidad'
+          activeEmb ? 'Oficial Destacada' : 'Comunidad'
         ],
         fecha: new Date().toISOString(),
         autor: autor,
         isExperienced: isExp,
-        destacada: false,
+        destacada: Boolean(activeEmb),
+        destacadaOficial: Boolean(activeEmb),
+        isEmbajadorRoute: Boolean(activeEmb),
+        embajadorSlug: activeEmb ? activeEmb.slug : null,
+        embajadorNumero: activeEmb ? activeEmb.numero : null,
+        coverImg: activeEmb ? activeEmb.cover : null,
         likes: 0,
         isPublic: isPublic,
         destinos: JSON.parse(JSON.stringify(destinos || [])),
@@ -1096,8 +1377,12 @@
 
       const notice = document.getElementById('creatorBadgeNotice');
       if (notice) {
+        const activeEmb = getCurrentEmbajador();
         const isExp = isExperiencedCreator(currentNickname);
-        if (currentNickname) {
+        if (activeEmb) {
+          const numStr = String(activeEmb.numero).padStart(2, '0');
+          notice.innerHTML = `<span style="display:inline-flex; align-items:center; gap:6px;">${getEmbajadorSealSvg(14)} Publicando como <strong style="color:var(--verde);">${escapeHtml(activeEmb.nombre)}</strong> · <strong>Embajador Fundador #${numStr}</strong> (se destacará automáticamente como Ruta Oficial)</span>`;
+        } else if (currentNickname) {
           notice.innerHTML = `Publicando como: <strong style="color:var(--verde);">@${escapeHtml(currentNickname)}</strong> ${isExp ? '<span style="color:#fbbf24;" title="Creador experimentado">⭐</span>' : ''}`;
         } else {
           notice.innerHTML = `Publicando como: <span style="color:var(--gris);">Viajero Anónimo (sin sesión)</span>`;
@@ -1133,7 +1418,7 @@
     function clonarPlantillaCompleta(tplIdOrIndex, origin = 'oficial') {
       let tpl = null;
       if (origin === 'oficial') {
-        tpl = PLUX_OFICIAL_TEMPLATES.find(t => t.id === tplIdOrIndex);
+        tpl = getAllOfficialTemplatesWithEmbajadores().find(t => t.id === tplIdOrIndex);
       } else if (origin === 'comunidad') {
         tpl = firestoreCommunityTemplates.find(t => t.id === tplIdOrIndex) || PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplIdOrIndex);
       } else if (origin === 'mia') {
@@ -1149,58 +1434,114 @@
       const idBase = Date.now();
       const clonedDestinos = JSON.parse(JSON.stringify(tpl.destinos || [])).map((dest, dIdx) => ({
         id: idBase + dIdx * 1000,
-        nombre: dest.nombre,
+        nombre: String(dest.nombre || 'Destino').trim(),
         tramos: (dest.tramos || []).map((tr, trIdx) => ({
           id: idBase + dIdx * 1000 + trIdx + 50,
+          origen: tr.origen || '',
+          destino: tr.destino || dest.nombre || '',
           medio: tr.medio || '',
-          precio: tr.precio || 0,
+          precio: parseFloat(tr.precio) || 0,
+          moneda: tr.moneda || 'EUR',
           alojamiento: tr.alojamiento || '',
-          precioAlojamiento: tr.precioAlojamiento || 0
+          precioAlojamiento: parseFloat(tr.precioAlojamiento) || 0,
+          monedaAlojamiento: tr.monedaAlojamiento || 'EUR',
+          escalas: Array.isArray(tr.escalas) ? [...tr.escalas] : []
         })),
         dias: (dest.dias || []).map((dia, diaIdx) => ({
           id: diaIdx,
-          eventos: (dia.eventos || []).map((ev, evIdx) => ({
-            id: idBase + dIdx * 1000 + (diaIdx + 1) * 100 + evIdx + 1,
-            hora: ev.hora || '10:00',
-            titulo: ev.titulo || 'Actividad',
-            notas: ev.notas || '',
-            costo: ev.costo || 0,
-            duracion: ev.duracion || 60
-          })),
+          eventos: (dia.eventos || []).map((ev, evIdx) => {
+            const evCosto = parseFloat(ev.costo !== undefined ? ev.costo : ev.precio) || 0;
+            return {
+              id: idBase + dIdx * 1000 + (diaIdx + 1) * 100 + evIdx + 1,
+              hora: ev.hora || '10:00',
+              titulo: ev.titulo || 'Actividad',
+              notas: ev.notas || '',
+              costo: evCosto,
+              precio: evCosto,
+              moneda: ev.moneda || 'EUR',
+              duracion: parseInt(ev.duracion, 10) || 60
+            };
+          }),
           costosAdicionales: (dia.costosAdicionales || []).map((c, cIdx) => ({
             id: idBase + dIdx * 1000 + (diaIdx + 1) * 100 + cIdx + 50,
             concepto: c.concepto || '',
-            precio: c.precio || 0
+            precio: parseFloat(c.precio) || 0
           }))
         }))
       }));
 
+      // Crear un viaje nuevo limpio para no sobrescribir un viaje previo ni un viaje colaborativo activo
+      if (typeof loadedTripIndex !== 'undefined') loadedTripIndex = null;
+      if (typeof syncCode !== 'undefined') syncCode = null;
+      try { localStorage.removeItem('PluxSyncCode'); } catch (e) {}
+      if (typeof currentTripId !== 'undefined') {
+        currentTripId = 'trip_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      }
+      window.currentTripRole = 'editor';
+      window.isExternalSharedTrip = false;
+      window.currentTripEmbajadorSlug = tpl.embajadorSlug || null;
+
+      const nombreViajeInput = document.getElementById('nombreViaje');
+      if (nombreViajeInput) nombreViajeInput.value = tpl.nombre || '';
+
       destinos = clonedDestinos;
       vueltaGlobal = tpl.vueltaGlobal || '';
-      vueltaPrecioGlobal = tpl.vueltaPrecioGlobal || 0;
-      vueltaCostosAdicionales = tpl.vueltaCostosAdicionales || [];
+      vueltaPrecioGlobal = parseFloat(tpl.vueltaPrecioGlobal) || 0;
+      vueltaCostosAdicionales = Array.isArray(tpl.vueltaCostosAdicionales)
+        ? JSON.parse(JSON.stringify(tpl.vueltaCostosAdicionales))
+        : [];
+
+      // Limpiar destinos colapsados previos y abrir el primer tramo si la ruta tiene logística detallada
+      if (typeof collapsedEditorDestinos !== 'undefined' && collapsedEditorDestinos && typeof collapsedEditorDestinos.clear === 'function') {
+        collapsedEditorDestinos.clear();
+      }
+      if (typeof openTransportDestIds !== 'undefined' && openTransportDestIds && typeof openTransportDestIds.clear === 'function') {
+        openTransportDestIds.clear();
+      }
 
       renderDestinos();
       renderVueltaCostos();
-      cerrarModalViajes();
+      if (typeof cerrarModalViajes === 'function') cerrarModalViajes();
       if (typeof window.cerrarDescubrir === 'function') {
         window.cerrarDescubrir();
       }
+      if (typeof window.cerrarPerfilEmbajador === 'function') {
+        window.cerrarPerfilEmbajador(true);
+      }
       empezar();
+      if (typeof window.renderActiveTripEmbajadorSeal === 'function') {
+        window.renderActiveTripEmbajadorSeal();
+      }
 
       if (typeof generarSelloPasaporte === 'function' && destinos[0]?.nombre) {
         generarSelloPasaporte(destinos[0].nombre);
       }
 
       autoSave();
-      showToast(`¡Plantilla "${tpl.nombre}" clonada a tu viaje!`, 'success');
+      showToast(`¡Plantilla "${tpl.nombre}" clonada como nuevo viaje!`, 'success');
       trackEvent('clone_template', {
         template_id: String(tplIdOrIndex),
         template_name: tpl.nombre,
-        origin
+        origin,
+        embajador_slug: tpl.embajadorSlug || null
       });
     }
     window.clonarPlantillaCompleta = clonarPlantillaCompleta;
+
+    function getAllOfficialTemplatesWithEmbajadores() {
+      const liveEmb = (typeof firestoreCommunityTemplates !== 'undefined' && Array.isArray(firestoreCommunityTemplates))
+        ? firestoreCommunityTemplates.filter(t => t && (t.isEmbajadorRoute || t.embajadorSlug))
+        : [];
+      const seen = new Set();
+      const combined = [];
+      [...liveEmb, ...PLUX_OFICIAL_TEMPLATES].forEach(t => {
+        if (t && t.id && !seen.has(t.id)) {
+          seen.add(t.id);
+          combined.push(t);
+        }
+      });
+      return combined;
+    }
 
     function getPluxSyncedTemplatesData() {
       const map = new Map();
@@ -1209,12 +1550,284 @@
       const comunidadList = Array.from(map.values()).sort((a, b) => (b.likes || 0) - (a.likes || 0));
 
       return {
-        oficiales: PLUX_OFICIAL_TEMPLATES,
+        oficiales: getAllOfficialTemplatesWithEmbajadores(),
         comunidad: comunidadList,
         mias: typeof getStoredTemplates === 'function' ? getStoredTemplates() : [],
         likedSet: getLikedTemplatesSet()
       };
     }
+    // ================== PROGRAMA EMBAJADORES FUNDADORES ==================
+    let _origTitleBeforeEmbajador = null;
+
+    function getEmbajadorTemplates(slug) {
+      return getAllOfficialTemplatesWithEmbajadores().filter(t => t.embajadorSlug === slug);
+    }
+
+    function abrirRedEmbajador(slug, tipo, url, event) {
+      if (event) event.stopPropagation();
+      if (!navigator.onLine) {
+        if (typeof showToast === 'function') {
+          showToast('Sin conexión: conectate a internet para abrir ' + tipo + '.', 'info');
+        }
+        return false;
+      }
+      if (typeof trackEvent === 'function') {
+        trackEvent('embajador_social_click', { embajador: slug, network: tipo });
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return false;
+    }
+    window.abrirRedEmbajador = abrirRedEmbajador;
+
+    function copiarLinkEmbajador(slug, event) {
+      if (event) event.stopPropagation();
+      const shareUrl = `https://plux.nibecarcofeben.com/?embajador=${encodeURIComponent(slug)}`;
+      const fallbackCopy = () => {
+        const ta = document.createElement('textarea');
+        ta.value = shareUrl;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        ta.remove();
+        if (typeof showToast === 'function') showToast('Enlace del embajador copiado al portapapeles', 'success');
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl)
+          .then(() => { if (typeof showToast === 'function') showToast('Enlace del embajador copiado al portapapeles', 'success'); })
+          .catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+    }
+    window.copiarLinkEmbajador = copiarLinkEmbajador;
+
+    function cerrarPerfilEmbajador(skipHistoryUpdate = false) {
+      const modal = document.getElementById('modal-embajador-perfil');
+      if (modal) modal.remove();
+      if (_origTitleBeforeEmbajador) {
+        document.title = _origTitleBeforeEmbajador;
+        _origTitleBeforeEmbajador = null;
+      }
+      if (!skipHistoryUpdate) {
+        try {
+          const url = new URL(window.location.href);
+          if (url.searchParams.has('embajador')) {
+            url.searchParams.delete('embajador');
+            window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+          }
+        } catch (e) {}
+      }
+    }
+    window.cerrarPerfilEmbajador = cerrarPerfilEmbajador;
+
+    function abrirPerfilEmbajador(slug, pushUrl = true) {
+      const emb = getEmbajadorBySlug(slug);
+      if (!emb) return;
+
+      cerrarPerfilEmbajador(true);
+      if (!_origTitleBeforeEmbajador) _origTitleBeforeEmbajador = document.title;
+      document.title = `${emb.nombre} · Embajador Fundador de Plux`;
+
+      if (pushUrl) {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set('embajador', emb.slug);
+          window.history.pushState({ embajador: emb.slug }, '', url.pathname + url.search + url.hash);
+        } catch (e) {}
+      }
+
+      if (typeof trackEvent === 'function') {
+        trackEvent('embajador_view', { embajador: emb.slug, numero: emb.numero });
+      }
+
+      const rutas = getEmbajadorTemplates(emb.slug);
+      const numStr = String(emb.numero).padStart(2, '0');
+
+      const modal = document.createElement('div');
+      modal.id = 'modal-embajador-perfil';
+      modal.className = 'embajador-modal-backdrop';
+      modal.onclick = (e) => { if (e.target === modal) cerrarPerfilEmbajador(); };
+
+      const redesHtml = (emb.redes || []).map(r => {
+        const icon = r.tipo === 'youtube' ? '<i class="fa-brands fa-youtube"></i>' : (r.tipo === 'instagram' ? '<i class="fa-brands fa-instagram"></i>' : '<i class="fa-solid fa-globe"></i>');
+        return `<button type="button" class="emb-pill-btn emb-pill-${escapeHtml(r.tipo)}" onclick="window.abrirRedEmbajador('${escapeHtml(emb.slug)}', '${escapeHtml(r.label)}', '${escapeHtml(r.url)}', event)">${icon}<span>${escapeHtml(r.label)}</span></button>`;
+      }).join('');
+
+      const rutasHtml = rutas.map(tpl => {
+        const daysCount = (tpl.destinos || []).reduce((acc, d) => acc + ((d.dias || []).length || 0), 0);
+        const eventsCount = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + (dia.eventos?.length || 0), 0), 0);
+        const paradas = (tpl.destinos || []).map(d => d.nombre).join(' → ');
+        const originType = (tpl.id && tpl.id.startsWith('emb_')) ? 'comunidad' : 'oficial';
+        const cover = tpl.coverImg || emb.cover;
+        return `
+          <div class="embajador-route-card">
+            <div class="embajador-route-cover" style="background-image:url('${escapeHtml(cover)}');">
+              <div class="embajador-route-cover-overlay"></div>
+              <div class="embajador-route-cover-top">
+                <span class="emb-route-tag">Oficial Destacada</span>
+                <span class="emb-route-meta">${daysCount} días · ${eventsCount} paradas ${tpl.presupuestoAprox ? '· ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
+              </div>
+              <div class="embajador-route-cover-bottom">
+                <div class="embajador-route-title">${escapeHtml(tpl.nombre)}</div>
+                <div class="embajador-route-stops">${escapeHtml(paradas)}</div>
+              </div>
+            </div>
+            <div class="embajador-route-body">
+              <div class="embajador-route-desc">${escapeHtml(tpl.descripcion)}</div>
+              <div class="embajador-route-actions">
+                <button type="button" class="embajador-btn-clone" onclick="window.clonarPlantillaCompleta('${escapeHtml(tpl.id)}', '${originType}')">
+                  <i class="fa-solid fa-clone"></i> Clonar ruta en mi viaje
+                </button>
+                <button type="button" class="embajador-btn-save" onclick="window.guardarPlantillaEnMisPlantillas('${escapeHtml(tpl.id)}', '${originType}', event)">
+                  <i class="fa-regular fa-bookmark"></i> Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      modal.innerHTML = `
+        <div class="embajador-modal-card">
+          <div class="embajador-modal-banner" style="background-image:url('${escapeHtml(emb.cover)}');">
+            <div class="embajador-modal-banner-grad"></div>
+            <button type="button" class="embajador-modal-close" onclick="window.cerrarPerfilEmbajador()" aria-label="Cerrar">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="embajador-modal-identity">
+              <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="embajador-avatar-img-lg" />
+              <div style="flex:1; min-width:0;">
+                <div class="embajador-founder-tag">${getEmbajadorSealSvg(12)}<span>EMBAJADOR FUNDADOR #${numStr}</span></div>
+                <div class="embajador-modal-name">${escapeHtml(emb.nombre)}</div>
+                <div class="embajador-modal-sub">${escapeHtml(emb.subtitulo)} · ${escapeHtml(emb.especialidad)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="embajador-modal-body">
+            <div class="embajador-modal-bio">${escapeHtml(emb.bio)}</div>
+
+            <div class="embajador-modal-socials">
+              ${redesHtml}
+              <button type="button" class="emb-pill-btn emb-pill-share" onclick="window.copiarLinkEmbajador('${escapeHtml(emb.slug)}', event)">
+                <i class="fa-solid fa-link"></i><span>Copiar enlace</span>
+              </button>
+            </div>
+
+            <div class="embajador-routes-heading">
+              Rutas oficiales destacadas (${rutas.length})
+            </div>
+            <div class="embajador-routes-list">
+              ${rutasHtml}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+    }
+    window.abrirPerfilEmbajador = abrirPerfilEmbajador;
+
+    // Sello oficial del Embajador visible dentro del editor del viaje (#app)
+    function renderActiveTripEmbajadorSeal() {
+      const existing = document.getElementById('activeTripEmbajadorSeal');
+      if (existing) existing.remove();
+
+      const slug = window.currentTripEmbajadorSlug;
+      if (!slug) return;
+      const emb = getEmbajadorBySlug(slug);
+      if (!emb) return;
+
+      const destinosEl = document.getElementById('destinos');
+      if (!destinosEl || !destinosEl.parentElement) return;
+
+      const numStr = String(emb.numero).padStart(2, '0');
+      const bar = document.createElement('div');
+      bar.id = 'activeTripEmbajadorSeal';
+      bar.className = 'active-trip-embajador-seal';
+      bar.onclick = () => abrirPerfilEmbajador(emb.slug);
+      bar.innerHTML = `
+        <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="active-trip-emb-avatar" />
+        <div style="flex:1; min-width:0;">
+          <div class="active-trip-emb-title">${getEmbajadorSealSvg(14)}<span>Ruta Oficial de ${escapeHtml(emb.nombre)}</span> <span class="active-trip-emb-num">Embajador #${numStr}</span></div>
+          <div class="active-trip-emb-sub">${escapeHtml(emb.especialidad)} · Podés editar libremente tu copia y llevarla offline</div>
+        </div>
+        <span class="active-trip-emb-link">Ver perfil y redes <i class="fa-solid fa-arrow-right"></i></span>
+      `;
+      destinosEl.parentElement.insertBefore(bar, destinosEl);
+    }
+    window.renderActiveTripEmbajadorSeal = renderActiveTripEmbajadorSeal;
+
+    // Tira compacta con presencia editorial en portada (mantiene Home 100vh sin scroll)
+    function renderEmbajadoresHome() {
+      const section = document.getElementById('embajadoresHomeSection');
+      if (!section || !PLUX_EMBAJADORES.length) return;
+
+      const pillsHtml = PLUX_EMBAJADORES.map(emb => {
+        const rutas = getEmbajadorTemplates(emb.slug);
+        const numStr = String(emb.numero).padStart(2, '0');
+        return `
+          <div class="embajador-strip-item" onclick="window.abrirPerfilEmbajador('${escapeHtml(emb.slug)}')" title="Ver perfil oficial y rutas de ${escapeHtml(emb.nombre)}">
+            <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="embajador-strip-avatar" />
+            <div class="embajador-strip-info">
+              <span class="embajador-strip-badge">${getEmbajadorSealSvg(12)} FUNDADOR #${numStr}</span>
+              <span class="embajador-strip-name">${escapeHtml(emb.nombre)}</span>
+              <span class="embajador-strip-meta">· ${escapeHtml(emb.especialidad)}</span>
+            </div>
+            <span class="embajador-strip-cta">Explorar ${rutas.length} rutas <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        `;
+      }).join('');
+
+      section.innerHTML = `<div class="embajadores-strip-bar">${pillsHtml}</div>`;
+    }
+    window.renderEmbajadoresHome = renderEmbajadoresHome;
+
+    // Cierre con tecla Escape y botón Atrás (popstate)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('modal-embajador-perfil')) {
+        cerrarPerfilEmbajador();
+      }
+    });
+    window.addEventListener('popstate', () => {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('embajador');
+      if (slug && getEmbajadorBySlug(slug)) {
+        abrirPerfilEmbajador(slug, false);
+      } else if (document.getElementById('modal-embajador-perfil')) {
+        cerrarPerfilEmbajador(true);
+      }
+    });
+
+    function initEmbajadoresUI() {
+      renderEmbajadoresHome();
+      renderActiveTripEmbajadorSeal();
+      if (typeof window.updateUserButtonDisplay === 'function') {
+        window.updateUserButtonDisplay();
+      }
+      const params = new URLSearchParams(window.location.search);
+      const hasOtherDeepLink = params.has('join') || params.has('code') || params.has('plantilla') || params.has('template') || params.has('destino') || window.location.pathname.includes('/join/');
+      const embSlug = params.get('embajador');
+      if (embSlug && !hasOtherDeepLink && getEmbajadorBySlug(embSlug)) {
+        setTimeout(() => abrirPerfilEmbajador(embSlug, false), 180);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initEmbajadoresUI);
+    } else {
+      initEmbajadoresUI();
+    }
+
+    window.PLUX_EMBAJADORES = PLUX_EMBAJADORES;
+    window.getEmbajadorBySlug = getEmbajadorBySlug;
+    window.getEmbajadorByAccount = getEmbajadorByAccount;
+    window.getCurrentEmbajador = getCurrentEmbajador;
+    window.getEmbajadorSealSvg = getEmbajadorSealSvg;
+    window.getEmbajadorBadgeHtml = getEmbajadorBadgeHtml;
+    window.getEmbajadorTemplates = getEmbajadorTemplates;
     window.getPluxSyncedTemplatesData = getPluxSyncedTemplatesData;
     window.getHeartSvg = getHeartSvg;
     window.getCreatorBadgeHtml = getCreatorBadgeHtml;

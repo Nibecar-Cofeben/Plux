@@ -152,7 +152,7 @@
     
     document.body.classList.remove(
       'theme-claro', 'theme-oscuro', 'theme-tokyo',
-      'theme-grid', 'theme-starship', 'theme-terminal', 'theme-ares'
+      'theme-grid', 'theme-starship', 'theme-terminal', 'theme-ares', 'theme-minecraft'
     );
     document.body.classList.add(t);
     

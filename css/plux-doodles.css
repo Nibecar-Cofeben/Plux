@@ -229,53 +229,65 @@
     }
 
     /* =========================================================
-       MODO MINECRAFT ULTRA PROFUNDO (TEMA CÚBICO Y VOXEL 360°)
+       TEMA OFICIAL / MODO MINECRAFT (VOXEL 360° MEJORADO)
        ========================================================= */
-    body.minecraft-mode {
+    body.minecraft-mode,
+    body.theme-minecraft {
       image-rendering: pixelated;
-      background: #4a80ba !important; /* Minecraft daytime sky */
+      background: #4a80ba !important;
       position: relative;
     }
-    
-    body.minecraft-mode .welcome {
+
+    body.minecraft-mode .welcome,
+    body.theme-minecraft .welcome {
       background: transparent !important;
     }
 
-    /* Cielo y nubes cúbicas de Minecraft */
-    body.minecraft-mode #bg-parallax {
+    /* Cielo, sol cuadrado, nubes cúbicas y horizonte de césped/tierra */
+    body.minecraft-mode #bg-parallax,
+    body.theme-minecraft #bg-parallax {
       position: fixed;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100vw;
       height: 100vh;
-      background: linear-gradient(180deg, #3b71ab 0%, #70a4de 55%, #9bc2ea 100%) !important;
+      background:
+        linear-gradient(180deg, transparent calc(100% - 26px), #5b8e31 calc(100% - 26px), #74b03f calc(100% - 18px), #497525 calc(100% - 16px), #866043 calc(100% - 16px), #6b4b33 100%),
+        linear-gradient(180deg, #35679e 0%, #5a93cf 50%, #99c6ee 86%, #b8dcfa 100%) !important;
       opacity: 1 !important;
       z-index: 0;
       pointer-events: none;
     }
-    body.minecraft-mode #bg-parallax::before {
+    body.minecraft-mode #bg-parallax::before,
+    body.theme-minecraft #bg-parallax::before {
       content: "";
       position: fixed;
-      top: 35px;
-      right: 75px;
-      width: 58px;
-      height: 58px;
-      background: #ffffea;
-      box-shadow: 0 0 0 6px rgba(255, 255, 234, 0.4), 0 0 30px #ffffea;
+      top: 38px;
+      right: 78px;
+      width: 56px;
+      height: 56px;
+      background: #fffbe6;
+      border: 4px solid #fef08a;
+      box-shadow: 0 0 0 8px rgba(254, 240, 138, 0.28), 0 0 36px rgba(255, 251, 230, 0.85);
       image-rendering: pixelated;
       z-index: 1;
       pointer-events: none;
     }
-    body.minecraft-mode #bg-parallax::after {
+    body.minecraft-mode #bg-parallax::after,
+    body.theme-minecraft #bg-parallax::after {
       content: "";
       position: fixed;
-      top: 95px;
+      top: 86px;
       left: 0;
       width: 200vw;
-      height: 48px;
-      background: repeating-linear-gradient(90deg, #ffffff 0px, #ffffff 130px, transparent 130px, transparent 260px);
-      opacity: 0.75;
-      animation: driftClouds 45s linear infinite;
+      height: 44px;
+      background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.88) 0px, rgba(255,255,255,0.88) 110px, transparent 110px, transparent 220px),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 40px, rgba(235,245,255,0.65) 40px, rgba(235,245,255,0.65) 160px, transparent 160px, transparent 300px);
+      background-size: 100% 24px, 100% 18px;
+      background-position: 0 0, 0 22px;
+      background-repeat: repeat-x;
+      opacity: 0.8;
+      animation: driftClouds 52s linear infinite;
       z-index: 1;
       pointer-events: none;
     }
@@ -284,9 +296,10 @@
       100% { transform: translateX(-50%); }
     }
 
-    body.minecraft-mode .logo-bubble {
+    body.minecraft-mode .logo-bubble,
+    body.theme-minecraft .logo-bubble {
       font-family: 'Press Start 2P', monospace !important;
-      font-size: 2.6rem !important;
+      font-size: 2.5rem !important;
       letter-spacing: -2px !important;
       border-radius: 0px !important;
       background: linear-gradient(180deg, #5b8e31 0%, #5b8e31 38%, #866043 38%, #866043 100%) !important;
@@ -295,74 +308,147 @@
       text-shadow: 3px 3px 0 #1b1207 !important;
       animation: none !important;
     }
-    body.minecraft-mode .logo-bubble:hover {
+    body.minecraft-mode .logo-bubble:hover,
+    body.theme-minecraft .logo-bubble:hover {
       transform: scale(1.02) !important;
       box-shadow: inset 4px 4px 0 #7ec83e, inset -4px -4px 0 #4a3424, 8px 8px 0 rgba(0,0,0,0.9) !important;
     }
 
-    body.minecraft-mode .main-btn {
+    body.minecraft-mode .main-btn,
+    body.theme-minecraft .main-btn {
       font-family: 'Press Start 2P', monospace !important;
-      font-size: 0.75rem !important;
-      line-height: 1.4 !important;
+      font-size: 0.72rem !important;
+      line-height: 1.45 !important;
       border-radius: 0px !important;
       background: #737373 !important;
       border: 3px solid #000000 !important;
-      box-shadow: inset 3px 3px 0 #adadad, inset -3px -3px 0 #424242, 4px 4px 0 rgba(0,0,0,0.7) !important;
+      box-shadow: inset 3px 3px 0 #adadad, inset -3px -3px 0 #424242, 4px 4px 0 rgba(0,0,0,0.75) !important;
       color: #ffffff !important;
       text-shadow: 2px 2px 0 #1a1a1a !important;
-      padding: 16px 20px !important;
-      transition: all 0.1s ease !important;
+      padding: 15px 18px !important;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s ease !important;
     }
-    body.minecraft-mode .main-btn:hover {
+    body.minecraft-mode .main-btn:hover,
+    body.theme-minecraft .main-btn:hover {
       background: #878787 !important;
-      transform: none !important;
-      box-shadow: inset 3px 3px 0 #ffffff, inset -3px -3px 0 #333333, 4px 4px 0 rgba(0,0,0,0.9) !important;
+      transform: translate(-1px, -1px) !important;
+      box-shadow: inset 3px 3px 0 #ffffff, inset -3px -3px 0 #333333, 5px 5px 0 rgba(0,0,0,0.9) !important;
     }
-    body.minecraft-mode .main-btn:active {
-      box-shadow: inset 3px 3px 0 #2b2b2b, inset -3px -3px 0 #8c8c8c !important;
+    body.minecraft-mode .main-btn:active,
+    body.theme-minecraft .main-btn:active {
+      transform: translate(2px, 2px) !important;
+      box-shadow: inset 3px 3px 0 #2b2b2b, inset -3px -3px 0 #8c8c8c, 2px 2px 0 rgba(0,0,0,0.8) !important;
     }
-    body.minecraft-mode .main-btn.discover-btn {
-      background: #1e3a5f !important;
-      box-shadow: inset 3px 3px 0 #38bdf8, inset -3px -3px 0 #0c1e33, 4px 4px 0 rgba(0,0,0,0.8) !important;
-      font-size: 0.95rem !important;
+    body.minecraft-mode .main-btn.discover-btn,
+    body.theme-minecraft .main-btn.discover-btn {
+      background: #1e4b7a !important;
+      box-shadow: inset 3px 3px 0 #38bdf8, inset -3px -3px 0 #0c233c, 4px 4px 0 rgba(0,0,0,0.8) !important;
+      font-size: 0.88rem !important;
     }
-    body.minecraft-mode .main-btn.tools-btn {
-      background: #581c87 !important;
+    body.minecraft-mode .main-btn.tools-btn,
+    body.theme-minecraft .main-btn.tools-btn {
+      background: #5b21b6 !important;
       box-shadow: inset 3px 3px 0 #c084fc, inset -3px -3px 0 #2e1065, 4px 4px 0 rgba(0,0,0,0.8) !important;
     }
 
-    body.minecraft-mode .doodle-info-card {
+    /* Selectores superiores y menús estilo inventario */
+    body.minecraft-mode .top-selectors .lang-button,
+    body.minecraft-mode .top-selectors .theme-button,
+    body.minecraft-mode .top-selectors .currency-button,
+    body.minecraft-mode .top-selectors .tour-button,
+    body.minecraft-mode .top-selectors .user-button,
+    body.minecraft-mode .top-selectors .chat-social-button,
+    body.theme-minecraft .top-selectors .lang-button,
+    body.theme-minecraft .top-selectors .theme-button,
+    body.theme-minecraft .top-selectors .currency-button,
+    body.theme-minecraft .top-selectors .tour-button,
+    body.theme-minecraft .top-selectors .user-button,
+    body.theme-minecraft .top-selectors .chat-social-button {
+      border-radius: 2px !important;
+      background: #6b7280 !important;
+      border: 2px solid #000000 !important;
+      box-shadow: inset 2px 2px 0 #9ca3af, inset -2px -2px 0 #374151, 2px 2px 0 rgba(0,0,0,0.7) !important;
+      color: #ffffff !important;
+    }
+    body.minecraft-mode .lang-dropdown,
+    body.minecraft-mode .theme-dropdown,
+    body.minecraft-mode .currency-dropdown,
+    body.theme-minecraft .lang-dropdown,
+    body.theme-minecraft .theme-dropdown,
+    body.theme-minecraft .currency-dropdown {
+      border-radius: 2px !important;
+      background: #27272a !important;
+      border: 3px solid #000000 !important;
+      box-shadow: inset 2px 2px 0 #52525b, inset -2px -2px 0 #18181b, 6px 6px 0 rgba(0,0,0,0.8) !important;
+    }
+
+    /* Bloques de la app (Itinerario, Modales, Descubrir, Herramientas) */
+    body.minecraft-mode .container,
+    body.minecraft-mode .ciudad-block,
+    body.minecraft-mode .dia-card,
+    body.minecraft-mode .lugar-card,
+    body.minecraft-mode .modal-content,
+    body.minecraft-mode .cuenta-content,
+    body.minecraft-mode .resumen-content,
+    body.minecraft-mode .herramienta-card,
+    body.minecraft-mode .foro-thread-card,
+    body.minecraft-mode .reservas-panel-card,
+    body.theme-minecraft .container,
+    body.theme-minecraft .ciudad-block,
+    body.theme-minecraft .dia-card,
+    body.theme-minecraft .lugar-card,
+    body.theme-minecraft .modal-content,
+    body.theme-minecraft .cuenta-content,
+    body.theme-minecraft .resumen-content,
+    body.theme-minecraft .herramienta-card,
+    body.theme-minecraft .foro-thread-card,
+    body.theme-minecraft .reservas-panel-card {
+      border-radius: 2px !important;
+      border: 3px solid #000000 !important;
+      box-shadow: inset 2px 2px 0 rgba(255,255,255,0.12), inset -2px -2px 0 rgba(0,0,0,0.45), 5px 5px 0 rgba(0,0,0,0.65) !important;
+    }
+    body.minecraft-mode .container,
+    body.theme-minecraft .container {
+      background: rgba(30, 32, 38, 0.94) !important;
+    }
+    body.minecraft-mode .doodle-info-card,
+    body.theme-minecraft .doodle-info-card {
       font-family: 'Press Start 2P', monospace !important;
       border-radius: 0px !important;
       background: #2b2b2b !important;
       border: 4px solid #000000 !important;
       box-shadow: inset 3px 3px 0 #5c5c5c, inset -3px -3px 0 #141414, 6px 6px 0 rgba(0,0,0,0.8) !important;
     }
-    body.minecraft-mode .doodle-card-title {
+    body.minecraft-mode .doodle-card-title,
+    body.theme-minecraft .doodle-card-title {
       font-family: 'Press Start 2P', monospace !important;
       font-size: 0.85rem !important;
       color: #ffff55 !important;
       text-shadow: 2px 2px 0 #3f3f00 !important;
     }
-    body.minecraft-mode .doodle-card-desc {
+    body.minecraft-mode .doodle-card-desc,
+    body.theme-minecraft .doodle-card-desc {
       font-family: 'Press Start 2P', monospace !important;
       font-size: 0.55rem !important;
       line-height: 1.6 !important;
-      color: #aaaaaa !important;
+      color: #d4d4d8 !important;
     }
-    body.minecraft-mode .doodle-card-date {
+    body.minecraft-mode .doodle-card-date,
+    body.theme-minecraft .doodle-card-date {
       font-family: 'Press Start 2P', monospace !important;
       font-size: 0.55rem !important;
       color: #55ff55 !important;
     }
-    body.minecraft-mode .btn-card-info {
+    body.minecraft-mode .btn-card-info,
+    body.theme-minecraft .btn-card-info {
       font-family: 'Press Start 2P', monospace !important;
       font-size: 0.55rem !important;
       border-radius: 0px !important;
       box-shadow: inset 2px 2px 0 #adadad, inset -2px -2px 0 #373737 !important;
       border: 2px solid #000000 !important;
     }
-    body.minecraft-mode .btn-card-action {
+    body.minecraft-mode .btn-card-action,
+    body.theme-minecraft .btn-card-action {
       font-family: 'Press Start 2P', monospace !important;
       font-size: 0.52rem !important;
       padding: 0 6px !important;
@@ -371,25 +457,42 @@
       border: 2px solid #000000 !important;
       white-space: nowrap !important;
     }
-    body.minecraft-mode .btn-card-dismiss {
+    body.minecraft-mode .btn-card-dismiss,
+    body.theme-minecraft .btn-card-dismiss {
       border-radius: 0px !important;
       border: 2px solid #000000 !important;
     }
-    body.minecraft-mode .inspo-card {
+    body.minecraft-mode .inspo-card,
+    body.theme-minecraft .inspo-card {
       border-radius: 0px !important;
       border: 3px solid #000000 !important;
-      box-shadow: 4px 4px 0 rgba(0,0,0,0.7) !important;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.75) !important;
     }
-    body.minecraft-mode .inspo-title {
+    body.minecraft-mode .inspo-title,
+    body.theme-minecraft .inspo-title {
       font-family: 'Press Start 2P', monospace !important;
-      font-size: 0.75rem !important;
+      font-size: 0.72rem !important;
       color: #ffffff !important;
+      text-shadow: 2px 2px 0 #000 !important;
+    }
+
+    /* Screen Shake para TNT */
+    @keyframes mcTntShake {
+      0%, 100% { transform: translate(0, 0); }
+      15% { transform: translate(-6px, 4px); }
+      30% { transform: translate(6px, -5px); }
+      45% { transform: translate(-5px, -3px); }
+      60% { transform: translate(5px, 4px); }
+      75% { transform: translate(-3px, 2px); }
+    }
+    body.mc-tnt-shake {
+      animation: mcTntShake 0.45s cubic-bezier(.36,.07,.19,.97) both;
     }
 
     /* BARRA HUD DE MINECRAFT (HOTBAR + CORAZONES + HAMBRE + XP) */
     .mc-hud-container {
       position: fixed;
-      bottom: 74px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 1100;
@@ -400,29 +503,83 @@
       pointer-events: auto;
       user-select: none;
       animation: slideUpHud 0.3s ease;
+      max-width: 96vw;
     }
     @keyframes slideUpHud {
       from { transform: translateX(-50%) translateY(30px); opacity: 0; }
       to { transform: translateX(-50%) translateY(0); opacity: 1; }
     }
-    body.minecraft-mode .mc-hud-container {
+    body.minecraft-mode .mc-hud-container,
+    body.theme-minecraft .mc-hud-container {
       display: flex;
+    }
+    .mc-hud-container.minimized .mc-status-bars,
+    .mc-hud-container.minimized .mc-xp-bar-wrap,
+    .mc-hud-container.minimized .mc-hotbar {
+      display: none;
+    }
+    .mc-hud-container.minimized {
+      left: auto;
+      right: 16px;
+      bottom: 16px;
+      transform: none;
+    }
+    .mc-hud-container.minimized::after {
+      content: "⛏️ HUD";
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.58rem;
+      background: #2b2b2b;
+      color: #80ff00;
+      border: 2px solid #000000;
+      box-shadow: inset 2px 2px 0 #5c5c5c, inset -2px -2px 0 #141414, 3px 3px 0 rgba(0,0,0,0.8);
+      padding: 8px 10px;
+      cursor: pointer;
     }
 
     .mc-status-bars {
       display: flex;
       justify-content: space-between;
-      width: 400px;
+      align-items: center;
+      width: min(92vw, 400px);
       padding: 0 4px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      gap: 6px;
     }
     .mc-hearts, .mc-hunger {
       display: flex;
       gap: 2px;
       filter: drop-shadow(1px 1px 0 #000);
+      cursor: pointer;
+    }
+    .mc-status-pulse {
+      animation: mcPulse 0.35s ease;
+    }
+    @keyframes mcPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+    .mc-hud-toggle {
+      background: #3f3f46;
+      color: #e4e4e7;
+      border: 2px solid #000000;
+      box-shadow: inset 1px 1px 0 #71717a, inset -1px -1px 0 #18181b;
+      width: 22px;
+      height: 22px;
+      font-size: 0.72rem;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .mc-hud-toggle:hover {
+      background: #52525b;
+      color: #ffffff;
     }
     .mc-xp-bar-wrap {
-      width: 400px;
+      width: min(92vw, 400px);
       height: 7px;
       background: #000000;
       border: 1px solid #373737;
@@ -433,6 +590,7 @@
       height: 100%;
       background: #80ff00;
       box-shadow: 0 0 6px #80ff00;
+      transition: width 0.25s ease;
     }
     .mc-xp-level {
       position: absolute;
@@ -485,6 +643,19 @@
       font-size: 0.45rem;
       color: #ffffff;
       text-shadow: 1px 1px 0 #000;
+    }
+    @media (max-width: 480px) {
+      .mc-hud-container {
+        bottom: 14px;
+      }
+      .mc-status-bars {
+        font-size: 0.72rem;
+      }
+      .mc-slot {
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
+      }
     }
 
     /* =========================================================

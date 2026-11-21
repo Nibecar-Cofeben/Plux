@@ -1290,6 +1290,10 @@
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                 <span id="txtTabParaTi">Para ti</span>
               </button>
+              <button class="descubrir-tab-btn" id="tabBtn-embajadores" onclick="window.cambiarTabDescubrir('embajadores')">
+                <i class="fa-solid fa-award" style="color:var(--verde);"></i>
+                <span id="txtTabEmbajadores">Embajadores</span>
+              </button>
               <button class="descubrir-tab-btn" id="tabBtn-destinos" onclick="window.cambiarTabDescubrir('destinos')">
                 <i class="fa-solid fa-earth-americas"></i>
                 <span id="txtTabDestinos">Explorar Destinos</span>
@@ -1317,6 +1321,11 @@
               <!-- Tab 1: Para ti (Contextual) -->
               <div class="descubrir-tab-pane active" id="pane-descubrir-para_ti">
                 <div id="descubrir-context-content"></div>
+              </div>
+
+              <!-- Tab Embajadores Fundadores -->
+              <div class="descubrir-tab-pane" id="pane-descubrir-embajadores">
+                <div id="descubrir-embajadores-content"></div>
               </div>
 
               <!-- Tab 2: Explorar Destinos -->
@@ -1480,6 +1489,121 @@
     window.abrirDescubrirModalUnified = abrirDescubrir;
     window.cerrarDescubrirModalUnified = cerrarDescubrir;
 
+    function buildEmbajadorSpotlightBannerHtml() {
+      const embs = Array.isArray(window.PLUX_EMBAJADORES) ? window.PLUX_EMBAJADORES : [];
+      if (!embs.length) return '';
+      const emb = embs[0];
+      const seal = typeof window.getEmbajadorSealSvg === 'function' ? window.getEmbajadorSealSvg(15) : '';
+      const rutas = typeof window.getEmbajadorTemplates === 'function' ? window.getEmbajadorTemplates(emb.slug) : [];
+      const firstRouteId = rutas[0]?.id || 'oficial_carretera_austral_mochila';
+      return `
+        <div class="descubrir-embajador-banner" onclick="window.cambiarTabDescubrir('embajadores')" style="background-image:url('${escapeHtml(emb.cover)}'); margin: 0 0 20px 0;">
+          <div class="descubrir-embajador-overlay"></div>
+          <div class="descubrir-embajador-inner">
+            <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="descubrir-embajador-avatar" />
+            <div style="flex:1; min-width:220px;">
+              <div class="descubrir-embajador-kicker">${seal}<span>EMBAJADOR FUNDADOR #${String(emb.numero).padStart(2, '0')} · RUTAS OFICIALES DESTACADAS</span></div>
+              <div class="descubrir-embajador-name">${escapeHtml(emb.nombre)} <span style="font-weight:500; opacity:0.85;">· ${escapeHtml(emb.subtitulo)}</span></div>
+              <div class="descubrir-embajador-sub">${escapeHtml(emb.especialidad)} · ${rutas.length} itinerarios reales listos para clonar offline</div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="descubrir-embajador-btn" style="background:var(--verde,#10b981); color:#04120c;" onclick="event.stopPropagation(); window.clonarPlantillaCompleta && window.clonarPlantillaCompleta('${escapeHtml(firstRouteId)}', 'oficial')">
+                <i class="fa-solid fa-clone"></i> Clonar Carretera Austral
+              </button>
+              <button type="button" class="descubrir-embajador-btn" onclick="event.stopPropagation(); window.cambiarTabDescubrir('embajadores')">
+                Ver perfil y rutas <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDescubrirEmbajadores() {
+      const container = document.getElementById('descubrir-embajadores-content');
+      if (!container) return;
+      const embs = Array.isArray(window.PLUX_EMBAJADORES) ? window.PLUX_EMBAJADORES : [];
+      const seal = typeof window.getEmbajadorSealSvg === 'function' ? window.getEmbajadorSealSvg(15) : '';
+
+      if (!embs.length) {
+        container.innerHTML = `<div style="padding:36px; text-align:center; color:var(--gris);">Próximamente nuevos Embajadores Fundadores.</div>`;
+        return;
+      }
+
+      container.innerHTML = embs.map(emb => {
+        const rutas = typeof window.getEmbajadorTemplates === 'function' ? window.getEmbajadorTemplates(emb.slug) : [];
+        const numStr = String(emb.numero).padStart(2, '0');
+        const redesHtml = (emb.redes || []).map(r => {
+          const icon = r.tipo === 'youtube' ? '<i class="fa-brands fa-youtube"></i>' : (r.tipo === 'instagram' ? '<i class="fa-brands fa-instagram"></i>' : '<i class="fa-solid fa-globe"></i>');
+          return `<button type="button" class="emb-pill-btn emb-pill-${escapeHtml(r.tipo)}" onclick="window.abrirRedEmbajador && window.abrirRedEmbajador('${escapeHtml(emb.slug)}', '${escapeHtml(r.label)}', '${escapeHtml(r.url)}', event)">${icon}<span>${escapeHtml(r.label)}</span></button>`;
+        }).join('');
+
+        const rutasHtml = rutas.map(tpl => {
+          const daysCount = (tpl.destinos || []).reduce((acc, d) => acc + ((d.dias || []).length || 0), 0);
+          const eventsCount = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + (dia.eventos?.length || 0), 0), 0);
+          const paradas = (tpl.destinos || []).map(d => d.nombre).join(' → ');
+          const originType = (tpl.id && tpl.id.startsWith('emb_')) ? 'comunidad' : 'oficial';
+          const cover = tpl.coverImg || emb.cover;
+          return `
+            <div class="embajador-route-card" style="background:rgba(15,23,42,0.75);">
+              <div class="embajador-route-cover" style="background-image:url('${escapeHtml(cover)}'); min-height:142px;">
+                <div class="embajador-route-cover-overlay"></div>
+                <div class="embajador-route-cover-top">
+                  <span class="emb-route-tag">Oficial Destacada</span>
+                  <span class="emb-route-meta">${daysCount} días · ${eventsCount} paradas ${tpl.presupuestoAprox ? '· Est. ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
+                </div>
+                <div class="embajador-route-cover-bottom">
+                  <div class="embajador-route-title" style="font-size:1.12rem;">${escapeHtml(tpl.nombre)}</div>
+                  <div class="embajador-route-stops">${escapeHtml(paradas)}</div>
+                </div>
+              </div>
+              <div class="embajador-route-body">
+                <div class="embajador-route-desc">${escapeHtml(tpl.descripcion)}</div>
+                <div class="embajador-route-actions">
+                  <button type="button" class="embajador-btn-clone" onclick="window.clonarPlantillaCompleta && window.clonarPlantillaCompleta('${escapeHtml(tpl.id)}', '${originType}')">
+                    <i class="fa-solid fa-clone"></i> Clonar ruta en mi viaje
+                  </button>
+                  <button type="button" class="embajador-btn-save" onclick="window.guardarPlantillaEnMisPlantillas && window.guardarPlantillaEnMisPlantillas('${escapeHtml(tpl.id)}', '${originType}', event)">
+                    <i class="fa-regular fa-bookmark"></i> Guardar
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div style="border-radius:20px; overflow:hidden; border:1px solid rgba(16,185,129,0.32); background:rgba(15,23,42,0.85); margin-bottom:24px;">
+            <div class="embajador-modal-banner" style="background-image:url('${escapeHtml(emb.cover)}'); min-height:190px; padding:24px 28px;">
+              <div class="embajador-modal-banner-grad"></div>
+              <div class="embajador-modal-identity">
+                <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="embajador-avatar-img-lg" style="width:76px; height:76px;" />
+                <div style="flex:1; min-width:200px;">
+                  <div class="embajador-founder-tag">${seal}<span>EMBAJADOR FUNDADOR #${numStr}</span></div>
+                  <div class="embajador-modal-name" style="font-size:1.6rem;">${escapeHtml(emb.nombre)}</div>
+                  <div class="embajador-modal-sub">${escapeHtml(emb.subtitulo)} · ${escapeHtml(emb.especialidad)}</div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:22px 28px 26px;">
+              <div class="embajador-modal-bio" style="font-size:0.92rem; margin-bottom:16px;">${escapeHtml(emb.bio)}</div>
+              <div class="embajador-modal-socials" style="margin-bottom:22px;">
+                ${redesHtml}
+                <button type="button" class="emb-pill-btn emb-pill-share" onclick="window.copiarLinkEmbajador && window.copiarLinkEmbajador('${escapeHtml(emb.slug)}', event)">
+                  <i class="fa-solid fa-link"></i><span>Copiar enlace oficial</span>
+                </button>
+              </div>
+              <div class="embajador-routes-heading" style="margin-bottom:14px;">Rutas oficiales destacadas de ${escapeHtml(emb.nombre)} (${rutas.length})</div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(290px, 1fr)); gap:16px;">
+                ${rutasHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    window.renderDescubrirEmbajadores = renderDescubrirEmbajadores;
+
     function cambiarTabDescubrir(tabKey) {
       document.querySelectorAll('.descubrir-tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.descubrir-tab-pane').forEach(pane => pane.classList.remove('active'));
@@ -1489,6 +1613,7 @@
 
       if (activeBtn) activeBtn.classList.add('active');
       if (activePane) activePane.classList.add('active');
+      if (tabKey === 'embajadores') renderDescubrirEmbajadores();
     }
 
     // ================== PESTAÑA 1: PARA TI (CONTEXTUAL) ==================
@@ -1510,11 +1635,13 @@
 
         const mainCity = (validDestinos.length > 0 && validDestinos[0].nombre) ? validDestinos[0].nombre.toLowerCase().trim() : '';
 
-        // Buscar actividades que coincidan con las ciudades del viaje
-        const ciudadesViaje = validDestinos.map(d => (d.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+        // Buscar actividades que coincidan con las ciudades del viaje (sin falsos positivos por subcadenas cortas)
+        const ciudadesViaje = validDestinos
+          .map(d => (d.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim())
+          .filter(c => c.length >= 3);
         const actividadesRecomendadas = PLUX_CURATED_ACTIVITIES.filter(act => {
           const actCity = (act.ciudad || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-          return ciudadesViaje.some(c => c && (actCity.includes(c) || c.includes(actCity)));
+          return ciudadesViaje.some(c => actCity === c || actCity.split(/[\s,]+/).includes(c));
         });
 
         // Buscar escapadas
@@ -1522,7 +1649,7 @@
         for (const c of ciudadesViaje) {
           if (!c) continue;
           for (const k in PLUX_NEARBY_GETAWAYS) {
-            if (c.includes(k) || k.includes(c)) {
+            if (c === k || k.split(/[\s,]+/).includes(c) || c.split(/[\s,]+/).includes(k)) {
               escapadas = escapadas.concat(PLUX_NEARBY_GETAWAYS[k]);
             }
           }
@@ -1542,6 +1669,7 @@
               </button>
             </div>
           </div>
+          ${buildEmbajadorSpotlightBannerHtml()}
         `;
         html += `
           <!-- Accesos Rápidos: Importar Reservas & Comunidad y Foros -->
@@ -1595,9 +1723,9 @@
         } else {
           html += `
             <div style="background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.15); border-radius:16px; padding:24px; text-align:center;">
-              <p style="color:var(--gris); margin:0 0 12px 0;">Explorando atracciones para ${escapeHtml(nombresDestinos)}...</p>
+              <p style="color:var(--gris); margin:0 0 12px 0;">¿Buscás qué hacer en ${escapeHtml(nombresDestinos)}?</p>
               <button class="btn-card-primary" style="max-width:280px; margin:0 auto;" onclick="window.buscarLugaresPorDestino('${escapeHtml(validDestinos[0]?.nombre || '')}')">
-                <i class="fa-solid fa-sparkles"></i> Buscar actividades con IA
+                <i class="fa-solid fa-magnifying-glass"></i> Buscar lugares reales
               </button>
             </div>
           `;
@@ -1639,8 +1767,8 @@
         html += `
           <div style="margin-top:30px; background:rgba(15,23,42,0.7); border:1px solid rgba(99,102,241,0.25); border-radius:20px; padding:22px;">
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-              <i class="fa-solid fa-brain" style="color:#818cf8; font-size:1.2rem;"></i>
-              <strong style="color:#ffffff; font-size:1rem;">Búsqueda Inteligente de Lugares con IA</strong>
+              <i class="fa-solid fa-compass" style="color:#818cf8; font-size:1.2rem;"></i>
+              <strong style="color:#ffffff; font-size:1rem;">Buscador de Lugares y Atracciones Reales</strong>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
               <input type="text" id="aiCustomSearchInput" placeholder="Escribe cualquier ciudad o atracción (ej: Trastevere, Kioto, Montmartre)..." style="flex:1; min-width:240px; padding:12px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:12px; color:white; font-size:0.9rem; outline:none;">
@@ -1670,6 +1798,8 @@
               </button>
             </div>
           </div>
+
+          ${buildEmbajadorSpotlightBannerHtml()}
 
           <!-- Accesos Rápidos: Importar Reservas & Comunidad y Foros -->
           <div class="descubrir-quick-modules-row">
@@ -1750,14 +1880,19 @@
               return topOficiales.map(tpl => {
                 const isLiked = syncData.likedSet && syncData.likedSet.has(tpl.id);
                 const votes = (tpl.likes || 0) + (isLiked ? 1 : 0);
-                const eventsCount = (tpl.destinos?.[0]?.dias || []).reduce((acc, d) => acc + (d.eventos?.length || 0), 0);
+                const eventsCount = (tpl.destinos || []).reduce((acc, dest) => acc + (dest.dias || []).reduce((a, d) => a + (d.eventos?.length || 0), 0), 0);
+                const embBadge = (typeof window.getEmbajadorBadgeHtml === 'function') ? window.getEmbajadorBadgeHtml(tpl) : '';
+                const originType = (tpl.id && tpl.id.startsWith('emb_')) ? 'comunidad' : 'oficial';
                 return `
-                  <div style="background:rgba(15,23,42,0.75); border:1px solid rgba(255,255,255,0.09); border-radius:16px; padding:18px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+                  <div style="background:rgba(15,23,42,0.82); border:1px solid ${tpl.destacadaOficial ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.09)'}; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between;">
+                    ${tpl.coverImg ? `<div style="height:108px; background:url('${escapeHtml(tpl.coverImg)}') center/cover no-repeat; position:relative;"><div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(9,13,22,0.12), rgba(15,23,42,0.92));"></div></div>` : ''}
+                    <div style="padding:16px 18px 18px; display:flex; flex-direction:column; justify-content:space-between; gap:12px; flex:1;">
                     <div>
                       <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px;">
-                        <span style="font-size:0.72rem; color:var(--verde); font-weight:800; text-transform:uppercase; background:rgba(16,185,129,0.12); padding:3px 9px; border-radius:20px;">Plux Oficial · ${(tpl.tags && tpl.tags[0]) || '3 Días'}</span>
+                        <span style="font-size:0.72rem; color:var(--verde); font-weight:800; text-transform:uppercase; background:rgba(16,185,129,0.12); padding:3px 9px; border-radius:20px;">${tpl.destacadaOficial ? 'Oficial Destacada' : 'Plux Oficial'} · ${(tpl.tags && tpl.tags[0]) || '3 Días'}</span>
                         <span style="font-size:0.75rem; color:var(--gris);">${tpl.presupuestoAprox ? 'Est. ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
                       </div>
+                      ${embBadge ? `<div style="margin-bottom:6px;">${embBadge}</div>` : ''}
                       <h5 style="color:#ffffff; font-size:1.05rem; margin:4px 0 6px 0; font-weight:800;">${escapeHtml(tpl.nombre)}</h5>
                       <p style="font-size:0.82rem; color:var(--gris); margin:0 0 8px 0; line-height:1.45;">${escapeHtml(tpl.descripcion)}</p>
                       <span style="font-size:0.74rem; color:#38bdf8; font-weight:700;"><i class="fa-solid fa-calendar-check"></i> ${eventsCount} actividades incluidas</span>
@@ -1767,13 +1902,14 @@
                         <i class="fa-solid fa-heart" style="color:${isLiked ? '#f472b6' : 'inherit'};"></i> ${votes}
                       </button>
                       <div style="display:flex; gap:6px;">
-                        <button type="button" class="btn-card-secondary" style="padding:7px 11px; font-size:0.78rem;" onclick="window.guardarPlantillaEnMisPlantillas && window.guardarPlantillaEnMisPlantillas('${tpl.id}', 'oficial', event)" title="Guardar en Mis Plantillas">
+                        <button type="button" class="btn-card-secondary" style="padding:7px 11px; font-size:0.78rem;" onclick="window.guardarPlantillaEnMisPlantillas && window.guardarPlantillaEnMisPlantillas('${tpl.id}', '${originType}', event)" title="Guardar en Mis Plantillas">
                           <i class="fa-regular fa-bookmark"></i> Guardar
                         </button>
-                        <button type="button" class="btn-card-primary" style="padding:7px 13px; font-size:0.8rem;" onclick="window.clonarPlantillaCompleta && window.clonarPlantillaCompleta('${tpl.id}', 'oficial')">
+                        <button type="button" class="btn-card-primary" style="padding:7px 13px; font-size:0.8rem;" onclick="window.clonarPlantillaCompleta && window.clonarPlantillaCompleta('${tpl.id}', '${originType}')">
                           <i class="fa-solid fa-clone"></i> Clonar
                         </button>
                       </div>
+                    </div>
                     </div>
                   </div>
                 `;
@@ -2242,40 +2378,66 @@
       }
     }
 
-    // Búsqueda IA asistente
+    // Búsqueda de lugares reales (Catálogo curado Plux + Wikipedia verificada, sin inventar actividades)
     async function buscarLugaresPorDestino(ciudad) {
-      if (!ciudad) return;
+      const qRaw = (ciudad || '').trim();
+      if (!qRaw) return;
       const resultados = document.getElementById('feed-resultados');
       if (!resultados) return;
-      resultados.innerHTML = `<p style="color:var(--gris); padding:25px; text-align:center; font-size:1.05rem; animation:pulse 1s infinite;"><i class="fa-solid fa-sparkles" style="color:var(--verde);"></i> Analizando ${escapeHtml(ciudad)} con IA...</p>`;
-      
-      try {
-        const prompt = `Eres un experto guía turístico. Recomienda 6 lugares o actividades imperdibles en ${ciudad}. Devuelve ESTRICTAMENTE un JSON: {"lugares":[{"titulo":"Nombre","descripcion":"Breve descripción","costo":15,"duracion":"90 min"}]}`;
-        const textContent = await callAI(prompt);
-        if (!textContent) throw new Error('No response');
-        
-        const jsonStr = textContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        const suggestions = JSON.parse(jsonStr);
-        
+
+      const norm = qRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+      // 1. Buscar primero en el catálogo verificado de Plux
+      const locales = PLUX_CURATED_ACTIVITIES.filter(act => {
+        const c = (act.ciudad || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const n = (act.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return c.includes(norm) || n.includes(norm);
+      });
+
+      if (locales.length > 0) {
         let html = '<div class="descubrir-grid-actividades" style="margin-top:16px;">';
-        suggestions.lugares.forEach(p => {
+        locales.slice(0, 8).forEach(act => {
+          html += renderTarjetaActividadHTML(act, true);
+        });
+        html += '</div>';
+        resultados.innerHTML = html;
+        return;
+      }
+
+      // 2. Si no está en el catálogo local, consultar lugares reales en Wikipedia (sin inventar precios ni duraciones)
+      resultados.innerHTML = `<p style="color:var(--gris); padding:25px; text-align:center; font-size:1.05rem;"><i class="fa-solid fa-magnifying-glass" style="color:var(--verde);"></i> Buscando lugares reales en ${escapeHtml(qRaw)}...</p>`;
+
+      try {
+        const wikiUrl = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(qRaw + ' turismo atracciones')}&srlimit=6&utf8=1&format=json&origin=*`;
+        const resp = await fetch(wikiUrl);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        const items = data?.query?.search || [];
+
+        if (items.length === 0) {
+          resultados.innerHTML = `<p style="color:var(--gris); padding:20px; text-align:center;">No encontramos lugares verificados en el catálogo para "${escapeHtml(qRaw)}". Prueba con el nombre principal de la ciudad.</p>`;
+          return;
+        }
+
+        let html = '<div class="descubrir-grid-actividades" style="margin-top:16px;">';
+        items.forEach(item => {
+          const cleanDesc = String(item.snippet || '').replace(/<[^>]+>/g, '').trim();
+          const titleEsc = escapeHtml(item.title);
           html += `
             <div class="activity-card-rich">
               <div class="activity-card-header">
                 <div>
-                  <span style="font-size:0.75rem; color:var(--verde); font-weight:700; text-transform:uppercase;">${escapeHtml(ciudad)}</span>
-                  <h5>${escapeHtml(p.titulo)}</h5>
+                  <span style="font-size:0.75rem; color:var(--verde); font-weight:700; text-transform:uppercase;">${escapeHtml(qRaw)}</span>
+                  <h5>${titleEsc}</h5>
                 </div>
-                <span class="activity-card-cat-badge">Recomendado IA</span>
+                <span class="activity-card-cat-badge">Wikipedia</span>
               </div>
-              <p class="activity-card-desc">${escapeHtml(p.descripcion)}</p>
-              <div class="activity-card-meta">
-                <span class="activity-meta-item"><i class="fa-regular fa-clock"></i> ${escapeHtml(p.duracion || '60 min')}</span>
-                <span class="activity-meta-item"><i class="fa-solid fa-coins"></i> ~$${p.costo || 0} USD</span>
-              </div>
+              <p class="activity-card-desc">${escapeHtml(cleanDesc)}...</p>
               <div class="activity-card-footer">
-                <span class="activity-price-tag">${p.costo ? `~$${p.costo} USD` : 'Gratis / Consulta'}</span>
-                <button class="btn-add-activity-trip" onclick="window.añadirDesdeFeed('${escapeHtml(p.titulo)}', ${p.costo || 0}, '${escapeHtml(p.duracion || '60')}')">
+                <a href="https://es.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/ /g, '_'))}" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem; color:#38bdf8; text-decoration:none;">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver info
+                </a>
+                <button class="btn-add-activity-trip" onclick="window.añadirDesdeFeed('${titleEsc}', 0, '60', '${escapeHtml(qRaw)}')">
                   <i class="fa-solid fa-plus"></i> Añadir
                 </button>
               </div>
@@ -2284,9 +2446,9 @@
         });
         html += '</div>';
         resultados.innerHTML = html;
-      } catch(e) {
-        console.error('AI Feed Error:', e);
-        resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">No se pudo completar la consulta con IA. Intenta con otro término.</p>';
+      } catch (e) {
+        console.error('Error buscando lugares reales:', e);
+        resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">No se pudieron consultar lugares verificados en este momento. Verifica tu conexión o busca una ciudad del catálogo.</p>';
       }
     }
 
@@ -5025,7 +5187,9 @@ function renderizarComunidadForos() {
       ? itemsToRender.filter(({ tpl }) => {
           const destNames = (tpl.destinos || []).map(d => d.nombre || '').join(' ');
           const tagsStr = (tpl.tags || []).join(' ');
-          const hay = `${tpl.nombre || ''} ${tpl.descripcion || ''} ${tpl.autor || ''} ${destNames} ${tagsStr}`.toLowerCase();
+          const emb = (tpl.embajadorSlug && typeof window.getEmbajadorBySlug === 'function') ? window.getEmbajadorBySlug(tpl.embajadorSlug) : null;
+          const embStr = emb ? `${emb.nombre} ${emb.subtitulo} ${emb.especialidad} embajador` : '';
+          const hay = `${tpl.nombre || ''} ${tpl.descripcion || ''} ${tpl.autor || ''} ${destNames} ${tagsStr} ${embStr}`.toLowerCase();
           return hay.includes(qTpl);
         })
       : itemsToRender;
@@ -5043,16 +5207,19 @@ function renderizarComunidadForos() {
         const eventsCount = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + ((dia.eventos || []).length), 0), 0);
         const votes = (tpl.likes || 0) + (origin === 'oficial' && isLiked ? 1 : 0);
         const autorClean = (tpl.autor || (origin === 'oficial' ? 'Plux Oficial' : cuenta.nickname)).replace(/^@/, '');
+        const embBadge = (origin === 'oficial' && typeof window.getEmbajadorBadgeHtml === 'function') ? window.getEmbajadorBadgeHtml(tpl) : '';
 
         html += `
-          <div class="activity-card-rich">
+          <div class="activity-card-rich" style="${tpl.destacadaOficial ? 'border-color:rgba(16,185,129,0.4);' : ''}">
             <div>
+              ${tpl.coverImg ? `<div style="height:96px; margin:-16px -16px 12px -16px; border-radius:14px 14px 0 0; background:url('${escapeHtml(tpl.coverImg)}') center/cover no-repeat; position:relative;"><div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(9,13,22,0.1), rgba(15,23,42,0.85)); border-radius:14px 14px 0 0;"></div></div>` : ''}
               <div class="activity-card-header" style="margin-bottom:6px;">
                 <span style="font-size:0.72rem; font-weight:800; text-transform:uppercase; padding:3px 9px; border-radius:20px; background:${origin === 'oficial' ? 'rgba(16,185,129,0.15)' : (origin === 'mia' ? 'rgba(251,191,36,0.15)' : 'rgba(56,189,248,0.15)')}; color:${origin === 'oficial' ? 'var(--verde)' : (origin === 'mia' ? '#fbbf24' : '#38bdf8')};">
-                  ${origin === 'oficial' ? 'Plux Oficial' : (origin === 'mia' ? 'En Mis Plantillas' : `@${escapeHtml(autorClean)}`)}
+                  ${origin === 'oficial' ? (tpl.destacadaOficial ? 'Oficial Destacada' : 'Plux Oficial') : (origin === 'mia' ? 'En Mis Plantillas' : `@${escapeHtml(autorClean)}`)}
                 </span>
                 <span style="font-size:0.75rem; color:var(--gris); font-weight:700;">${daysCount}d · ${eventsCount} act.</span>
               </div>
+              ${embBadge ? `<div style="margin-bottom:6px;">${embBadge}</div>` : ''}
               <h5 style="margin:4px 0 6px 0; font-size:1.05rem; color:#fff; font-weight:800;">${escapeHtml(tpl.nombre)}</h5>
               <p class="activity-card-desc" style="margin-bottom:10px;">${escapeHtml(tpl.descripcion || `Ruta por ${(tpl.destinos || []).map(d => d.nombre).join(', ')}`)}</p>
               <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">

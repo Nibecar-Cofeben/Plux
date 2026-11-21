@@ -27,7 +27,15 @@
   <meta name="keywords" content="planificador de viajes, organizar itinerario, viajes colaborativos, presupuesto de viaje, mapa de ruta, turismo, guías de viaje, plux" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://plux.nibecarcofeben.com/" />
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" href="/plux-logo.png" />
+  <link rel="shortcut icon" type="image/png" href="/plux-logo.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#090d16" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Plux" />
+  <link rel="apple-touch-icon" href="/plux-logo.png" />
 
   <!-- Open Graph / Redes Sociales (Facebook, WhatsApp, Telegram, LinkedIn) -->
   <meta property="og:type" content="website" />
@@ -111,18 +119,19 @@
   <base href="/" />
   <link rel="stylesheet" href="/css/plux-herramientas.css">
   <link rel="stylesheet" href="/css/plux-wrapped.css">
-  <link rel="stylesheet" href="/styles.css?v=1790010000025">
+  <link rel="stylesheet" href="/styles.css?v=1790010000035">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
   <script defer src="/js/jspdf.umd.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000025">
+  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000029">
   
   <!-- Firebase (compat) Local Offline SDK -->
   <script defer src="/firebase/firebase-app-compat.js"></script>
@@ -130,17 +139,18 @@
   <script defer src="/firebase/firebase-database-compat.js"></script>
   <script defer src="/firebase/firebase-firestore-compat.js"></script>
   <!-- Plux Modular Architecture -->
-  <script defer src="/js/plux-i18n.js?v=1790010000027"></script>
-  <script defer src="/script.js?v=1790010000027"></script>
-  <script defer src="/js/plux-export-cards.js?v=1790010000027"></script>
-  <script defer src="/js/plux-templates.js?v=1790010000027"></script>
-  <script defer src="/js/plux-discover.js?v=1790010000027"></script>
+  <script defer src="/js/plux-i18n.js?v=1790010000031"></script>
+  <script defer src="/script.js?v=1790010000036"></script>
+  <script defer src="/js/plux-export-cards.js?v=1790010000028"></script>
+  <script defer src="/js/plux-templates.js?v=1790010000036"></script>
+  <script defer src="/js/plux-discover.js?v=1790010000035"></script>
   <script defer src="/js/plux-social-chat.js?v=1790010000027"></script>
   <script defer src="/js/plux-collab.js?v=1790010000027"></script>
-  <script defer src="/js/plux-doodles.js?v=1790010000027"></script>
+  <script defer src="/js/plux-doodles.js?v=1790010000031"></script>
     <script defer src="/js/plux-herramientas.js?v=1790010000025"></script>
   <script defer src="/js/plux-wrapped.js?v=1790010000025"></script>
-<script defer src="/plux-pro.js?v=1790010000025"></script>
+<script defer src="/plux-pro.js?v=1790010000031"></script>
+  <script defer src="/js/plux-offline.js?v=1790010000033"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -223,16 +233,17 @@
   <!-- BARRA HUD DE MINECRAFT ULTRA PROFUNDA -->
   <div class="mc-hud-container" id="mcHudContainer">
     <div class="mc-status-bars">
-      <div class="mc-hearts" title="Vida: 20/20">
+      <div class="mc-hearts" title="Vida: 20/20" onclick="window.pulseMcStatus && window.pulseMcStatus(this)">
         <span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span>
       </div>
-      <div class="mc-hunger" title="Comida: 20/20">
+      <div class="mc-hunger" title="Comida: 20/20" onclick="window.pulseMcStatus && window.pulseMcStatus(this)">
         <span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span>
       </div>
+      <button type="button" class="mc-hud-toggle" id="mcHudToggle" onclick="window.toggleMcHud && window.toggleMcHud()" title="Ocultar / Mostrar Hotbar">▾</button>
     </div>
     <div class="mc-xp-bar-wrap">
-      <div class="mc-xp-fill"></div>
-      <div class="mc-xp-level">64</div>
+      <div class="mc-xp-fill" id="mcXpFill"></div>
+      <div class="mc-xp-level" id="mcXpLevel">64</div>
     </div>
     <div class="mc-hotbar" id="mcHotbar">
       <div class="mc-slot active" data-slot="1" onclick="window.selectHotbarSlot(1)" title="[1] Pico de Diamante">⛏️<span class="mc-slot-num">1</span></div>
@@ -324,7 +335,16 @@
       </div>
       <div class="selector-wrapper" style="position:relative;">
         <div class="theme-button" id="themeButton" onclick="window.toggleThemeDropdown(event)" title="Tema">🎨</div>
-        <div class="theme-dropdown" id="themeDropdown" style="display:none;"></div>
+        <div class="theme-dropdown" id="themeDropdown" style="display:none;">
+          <div class="theme-option" data-theme="theme-claro" onclick="window.setTheme('theme-claro')">Claro</div>
+          <div class="theme-option active" data-theme="theme-oscuro" onclick="window.setTheme('theme-oscuro')">Oscuro</div>
+          <div class="theme-option" data-theme="theme-tokyo" onclick="window.setTheme('theme-tokyo')">Tokyo Night</div>
+          <div class="theme-option" data-theme="theme-grid" onclick="window.setTheme('theme-grid')">The Grid</div>
+          <div class="theme-option" data-theme="theme-terminal" onclick="window.setTheme('theme-terminal')">Terminal</div>
+          <div class="theme-option" data-theme="theme-starship" onclick="window.setTheme('theme-starship')">Starship</div>
+          <div class="theme-option" data-theme="theme-ares" onclick="window.setTheme('theme-ares')">Ares</div>
+          <div class="theme-option" data-theme="theme-minecraft" onclick="window.setTheme('theme-minecraft')">Minecraft</div>
+        </div>
       </div>
       <div class="selector-wrapper" style="position:relative;">
         <div class="currency-button" id="currencyButton" onclick="window.toggleCurrencyDropdown(event)" title="Moneda">EUR</div>
@@ -467,6 +487,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Embajadores Fundadores -->
+    <div class="embajadores-section" id="embajadoresHomeSection"></div>
 
     <div class="version">vD7.0 · 100% Gratis</div>
     <div class="footer-logo">nibecar cofeben</div>
@@ -663,6 +686,10 @@
           <i class="fa-solid fa-wand-magic-sparkles"></i>
           <span id="txtTabParaTi">Para ti</span>
         </button>
+        <button class="descubrir-tab-btn" id="tabBtn-embajadores" onclick="window.cambiarTabDescubrir('embajadores')">
+          <i class="fa-solid fa-award" style="color:var(--verde);"></i>
+          <span id="txtTabEmbajadores">Embajadores</span>
+        </button>
         <button class="descubrir-tab-btn" id="tabBtn-destinos" onclick="window.cambiarTabDescubrir('destinos')">
           <i class="fa-solid fa-earth-americas"></i>
           <span id="txtTabDestinos">Explorar Destinos</span>
@@ -691,6 +718,11 @@
         <!-- Tab 1: Para ti (Contextual) -->
         <div class="descubrir-tab-pane active" id="pane-descubrir-para_ti">
           <div id="descubrir-context-content"></div>
+        </div>
+
+        <!-- Tab Embajadores Fundadores -->
+        <div class="descubrir-tab-pane" id="pane-descubrir-embajadores">
+          <div id="descubrir-embajadores-content"></div>
         </div>
 
         <!-- Tab 2: Explorar Destinos -->

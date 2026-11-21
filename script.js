@@ -10,6 +10,7 @@
         return [];
       }
     }
+    window.getStoredTrips = getStoredTrips;
 
     function getStoredTemplates() {
       try {
@@ -337,24 +338,30 @@
     function updateUserButtonDisplay() {
       const btn = document.getElementById('cuentaButton');
       if (!btn) return;
-      const photo = localStorage.getItem('Plux_UserProfile_Photo') || (firebaseUser && firebaseUser.photoURL);
+      const activeEmb = typeof window.getCurrentEmbajador === 'function' ? window.getCurrentEmbajador() : null;
+      const photo = localStorage.getItem('Plux_UserProfile_Photo') || (firebaseUser && firebaseUser.photoURL) || (activeEmb && activeEmb.avatar);
       const isLogged = !!(currentNickname || (firebaseUser && firebaseUser.email) || (typeof currentUserUid !== 'undefined' && currentUserUid));
       if (isLogged) {
         btn.classList.add('logged-in');
-        btn.title = currentNickname ? `@${currentNickname}` : (firebaseUser ? (firebaseUser.displayName || firebaseUser.email) : 'Tu perfil');
+        btn.title = activeEmb
+          ? `${activeEmb.nombre} · Embajador Fundador #${String(activeEmb.numero).padStart(2, '0')}`
+          : (currentNickname ? `@${currentNickname}` : (firebaseUser ? (firebaseUser.displayName || firebaseUser.email) : 'Tu perfil'));
         if (photo) {
           btn.innerHTML = `<img src="${photo}" alt="Perfil" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
           btn.style.padding = '0';
           btn.style.overflow = 'hidden';
+          btn.style.border = activeEmb ? '2px solid #10b981' : '';
         } else {
           btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
           btn.style.padding = '';
+          btn.style.border = '';
         }
       } else {
         btn.classList.remove('logged-in');
         btn.title = (typeof t === 'function' ? t('cuenta_btn_title') : 'Tu perfil') || 'Tu perfil';
         btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
         btn.style.padding = '';
+        btn.style.border = '';
       }
     }
     window.updateUserButtonDisplay = updateUserButtonDisplay;
@@ -423,13 +430,22 @@
         
         const setEl = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
 
-        // Update profile header
-        setEl('profileName', nick);
-        setEl('profileEmail', email);
+        // Update profile header + Sello de Embajador Fundador si corresponde
+        const activeEmb = typeof window.getCurrentEmbajador === 'function' ? window.getCurrentEmbajador() : null;
+        const nameEl = document.getElementById('profileName');
+        if (nameEl) {
+          if (activeEmb && typeof window.getEmbajadorSealSvg === 'function') {
+            const numStr = String(activeEmb.numero).padStart(2, '0');
+            nameEl.innerHTML = `${escapeHtml(activeEmb.nombre)} ${window.getEmbajadorSealSvg(16)} <span class="embajador-account-chip">Embajador #${numStr}</span>`;
+          } else {
+            nameEl.innerText = nick;
+          }
+        }
+        setEl('profileEmail', activeEmb ? `${email} · ${activeEmb.especialidad}` : email);
         
-        // Update avatar image if user has custom photo or Google photo
-        const photo = localStorage.getItem('Plux_UserProfile_Photo') || (firebaseUser && firebaseUser.photoURL);
-        if (photo && !localStorage.getItem('Plux_UserProfile_Photo')) {
+        // Update avatar image if user has custom photo, Google photo, or official Ambassador avatar
+        const photo = localStorage.getItem('Plux_UserProfile_Photo') || (firebaseUser && firebaseUser.photoURL) || (activeEmb && activeEmb.avatar);
+        if (photo && !localStorage.getItem('Plux_UserProfile_Photo') && (!activeEmb || photo !== activeEmb.avatar)) {
           localStorage.setItem('Plux_UserProfile_Photo', photo);
         }
         const avatarEl = document.getElementById('profileAvatarInner');
@@ -441,6 +457,36 @@
           }
         }
         updateUserButtonDisplay();
+
+        // Panel especial de Embajador Fundador dentro del perfil
+        const existingEmbPanel = document.getElementById('embajadorAccountPanel');
+        if (existingEmbPanel) existingEmbPanel.remove();
+        if (activeEmb && cProf) {
+          const rutasCount = typeof window.getEmbajadorTemplates === 'function' ? window.getEmbajadorTemplates(activeEmb.slug).length : 0;
+          const panel = document.createElement('div');
+          panel.id = 'embajadorAccountPanel';
+          panel.className = 'embajador-account-panel';
+          panel.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+              <div>
+                <div style="font-size:0.72rem; font-weight:800; color:var(--verde); text-transform:uppercase; letter-spacing:0.5px;">Cuenta Oficial Verificada</div>
+                <div style="font-size:0.92rem; font-weight:800; color:var(--texto); margin-top:2px;">Embajador Fundador #${String(activeEmb.numero).padStart(2, '0')} · ${rutasCount} rutas activas</div>
+              </div>
+            </div>
+            <div style="font-size:0.78rem; color:var(--gris); line-height:1.45;">
+              Cada plantilla que publiques desde esta cuenta llevará tu sello oficial y aparecerá destacada en tu perfil público, Plantillas Oficiales y Descubrir.
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="embajador-btn-clone" style="padding:8px 12px; font-size:0.78rem;" onclick="document.getElementById('modal-cuenta').style.display='none'; window.abrirModalViajes && window.abrirModalViajes(); setTimeout(()=>window.switchTripsTab && window.switchTripsTab('templates'), 80);">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Publicar nueva ruta oficial
+              </button>
+              <button type="button" class="embajador-btn-save" style="padding:8px 12px; font-size:0.78rem;" onclick="document.getElementById('modal-cuenta').style.display='none'; window.abrirPerfilEmbajador && window.abrirPerfilEmbajador('${escapeHtml(activeEmb.slug)}');">
+                Ver mi perfil público
+              </button>
+            </div>
+          `;
+          cProf.insertBefore(panel, cProf.children[1] || null);
+        }
         
         // Calculate and update stats
         actualizarEstadisticasPerfil();
@@ -649,9 +695,9 @@
       if (submitBtn) submitBtn.disabled = true;
 
       try {
-        // Si no tiene @, es un Nickname directo
-        if (!loginVal.includes('@')) {
-          const nick = loginVal.toLowerCase().replace(/[^a-z0-9_]/g, '');
+        // Si no es email (no tiene @ o empieza con @ como @mochilaalhombro), es un Nickname directo
+        if (loginVal.startsWith('@') || !loginVal.includes('@')) {
+          const nick = loginVal.toLowerCase().replace(/[^a-z0-9]/g, '');
           if (nick.length < 3) {
             showToast('El nickname debe tener al menos 3 caracteres', 'error');
             return;
@@ -660,12 +706,16 @@
           currentUserUid = nick;
           localStorage.setItem('Plux_Nickname', nick);
           localStorage.setItem('Plux_Uid', nick);
+          const matchedEmb = typeof window.getEmbajadorByAccount === 'function' ? window.getEmbajadorByAccount(nick, '') : null;
+          if (matchedEmb && matchedEmb.avatar && !localStorage.getItem('Plux_UserProfile_Photo')) {
+            localStorage.setItem('Plux_UserProfile_Photo', matchedEmb.avatar);
+          }
           if (typeof updateUserButtonDisplay === 'function') updateUserButtonDisplay();
           
           await cargarPerfilUsuario();
           if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(nick);
           
-          showToast('¡Bienvenido, @' + nick + '!', 'success');
+          showToast(matchedEmb ? `¡Bienvenido ${matchedEmb.nombre}! Embajador Fundador #${String(matchedEmb.numero).padStart(2, '0')} activo.` : ('¡Bienvenido, @' + nick + '!'), 'success');
           if (typeof cerrarCuenta === 'function') cerrarCuenta();
           return;
         }
@@ -838,6 +888,16 @@
         // Check if nickname exists in Firestore
         const userDoc = await db.collection('plux_usuarios').doc(nick).get();
         if (!userDoc.exists) {
+          const matchedEmbNotCreated = typeof window.getEmbajadorByAccount === 'function' ? window.getEmbajadorByAccount(nick, '') : null;
+          if (matchedEmbNotCreated) {
+            showToast(`@${nick} es cuenta de Embajador Fundador: creala ahora desde "Crear cuenta" (te recomendamos activar contraseña).`, 'info');
+            if (typeof switchCuentaTab === 'function') switchCuentaTab('register');
+            const chkPass = document.getElementById('register-has-password');
+            const regPassBox = document.getElementById('register-password-container');
+            if (chkPass) chkPass.checked = true;
+            if (regPassBox) regPassBox.style.display = 'flex';
+            return;
+          }
           showToast('El nickname @' + nick + ' no está registrado', 'error');
           console.log('Nickname not found in Firestore');
           return;
@@ -890,8 +950,17 @@
         currentUserUid = nick;
         localStorage.setItem('Plux_Nickname', nick);
         localStorage.setItem('Plux_Uid', nick);
+        const matchedEmbLogin = typeof window.getEmbajadorByAccount === 'function' ? window.getEmbajadorByAccount(nick, userData.email || '') : null;
         if (userData.photoUrl) {
           localStorage.setItem('Plux_UserProfile_Photo', userData.photoUrl);
+        } else if (matchedEmbLogin && matchedEmbLogin.avatar) {
+          localStorage.setItem('Plux_UserProfile_Photo', matchedEmbLogin.avatar);
+          userData.photoUrl = matchedEmbLogin.avatar;
+        }
+        if (matchedEmbLogin) {
+          userData.isEmbajador = true;
+          userData.embajadorSlug = matchedEmbLogin.slug;
+          userData.embajadorNumero = matchedEmbLogin.numero;
         }
         updateUserButtonDisplay();
         
@@ -912,7 +981,7 @@
           cargarViaje(mergedTrips.length - 1, false);
         }
         if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(nick);
-        showToast('¡Bienvenido, @' + nick + '!', 'success');
+        showToast(matchedEmbLogin ? `¡Bienvenido ${matchedEmbLogin.nombre}! Cuenta oficial de Embajador Fundador #${String(matchedEmbLogin.numero).padStart(2, '0')} activa.` : ('¡Bienvenido, @' + nick + '!'), 'success');
         cerrarCuenta();
       } catch (e) {
         console.error('Error en login nickname:', e);
@@ -967,7 +1036,17 @@
 
         const localTrips = getStoredTrips();
         const localFriends = getStoredFriends();
-        const localPhoto = localStorage.getItem('Plux_UserProfile_Photo') || null;
+        const matchedEmbReg = typeof window.getEmbajadorByAccount === 'function' ? window.getEmbajadorByAccount(nick, '') : null;
+        const localPhoto = localStorage.getItem('Plux_UserProfile_Photo') || (matchedEmbReg ? matchedEmbReg.avatar : null);
+        if (matchedEmbReg && matchedEmbReg.avatar) {
+          localStorage.setItem('Plux_UserProfile_Photo', matchedEmbReg.avatar);
+          localStorage.setItem('Plux_PersonalInfo', JSON.stringify({
+            fullname: matchedEmbReg.nombre,
+            location: matchedEmbReg.especialidad,
+            travelStyle: 'mochilero',
+            bio: matchedEmbReg.bio
+          }));
+        }
         const storedPassword = (hasPassword && password)
           ? ((typeof window.hashPassword === 'function') ? await window.hashPassword(password) : password)
           : null;
@@ -977,6 +1056,11 @@
           email: null,
           photoUrl: localPhoto,
           password: storedPassword,
+          isEmbajador: Boolean(matchedEmbReg),
+          embajadorSlug: matchedEmbReg ? matchedEmbReg.slug : null,
+          embajadorNumero: matchedEmbReg ? matchedEmbReg.numero : null,
+          nombreCompleto: matchedEmbReg ? matchedEmbReg.nombre : null,
+          bio: matchedEmbReg ? matchedEmbReg.bio : null,
           idioma: currentLang,
           tema: currentTheme,
           viajes_guardados: localTrips,
@@ -995,7 +1079,8 @@
         localStorage.setItem('Plux_Nickname', nick);
         localStorage.setItem('Plux_Uid', nick);
         updateUserButtonDisplay();
-        showToast('¡Cuenta creada para @' + nick + '!', 'success');
+        if (typeof renderTripLists === 'function') renderTripLists();
+        showToast(matchedEmbReg ? `¡Cuenta oficial de Embajador Fundador #${String(matchedEmbReg.numero).padStart(2, '0')} (${matchedEmbReg.nombre}) activada!` : ('¡Cuenta creada para @' + nick + '!'), 'success');
         cerrarCuenta();
       } catch (e) {
         console.error('Error creando cuenta nickname:', e);
@@ -1178,20 +1263,35 @@
         ? firebase.firestore.FieldValue.serverTimestamp()
         : new Date().toISOString();
 
+      if (!navigator.onLine) {
+        try { localStorage.setItem('Plux_Pending_Cloud_Sync', '1'); } catch (e) {}
+      }
+
       try {
         if (ref) {
-          ref.set(safePayload, { merge: true }).catch(e => console.warn("Sincronización por ref:", e));
+          ref.set(safePayload, { merge: true }).catch(e => {
+            try { localStorage.setItem('Plux_Pending_Cloud_Sync', '1'); } catch (_) {}
+            console.warn("Sincronización por ref:", e);
+          });
         }
         if (uid && db) {
-          db.collection('plux_usuarios').doc(uid).set(safePayload, { merge: true }).catch(e => console.warn("Sincronización por uid:", e));
+          db.collection('plux_usuarios').doc(uid).set(safePayload, { merge: true }).catch(e => {
+            try { localStorage.setItem('Plux_Pending_Cloud_Sync', '1'); } catch (_) {}
+            console.warn("Sincronización por uid:", e);
+          });
         }
         if (nick && db && uid !== nick) {
-          db.collection('plux_usuarios').doc(nick).set(safePayload, { merge: true }).catch(e => console.warn("Sincronización por nick:", e));
+          db.collection('plux_usuarios').doc(nick).set(safePayload, { merge: true }).catch(e => {
+            try { localStorage.setItem('Plux_Pending_Cloud_Sync', '1'); } catch (_) {}
+            console.warn("Sincronización por nick:", e);
+          });
         }
       } catch (err) {
+        try { localStorage.setItem('Plux_Pending_Cloud_Sync', '1'); } catch (_) {}
         console.warn("Error enviando perfil a Firestore:", err);
       }
     }
+    window.sincronizarPerfil = sincronizarPerfil;
 
     async function cargarPerfilUsuario() {
       if (!db && typeof getFirestoreDb === 'function') db = getFirestoreDb();
@@ -1700,7 +1800,8 @@
       { id: 'theme-grid', name: 'The Grid' },
       { id: 'theme-terminal', name: 'Terminal' },
       { id: 'theme-starship', name: 'Starship' },
-      { id: 'theme-ares', name: 'Ares' }
+      { id: 'theme-ares', name: 'Ares' },
+      { id: 'theme-minecraft', name: 'Minecraft' }
     ];
 
     function toggleLangDropdown(e) {
@@ -2636,9 +2737,13 @@
       // Eliminar clases de temas previas del body y aplicar la nueva
       document.body.classList.remove(
         'theme-claro', 'theme-oscuro', 'theme-tokyo',
-        'theme-grid', 'theme-starship', 'theme-terminal', 'theme-ares'
+        'theme-grid', 'theme-starship', 'theme-terminal', 'theme-ares', 'theme-minecraft'
       );
       document.body.classList.add(themeId);
+
+      if (typeof window.syncMinecraftThemeState === 'function') {
+        window.syncMinecraftThemeState(themeId === 'theme-minecraft');
+      }
 
       // Banner para salir de Ares
       const aresBanner = document.getElementById('ares-esc-banner');
@@ -3073,7 +3178,8 @@
         syncCode: syncCode || null,
         userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : null,
         moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
-        cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : []
+        cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : [],
+        embajadorSlug: window.currentTripEmbajadorSlug || (targetIndex !== -1 && trips[targetIndex]?.embajadorSlug) || null
       };
 
       if (targetIndex !== -1) {
@@ -3105,13 +3211,28 @@
       lastLocalTripJson = JSON.stringify(tripData);
 
       // Also upload to Firestore if syncCode exists and we have permissions
-      if (db && syncCode && window.currentTripRole !== 'viajero' && window.currentTripRole !== 'reader' && window.currentTripRole !== 'lector') {
-        db.collection("plux_viajes_compartidos").doc(syncCode).set({
-          data: lastLocalTripJson,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(e => console.error("Error autosaving to Firestore:", e));
+      if (syncCode && window.currentTripRole !== 'viajero' && window.currentTripRole !== 'reader' && window.currentTripRole !== 'lector') {
+        if (!navigator.onLine || !db) {
+          try {
+            localStorage.setItem('Plux_Pending_Collab_Sync', JSON.stringify({ syncCode, data: lastLocalTripJson }));
+            localStorage.setItem('Plux_Pending_Cloud_Sync', '1');
+          } catch (_) {}
+        }
+        if (db) {
+          db.collection("plux_viajes_compartidos").doc(syncCode).set({
+            data: lastLocalTripJson,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(e => {
+            try {
+              localStorage.setItem('Plux_Pending_Collab_Sync', JSON.stringify({ syncCode, data: lastLocalTripJson }));
+              localStorage.setItem('Plux_Pending_Cloud_Sync', '1');
+            } catch (_) {}
+            console.error("Error autosaving to Firestore:", e);
+          });
+        }
       }
     }
+    window.autoSave = autoSave;
 
     let isSyncing = false; // Prevent loops
     let unsubSnapshot = null; // Store active Firestore listener
@@ -5110,7 +5231,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const savedTheme = localStorage.getItem('Plux_Theme') || localStorage.getItem('PluxTheme') || 'theme-oscuro';
       const savedLang = localStorage.getItem('Plux_Lang') || localStorage.getItem('pluxUserLanguage') || currentLang || 'es';
       
-      if (savedTheme && ['theme-claro','theme-oscuro','theme-tokyo','theme-grid','theme-terminal','theme-starship','theme-ares'].includes(savedTheme)) setTheme(savedTheme, false);
+      if (savedTheme && ['theme-claro','theme-oscuro','theme-tokyo','theme-grid','theme-terminal','theme-starship','theme-ares','theme-minecraft'].includes(savedTheme)) setTheme(savedTheme, false);
       else setTheme('theme-oscuro', false);
       setLanguage(savedLang, false);
 
@@ -6347,6 +6468,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function renderDestinos() {
       const cont = document.getElementById("destinos");
       if (!cont) return;
+      if (typeof window.renderActiveTripEmbajadorSeal === 'function') {
+        window.renderActiveTripEmbajadorSeal();
+      }
       // Sync openTransportDestIds with current DOM state before clearing
       const openTransports = cont.querySelectorAll('.transport-section.show');
       openTransports.forEach(el => {
@@ -6580,6 +6704,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     // Non-JSON AI call (for Pluxy Chat Agent)
     async function callAIText(messages) {
+      if (!navigator.onLine) {
+        return '📵 No hay señal.';
+      }
       // 1. Prioridad: Cloudflare Worker Seguro y Multimodelo
       try {
         const workerResp = await fetch('https://pluxy.nibecar-cofeben.workers.dev/', {
@@ -6595,23 +6722,21 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         }
       } catch (e) {
         console.warn('⚠️ Cloudflare Worker pluxy fallback to direct keys:', e);
+        if (!navigator.onLine) {
+          return '📵 No hay señal.';
+        }
       }
 
-      const appLang = (typeof currentLang === 'string' && currentLang) ? currentLang : 'es';
-      // 5. Intelligent Fallback
-      const destNames = (Array.isArray(destinos) && destinos.length > 0) 
-        ? destinos.map(d => d.nombre).join(', ') 
-        : (appLang === 'en' ? 'your destinations' : 'tus destinos');
-
-      if (appLang === 'en') {
-        return `Hello! I'm your Pluxy travel assistant ✨. For ${destNames}: I recommend planning visits to top landmarks early in the morning to skip the lines, using 24/48h transit passes, and booking tickets in advance. Feel free to ask me for custom recommendations or use the quick action buttons above! ✨`;
-      }
-      return `¡Hola! Como tu asistente Pluxy ✨, para ${destNames}: te recomiendo planificar siempre las visitas a los monumentos principales por la mañana temprano para evitar filas, usar pases de transporte público de 24/48hs para ahorrar, y reservar actividades con antelación. ¡Podés pedirme sugerencias específicas para cualquier ciudad o usar los botones de acceso rápido arriba! ✨`;
+      return '📵 No hay señal.';
     }
 
     // ================== GENERADOR AUTOMÁTICO DE ITINERARIO ==================
     async function generarItinerarioAuto(destId, diasForzados = null) {
       if (!checkEditPermission()) return;
+      if (!navigator.onLine) {
+        showToast('📵 No hay señal', 'warning');
+        return;
+      }
       const dest = destinos.find(d => d.id === destId);
       if (!dest) return;
       
@@ -6663,6 +6788,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         showToast('¡Itinerario generado con éxito!', 'success');
       } catch(e) {
         console.error('Itinerary error:', e);
+        if (!navigator.onLine) {
+          showToast('📵 No hay señal', 'warning');
+          return;
+        }
         showToast('Error con la IA, usando Wikipedia...', 'warning');
         await generarItinerarioWikiFallback(destId, numDias);
       } finally {
@@ -10580,6 +10709,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
       if (sync) sincronizarPerfil();
     }
+    window.saveTrips = saveTrips;
 
     function saveTemplates(templates, sync = true) {
       localStorage.setItem(TEMPLATE_KEY, JSON.stringify(templates));
@@ -10614,10 +10744,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           item.className = 'trip-item';
           item.style.cursor = 'pointer';
           const dests = (trip.destinos || []).map(d => d.nombre).join(', ') || 'Sin destinos';
+          const embSealHtml = (trip.embajadorSlug && typeof window.getEmbajadorBadgeHtml === 'function') ? window.getEmbajadorBadgeHtml(trip) : '';
           item.innerHTML = `
             <div class="trip-info" onclick="cargarViaje(${index})" style="cursor:pointer;flex:1;">
-              <div style="display:flex; align-items:center; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 <h4 style="margin:0;">${escapeHtml(trip.nombre)}</h4>
+                ${embSealHtml}
                 <button onclick="event.stopPropagation(); window.renombrarViajeGuardado(${index})" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:0.85rem; padding:2px 4px;" title="Renombrar viaje">✏️</button>
               </div>
               <small style="color:var(--gris);">${new Date(trip.fecha).toLocaleDateString()} · ${escapeHtml(dests)}</small>
@@ -10668,7 +10800,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         destinos,
         vueltaGlobal,
         vueltaPrecioGlobal,
-        vueltaCostosAdicionales
+        vueltaCostosAdicionales,
+        embajadorSlug: window.currentTripEmbajadorSlug || null
       };
 
       const trips = getStoredTrips();
@@ -10725,6 +10858,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       vueltaPrecioGlobal = viaje.vueltaPrecioGlobal || 0;
       vueltaCostosAdicionales = viaje.vueltaCostosAdicionales || [];
       loadedTripIndex = index;
+      window.currentTripEmbajadorSlug = viaje.embajadorSlug || null;
+      if (typeof window.renderActiveTripEmbajadorSeal === 'function') {
+        window.renderActiveTripEmbajadorSeal();
+      }
 
       syncCode = viaje.syncCode || null;
       if (syncCode) {
@@ -10811,7 +10948,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         destinos,
         vueltaGlobal,
         vueltaPrecioGlobal,
-        vueltaCostosAdicionales
+        vueltaCostosAdicionales,
+        embajadorSlug: window.currentTripEmbajadorSlug || null
       };
       const blob = new Blob([JSON.stringify(viaje, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -10905,7 +11043,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           { id: 'theme-grid', name: 'Cyber Grid', desc: 'Futurista', color: '#00f0ff', border: 'none', activeBorder: '#00f0ff' },
           { id: 'theme-starship', name: 'Starship', desc: 'Galáctico', color: '#a855f7', border: 'none', activeBorder: '#a855f7' },
           { id: 'theme-terminal', name: 'Terminal', desc: 'Hacker', color: '#00ff66', border: 'none', activeBorder: '#00ff66' },
-          { id: 'theme-ares', name: 'Ares', desc: 'Crimson', color: '#ff3333', border: 'none', activeBorder: '#ff3333' }
+          { id: 'theme-ares', name: 'Ares', desc: 'Crimson', color: '#ff3333', border: 'none', activeBorder: '#ff3333' },
+          { id: 'theme-minecraft', name: 'Minecraft', desc: 'Voxel 8-Bit', color: '#5b8e31', border: '1.5px solid #866043', activeBorder: '#80ff00' }
         ];
 
         let html = `<div id="modal-preferencias" style="position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2100;padding:15px;" onclick="if(event.target===this) this.remove()">
@@ -12227,6 +12366,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       localStorage.removeItem('PluxSyncCode');
       loadedTripIndex = null;
       window.currentTripRole = 'editor';
+      window.currentTripEmbajadorSlug = null;
+      if (typeof window.renderActiveTripEmbajadorSeal === 'function') window.renderActiveTripEmbajadorSeal();
       
       // Reset lista de viajeros y UI
       listaViajeros = [];
@@ -12283,6 +12424,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       localStorage.removeItem('PluxSyncCode');
       loadedTripIndex = null;
       window.currentTripRole = 'editor';
+      window.currentTripEmbajadorSlug = null;
+      if (typeof window.renderActiveTripEmbajadorSeal === 'function') window.renderActiveTripEmbajadorSeal();
       
       // Reset lista de viajeros y UI
       listaViajeros = [];
@@ -12622,7 +12765,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       matchedTemplate = PLUX_OFICIAL_TEMPLATES.find(t => {
         const tplName = (t.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
         const tplId = (t.id || '').toLowerCase().replace('oficial_', '').replace(/[\s\-_]/g, "");
-        const destName = (t.destinos && t.destinos[0]?.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
+        const destName = (t.destinos || []).map(d => d?.nombre || '').join(' ').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-_]/g, "");
         return t.id === ciudadRaw || tplId === cClean || t.id === 'oficial_' + cClean || tplId.includes(cClean) || cClean.includes(tplId) || tplName.includes(cClean) || destName.includes(cClean);
       });
     }

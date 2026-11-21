@@ -1141,11 +1141,71 @@ function abrirTerminalARPANET() {
       showPluxeeToast('🖥️ <strong>Sistema reiniciado:</strong> Bienvenido nuevamente a Plux.');
     }
 
-    // 3. MINECRAFT: Hotbar interactiva y sonidos
+    // 3. MINECRAFT: Hotbar interactiva, XP, HUD y efectos
+    let mcXpProgress = 82;
+    let mcXpCurrentLevel = 64;
+    let prevThemeBeforeMinecraft = null;
+
+    function isMinecraftVisualActive() {
+      return document.body.classList.contains('minecraft-mode') || document.body.classList.contains('theme-minecraft');
+    }
+
+    function addMinecraftXp(amount = 14) {
+      mcXpProgress += amount;
+      const fill = document.getElementById('mcXpFill');
+      const lvlEl = document.getElementById('mcXpLevel');
+      if (mcXpProgress >= 100) {
+        mcXpProgress = mcXpProgress % 100;
+        mcXpCurrentLevel += 1;
+        playSound('minecraft-xp');
+        if (lvlEl) lvlEl.textContent = String(mcXpCurrentLevel);
+        showPluxeeToast(`✨ <strong>¡Nivel ${mcXpCurrentLevel} alcanzado!</strong> XP de explorador subida.`);
+      }
+      if (fill) fill.style.width = `${mcXpProgress}%`;
+    }
+
+    function toggleMcHud(forceState) {
+      const hud = document.getElementById('mcHudContainer');
+      const btn = document.getElementById('mcHudToggle');
+      if (!hud) return;
+      const shouldMinimize = typeof forceState === 'boolean' ? forceState : !hud.classList.contains('minimized');
+      hud.classList.toggle('minimized', shouldMinimize);
+      if (btn) btn.textContent = shouldMinimize ? '▴' : '▾';
+    }
+    window.toggleMcHud = toggleMcHud;
+
+    // Permitir restaurar el HUD tocando el chip minimizado
+    document.addEventListener('click', (e) => {
+      const hud = document.getElementById('mcHudContainer');
+      if (hud && hud.classList.contains('minimized') && e.target === hud) {
+        toggleMcHud(false);
+      }
+    });
+
+    function pulseMcStatus(el) {
+      if (!el) return;
+      el.classList.remove('mc-status-pulse');
+      void el.offsetWidth;
+      el.classList.add('mc-status-pulse');
+      playSound('minecraft-eat');
+    }
+    window.pulseMcStatus = pulseMcStatus;
+
+    window.syncMinecraftThemeState = function(isThemeActive) {
+      minecraftModeActive = Boolean(isThemeActive);
+      document.body.classList.toggle('minecraft-mode', minecraftModeActive);
+      const btnText = document.getElementById('btnCardActionText');
+      if (currentKey === 'minecraft' && btnText) {
+        btnText.textContent = minecraftModeActive ? '⛏️ Modo Voxel: ON' : '⛏️ Activar Modo Voxel';
+      }
+    };
+
     function selectHotbarSlot(num) {
       document.querySelectorAll('.mc-slot').forEach(s => s.classList.remove('active'));
       const target = document.querySelector(`.mc-slot[data-slot="${num}"]`);
       if (target) target.classList.add('active');
+
+      addMinecraftXp(12);
 
       if (num === 1) {
         playSound('minecraft-block');
@@ -1162,8 +1222,52 @@ function abrirTerminalARPANET() {
       } else if (num === 5) {
         playSound('minecraft-tnt');
         showPluxeeToast('🧨 <strong>¡CREEPER ACERCÁNDOSE!</strong> Sssssssss... ¡BOOM!', 2500);
+        setTimeout(() => {
+          if (!isMinecraftVisualActive()) return;
+          document.body.classList.remove('mc-tnt-shake');
+          void document.body.offsetWidth;
+          document.body.classList.add('mc-tnt-shake');
+          setTimeout(() => document.body.classList.remove('mc-tnt-shake'), 500);
+          const boom = [];
+          const colors = ['#ef4444', '#f97316', '#facc15', '#71717a', '#18181b'];
+          const cx = window.innerWidth / 2;
+          const cy = window.innerHeight - 110;
+          for (let i = 0; i < 32; i++) {
+            boom.push({
+              x: cx + (Math.random() - 0.5) * 80,
+              y: cy + (Math.random() - 0.5) * 30,
+              vx: (Math.random() - 0.5) * 14,
+              vy: -4 - Math.random() * 10,
+              gravity: 0.35,
+              size: 6 + Math.random() * 7,
+              color: colors[i % colors.length],
+              alpha: 1,
+              fade: 0.018,
+              type: 'pixel-dirt'
+            });
+          }
+          addParticles(boom);
+        }, 1200);
       } else if (num === 6) {
         playSound('minecraft-teleport');
+        const pearls = [];
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight - 90;
+        for (let i = 0; i < 20; i++) {
+          pearls.push({
+            x: cx + (Math.random() - 0.5) * 60,
+            y: cy,
+            vx: (Math.random() - 0.5) * 8,
+            vy: -3 - Math.random() * 7,
+            gravity: 0.12,
+            size: 5 + Math.random() * 5,
+            color: i % 2 === 0 ? '#a855f7' : '#e879f9',
+            alpha: 1,
+            fade: 0.02,
+            type: 'pixel-dirt'
+          });
+        }
+        addParticles(pearls);
         showPluxeeToast('🔮 <strong>¡Ender Pearl lanzada!</strong> Teletransportado a tu próximo destino.');
       } else if (num === 7) {
         playSound('minecraft-eat');
@@ -1173,13 +1277,15 @@ function abrirTerminalARPANET() {
         showPluxeeToast('🕯️ <strong>Antorcha:</strong> Iluminando las cuevas de tu itinerario.');
       } else if (num === 9) {
         playSound('coin');
-        showPluxeeToast('🗺️ <strong>Mapa de Plux:</strong> Explora más de 500 destinos en el mundo.');
+        const inspo = document.querySelector('.inspo-section');
+        if (inspo) inspo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showPluxeeToast('🗺️ <strong>Mapa de Plux:</strong> Explora destinos destacados en el mundo.');
       }
     }
 
     // Teclas 1-9 para cambiar slot de Minecraft
     document.addEventListener('keydown', (e) => {
-      if (document.body.classList.contains('minecraft-mode')) {
+      if (isMinecraftVisualActive() && !e.target.matches('input, textarea, select')) {
         const key = parseInt(e.key);
         if (key >= 1 && key <= 9) {
           selectHotbarSlot(key);
@@ -1189,7 +1295,7 @@ function abrirTerminalARPANET() {
 
     // Clic sobre cualquier botón en modo Minecraft
     document.addEventListener('click', (e) => {
-      if (document.body.classList.contains('minecraft-mode')) {
+      if (isMinecraftVisualActive()) {
         if (e.target.closest('.main-btn') || e.target.closest('.inspo-card') || e.target.closest('.doodle-art-seamless')) {
           playSound('minecraft-block');
           // Pequeñas partículas de tierra/piedra pixelada
@@ -2032,20 +2138,36 @@ function abrirTerminalARPANET() {
           <p><em>¡Haz clic en "Activar Modo Voxel" para transformar toda la interfaz de Plux en bloques cúbicos e interactuar con la Hotbar!</em></p>
         `,
         action: () => {
-          minecraftModeActive = !minecraftModeActive;
-          document.body.classList.toggle('minecraft-mode', minecraftModeActive);
+          const activate = !isMinecraftVisualActive();
+          if (tradicionModeActive) {
+            desactivarModoTradicion();
+          }
+          if (activate) {
+            const cur = localStorage.getItem('Plux_Theme') || 'theme-oscuro';
+            if (cur !== 'theme-minecraft') prevThemeBeforeMinecraft = cur;
+            if (typeof window.setTheme === 'function') {
+              window.setTheme('theme-minecraft');
+            } else {
+              minecraftModeActive = true;
+              document.body.classList.add('minecraft-mode', 'theme-minecraft');
+            }
+          } else {
+            if (typeof window.setTheme === 'function') {
+              window.setTheme(prevThemeBeforeMinecraft || 'theme-oscuro');
+            } else {
+              minecraftModeActive = false;
+              document.body.classList.remove('minecraft-mode', 'theme-minecraft');
+            }
+          }
           playSound('minecraft-xp');
 
           const btnText = document.getElementById('btnCardActionText');
-          if (tradicionModeActive) {
-        desactivarModoTradicion();
-      }
-      if (minecraftModeActive) {
-            btnText.textContent = '⛏️ Modo Voxel: ON';
-            showPluxeeToast('⛏️ <strong>MODO MINECRAFT ACTIVADO:</strong> Usa las teclas 1-9 o haz clic en la Hotbar inferior.');
+          if (activate) {
+            if (btnText) btnText.textContent = '⛏️ Modo Voxel: ON';
+            showPluxeeToast('⛏️ <strong>TEMA MINECRAFT ACTIVADO:</strong> Usa las teclas 1-9 o haz clic en la Hotbar inferior.');
           } else {
-            btnText.textContent = '⛏️ Activar Modo Voxel';
-            showPluxeeToast('Modo Voxel desactivado. Interfaz restablecida.');
+            if (btnText) btnText.textContent = '⛏️ Activar Modo Voxel';
+            showPluxeeToast('Tema Minecraft desactivado. Interfaz restablecida.');
           }
         }
       },
@@ -2368,8 +2490,8 @@ function abrirTerminalARPANET() {
       document.body.classList.toggle('halloween-active', key === 'halloween');
       document.body.classList.toggle('tradicion-mode', key === 'tradicion');
 
-      // Desactivar modo minecraft si cambiamos de Pluxee
-      if (key !== 'minecraft' && minecraftModeActive) {
+      // Desactivar modo minecraft temporal si cambiamos de Pluxee (sin quitar tema oficial)
+      if (key !== 'minecraft' && minecraftModeActive && !document.body.classList.contains('theme-minecraft')) {
         minecraftModeActive = false;
         document.body.classList.remove('minecraft-mode');
       }
@@ -2407,7 +2529,11 @@ function abrirTerminalARPANET() {
       const descEl = document.getElementById('doodleCardDesc');
       if (descEl) descEl.textContent = data.desc;
       const btnText = document.getElementById('btnCardActionText');
-      if (btnText) btnText.textContent = data.btnText || '✨ Probar';
+      if (btnText) {
+        btnText.textContent = (key === 'minecraft' && isMinecraftVisualActive())
+          ? '⛏️ Modo Voxel: ON'
+          : (data.btnText || '✨ Probar');
+      }
     }
 
     function dispararAccionActual() {
@@ -2426,7 +2552,7 @@ function abrirTerminalARPANET() {
       if (tradicionModeActive) {
         desactivarModoTradicion();
       }
-      if (minecraftModeActive) {
+      if (minecraftModeActive && !document.body.classList.contains('theme-minecraft')) {
         minecraftModeActive = false;
         document.body.classList.remove('minecraft-mode');
       }

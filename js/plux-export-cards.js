@@ -1706,42 +1706,110 @@ window.compartirTravelCard = compartirTravelCard;
 
 
 // ================== EXPORTAR PDF (DOSSIER EDITORIAL PLUX) ==================
+function loadExternalScript(src) {
+  return new Promise((resolve) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+}
+
 async function asegurarJsPDF() {
+  let JsPDFCtor = null;
   if (typeof window.jspdf !== 'undefined' && window.jspdf && window.jspdf.jsPDF) {
-    return window.jspdf.jsPDF;
-  }
-  if (typeof window.jsPDF === 'function') {
+    JsPDFCtor = window.jspdf.jsPDF;
+  } else if (typeof window.jsPDF === 'function') {
     window.jspdf = { jsPDF: window.jsPDF };
-    return window.jsPDF;
+    JsPDFCtor = window.jsPDF;
   }
-  const sources = [
-    '/js/jspdf.umd.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
-  ];
-  for (const src of sources) {
-    try {
-      const ok = await new Promise((resolve) => {
-        const s = document.createElement('script');
-        s.src = src;
-        s.onload = () => resolve(true);
-        s.onerror = () => resolve(false);
-        document.head.appendChild(s);
-      });
-      if (ok && typeof window.jspdf !== 'undefined' && window.jspdf && window.jspdf.jsPDF) {
-        return window.jspdf.jsPDF;
+
+  if (!JsPDFCtor) {
+    const sources = [
+      '/js/jspdf.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+    ];
+    for (const src of sources) {
+      try {
+        const ok = await loadExternalScript(src);
+        if (ok && typeof window.jspdf !== 'undefined' && window.jspdf && window.jspdf.jsPDF) {
+          JsPDFCtor = window.jspdf.jsPDF;
+          break;
+        }
+        if (ok && typeof window.jsPDF === 'function') {
+          window.jspdf = { jsPDF: window.jsPDF };
+          JsPDFCtor = window.jsPDF;
+          break;
+        }
+      } catch (e) {
+        console.warn('Error cargando jsPDF:', src, e);
       }
-      if (ok && typeof window.jsPDF === 'function') {
-        window.jspdf = { jsPDF: window.jsPDF };
-        return window.jsPDF;
-      }
-    } catch (e) {
-      console.warn('Error cargando jsPDF:', src, e);
     }
   }
-  return null;
+
+  if (JsPDFCtor && JsPDFCtor.API && typeof JsPDFCtor.API.autoTable !== 'function') {
+    await loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+  }
+
+  return JsPDFCtor;
+}
+
+function safeAutoTable(doc, options) {
+  if (typeof doc.autoTable === 'function') {
+    doc.autoTable(options);
+    return;
+  }
+  // Fallback nativo si jspdf-autotable no pudo cargarse (offline / CDN bloqueado)
+  const marginLeft = (options.margin && options.margin.left) || 14;
+  const marginRight = (options.margin && options.margin.right) || 14;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const usableW = pageWidth - marginLeft - marginRight;
+  let y = options.startY || 28;
+  const rowH = 7;
+
+  const drawRow = (cells, isHeader, rowIndex) => {
+    if (y + rowH > pageHeight - 16) {
+      doc.addPage();
+      doc.setFillColor(11, 17, 32);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
+      y = 20;
+    }
+    const colCount = Math.max(cells.length, 1);
+    const colW = usableW / colCount;
+    if (isHeader) {
+      doc.setFillColor(30, 41, 59);
+      doc.rect(marginLeft, y, usableW, rowH, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(56, 189, 248);
+    } else {
+      doc.setFillColor(rowIndex % 2 === 0 ? 15 : 19, 23, 42);
+      doc.rect(marginLeft, y, usableW, rowH, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(226, 232, 240);
+    }
+    cells.forEach((cell, idx) => {
+      const rawText = (cell && typeof cell === 'object' && 'content' in cell) ? cell.content : cell;
+      const textStr = String(rawText ?? '').slice(0, 42);
+      doc.text(textStr, marginLeft + idx * colW + 2, y + 4.8);
+    });
+    y += rowH;
+  };
+
+  if (Array.isArray(options.head)) {
+    options.head.forEach((row) => drawRow(row, true, 0));
+  }
+  if (Array.isArray(options.body)) {
+    options.body.forEach((row, idx) => drawRow(row, false, idx));
+  }
+  doc.lastAutoTable = { finalY: y };
 }
 
 async function exportarPDF() {
+  try {
   const jsPDF = await asegurarJsPDF();
   if (!jsPDF) {
     if (typeof showToast === 'function') showToast('Librería PDF no disponible. Por favor recarga la página.', 'error');
@@ -1761,7 +1829,8 @@ async function exportarPDF() {
   }
 
   // 1. Ensure trip exists in Firestore and get Reader URL
-  const shareUrl = await asegurarViajeEnNubeParaCompartir();
+  const rawShareUrl = await asegurarViajeEnNubeParaCompartir();
+  const shareUrl = (typeof rawShareUrl === 'string' && /^https?:\/\//i.test(rawShareUrl)) ? rawShareUrl : window.location.href;
 
   // 2. Trip metrics
   const tripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || 'Viaje en Plux');
@@ -1965,7 +2034,7 @@ async function exportarPDF() {
     ]
   ];
 
-  doc.autoTable({
+  safeAutoTable(doc, {
     startY: ctaBtnY + 16,
     margin: { left: 14, right: 14 },
     body: tableData,
@@ -1981,7 +2050,7 @@ async function exportarPDF() {
   });
 
   // Destinations Breakdown list on Cover
-  let currentY = doc.lastAutoTable.finalY + 10;
+  let currentY = (doc.lastAutoTable?.finalY || (ctaBtnY + 42)) + 10;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(236, 72, 153); // pink
@@ -1997,7 +2066,7 @@ async function exportarPDF() {
   ]);
 
   if (destTable.length > 0) {
-    doc.autoTable({
+    safeAutoTable(doc, {
       startY: currentY,
       margin: { left: 14, right: 14 },
       head: [['#', 'Destino', 'Estadia', 'Actividades', 'Transporte & Estadia']],
@@ -2017,7 +2086,7 @@ async function exportarPDF() {
         fillColor: [15, 23, 42]
       }
     });
-    currentY = doc.lastAutoTable.finalY + 8;
+    currentY = (doc.lastAutoTable?.finalY || currentY + 25) + 8;
   }
 
   // Scannable QR Code section at bottom of Page 1
@@ -2113,7 +2182,7 @@ async function exportarPDF() {
     dayCounter += dest.days;
   });
 
-  doc.autoTable({
+  safeAutoTable(doc, {
     startY: 28,
     margin: { left: 14, right: 14 },
     head: [['Dia', 'Destino', 'Actividad / Lugar', 'Horario', 'Costo Est.', 'Estado']],
@@ -2138,7 +2207,7 @@ async function exportarPDF() {
   });
 
   // Notes and Tips box
-  const notesY = Math.min(doc.lastAutoTable.finalY + 8, pageHeight - 45);
+  const notesY = Math.min((doc.lastAutoTable?.finalY || 120) + 8, pageHeight - 45);
   doc.setFillColor(15, 23, 42);
   doc.roundedRect(14, notesY, pageWidth - 28, 28, 3, 3, 'F');
   doc.setDrawColor(30, 41, 59);
@@ -2206,6 +2275,10 @@ async function exportarPDF() {
   } else {
     doc.save(safeFilename);
     if (typeof showToast === 'function') showToast('PDF generado correctamente', 'success');
+  }
+  } catch (err) {
+    console.error('Error al generar PDF:', err);
+    if (typeof showToast === 'function') showToast('No se pudo generar el PDF: ' + (err.message || 'error inesperado'), 'error');
   }
 }
 

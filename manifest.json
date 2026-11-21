@@ -1,0 +1,43 @@
+{
+  "name": "Plux · Planificador Inteligente de Viajes e Itinerarios",
+  "short_name": "Plux",
+  "description": "Organiza tus viajes día por día, calcula presupuestos multidivisa, guarda vouchers y consulta mapas 100% offline.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#090d16",
+  "theme_color": "#34d399",
+  "lang": "es",
+  "categories": ["travel", "navigation", "productivity"],
+  "icons": [
+    {
+      "src": "/plux-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/plux-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mis Viajes Offline",
+      "short_name": "Viajes",
+      "description": "Abrir tus itinerarios guardados en el dispositivo",
+      "url": "/?offline=1",
+      "icons": [{ "src": "/plux-logo.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Descubrir y Billetera",
+      "short_name": "Descubrir",
+      "description": "Explorar rutas y abrir tu billetera de vouchers offline",
+      "url": "/?view=discover",
+      "icons": [{ "src": "/plux-logo.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

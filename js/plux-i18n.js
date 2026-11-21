@@ -57,7 +57,7 @@
         pluxy_hint: "Preguntame cualquier cosa sobre tu viaje",
         weather_loading: "Cargando...", personas_label: "Personas:", fecha_inicio_label: "Fecha de inicio:",
         eventos_dia_title: "Eventos del día", estadisticas: { duracion: "Duración (días)", eventos: "Eventos", coste_total: "Coste total", coste_persona: "Coste/persona", destinos: "Destinos" },
-        temas: { claro: "Claro", oscuro: "Oscuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares" },
+        temas: { claro: "Claro", oscuro: "Oscuro", tokyo: "Tokyo Night", grid: "The Grid", terminal: "Terminal", starship: "Starship", ares: "Ares", minecraft: "Minecraft" },
         lugar_salida: "Lugar de salida", costo_extra_vuelta: "Costo extra vuelta", tramo: "Tramo", origen: "Origen",
         destino: "Destino", medio: "Medio", precio: "Precio", escala: "Escala", agregar_tramo: "+ Agregar tramo", agregar_escala: "+ Escala",
         inspo_title: "Inspiración · Destinos Populares", tab_saved: "Guardados", tab_templates: "Plantillas",

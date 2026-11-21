@@ -38,6 +38,13 @@
             badge.id = 'plux-live-collab-pill';
             badge.style.cssText = 'display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:0.78rem; font-weight:800; transition:all 0.25s ease; cursor:pointer; user-select:none; height:36px; box-sizing:border-box; margin-right:4px;';
             badge.onclick = () => {
+                const collabsCount = Array.isArray(window.colaboradoresActuales) ? window.colaboradoresActuales.length : 1;
+                if (!navigator.onLine || collabsCount <= 1) {
+                    if (typeof window.abrirPanelOffline === 'function') {
+                        window.abrirPanelOffline();
+                        return;
+                    }
+                }
                 const modal = document.getElementById('modal-colaboradores');
                 if (modal) modal.style.display = 'flex';
             };
@@ -49,13 +56,20 @@
 
         const isOnline = navigator.onLine;
         const collabs = Array.isArray(window.colaboradoresActuales) ? window.colaboradoresActuales.length : 1;
+        const pendingSync = typeof window.hasPendingCloudSync === 'function' && window.hasPendingCloudSync();
 
         if (!isOnline) {
             badge.style.background = 'rgba(245, 158, 11, 0.18)';
             badge.style.border = '1px solid rgba(245, 158, 11, 0.45)';
             badge.style.color = '#fbbf24';
-            badge.title = 'Modo Offline: Guardando cambios en el dispositivo.';
-            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> Offline`;
+            badge.title = 'Modo Offline activo: Guardando cambios en el dispositivo. Clic para abrir Centro Modo Avión.';
+            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> Offline · Local`;
+        } else if (pendingSync) {
+            badge.style.background = 'rgba(56, 189, 248, 0.16)';
+            badge.style.border = '1px solid rgba(56, 189, 248, 0.45)';
+            badge.style.color = '#38bdf8';
+            badge.title = 'Sincronizando cambios offline con la nube... Clic para ver estado.';
+            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#38bdf8;display:inline-block;"></span> Sincronizando...`;
         } else if (collabs > 1) {
             badge.style.background = 'rgba(16, 185, 129, 0.18)';
             badge.style.border = '1px solid rgba(16, 185, 129, 0.45)';
@@ -66,10 +80,13 @@
             badge.style.background = 'rgba(16, 185, 129, 0.14)';
             badge.style.border = '1px solid rgba(16, 185, 129, 0.35)';
             badge.style.color = '#10b981';
-            badge.title = 'Sincronizado en la nube. Cambios guardados.';
-            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;"></span> Nube activa`;
+            badge.title = 'Sincronizado en la nube y listo para Modo Avión. Clic para abrir Centro Offline.';
+            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;"></span> Nube & Offline ✓`;
         }
     }
+    window.updateLiveCollabBadge = updateLiveCollabBadge;
+    window.addEventListener('online', updateLiveCollabBadge);
+    window.addEventListener('offline', updateLiveCollabBadge);
 
     // Proteger foco de inputs cuando hay renders remotos
     let pendingRemoteRender = false;
@@ -143,6 +160,9 @@
     if (typeof window.callAIText === 'function') {
         const origCallAIText = window.callAIText;
         window.callAIText = async function (messages) {
+            if (!navigator.onLine) {
+                return '📵 No hay señal.';
+            }
             try {
                 // 1. Intentar Cloudflare Worker original
                 const workerResp = await fetch('https://pluxy.nibecar-cofeben.workers.dev/', {
@@ -158,6 +178,9 @@
                 }
             } catch (e) {
                 console.warn('Worker offline, activando IA de respaldo...', e);
+                if (!navigator.onLine) {
+                    return '📵 No hay señal.';
+                }
             }
 
             // 2. Si el Worker dio 502 / falló, llamar a Pollinations AI (que responde en tiempo real con OpenAI)
@@ -166,15 +189,7 @@
                 return fallbackText;
             }
 
-            // 3. Respaldo inteligente dinámico según lo que pidió el usuario (para no repetir el texto estático)
-            const lastUserMsg = Array.isArray(messages) ? messages[messages.length - 1]?.content?.toLowerCase() || '' : '';
-            const primerDestino = (Array.isArray(destinos) && destinos[0] && destinos[0].nombre) ? destinos[0].nombre : 'tu destino';
-
-            if (lastUserMsg.includes('cambia') || lastUserMsg.includes('agrega') || lastUserMsg.includes('modifica') || lastUserMsg.includes('boludez')) {
-                return `¡Listo! Modifiqué el itinerario agregando una nueva experiencia gastronómica en ${primerDestino} para que la disfrutes.\n[ACCION:AGREGAR_EVENTO:${primerDestino}|1|13:30|Almuerzo Típico y Caminata Secreta|Degustación recomendada por Pluxy|15]`;
-            }
-
-            return origCallAIText.apply(this, arguments);
+            return '📵 No hay señal.';
         };
     }
 

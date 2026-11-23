@@ -2067,13 +2067,13 @@
         renderDestinos();
       }
       const pantResumen = document.getElementById('pantalla-resumen');
-      if (pantResumen && pantResumen.style.display !== 'none') {
+      if (pantResumen && pantResumen.style.display === 'flex') {
         mostrarResumen();
       }
       if (sync && typeof autoSave === 'function') {
         autoSave();
       }
-      showToast(`Moneda activa: ${code} (${getSimboloMoneda(code)})`, 'info');
+      if (sync) showToast(`Moneda activa: ${code} (${getSimboloMoneda(code)})`, 'info');
     }
     window.setMonedaActiva = setMonedaActiva;
 
@@ -2710,7 +2710,7 @@
         renderDestinos();
       }
       if (typeof renderTripLists === 'function') renderTripLists();
-      if (typeof renderResumen === 'function' && document.getElementById('modal-resumen') && document.getElementById('modal-resumen').style.display !== 'none') {
+      if (typeof renderResumen === 'function' && document.getElementById('modal-resumen') && document.getElementById('modal-resumen').style.display === 'flex') {
         renderResumen();
       }
 
@@ -7515,7 +7515,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (campo === 'moneda' || campo === 'monedaAlojamiento') {
         renderTramos(destId);
         const pantResumen = document.getElementById('pantalla-resumen');
-        if (pantResumen && pantResumen.style.display !== 'none') mostrarResumen();
+        if (pantResumen && pantResumen.style.display === 'flex') mostrarResumen();
       }
       autoSave();
     }
@@ -8125,7 +8125,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           lbl.textContent = `${t('event_cost_placeholder')} (${getSimboloMoneda(valor)})`;
         }
         const pantResumen = document.getElementById('pantalla-resumen');
-        if (pantResumen && pantResumen.style.display !== 'none') mostrarResumen();
+        if (pantResumen && pantResumen.style.display === 'flex') mostrarResumen();
       }
       autoSave();
     }
@@ -8232,7 +8232,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       dia.costosAdicionales[ida][campo] = valor;
       if (campo === 'moneda') {
         const pantResumen = document.getElementById('pantalla-resumen');
-        if (pantResumen && pantResumen.style.display !== 'none') mostrarResumen();
+        if (pantResumen && pantResumen.style.display === 'flex') mostrarResumen();
       }
       autoSave();
     }

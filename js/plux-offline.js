@@ -148,6 +148,9 @@
     'sao paulo': { lat: -23.5505, lon: -46.6333, display_name: 'São Paulo, Brasil' },
     'florianopolis': { lat: -27.5954, lon: -48.5480, display_name: 'Florianópolis, Brasil' },
     'buzios': { lat: -22.7469, lon: -41.8817, display_name: 'Búzios, Brasil' },
+    'ilhabela': { lat: -23.7781, lon: -45.3581, display_name: 'Ilhabela, Brasil' },
+    'camboriu': { lat: -26.9926, lon: -48.6352, display_name: 'Balneário Camboriú, Brasil' },
+    'balneario camboriu': { lat: -26.9926, lon: -48.6352, display_name: 'Balneário Camboriú, Brasil' },
     'salvador': { lat: -12.9714, lon: -38.5014, display_name: 'Salvador de Bahía, Brasil' },
     'lima': { lat: -12.0464, lon: -77.0428, display_name: 'Lima, Perú' },
     'cusco': { lat: -13.5320, lon: -71.9675, display_name: 'Cusco, Perú' },
@@ -632,12 +635,13 @@
 
     // 1. Recolectar ciudades del viaje activo y de los viajes guardados
     const cityNames = new Set();
+    const isSeaLegacy = (n) => typeof window.esDestinoNavegacion === 'function' && window.esDestinoNavegacion(n);
     if (typeof destinos !== 'undefined' && Array.isArray(destinos)) {
-      destinos.forEach((d) => { if (d && d.nombre) cityNames.add(d.nombre.trim()); });
+      destinos.forEach((d) => { if (d && d.nombre && !isSeaLegacy(d.nombre)) cityNames.add(d.nombre.trim()); });
     }
     const storedTrips = typeof window.getStoredTrips === 'function' ? window.getStoredTrips() : [];
     storedTrips.slice(-3).forEach((t) => {
-      (t?.destinos || []).forEach((d) => { if (d && d.nombre) cityNames.add(d.nombre.trim()); });
+      (t?.destinos || []).forEach((d) => { if (d && d.nombre && !isSeaLegacy(d.nombre)) cityNames.add(d.nombre.trim()); });
     });
 
     if (cityNames.size === 0) {

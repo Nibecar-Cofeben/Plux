@@ -1278,7 +1278,7 @@
       const autor = activeEmb ? activeEmb.nombre : (currentNickname ? `@${currentNickname.replace('@','')}` : 'Viajero Anónimo');
       const isExp = activeEmb ? true : isExperiencedCreator(currentNickname);
       const tplId = (activeEmb ? 'emb_' : 'com_') + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5);
-      const daysTotal = destinos.reduce((acc, d) => acc + (d.dias?.length || 0), 0);
+      const daysTotal = destinos.reduce((acc, d, idx) => acc + (d.dias?.length || 0) + (idx > 0 ? (Math.floor(Number(d.diasTransitoPrevio) || 0)) : 0), 0);
       const eventsTotal = destinos.reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + (dia.eventos?.length || 0), 0), 0);
 
       const newTemplate = {
@@ -1396,7 +1396,7 @@
           const item = document.createElement('div');
           item.className = 'trip-item';
           const dests = (tpl.destinos || []).map(d => d.nombre).join(', ') || 'Destino';
-          const daysTotal = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias?.length || 0), 0);
+          const daysTotal = (tpl.destinos || []).reduce((acc, d, idx) => acc + (d.dias?.length || 0) + (idx > 0 ? (Math.floor(Number(d.diasTransitoPrevio) || 0)) : 0), 0);
           item.innerHTML = `
             <div class="trip-info" onclick="window.clonarPlantillaCompleta(${index}, 'mia')" style="cursor:pointer;flex:1;">
               <div style="display:flex; align-items:center; gap:8px;">
@@ -1435,6 +1435,13 @@
       const clonedDestinos = JSON.parse(JSON.stringify(tpl.destinos || [])).map((dest, dIdx) => ({
         id: idBase + dIdx * 1000,
         nombre: String(dest.nombre || 'Destino').trim(),
+        diasTransitoPrevio: dIdx > 0 ? (Math.floor(Number(dest.diasTransitoPrevio) || 0)) : 0,
+        transitoEtiqueta: dest.transitoEtiqueta || '',
+        tipoParada: dest.tipoParada || 'estadia',
+        horaLlegada: dest.horaLlegada || '',
+        horaSalida: dest.horaSalida || '',
+        notaParada: dest.notaParada || '',
+        ignoraTramoCompartido: Boolean(dest.ignoraTramoCompartido),
         tramos: (dest.tramos || []).map((tr, trIdx) => ({
           id: idBase + dIdx * 1000 + trIdx + 50,
           origen: tr.origen || '',
@@ -1445,7 +1452,14 @@
           alojamiento: tr.alojamiento || '',
           precioAlojamiento: parseFloat(tr.precioAlojamiento) || 0,
           monedaAlojamiento: tr.monedaAlojamiento || 'EUR',
-          escalas: Array.isArray(tr.escalas) ? [...tr.escalas] : []
+          escalas: Array.isArray(tr.escalas) ? [...tr.escalas] : [],
+          cubreParadas: Boolean(tr.cubreParadas),
+          modoPrecio: tr.modoPrecio === 'total' ? 'total' : 'persona',
+          montoPagado: tr.montoPagado !== undefined ? (parseFloat(tr.montoPagado) || 0) : undefined,
+          saldoPendiente: tr.saldoPendiente !== undefined ? (parseFloat(tr.saldoPendiente) || 0) : undefined,
+          pagado: Boolean(tr.pagado),
+          pagadoPor: tr.pagadoPor || 'Todos',
+          codigoReserva: tr.codigoReserva || ''
         })),
         dias: (dest.dias || []).map((dia, diaIdx) => ({
           id: diaIdx,
@@ -1480,11 +1494,15 @@
       window.currentTripRole = 'editor';
       window.isExternalSharedTrip = false;
       window.currentTripEmbajadorSlug = tpl.embajadorSlug || null;
+      window.currentTripTemplateOrigin = tpl.titulo || tpl.nombre || 'Plantilla';
+      window.currentTripTitle = tpl.nombre || '';
 
       const nombreViajeInput = document.getElementById('nombreViaje');
       if (nombreViajeInput) nombreViajeInput.value = tpl.nombre || '';
 
-      destinos = clonedDestinos;
+      destinos = (typeof window.normalizarDestinosLegacy === 'function')
+        ? window.normalizarDestinosLegacy(clonedDestinos)
+        : clonedDestinos;
       vueltaGlobal = tpl.vueltaGlobal || '';
       vueltaPrecioGlobal = parseFloat(tpl.vueltaPrecioGlobal) || 0;
       vueltaCostosAdicionales = Array.isArray(tpl.vueltaCostosAdicionales)
@@ -1518,6 +1536,9 @@
       }
 
       autoSave();
+      if (typeof window.setActiveSession === 'function' && typeof currentTripId !== 'undefined') {
+        window.setActiveSession({ mode: 'trip', explicit: false, tripId: currentTripId });
+      }
       showToast(`¡Plantilla "${tpl.nombre}" clonada como nuevo viaje!`, 'success');
       trackEvent('clone_template', {
         template_id: String(tplIdOrIndex),

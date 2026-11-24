@@ -3,7 +3,7 @@
  * App Shell + Librerías CDN + Caché de Tiles de Mapas + Caché de APIs de Viaje
  */
 
-const SW_VERSION = 'v8.0.11';
+const SW_VERSION = 'v8.0.13';
 const STATIC_CACHE = `plux-static-${SW_VERSION}`;
 const CDN_CACHE = `plux-cdn-${SW_VERSION}`;
 const TILES_CACHE = `plux-tiles-${SW_VERSION}`;

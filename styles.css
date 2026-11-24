@@ -8264,3 +8264,961 @@ body.minecraft-mode .embajador-modal-card {
 .theme-claro .active-trip-emb-link {
   color: #047857;
 }
+
+/* ==========================================================================
+   PLUX v8.0.13 — IMPORTER ISOLATION, TRANSIT CONNECTORS, SHARED BOOKINGS & SYNC MODAL
+   ========================================================================== */
+
+/* 1. Scoped Resets (neutralize global button { padding: 16px 32px; min-height: 48px }
+      and input, select { min-width: 200px; padding: 16px } as well as #app rules) */
+#descubrir-reservas-content button,
+.plux-sync-choice-modal button,
+#app .plux-transit-connector button,
+.plux-transit-connector button,
+#app .plux-shared-booking-chip button,
+.plux-shared-booking-chip button,
+#app .plux-stop-logistics-box button,
+.plux-stop-logistics-box button {
+  min-height: 0;
+  min-width: 0;
+  overflow: visible;
+  transform: none;
+  box-shadow: none;
+}
+
+#descubrir-reservas-content button::after,
+.plux-sync-choice-modal button::after,
+#app .plux-transit-connector button::after,
+.plux-transit-connector button::after,
+#app .plux-shared-booking-chip button::after,
+.plux-shared-booking-chip button::after,
+#app .plux-stop-logistics-box button::after,
+.plux-stop-logistics-box button::after {
+  display: none;
+}
+
+#descubrir-reservas-content button:hover,
+.plux-sync-choice-modal button:hover,
+#app .plux-transit-connector button:hover,
+.plux-transit-connector button:hover,
+#app .plux-shared-booking-chip button:hover,
+.plux-shared-booking-chip button:hover,
+#app .plux-stop-logistics-box button:hover,
+.plux-stop-logistics-box button:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+#descubrir-reservas-content button:not(.btn-card-primary):not(.btn-card-secondary):not(.subswitch-btn):not(.filter-chip):not(.reserva-thumb-remove):not(.reserva-retry-btn),
+#app .plux-transit-connector button,
+.plux-transit-connector button,
+#app .plux-shared-booking-chip button,
+.plux-shared-booking-chip button,
+#app .plux-stop-logistics-box button,
+.plux-stop-logistics-box button {
+  padding: 6px 12px;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
+  background: rgba(255, 255, 255, 0.07);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  white-space: nowrap;
+}
+
+#descubrir-reservas-content input:not([type="checkbox"]):not([type="radio"]),
+#descubrir-reservas-content select,
+.plux-sync-choice-modal input:not([type="checkbox"]):not([type="radio"]),
+.plux-sync-choice-modal select,
+#app .plux-transit-connector input:not([type="checkbox"]):not([type="radio"]),
+.plux-transit-connector input:not([type="checkbox"]):not([type="radio"]),
+#app .plux-transit-connector select,
+.plux-transit-connector select,
+#app .plux-shared-booking-chip input:not([type="checkbox"]):not([type="radio"]),
+.plux-shared-booking-chip input:not([type="checkbox"]):not([type="radio"]),
+#app .plux-shared-booking-chip select,
+.plux-shared-booking-chip select,
+#app .plux-stop-logistics-box input:not([type="checkbox"]):not([type="radio"]),
+.plux-stop-logistics-box input:not([type="checkbox"]):not([type="radio"]),
+#app .plux-stop-logistics-box select,
+.plux-stop-logistics-box select {
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 7px 10px;
+  font-size: 0.84rem;
+  line-height: 1.3;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.78);
+  color: #f8fafc;
+  box-sizing: border-box;
+  transform: none;
+}
+
+#descubrir-reservas-content .voucher-pnr-box input {
+  background: transparent;
+  border: none;
+  color: var(--verde);
+  padding: 2px 4px;
+  width: 96px;
+}
+
+#descubrir-reservas-content input[type="checkbox"],
+#descubrir-reservas-content input[type="radio"],
+.plux-sync-choice-modal input[type="checkbox"],
+#app .plux-transit-connector input[type="checkbox"],
+#app .plux-shared-booking-chip input[type="checkbox"],
+#app .plux-stop-logistics-box input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0;
+  border-radius: 4px;
+  box-shadow: none !important;
+  transform: none;
+  accent-color: var(--verde);
+}
+
+/* 2. Upload Status Banner & Thumbnails */
+.reserva-status-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+.reserva-status-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+#descubrir-reservas-content .reserva-retry-btn,
+.reserva-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  min-height: 0;
+  min-width: 0;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#descubrir-reservas-content .reserva-retry-btn:hover,
+.reserva-retry-btn:hover {
+  background: rgba(245, 158, 11, 0.26);
+}
+
+.reserva-thumb-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+  padding-top: 4px;
+}
+
+.reserva-thumb-item {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+}
+
+.reserva-thumb-img {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+#descubrir-reservas-content .reserva-thumb-remove,
+.reserva-thumb-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  border: 2px solid #0f172a;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+#descubrir-reservas-content .reserva-thumb-remove:hover,
+.reserva-thumb-remove:hover {
+  background: #dc2626;
+}
+
+.reserva-thumb-status {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  z-index: 2;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  background: #334155;
+  color: #f8fafc;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.reserva-thumb-status--loading,
+.reserva-thumb-status--processing,
+.reserva-thumb-status--pending {
+  background: #0284c7;
+  color: #ffffff;
+  animation: pulse 1.2s infinite;
+}
+
+.reserva-thumb-status--ok,
+.reserva-thumb-status--done {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.reserva-thumb-status--failed,
+.reserva-thumb-status--error {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* 3. Review Card Meta Grid, Finance Bar & Responsive Stages */
+.reserva-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.reserva-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.reserva-meta-item label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  color: var(--gris, #94a3b8);
+  margin: 0;
+}
+
+.reserva-meta-item input,
+.reserva-meta-item select {
+  width: 100%;
+  min-width: 0;
+}
+
+.reserva-finance-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.reserva-finance-pill,
+.reserva-finance-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.reserva-finance-metric--paid {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.36);
+  color: #34d399;
+}
+
+.reserva-finance-metric--pending {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.38);
+  color: #fbbf24;
+}
+
+.reserva-stages-box {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+}
+
+.reserva-stages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+.reserva-stages-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reserva-stages-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.reserva-stages-list::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+}
+
+.reserva-stage-row {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 62px 62px 26px;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  box-sizing: border-box;
+}
+
+#descubrir-reservas-content .reserva-stage-row input,
+#descubrir-reservas-content .reserva-stage-row select,
+.reserva-stage-row input,
+.reserva-stage-row select {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 7px;
+  font-size: 0.78rem;
+  border-radius: 7px;
+}
+
+#descubrir-reservas-content .reserva-stage-row button,
+.reserva-stage-row button {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reserva-stage-transit-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  padding: 3px 10px;
+  margin: 2px 0;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px dashed rgba(56, 189, 248, 0.36);
+  color: #7dd3fc;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.reserva-stage-tender-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  color: #fbbf24;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .reserva-stage-row {
+    grid-template-columns: minmax(0, 1fr) 64px 64px 26px;
+  }
+  .reserva-stage-row > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 4. First-Sync Choice Modal (MUST sit above #modal-descubrir z-index: 999999) */
+.plux-sync-choice-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000050 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+
+.plux-sync-choice-card {
+  max-width: 440px;
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  padding: 22px;
+  color: #f8fafc;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+  box-sizing: border-box;
+}
+
+.plux-sync-choice-card h3,
+.plux-sync-choice-card h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.plux-sync-choice-card p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.plux-sync-choice-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.plux-sync-choice-modal .plux-sync-btn-primary,
+.plux-sync-btn-primary {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 11px;
+  border: none;
+  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  color: #04120c;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.plux-sync-choice-modal .plux-sync-btn-secondary,
+.plux-sync-btn-secondary {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  color: #f8fafc;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.plux-sync-choice-modal .plux-sync-btn-secondary:hover,
+.plux-sync-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.plux-sync-choice-modal .plux-sync-btn-cancel,
+.plux-sync-btn-cancel {
+  width: 100%;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plux-sync-choice-modal .plux-sync-btn-cancel:hover,
+.plux-sync-btn-cancel:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* 5. Editor Transit Connector, Logistics Stepper, Stop Badges & Shared Booking Chip */
+.plux-transit-connector {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: -6px auto;
+  padding: 4px 0;
+  gap: 0;
+}
+
+.plux-transit-connector::before,
+.plux-transit-connector::after {
+  content: '';
+  width: 2px;
+  height: 10px;
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.2), rgba(56, 189, 248, 0.55));
+  border-radius: 999px;
+}
+
+.plux-transit-connector-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.86);
+  border: 1px solid rgba(56, 189, 248, 0.34);
+  color: #bae6fd;
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#app .plux-transit-connector button,
+.plux-transit-connector button {
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#app .plux-transit-connector button:hover,
+.plux-transit-connector button:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+
+.plux-stop-logistics-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  font-size: 0.82rem;
+}
+
+.plux-transit-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+#app .plux-transit-stepper button,
+.plux-transit-stepper button {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border-radius: 7px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plux-stop-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.plux-stop-badge--embarque {
+  background: rgba(20, 184, 166, 0.16);
+  border-color: rgba(20, 184, 166, 0.4);
+  color: #2dd4bf;
+}
+
+.plux-stop-badge--escala {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.38);
+  color: #7dd3fc;
+}
+
+.plux-stop-badge--desembarque {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.plux-stop-badge--tender {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.plux-shared-booking-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.11), rgba(56, 189, 248, 0.08));
+  border: 1px solid rgba(52, 211, 153, 0.32);
+  color: #d1fae5;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+#app .plux-shared-booking-chip button,
+.plux-shared-booking-chip button {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+}
+
+/* 6. Wikipedia Suggestions Strip Thin Scrollbar */
+.wiki-suggestions-strip {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+.wiki-suggestions-strip::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.wiki-suggestions-strip::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wiki-suggestions-strip::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+}
+
+.wiki-suggestions-strip::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+}
+
+/* 7. Light Mode (.theme-claro) Overrides */
+.theme-claro #descubrir-reservas-content input:not([type="checkbox"]):not([type="radio"]),
+.theme-claro #descubrir-reservas-content select,
+.theme-claro .plux-sync-choice-modal input:not([type="checkbox"]):not([type="radio"]),
+.theme-claro .plux-sync-choice-modal select,
+.theme-claro #app .plux-stop-logistics-box input:not([type="checkbox"]):not([type="radio"]),
+.theme-claro #app .plux-stop-logistics-box select {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.theme-claro #descubrir-reservas-content .voucher-pnr-box input {
+  background: transparent !important;
+  border: none !important;
+  color: #059669 !important;
+  box-shadow: none !important;
+}
+
+.theme-claro #descubrir-reservas-content input[type="checkbox"],
+.theme-claro #app .plux-stop-logistics-box input[type="checkbox"],
+.theme-claro #app .plux-shared-booking-chip input[type="checkbox"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.theme-claro .reserva-status-banner {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.theme-claro .reserva-status-progress {
+  color: #0f172a !important;
+}
+
+.theme-claro #descubrir-reservas-content .reserva-retry-btn,
+.theme-claro .reserva-retry-btn {
+  background: #fef3c7 !important;
+  border-color: #f59e0b !important;
+  color: #92400e !important;
+}
+
+.theme-claro .reserva-thumb-img {
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+}
+
+.theme-claro #descubrir-reservas-content .reserva-thumb-remove,
+.theme-claro .reserva-thumb-remove {
+  border-color: #ffffff !important;
+}
+
+.theme-claro .reserva-thumb-status {
+  border-color: #ffffff !important;
+}
+
+.theme-claro .reserva-meta-item label {
+  color: #475569 !important;
+}
+
+.theme-claro .reserva-finance-bar {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.theme-claro .reserva-finance-pill,
+.theme-claro .reserva-finance-metric {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.theme-claro .reserva-finance-metric--paid {
+  background: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+  color: #047857 !important;
+}
+
+.theme-claro .reserva-finance-metric--pending {
+  background: #fffbeb !important;
+  border-color: #fcd34d !important;
+  color: #b45309 !important;
+}
+
+.theme-claro .reserva-stages-box {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.theme-claro .reserva-stage-row {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.theme-claro #descubrir-reservas-content .reserva-stage-row button,
+.theme-claro .reserva-stage-row button {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+.theme-claro .reserva-stage-transit-pill {
+  background: #e0f2fe !important;
+  border-color: #7dd3fc !important;
+  color: #0369a1 !important;
+}
+
+.theme-claro .reserva-stage-tender-badge {
+  background: #fef3c7 !important;
+  border-color: #f59e0b !important;
+  color: #92400e !important;
+}
+
+.theme-claro .plux-sync-choice-card {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22) !important;
+}
+
+.theme-claro .plux-sync-choice-card h3,
+.theme-claro .plux-sync-choice-card h4 {
+  color: #0f172a !important;
+}
+
+.theme-claro .plux-sync-choice-card p {
+  color: #475569 !important;
+}
+
+.theme-claro .plux-sync-choice-modal .plux-sync-btn-primary,
+.theme-claro .plux-sync-btn-primary {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #059669, #2563eb) !important;
+}
+
+.theme-claro .plux-sync-choice-modal .plux-sync-btn-secondary,
+.theme-claro .plux-sync-btn-secondary {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.theme-claro .plux-sync-choice-modal .plux-sync-btn-cancel,
+.theme-claro .plux-sync-btn-cancel {
+  color: #64748b !important;
+}
+
+.theme-claro .plux-transit-connector-pill {
+  background: #ffffff !important;
+  border-color: #7dd3fc !important;
+  color: #0369a1 !important;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+.theme-claro #app .plux-transit-connector button,
+.theme-claro .plux-transit-connector button {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+.theme-claro .plux-stop-logistics-box {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.theme-claro .plux-transit-stepper {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.theme-claro #app .plux-transit-stepper button,
+.theme-claro .plux-transit-stepper button {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.theme-claro .plux-stop-badge--embarque {
+  background: #ccfbf1 !important;
+  border-color: #5eead4 !important;
+  color: #0f766e !important;
+}
+
+.theme-claro .plux-stop-badge--escala {
+  background: #e0f2fe !important;
+  border-color: #7dd3fc !important;
+  color: #0369a1 !important;
+}
+
+.theme-claro .plux-stop-badge--desembarque {
+  background: #d1fae5 !important;
+  border-color: #6ee7b7 !important;
+  color: #047857 !important;
+}
+
+.theme-claro .plux-stop-badge--tender {
+  background: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #b45309 !important;
+}
+
+.theme-claro .plux-shared-booking-chip {
+  background: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+  color: #065f46 !important;
+}
+
+.theme-claro #app .plux-shared-booking-chip button,
+.theme-claro .plux-shared-booking-chip button {
+  background: #ffffff !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+.theme-claro .wiki-suggestions-strip {
+  scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
+}

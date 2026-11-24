@@ -2513,6 +2513,11 @@ let pluxReservaInputMode = 'smart'; // 'smart' | 'express' | 'wallet'
 let pluxExpressTipo = 'vuelo';
 let pluxPreselectedDestino = '';
 let pluxPendingImagePreview = null;
+let pluxPendingImages = []; // [{ id, name, dataUrl, ocrText, status: 'pending'|'processing'|'done'|'failed', errorMsg }]
+let pluxOcrInProgress = false;
+let pluxLastVisionBatches = [];
+let pluxLastDocReservas = [];
+let pluxOcrStatusText = '';
 
 const PLUX_IATA_CITIES = {
   EZE: 'Buenos Aires', AEP: 'Buenos Aires', COR: 'Córdoba', MDZ: 'Mendoza', BRC: 'Bariloche', IGR: 'Iguazú', USH: 'Ushuaia', SLA: 'Salta', ROS: 'Rosario', NQN: 'Neuquén', FTE: 'El Calafate',
@@ -2532,7 +2537,9 @@ const PLUX_KNOWN_CITIES = [
   'Santiago', 'Florencia', 'Venecia', 'Milán', 'Lisboa', 'Praga', 'Viena', 'Budapest', 'Atenas',
   'Estambul', 'Dubái', 'Bangkok', 'Seúl', 'Kioto', 'Osaka', 'Sídney', 'Ciudad de México',
   'Bogotá', 'Cartagena', 'Medellín', 'Lima', 'Ushuaia', 'Iguazú', 'Salta', 'El Calafate',
-  'Sevilla', 'Granada', 'Valencia', 'Niza', 'Múnich', 'Zúrich', 'Edimburgo', 'Dublín', 'El Cairo'
+  'Sevilla', 'Granada', 'Valencia', 'Niza', 'Múnich', 'Zúrich', 'Edimburgo', 'Dublín', 'El Cairo',
+  'Buzios', 'Ilhabela', 'Camboriú', 'Camboriu', 'Punta del Este', 'Montevideo', 'Santos', 'Itajaí',
+  'Salvador', 'Maceió', 'Angra dos Reis', 'Cozumel', 'Nassau', 'Civitavecchia', 'Santorini', 'Mykonos', 'Dubrovnik'
 ];
 
 const PLUX_MONTH_MAP = {
@@ -2550,93 +2557,92 @@ const PLUX_MONTH_MAP = {
   dic: 12, diciembre: 12, dec: 12, december: 12, dicembre: 12
 };
 
-const PLUX_EJEMPLOS_RESERVAS = {
-  vuelo: `CONFIRMACIÓN DE RESERVA DE VUELO - IBERIA / LATAM
-Código de reserva (PNR): K8M4X9
-Estado: Confirmado (Billete electrónico emitido)
-Vuelo: IB 6844 (Operado por Iberia)
-Origen: Buenos Aires - Ministro Pistarini (EZE) - Terminal A
-Destino: Roma Fiumicino (FCO) - Terminal 3
-Escala: Conexión en Madrid Barajas (MAD) · 2h 10m
-Fecha de salida: 15 de noviembre de 2026
-Hora de salida: 14:30 · Hora de llegada: 10:15
-Duración estimada: 780 min
-Asiento asignado: 18A (Ventanilla) · Puerta: B14
-Equipaje: 1 valija en bodega de 23 kg + carry-on de 10 kg
-Total pagado: USD 845`,
+function parseLocalNoonImporter(val) {
+  const m = String(val || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+}
 
-  hotel: `BOOKING.COM - CONFIRMACIÓN DE ALOJAMIENTO
-Número de confirmación: BK-482910
-PIN de seguridad: 7391
-Propiedad: Hotel Artemide Roma
-Dirección: Via Nazionale 22, Repubblica, 00184 Roma, Italia
-Ciudad: Roma
-Check-in: 15 de noviembre de 2026 a partir de las 15:00
-Check-out: 19 de noviembre de 2026 hasta las 11:00
-Estadía total: 4 noches · 1 Habitación Doble Superior
-Régimen: Desayuno buffet incluido + Cancelación gratuita
-Precio total: EUR 620`,
+function diffCalendarDaysISO(isoA, isoB) {
+  const d1 = parseLocalNoonImporter(isoA);
+  const d2 = parseLocalNoonImporter(isoB);
+  if (!d1 || !d2) return 0;
+  return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+}
 
-  tren: `TRENITALIA - BILLETE ALTA VELOCIDAD FRECCIAROSSA
-Código de reserva (PNR): TR992L
-Tren: Frecciarossa 9618
-Estación de salida: Roma Termini · Hora: 09:25
-Estación de llegada: Florencia Santa Maria Novella · Hora: 11:00
-Fecha de viaje: 19/11/2026
-Duración: 95 min
-Coche (Vagón): 4 · Asiento: 12D (Executive)
-Importe abonado: EUR 58`,
+function normCityKeyImporter(city) {
+  return String(city || '')
+    .split(',')[0]
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  actividad: `GETYOURGUIDE / CIVITATIS - VOUCHER DE ENTRADA OFICIAL
-Código de referencia: GYG-884120
-Actividad: Visita Guiada Coliseo, Foro Romano y Arena de Gladiadores
-Ciudad: Roma
-Fecha: 17 de noviembre de 2026
-Hora de inicio: 10:30 · Duración: 180 min
-Punto de encuentro: Piazza del Colosseo 1 (Arco de Constantino, guía con bandera azul)
-Idioma del tour: Español · Auriculares incluidos
-Total: EUR 64`,
+function parseAmountSmart(s) {
+  if (typeof s === 'number') return isNaN(s) ? 0 : s;
+  if (!s) return 0;
+  let cleaned = String(s).replace(/[^\d.,]/g, '').trim();
+  if (!cleaned) return 0;
+  const lastDot = cleaned.lastIndexOf('.');
+  const lastComma = cleaned.lastIndexOf(',');
+  if (lastDot !== -1 && lastComma !== -1) {
+    if (lastComma > lastDot) {
+      cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+    } else {
+      cleaned = cleaned.replace(/,/g, '');
+    }
+  } else if (lastComma !== -1) {
+    const decLen = cleaned.length - lastComma - 1;
+    cleaned = decLen === 3 ? cleaned.replace(/,/g, '') : cleaned.replace(',', '.');
+  } else if (lastDot !== -1) {
+    const decLen = cleaned.length - lastDot - 1;
+    if (decLen === 3 && cleaned.indexOf('.') !== lastDot) {
+      cleaned = cleaned.replace(/\./g, '');
+    } else if (decLen === 3 && cleaned.length > 4) {
+      cleaned = cleaned.replace(/\./g, '');
+    }
+  }
+  const v = parseFloat(cleaned);
+  return isNaN(v) ? 0 : v;
+}
 
-  multiple: `RESERVA 1: VUELO IDA INTERNACIONAL
-Aerolínea: ITA Airways · Vuelo AZ 681
-Ruta: Buenos Aires (EZE) a Roma Fiumicino (FCO)
-Código PNR: AZ774P
-Fecha: 15 de noviembre de 2026
-Salida: 13:15 · Llegada: 07:00
-Notas: Terminal C, Asiento 22C, Equipaje 23kg incluido
-Total: USD 890
----
-RESERVA 2: ALOJAMIENTO EN ROMA (3 NOCHES)
-Proveedor: Airbnb / Booking
-Propiedad: Loft Histórico Piazza Santa Maria in Trastevere
-Ciudad: Roma
-Dirección: Piazza di Santa Maria in Trastevere 14, Roma
-Check-in: 15/11/2026 15:00
-Check-out: 18/11/2026 11:00
-Estadía: 3 noches · Código de reserva: HM9928KL · PIN: 4512
-Notas: Acceso autónomo con caja de seguridad en el portal (código 4512)
-Total: EUR 420
----
-RESERVA 3: MUSEOS Y MONUMENTOS
-Proveedor: Musei Vaticani Oficial
-Actividad: Entrada Sin Filas Museos Vaticanos y Capilla Sixtina
-Ciudad: Roma
-Fecha: 16/11/2026
-Hora: 09:00 · Duración: 180 min
-Código de reserva: VAT-551902
-Punto de encuentro: Viale Vaticano 100, Puerta de Reservas Online
-Total: EUR 29
----
-RESERVA 4: TREN ALTA VELOCIDAD ROMA A FLORENCIA
-Proveedor: Trenitalia Frecciarossa 9514
-Estación de salida: Roma Termini
-Estación de llegada: Florencia Santa Maria Novella
-Ciudad: Florencia
-Fecha: 18/11/2026
-Hora: 08:50 · Llegada: 10:25 · Duración: 95 min
-Código PNR: FR881K · Coche 3 Asiento 8A
-Total: EUR 49`
-};
+const PLUX_GENERIC_BOOKING_CODES = new Set(['', 'CONF', 'CONF-OK', 'CONF-IA', 'CRU-OK', 'EXP-OK', 'PLUX-PASS']);
+
+function isRealBookingCode(code) {
+  const c = String(code || '').trim().toUpperCase();
+  return Boolean(c && c.length >= 4 && !PLUX_GENERIC_BOOKING_CODES.has(c));
+}
+
+function fnv1aHex(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+function computeBookingSyncKey(res) {
+  const tipo = String(res?.tipo || 'res').trim().toLowerCase();
+  const code = String(res?.codigo || '').trim().toUpperCase();
+  if (isRealBookingCode(code)) {
+    return `${tipo}:${code}`;
+  }
+  let sig = '';
+  if (Array.isArray(res?.etapas) && res.etapas.length > 0) {
+    sig = res.etapas
+      .filter(e => e && !e.esNavegacion)
+      .map(e => `${e.fechaISO || e.diaNum || ''}|${normCityKeyImporter(e.ciudad)}`)
+      .join(';');
+  } else {
+    sig = `${res?.fechaISO || ''}|${normCityKeyImporter(res?.ciudad)}|${String(res?.titulo || '').trim().toLowerCase()}`;
+  }
+  return `${tipo}:fp_${fnv1aHex(sig || 'empty')}`;
+}
 
 function obtenerWalletReservas() {
   try {
@@ -2745,11 +2751,101 @@ function calcularDiaViajePorFechaISO(fechaISO, baseFechaISO) {
   const tripStartEl = document.getElementById('fechaInicio');
   const refISO = baseFechaISO || (tripStartEl && tripStartEl.value ? tripStartEl.value : '');
   if (!refISO) return 0;
-  const d1 = new Date(refISO + 'T00:00:00');
-  const d2 = new Date(fechaISO + 'T00:00:00');
-  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 0;
+  const d1 = parseLocalNoonImporter(refISO);
+  const d2 = parseLocalNoonImporter(fechaISO);
+  if (!d1 || !d2) return 0;
   const diffDays = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-  return Math.max(0, Math.min(30, diffDays));
+  return Math.max(0, Math.min(90, diffDays));
+}
+
+function generarBannerArchivosReservaHTML(customStatusMsg = '') {
+  if (pluxPendingImages.length > 0) {
+    const doneCount = pluxPendingImages.filter(img => img.status === 'done').length;
+    const failedCount = pluxPendingImages.filter(img => img.status === 'failed').length;
+    const procCount = pluxPendingImages.filter(img => img.status === 'processing').length;
+
+    let statusSummary = '';
+    if (pluxOcrInProgress) {
+      statusSummary = customStatusMsg || pluxOcrStatusText || `Analizando imágenes con Vision IA (${doneCount}/${pluxPendingImages.length})...`;
+    } else if (failedCount > 0) {
+      statusSummary = `${pluxPendingImages.length} ${pluxPendingImages.length === 1 ? 'captura' : 'capturas'} · ${doneCount} listas · ${failedCount} fallidas`;
+    } else if (doneCount > 0) {
+      statusSummary = `${pluxPendingImages.length} ${pluxPendingImages.length === 1 ? 'captura' : 'capturas'} · ${doneCount} analizadas con éxito`;
+    } else {
+      statusSummary = `${pluxPendingImages.length} ${pluxPendingImages.length === 1 ? 'captura adjunta' : 'capturas adjuntas'}`;
+    }
+
+    return `
+      <div class="reserva-status-progress">
+        <span style="display:inline-flex; align-items:center; gap:7px;">
+          ${pluxOcrInProgress || procCount > 0
+            ? '<i class="fa-solid fa-spinner fa-spin" style="color:#38bdf8;"></i>'
+            : (failedCount > 0
+                ? '<i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i>'
+                : '<i class="fa-solid fa-circle-check" style="color:#10b981;"></i>')}
+          <span>${escapeHtml(statusSummary)}</span>
+        </span>
+        <div style="display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          ${failedCount > 0 && !pluxOcrInProgress ? `
+            <button type="button" class="reserva-retry-btn" onclick="window.reintentarImagenesFallidasReserva()">
+              <i class="fa-solid fa-rotate-right"></i> Reintentar fallidas (${failedCount})
+            </button>
+          ` : ''}
+          <button type="button" onclick="window.quitarImagenReservaAdjunta()" style="background:transparent; border:none; color:var(--gris); cursor:pointer; font-size:0.75rem; padding:2px 6px;">Quitar todas</button>
+        </div>
+      </div>
+      <div class="reserva-thumb-grid">
+        ${pluxPendingImages.map((img, i) => {
+          const st = img.status || 'pending';
+          let badgeHtml = '';
+          if (st === 'processing') {
+            badgeHtml = '<span class="reserva-thumb-status reserva-thumb-status--processing reserva-thumb-status--loading" title="Analizando..."><i class="fa-solid fa-spinner fa-spin"></i></span>';
+          } else if (st === 'done') {
+            badgeHtml = '<span class="reserva-thumb-status reserva-thumb-status--done reserva-thumb-status--ok" title="Analizada"><i class="fa-solid fa-check"></i></span>';
+          } else if (st === 'failed') {
+            badgeHtml = `<span class="reserva-thumb-status reserva-thumb-status--failed" title="${escapeHtml(img.errorMsg || 'Error al analizar')}"><i class="fa-solid fa-exclamation"></i></span>`;
+          }
+          return `
+            <div class="reserva-thumb-item">
+              <img class="reserva-thumb-img" src="${img.dataUrl}" title="${escapeHtml(img.name)}" alt="${escapeHtml(img.name)}">
+              <button type="button" class="reserva-thumb-remove" onclick="window.quitarImagenReservaIndividual(${i})" title="Quitar captura">&times;</button>
+              ${badgeHtml}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  if (pluxPendingImagePreview) {
+    return `
+      <div class="reserva-status-progress">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
+          <div class="reserva-thumb-item">
+            <img class="reserva-thumb-img" src="${pluxPendingImagePreview}" alt="Comprobante adjunto">
+          </div>
+          <div style="font-size:0.78rem;">Comprobante visual adjunto (quedará guardado en el voucher de tu billetera)</div>
+        </div>
+        <button type="button" onclick="window.quitarImagenReservaAdjunta()" style="background:transparent; border:none; color:var(--gris); cursor:pointer; font-size:1rem; padding:2px 6px;">&times;</button>
+      </div>
+    `;
+  }
+  return '';
+}
+
+function actualizarBannerArchivosReserva(customStatusMsg = '') {
+  if (customStatusMsg) pluxOcrStatusText = customStatusMsg;
+  else if (!pluxOcrInProgress) pluxOcrStatusText = '';
+  const banner = document.getElementById('reservaFileStatusBanner');
+  if (!banner) return;
+  const hasAny = pluxPendingImages.length > 0 || Boolean(pluxPendingImagePreview);
+  if (!hasAny) {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+    return;
+  }
+  banner.style.display = 'flex';
+  banner.innerHTML = generarBannerArchivosReservaHTML(customStatusMsg);
 }
 
 function abrirImportadorParaDestino(nombreDestino) {
@@ -2811,16 +2907,6 @@ function renderizarImportadorReservas() {
     </div>
 
     ${pluxReservaInputMode === 'smart' ? `
-      <!-- Barra de Ejemplos Reales en 1 Clic -->
-      <div class="reservas-samples-bar">
-        <span class="reservas-samples-label"><i class="fa-solid fa-flask" style="color:var(--verde);"></i> Probar con confirmación real:</span>
-        <button type="button" class="filter-chip" onclick="window.cargarEjemploReserva('vuelo')"><i class="fa-solid fa-plane"></i> Vuelo + Escala</button>
-        <button type="button" class="filter-chip" onclick="window.cargarEjemploReserva('hotel')"><i class="fa-solid fa-hotel"></i> Booking (4 noches + PIN)</button>
-        <button type="button" class="filter-chip" onclick="window.cargarEjemploReserva('tren')"><i class="fa-solid fa-train"></i> Tren Frecciarossa</button>
-        <button type="button" class="filter-chip" onclick="window.cargarEjemploReserva('actividad')"><i class="fa-solid fa-ticket"></i> Tour Guiado</button>
-        <button type="button" class="filter-chip" style="border-color:rgba(16,185,129,0.5); color:var(--verde);" onclick="window.cargarEjemploReserva('multiple')"><i class="fa-solid fa-layer-group"></i> Viaje Completo (4 Reservas)</button>
-      </div>
-
       <div class="reservas-importer-grid">
         <!-- Columna Izquierda: Entrada Multi-Formato -->
         <div class="reservas-panel-card">
@@ -2838,24 +2924,20 @@ function renderizarImportadorReservas() {
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
               <span style="font-size:0.82rem; color:#e2e8f0; font-weight:600;">
                 <i class="fa-solid fa-cloud-arrow-up" style="color:#38bdf8; margin-right:6px;"></i>
-                Arrastra tu <strong>PDF de pasaje/hotel</strong>, <strong>captura de pantalla</strong> o calendario <strong>.ics</strong>:
+                Arrastra uno o varios <strong>PDFs</strong>, <strong>capturas de pantalla</strong> o calendarios <strong>.ics</strong>:
               </span>
               <div style="display:flex; gap:6px; flex-wrap:wrap;">
                 <label style="cursor:pointer; background:linear-gradient(135deg, rgba(56,189,248,0.22), rgba(16,185,129,0.18)); border:1px solid rgba(56,189,248,0.45); color:#ffffff; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;">
-                  <i class="fa-solid fa-file-pdf" style="color:#38bdf8;"></i> Subir PDF / Imagen / ICS
-                  <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.ics,.eml,.txt,.html,.json" style="display:none;" onchange="window.subirArchivoReserva(event)">
+                  <i class="fa-solid fa-images" style="color:#38bdf8;"></i> Subir PDFs / Imágenes / ICS
+                  <input type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.ics,.eml,.txt,.html,.json" style="display:none;" onchange="window.subirArchivoReserva(event)">
                 </label>
                 <button type="button" onclick="window.pegarPortapapelesReserva()" style="cursor:pointer; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.16); color:#e2e8f0; padding:6px 11px; border-radius:8px; font-weight:700; font-size:0.78rem; display:inline-flex; align-items:center; gap:5px;">
                   <i class="fa-solid fa-paste"></i> Pegar
                 </button>
               </div>
             </div>
-            <div id="reservaFileStatusBanner" style="display:${pluxPendingImagePreview ? 'flex' : 'none'}; align-items:center; gap:10px; background:rgba(15,23,42,0.85); padding:8px 12px; border-radius:10px; border:1px solid rgba(56,189,248,0.3);">
-              ${pluxPendingImagePreview ? `
-                <img src="${pluxPendingImagePreview}" style="width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.2);">
-                <div style="flex:1; font-size:0.78rem; color:#e2e8f0;">Comprobante visual adjunto (quedará guardado en el voucher de tu billetera)</div>
-                <button type="button" onclick="window.quitarImagenReservaAdjunta()" style="background:transparent; border:none; color:var(--gris); cursor:pointer;">&times;</button>
-              ` : ''}
+            <div id="reservaFileStatusBanner" class="reserva-status-banner" style="display:${pluxPendingImages.length > 0 || pluxPendingImagePreview ? 'flex' : 'none'};">
+              ${generarBannerArchivosReservaHTML()}
             </div>
           </div>
 
@@ -2910,6 +2992,7 @@ function renderizarImportadorReservas() {
 
       <div class="descubrir-chips-filter" id="walletCategoryChips" style="margin-top:12px;">
         <button type="button" class="filter-chip ${pluxWalletFilter === 'todas' ? 'active' : ''}" onclick="window.filtrarWalletReservas('todas', this)">Todas (${wallet.length})</button>
+        <button type="button" class="filter-chip ${pluxWalletFilter === 'crucero' ? 'active' : ''}" onclick="window.filtrarWalletReservas('crucero', this)"><i class="fa-solid fa-ship"></i> Cruceros</button>
         <button type="button" class="filter-chip ${pluxWalletFilter === 'vuelo' ? 'active' : ''}" onclick="window.filtrarWalletReservas('vuelo', this)"><i class="fa-solid fa-plane"></i> Vuelos</button>
         <button type="button" class="filter-chip ${pluxWalletFilter === 'hotel' ? 'active' : ''}" onclick="window.filtrarWalletReservas('hotel', this)"><i class="fa-solid fa-hotel"></i> Hoteles / Airbnb</button>
         <button type="button" class="filter-chip ${pluxWalletFilter === 'tren' ? 'active' : ''}" onclick="window.filtrarWalletReservas('tren', this)"><i class="fa-solid fa-train"></i> Trenes / Buses</button>
@@ -2929,7 +3012,8 @@ function renderizarImportadorReservas() {
 
 function renderizarFormularioExpressReservaHTML(viajeros) {
   const defaultCity = pluxPreselectedDestino || (typeof destinos !== 'undefined' && destinos[0]?.nombre) || 'Roma';
-  const defaultDate = document.getElementById('fechaInicio')?.value || new Date().toISOString().slice(0, 10);
+  const rawTripStart = document.getElementById('fechaInicio')?.value || '';
+  const defaultDate = rawTripStart ? rawTripStart.slice(0, 10) : new Date().toISOString().slice(0, 10);
 
   return `
     <div class="reservas-panel-card" style="margin-bottom:20px;">
@@ -3094,42 +3178,56 @@ function guardarReservaExpressDirecto() {
     diaIndex: calcularDiaViajePorFechaISO(normDate.iso || fechaISO),
     targetDestMode: 'auto',
     sincronizarFechaInicio: !document.getElementById('fechaInicio')?.value,
-     guardarEnTransporte: pluxExpressTipo === 'vuelo' || pluxExpressTipo === 'tren' || pluxExpressTipo === 'hotel',
+    guardarEnTransporte: pluxExpressTipo === 'vuelo' || pluxExpressTipo === 'tren' || pluxExpressTipo === 'hotel',
     expandirNoches: pluxExpressTipo === 'hotel',
     rawEmail: `${titulo}\nCiudad: ${ciudad}\nFecha: ${normDate.display}\nHora: ${hora}\nCódigo: ${codigo}\nNotas: ${notas}`,
-    agregadoAlViaje: true
+    agregadoAlViaje: false
   };
+  res._syncKey = computeBookingSyncKey(res);
 
-  const targetDest = insertarObjetoReservaEnViaje(res);
-  guardarReservaEnWallet(res);
-  if (typeof renderDestinos === 'function') renderDestinos();
-  if (typeof autoSave === 'function') autoSave();
+  solicitarDestinoSincronizacion([res], () => {
+    const targetDest = upsertBookingInTrip(res);
+    res.agregadoAlViaje = true;
+    guardarReservaEnWallet(res);
+    finalizarSincronizacionImportacion();
 
-  pluxReservaInputMode = 'wallet';
-  renderizarImportadorReservas();
-  if (typeof window.showToast === 'function') {
-    window.showToast(`Reserva "${res.titulo}" sincronizada en ${targetDest ? targetDest.nombre : ciudad}`, 'success');
-  }
-}
-
-function cargarEjemploReserva(tipo) {
-  const input = document.getElementById('reservaRawInput');
-  if (!input) return;
-  input.value = PLUX_EJEMPLOS_RESERVAS[tipo] || PLUX_EJEMPLOS_RESERVAS.vuelo;
-  analizarTextoReserva();
+    pluxReservaInputMode = 'wallet';
+    renderizarImportadorReservas();
+    if (typeof window.showToast === 'function') {
+      window.showToast(`Reserva "${res.titulo}" sincronizada en ${targetDest ? targetDest.nombre : ciudad}`, 'success');
+    }
+  });
 }
 
 function limpiarImportadorReserva() {
   const input = document.getElementById('reservaRawInput');
   if (input) input.value = '';
   pluxDetectedReservas = [];
+  pluxLastVisionBatches = [];
+  pluxLastDocReservas = [];
   pluxPendingImagePreview = null;
-  renderizarImportadorReservas();
+  pluxPendingImages = [];
+  pluxOcrInProgress = false;
+  pluxOcrStatusText = '';
+  actualizarBannerArchivosReserva();
+  renderizarTarjetasReservasDetectadas();
 }
 
 function quitarImagenReservaAdjunta() {
   pluxPendingImagePreview = null;
-  renderizarImportadorReservas();
+  pluxPendingImages = [];
+  pluxLastVisionBatches = [];
+  pluxOcrInProgress = false;
+  pluxOcrStatusText = '';
+  actualizarBannerArchivosReserva();
+}
+
+function quitarImagenReservaIndividual(idx) {
+  if (idx >= 0 && idx < pluxPendingImages.length) {
+    pluxPendingImages.splice(idx, 1);
+    pluxPendingImagePreview = pluxPendingImages[0]?.dataUrl || null;
+    actualizarBannerArchivosReserva();
+  }
 }
 
 async function pegarPortapapelesReserva() {
@@ -3156,21 +3254,541 @@ function manejarDropArchivoReserva(event) {
     dz.style.borderColor = 'rgba(56,189,248,0.4)';
     dz.style.background = 'rgba(56,189,248,0.06)';
   }
-  const file = event?.dataTransfer?.files?.[0];
-  if (file) {
-    procesarArchivoReserva(file);
+  const files = event?.dataTransfer?.files ? Array.from(event.dataTransfer.files) : [];
+  if (files.length > 0) {
+    procesarMultiplesArchivosReserva(files);
   }
 }
 
 function subirArchivoReserva(event) {
-  const file = event?.target?.files?.[0];
-  if (file) {
-    procesarArchivoReserva(file);
+  const files = event?.target?.files ? Array.from(event.target.files) : [];
+  if (files.length > 0) {
+    procesarMultiplesArchivosReserva(files);
+  }
+  if (event?.target) event.target.value = '';
+}
+
+function comprimirImagenParaAnalisis(file, maxSide = 1100, quality = 0.80) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const rawUrl = String(ev.target?.result || '');
+      const img = new Image();
+      img.onload = function() {
+        try {
+          let w = img.width;
+          let h = img.height;
+          if (w > maxSide || h > maxSide) {
+            const scale = maxSide / Math.max(w, h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } catch (_) {
+          resolve(rawUrl);
+        }
+      };
+      img.onerror = () => resolve(rawUrl);
+      img.src = rawUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function extraerJsonDeRespuestaIA(rawText) {
+  if (!rawText) return null;
+  let cleaned = String(rawText).trim();
+  const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenceMatch) cleaned = fenceMatch[1].trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch (_) {}
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    try {
+      return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+    } catch (_) {}
+  }
+  const firstBracket = cleaned.indexOf('[');
+  const lastBracket = cleaned.lastIndexOf(']');
+  if (firstBracket !== -1 && lastBracket > firstBracket) {
+    try {
+      return JSON.parse(cleaned.slice(firstBracket, lastBracket + 1));
+    } catch (_) {}
+  }
+  return null;
+}
+
+function esRechazoVisualExplicito(txt) {
+  const s = String(txt || '').trim();
+  if (!s) return true;
+  return /\b(cannot view|can't view|can't see|unable to view|unable to see|i do not have access to images|no puedo ver las im[aá]genes|no tengo acceso a la imagen|no puedo visualizar la imagen)\b/i.test(s);
+}
+
+async function fetchVisionWorkerConTimeout(payload, timeoutMs = 35000) {
+  const workerUrl = (typeof window.GEMINI_ENDPOINT !== 'undefined' && window.GEMINI_ENDPOINT)
+    ? window.GEMINI_ENDPOINT
+    : 'https://pluxy.nibecar-cofeben.workers.dev/';
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    const resp = await fetch(workerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller ? controller.signal : undefined,
+      body: JSON.stringify(payload)
+    });
+    return resp;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
+async function analizarSubloteVisionDirecto(subImgs, retryAttempt = 0) {
+  const contentParts = [
+    {
+      type: 'text',
+      text: `Analiza estas ${subImgs.length} imágenes de viaje/reservas y responde ÚNICAMENTE con un objeto JSON válido con esta estructura exacta:
+{
+  "transcript": "texto visible principal separado por ---",
+  "bookingMeta": {
+    "tipo": "crucero|vuelo|hotel|tren|actividad|auto",
+    "titulo": "",
+    "proveedor": "",
+    "nave": "",
+    "codigo": "",
+    "cabina": "",
+    "moneda": "USD|EUR|ARS",
+    "costo": 0,
+    "montoPagado": 0,
+    "saldoPendiente": 0,
+    "modoPrecio": "total|persona",
+    "notas": "",
+    "detallesExtra": []
+  },
+  "stages": [
+    {
+      "diaNum": 1,
+      "fechaRaw": "23 ENE",
+      "fechaISO": "",
+      "ciudad": "Buenos Aires",
+      "esNavegacion": false,
+      "horaLlegada": "",
+      "horaSalida": "18:00",
+      "notas": ""
+    }
+  ]
+}
+REGLAS CRÍTICAS:
+1. Extrae SOLO la tarjeta, día o reserva PRINCIPAL enfocada/centrada en cada imagen. IGNORA por completo tarjetas vecinas parcialmente cortadas en los márgenes izquierdo o derecho.
+2. Si el año NO aparece en la imagen, deja "fechaISO": "" y pon la fecha visible exacta en "fechaRaw" (ej: "23 ENE", "1 FEB").
+3. Conserva "diaNum" exacto si dice "DÍA 4", "DÍA 9", etc.
+4. Si dice "DESEMBARQUE CON BOTE AUXILIAR" o "servicio de tenders", escríbelo en "notas" de esa etapa.
+5. Si es un vuelo/hotel/tren/actividad sin tabla de etapas, completa "bookingMeta" y opcionalmente una etapa con fecha, ciudad y horarios.`
+    },
+    ...subImgs.map(img => ({ type: 'image_url', image_url: { url: img.dataUrl } }))
+  ];
+
+  const payload = {
+    system: 'Eres un motor Vision-AI de extracción estructurada para comprobantes, itinerarios y capturas de viaje. Responde SOLO con JSON válido sin bloques markdown.',
+    messages: [{ role: 'user', content: contentParts }],
+    temperature: 0.1,
+    max_tokens: 3000
+  };
+
+  subImgs.forEach(img => { img.status = 'processing'; img.errorMsg = ''; });
+  actualizarBannerArchivosReserva();
+
+  try {
+    const resp = await fetchVisionWorkerConTimeout(payload, 35000);
+    if (!resp.ok) {
+      const status = resp.status;
+      // Split immediately on payload too large / bad request with >1 image
+      if ((status === 400 || status === 413) && subImgs.length > 1) {
+        const mid = Math.ceil(subImgs.length / 2);
+        const left = await analizarSubloteVisionDirecto(subImgs.slice(0, mid), 0);
+        const right = await analizarSubloteVisionDirecto(subImgs.slice(mid), 0);
+        return [...left, ...right];
+      }
+      // Retry once with 1.2s backoff on 429/502/5xx
+      if ((status === 429 || status >= 500) && retryAttempt < 1) {
+        await new Promise(r => setTimeout(r, 1200));
+        return analizarSubloteVisionDirecto(subImgs, retryAttempt + 1);
+      }
+      // If still failing with >1 image, split to salvage individually
+      if (subImgs.length > 1) {
+        const mid = Math.ceil(subImgs.length / 2);
+        const left = await analizarSubloteVisionDirecto(subImgs.slice(0, mid), 0);
+        const right = await analizarSubloteVisionDirecto(subImgs.slice(mid), 0);
+        return [...left, ...right];
+      }
+      subImgs.forEach(img => { img.status = 'failed'; img.errorMsg = `HTTP ${status}`; });
+      actualizarBannerArchivosReserva();
+      return [];
+    }
+
+    const data = await resp.json();
+    const replyTxt = String(data.text || data.reply || '').trim();
+    const parsedJson = extraerJsonDeRespuestaIA(replyTxt);
+
+    if (parsedJson && typeof parsedJson === 'object') {
+      const batchObj = Array.isArray(parsedJson)
+        ? { transcript: '', bookingMeta: parsedJson[0] || {}, stages: parsedJson.flatMap(x => x?.stages || x?.etapas || []) }
+        : {
+            transcript: String(parsedJson.transcript || '').trim(),
+            bookingMeta: (parsedJson.bookingMeta && typeof parsedJson.bookingMeta === 'object') ? parsedJson.bookingMeta : {},
+            stages: Array.isArray(parsedJson.stages) ? parsedJson.stages : (Array.isArray(parsedJson.etapas) ? parsedJson.etapas : [])
+          };
+      subImgs.forEach(img => {
+        img.status = 'done';
+        img.errorMsg = '';
+        if (batchObj.transcript) img.ocrText = batchObj.transcript;
+      });
+      actualizarBannerArchivosReserva();
+      return [batchObj];
+    }
+
+    // Fallback: valid plain-text transcript (never reject just for containing "error")
+    if (replyTxt && !esRechazoVisualExplicito(replyTxt)) {
+      const stagesFromTxt = extraerEtapasItinerarioTexto(replyTxt);
+      const cruiseFromTxt = intentarParsearCruceroOItinerario(replyTxt);
+      if (stagesFromTxt.length > 0 || cruiseFromTxt || replyTxt.length > 25) {
+        subImgs.forEach(img => {
+          img.status = 'done';
+          img.errorMsg = '';
+          img.ocrText = replyTxt;
+        });
+        actualizarBannerArchivosReserva();
+        return [{
+          transcript: replyTxt,
+          bookingMeta: cruiseFromTxt ? {
+            tipo: cruiseFromTxt.tipo,
+            titulo: cruiseFromTxt.titulo,
+            proveedor: cruiseFromTxt.proveedor,
+            codigo: cruiseFromTxt.codigo,
+            costo: cruiseFromTxt.costo,
+            moneda: cruiseFromTxt.moneda
+          } : {},
+          stages: stagesFromTxt
+        }];
+      }
+    }
+
+    // Unparseable or explicit visual refusal -> retry once or split
+    if (retryAttempt < 1) {
+      await new Promise(r => setTimeout(r, 1200));
+      return analizarSubloteVisionDirecto(subImgs, retryAttempt + 1);
+    }
+    if (subImgs.length > 1) {
+      const mid = Math.ceil(subImgs.length / 2);
+      const left = await analizarSubloteVisionDirecto(subImgs.slice(0, mid), 0);
+      const right = await analizarSubloteVisionDirecto(subImgs.slice(mid), 0);
+      return [...left, ...right];
+    }
+    subImgs.forEach(img => { img.status = 'failed'; img.errorMsg = 'Sin respuesta visual útil'; });
+    actualizarBannerArchivosReserva();
+    return [];
+  } catch (err) {
+    if (retryAttempt < 1) {
+      await new Promise(r => setTimeout(r, 1200));
+      return analizarSubloteVisionDirecto(subImgs, retryAttempt + 1);
+    }
+    if (subImgs.length > 1) {
+      const mid = Math.ceil(subImgs.length / 2);
+      const left = await analizarSubloteVisionDirecto(subImgs.slice(0, mid), 0);
+      const right = await analizarSubloteVisionDirecto(subImgs.slice(mid), 0);
+      return [...left, ...right];
+    }
+    subImgs.forEach(img => { img.status = 'failed'; img.errorMsg = err?.name === 'AbortError' ? 'Timeout (35s)' : (err?.message || 'Error de red'); });
+    actualizarBannerArchivosReserva();
+    return [];
+  }
+}
+
+async function leerTextoImagenesTesseractFallback(imagesList) {
+  try {
+    if (!window.Tesseract) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    if (window.Tesseract) {
+      const worker = await window.Tesseract.createWorker('spa+eng');
+      const ocrBlocks = [];
+      for (let i = 0; i < imagesList.length; i++) {
+        imagesList[i].status = 'processing';
+        actualizarBannerArchivosReserva(`OCR local (offline) ${i + 1}/${imagesList.length}...`);
+        const res = await worker.recognize(imagesList[i].dataUrl);
+        const t = (res?.data?.text || '').trim();
+        if (t) {
+          imagesList[i].status = 'done';
+          imagesList[i].ocrText = t;
+          ocrBlocks.push(t);
+        } else {
+          imagesList[i].status = 'failed';
+        }
+      }
+      await worker.terminate();
+      actualizarBannerArchivosReserva();
+      return ocrBlocks.join('\n---\n');
+    }
+  } catch (e2) {
+    console.warn('Error en Tesseract OCR fallback:', e2);
+  }
+  return '';
+}
+
+async function analizarImagenesVisionDirecto(imagesList) {
+  const MAX_BATCH = 3;
+  const succeededBatches = [];
+
+  if (navigator.onLine) {
+    const batches = [];
+    for (let i = 0; i < imagesList.length; i += MAX_BATCH) {
+      batches.push(imagesList.slice(i, i + MAX_BATCH));
+    }
+    for (let bIdx = 0; bIdx < batches.length; bIdx++) {
+      actualizarBannerArchivosReserva(`Analizando lote ${bIdx + 1} de ${batches.length} (${batches[bIdx].length} ${batches[bIdx].length === 1 ? 'imagen' : 'imágenes'}) con Vision IA...`);
+      const results = await analizarSubloteVisionDirecto(batches[bIdx], 0);
+      if (results.length > 0) {
+        succeededBatches.push(...results);
+      }
+    }
+    if (succeededBatches.length > 0) {
+      return { batches: succeededBatches, usedFallbackOcr: false };
+    }
+  }
+
+  // Fallback Tesseract SOLO si estamos offline o si fallaron TODOS los lotes Vision
+  const ocrText = await leerTextoImagenesTesseractFallback(imagesList);
+  if (ocrText) {
+    const stages = extraerEtapasItinerarioTexto(ocrText);
+    return {
+      batches: [{ transcript: ocrText, bookingMeta: {}, stages }],
+      usedFallbackOcr: true
+    };
+  }
+  return { batches: [], usedFallbackOcr: false };
+}
+
+async function reintentarImagenesFallidasReserva() {
+  if (pluxOcrInProgress) return;
+  const failedImgs = pluxPendingImages.filter(img => img.status === 'failed');
+  if (failedImgs.length === 0) return;
+
+  pluxOcrInProgress = true;
+  actualizarBannerArchivosReserva(`Reintentando ${failedImgs.length} ${failedImgs.length === 1 ? 'imagen fallida' : 'imágenes fallidas'}...`);
+  try {
+    const { batches } = await analizarImagenesVisionDirecto(failedImgs);
+    if (batches.length > 0) {
+      pluxLastVisionBatches = [...pluxLastVisionBatches, ...batches];
+      const unified = unificarResultadosImportacion(pluxLastVisionBatches, pluxLastDocReservas);
+      if (unified.length > 0) {
+        pluxDetectedReservas = unified;
+        renderizarTarjetasReservasDetectadas();
+      }
+      const transcripts = batches.map(b => b.transcript).filter(Boolean).join('\n---\n');
+      const input = document.getElementById('reservaRawInput');
+      if (input && transcripts) {
+        input.value = input.value ? `${input.value.trim()}\n---\n${transcripts}` : transcripts;
+      }
+      if (typeof window.showToast === 'function') {
+        window.showToast('Imágenes reintentadas e integradas en tu itinerario', 'success');
+      }
+    } else if (typeof window.showToast === 'function') {
+      window.showToast('No se pudieron recuperar las imágenes fallidas. Intenta de nuevo en unos segundos.', 'error');
+    }
+  } finally {
+    pluxOcrInProgress = false;
+    actualizarBannerArchivosReserva();
+  }
+}
+
+function parsearTextoDocumentoAReservas(rawText) {
+  const clean = String(rawText || '').trim();
+  if (!clean) return [];
+  const cruiseParsed = intentarParsearCruceroOItinerario(clean);
+  if (cruiseParsed) return [cruiseParsed];
+
+  let blocks = clean.split(/\n\s*---+\s*\n|\n(?=RESERVA\s+\d+\s*:)/i).map(b => b.trim()).filter(Boolean);
+  if (blocks.length === 0) blocks = [clean];
+
+  let earliestISO = (document.getElementById('fechaInicio')?.value || '').slice(0, 10);
+  if (!earliestISO) {
+    const allDates = extraerFechasDeTexto(clean).map(d => d.iso).filter(Boolean).sort();
+    if (allDates.length > 0) earliestISO = allDates[0];
+  }
+  return blocks.map((b, idx) => parsearBloqueIndividualReserva(b, idx, earliestISO));
+}
+
+async function procesarMultiplesArchivosReserva(files) {
+  const imageFiles = [];
+  const docFiles = [];
+
+  files.forEach(f => {
+    const n = (f.name || '').toLowerCase();
+    if ((f.type && f.type.startsWith('image/')) || /\.(png|jpg|jpeg|webp)$/i.test(n)) {
+      imageFiles.push(f);
+    } else {
+      docFiles.push(f);
+    }
+  });
+
+  const input = document.getElementById('reservaRawInput');
+  const docTextParts = [];
+
+  // 1. Procesar PDFs, ICS, EML, TXT
+  for (const f of docFiles) {
+    const txt = await extraerTextoArchivoDocumento(f);
+    if (txt) {
+      docTextParts.push(txt);
+      const parsedDocs = parsearTextoDocumentoAReservas(txt);
+      if (parsedDocs.length > 0) {
+        pluxLastDocReservas = [...pluxLastDocReservas, ...parsedDocs];
+      }
+    }
+  }
+
+  // Si ya había texto previo pegado y no había docReservas, conservarlo si se adjuntan solo imágenes
+  if (docFiles.length > 0 && input && docTextParts.length > 0) {
+    const docCombined = docTextParts.join('\n---\n').trim();
+    input.value = input.value.trim() ? `${input.value.trim()}\n---\n${docCombined}` : docCombined;
+  }
+
+  // 2. Procesar imágenes con Vision-First Direct JSON (siempre protegido con try/finally)
+  if (imageFiles.length > 0) {
+    pluxOcrInProgress = true;
+    try {
+      const compressed = [];
+      for (const imgFile of imageFiles) {
+        const dataUrl = await comprimirImagenParaAnalisis(imgFile, 1100, 0.80);
+        compressed.push({
+          id: 'img_' + Date.now() + '_' + Math.floor(Math.random() * 9999),
+          name: imgFile.name,
+          dataUrl,
+          ocrText: '',
+          status: 'pending',
+          errorMsg: ''
+        });
+      }
+      pluxPendingImages = [...pluxPendingImages, ...compressed];
+      pluxPendingImagePreview = pluxPendingImages[0]?.dataUrl || null;
+      actualizarBannerArchivosReserva(`Preparando ${compressed.length} ${compressed.length === 1 ? 'imagen' : 'imágenes'} para Vision IA...`);
+
+      if (typeof window.showToast === 'function') {
+        window.showToast(`Analizando ${compressed.length} ${compressed.length === 1 ? 'imagen' : 'imágenes'} con Vision IA...`, 'info');
+      }
+
+      const { batches } = await analizarImagenesVisionDirecto(compressed);
+      if (batches.length > 0) {
+        pluxLastVisionBatches = [...pluxLastVisionBatches, ...batches];
+        const transcripts = batches.map(b => b.transcript).filter(Boolean).join('\n---\n');
+        if (input && transcripts) {
+          input.value = input.value.trim() ? `${input.value.trim()}\n---\n${transcripts}` : transcripts;
+        }
+      }
+    } finally {
+      pluxOcrInProgress = false;
+      actualizarBannerArchivosReserva();
+    }
+  }
+
+  // 3. Unificar resultados (PDF + Vision batches) directamente en pluxDetectedReservas
+  const unified = unificarResultadosImportacion(pluxLastVisionBatches, pluxLastDocReservas);
+  if (unified.length > 0) {
+    pluxDetectedReservas = unified;
+    renderizarTarjetasReservasDetectadas();
+    const totalStages = unified.reduce((acc, r) => acc + (Array.isArray(r.etapas) ? r.etapas.length : 0), 0);
+    if (typeof window.showToast === 'function') {
+      if (totalStages > 0) {
+        window.showToast(`Itinerario estructurado: ${totalStages} paradas detectadas listas para sincronizar`, 'success');
+      } else {
+        window.showToast(`${unified.length} ${unified.length === 1 ? 'reserva detectada' : 'reservas detectadas'} y listas para revisar`, 'success');
+      }
+    }
+  } else if (input && input.value.trim()) {
+    analizarTextoReserva();
+  } else if (imageFiles.length > 0 && typeof window.showToast === 'function') {
+    window.showToast('Imágenes adjuntadas. Si alguna falló, usa "Reintentar fallidas" o "Extraer con IA".', 'info');
+  }
+}
+
+function reconstructPageRows(items, yTolerance = 3.5) {
+  if (!Array.isArray(items) || items.length === 0) return '';
+  const cells = [];
+  for (const item of items) {
+    if (!item || typeof item.str !== 'string') continue;
+    if (item.str.trim() === '') continue;
+    const t = Array.isArray(item.transform) ? item.transform : null;
+    const x = t ? Number(t[4]) : Number(item.x || 0);
+    const y = t ? Number(t[5]) : Number(item.y || 0);
+    const fs = (t ? (Math.abs(Number(t[0])) || Math.abs(Number(t[3]))) : 0) || Number(item.height) || 10;
+    const w = typeof item.width === 'number'
+      ? item.width
+      : (typeof item.w === 'number' ? item.w : item.str.length * fs * 0.5);
+    cells.push({ str: item.str, x, y, w, fs });
+  }
+  if (cells.length === 0) return '';
+
+  // Ordenar por y descendente (arriba hacia abajo) y x ascendente para clustering determinístico
+  cells.sort((a, b) => (b.y - a.y) || (a.x - b.x));
+
+  const rows = [];
+  for (const c of cells) {
+    let targetRow = null;
+    let bestDist = Infinity;
+    for (const r of rows) {
+      const dist = Math.abs(c.y - r.y);
+      if (dist <= yTolerance && dist < bestDist) {
+        bestDist = dist;
+        targetRow = r;
+      }
+    }
+    if (targetRow) {
+      targetRow.cells.push(c);
+    } else {
+      rows.push({ y: c.y, cells: [c] });
+    }
+  }
+
+  rows.sort((a, b) => b.y - a.y);
+
+  const lines = [];
+  for (const row of rows) {
+    row.cells.sort((a, b) => a.x - b.x);
+    let line = row.cells[0].str;
+    let prev = row.cells[0];
+    for (let i = 1; i < row.cells.length; i++) {
+      const c = row.cells[i];
+      const fs = prev.fs || c.fs || 10;
+      const dx = c.x - (prev.x + prev.w);
+      if (dx >= fs * 2.5) {
+        line += '\t' + c.str;
+      } else if (dx >= fs * 0.18) {
+        line += ' ' + c.str;
+      } else {
+        line += c.str;
+      }
+      prev = c;
+    }
+    const cleanedLine = line.replace(/[ ]+$/g, '').replace(/^[ ]+/g, '');
+    if (cleanedLine.trim()) lines.push(cleanedLine);
+  }
+  return lines.join('\n');
+}
+
 async function extraerTextoDePDFBuffer(arrayBuffer) {
-  // 1. Intentar con pdf.js desde CDN si hay conexión
+  // 1. Intentar con pdf.js desde CDN usando reconstrucción espacial por filas y columnas
   try {
     if (!window.pdfjsLib) {
       await new Promise((resolve, reject) => {
@@ -3184,22 +3802,23 @@ async function extraerTextoDePDFBuffer(arrayBuffer) {
     if (window.pdfjsLib) {
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let fullText = '';
-      for (let i = 1; i <= Math.min(pdf.numPages, 12); i++) {
+      const pageTexts = [];
+      for (let i = 1; i <= Math.min(pdf.numPages, 15); i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
-        const strings = content.items.map(item => item.str);
-        fullText += strings.join(' ') + '\n';
+        const reconstructed = reconstructPageRows(content.items || [], 3.5);
+        if (reconstructed) pageTexts.push(reconstructed);
       }
-      if (fullText.trim().length > 15) {
-        return fullText.trim();
+      const fullText = pageTexts.join('\n').trim();
+      if (fullText.length > 15) {
+        return fullText;
       }
     }
   } catch (e) {
     console.warn('Fallback nativo PDF activado:', e);
   }
 
-  // 2. Fallback nativo offline: extraer cadenas de texto legibles del binario PDF
+  // 2. Fallback nativo offline
   try {
     const decoder = new TextDecoder('latin1');
     const rawStr = decoder.decode(arrayBuffer);
@@ -3224,93 +3843,833 @@ function decodificarQuotedPrintableEml(raw) {
     .replace(/=([0-9A-F]{2})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
 
-async function procesarArchivoReserva(file) {
-  const name = (file.name || '').toLowerCase();
-
-  // Caso 1: Archivo PDF (.pdf)
-  if (name.endsWith('.pdf') || file.type === 'application/pdf') {
-    if (typeof window.showToast === 'function') {
-      window.showToast(`Leyendo PDF "${file.name}"...`, 'info');
-    }
-    const arrayBuffer = await file.arrayBuffer();
-    const extracted = await extraerTextoDePDFBuffer(arrayBuffer);
-    const input = document.getElementById('reservaRawInput');
-    if (input) {
-      input.value = extracted || `Comprobante PDF: ${file.name}`;
-      analizarTextoReserva();
-    }
-    return;
-  }
-
-  // Caso 2: Captura de pantalla o imagen (.png, .jpg, .jpeg, .webp)
-  if (file.type.startsWith('image/') || /\.(png|jpg|jpeg|webp)$/i.test(name)) {
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-      const dataUrl = String(e.target?.result || '');
-      pluxPendingImagePreview = dataUrl;
-      const banner = document.getElementById('reservaFileStatusBanner');
-      if (banner) {
-        banner.style.display = 'flex';
-        banner.innerHTML = `
-          <img src="${dataUrl}" style="width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.2);">
-          <div style="flex:1; font-size:0.78rem; color:#e2e8f0;">Captura <strong>${escapeHtml(file.name)}</strong> adjuntada al voucher. Analizando datos...</div>
-          <button type="button" onclick="window.quitarImagenReservaAdjunta()" style="background:transparent; border:none; color:var(--gris); cursor:pointer;">&times;</button>
-        `;
-      }
-      // Si el nombre del archivo o el input tiene pistas, o invocar IA
-      const input = document.getElementById('reservaRawInput');
-      if (input && !input.value.trim()) {
-        input.value = `Voucher desde imagen adjunta: ${file.name.replace(/\.[^.]+$/, '')}\nCiudad: ${pluxPreselectedDestino || (typeof destinos !== 'undefined' && destinos[0]?.nombre) || 'Roma'}\nFecha: ${document.getElementById('fechaInicio')?.value || new Date().toISOString().slice(0,10)}\nHora: 10:00\nCódigo de reserva: IMG-${Math.floor(100000 + Math.random() * 900000)}`;
-      }
-      analizarTextoReserva();
+function extraerTextoArchivoDocumento(file) {
+  return new Promise(async (resolve) => {
+    const name = (file.name || '').toLowerCase();
+    if (name.endsWith('.pdf') || file.type === 'application/pdf') {
       if (typeof window.showToast === 'function') {
-        window.showToast('Captura adjuntada al voucher. Puedes ajustar los campos o extraer con IA.', 'success');
+        window.showToast(`Leyendo PDF "${file.name}"...`, 'info');
       }
+      const arrayBuffer = await file.arrayBuffer();
+      const extracted = await extraerTextoDePDFBuffer(arrayBuffer);
+      resolve(extracted || `Comprobante PDF: ${file.name}`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      let raw = String(e.target?.result || '');
+      if (name.endsWith('.ics') || raw.includes('BEGIN:VEVENT')) {
+        const blocks = raw.split('BEGIN:VEVENT').slice(1);
+        const parsedIcs = blocks.map((b, idx) => {
+          const sum = (b.match(/SUMMARY[^:]*:(.*)/i)?.[1] || '').trim();
+          const loc = (b.match(/LOCATION[^:]*:(.*)/i)?.[1] || '').trim();
+          const desc = (b.match(/DESCRIPTION[^:]*:(.*)/i)?.[1] || '').replace(/\\n/g, ' ').trim();
+          const dt = (b.match(/DTSTART[^:]*:(\d{8}T?\d{0,6})/i)?.[1] || '').trim();
+          let fechaFmt = '';
+          let horaFmt = '10:00';
+          if (dt.length >= 8) fechaFmt = `${dt.slice(6,8)}/${dt.slice(4,6)}/${dt.slice(0,4)}`;
+          if (dt.includes('T') && dt.length >= 13) horaFmt = `${dt.slice(9,11)}:${dt.slice(11,13)}`;
+          return `RESERVA #${idx + 1}\nActividad: ${sum}\nCiudad: ${loc}\nFecha: ${fechaFmt}\nHora: ${horaFmt}\nNotas: ${desc}`;
+        }).join('\n---\n');
+        if (parsedIcs) raw = parsedIcs;
+      } else if (name.endsWith('.eml') || /Content-Transfer-Encoding:\s*quoted-printable/i.test(raw)) {
+        raw = decodificarQuotedPrintableEml(raw);
+        const tmp = document.createElement('div');
+        tmp.innerHTML = raw;
+        raw = tmp.innerText || tmp.textContent || raw;
+      } else if (name.endsWith('.html') || raw.includes('<body') || raw.includes('<table')) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = raw.replace(/<\/(tr|p|div|li|h[1-6]|br)>/gi, '$&\n');
+        raw = tmp.innerText || tmp.textContent || raw;
+      }
+      resolve(raw.trim());
     };
-    reader.readAsDataURL(file);
-    return;
+    reader.onerror = () => resolve('');
+    reader.readAsText(file);
+  });
+}
+
+async function procesarArchivoReserva(file) {
+  return procesarMultiplesArchivosReserva([file]);
+}
+
+function parseMonthDayFromRaw(rawStr) {
+  if (!rawStr) return null;
+  const s = String(rawStr).trim();
+  // YYYY-MM-DD
+  let m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (m) return { year: Number(m[1]), month: Number(m[2]), day: Number(m[3]), hasYear: true };
+  // DD/MM/YYYY or DD/MM/YY
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (m) {
+    const y = m[3].length === 2 ? Number('20' + m[3]) : Number(m[3]);
+    return { year: y, month: Number(m[2]), day: Number(m[1]), hasYear: true };
+  }
+  // "23 ENE" or "23 de enero 2027"
+  m = s.match(/(\d{1,2})\s*(?:de\s+)?([a-záéíóúñ]{3,12})(?:\s*(?:de|,)?\s*(\d{4}))?/i);
+  if (m) {
+    const mKey = m[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const monthNum = PLUX_MONTH_MAP[mKey] || PLUX_MONTH_MAP[mKey.slice(0, 3)];
+    if (monthNum) {
+      return { year: m[3] ? Number(m[3]) : null, month: monthNum, day: Number(m[1]), hasYear: Boolean(m[3]) };
+    }
+  }
+  // "ENE 23" / "Jan 23, 2027"
+  m = s.match(/([a-záéíóúñ]{3,12})\s+(\d{1,2}),?\s*(\d{4})?/i);
+  if (m) {
+    const mKey = m[1].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const monthNum = PLUX_MONTH_MAP[mKey] || PLUX_MONTH_MAP[mKey.slice(0, 3)];
+    if (monthNum) {
+      return { year: m[3] ? Number(m[3]) : null, month: monthNum, day: Number(m[2]), hasYear: Boolean(m[3]) };
+    }
+  }
+  return null;
+}
+
+function inferStageYearAndISO(stages, anchorYear = null, refDate = new Date()) {
+  if (!Array.isArray(stages) || stages.length === 0) return [];
+  const indexed = stages.map((st, originalIdx) => ({ st: { ...st }, originalIdx }));
+
+  // Ordenar por diaNum si existe, luego por aparición original
+  indexed.sort((a, b) => {
+    const da = Number(a.st.diaNum);
+    const db = Number(b.st.diaNum);
+    if (da > 0 && db > 0 && da !== db) return da - db;
+    return a.originalIdx - b.originalIdx;
+  });
+
+  // Determinar año base
+  let baseYear = anchorYear ? Number(anchorYear) : null;
+  if (!baseYear) {
+    for (const { st } of indexed) {
+      const pIso = parseMonthDayFromRaw(st.fechaISO);
+      const pRaw = parseMonthDayFromRaw(st.fechaRaw || st.fecha);
+      if (pRaw && pRaw.hasYear && pRaw.year >= 2024) {
+        baseYear = pRaw.year;
+        break;
+      }
+      if (pIso && pIso.hasYear && pIso.year >= 2024 && !st.fechaRaw) {
+        baseYear = pIso.year;
+        break;
+      }
+    }
   }
 
-  // Caso 3: Texto, .ics, .eml, .html, .json
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    let raw = String(e.target?.result || '');
-    if (name.endsWith('.ics') || raw.includes('BEGIN:VEVENT')) {
-      const blocks = raw.split('BEGIN:VEVENT').slice(1);
-      const parsedIcs = blocks.map((b, idx) => {
-        const sum = (b.match(/SUMMARY[^:]*:(.*)/i)?.[1] || '').trim();
-        const loc = (b.match(/LOCATION[^:]*:(.*)/i)?.[1] || '').trim();
-        const desc = (b.match(/DESCRIPTION[^:]*:(.*)/i)?.[1] || '').replace(/\\n/g, ' ').trim();
-        const dt = (b.match(/DTSTART[^:]*:(\d{8}T?\d{0,6})/i)?.[1] || '').trim();
-        let fechaFmt = '';
-        let horaFmt = '10:00';
-        if (dt.length >= 8) {
-          fechaFmt = `${dt.slice(6,8)}/${dt.slice(4,6)}/${dt.slice(0,4)}`;
+  if (!baseYear) {
+    // Inferir próximo año calendario según la primera fecha sin año
+    const now = refDate instanceof Date ? refDate : new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth() + 1;
+    const curDay = now.getDate();
+    let firstMD = null;
+    for (const { st } of indexed) {
+      const p = parseMonthDayFromRaw(st.fechaRaw || st.fecha || st.fechaISO);
+      if (p && p.month && p.day) {
+        firstMD = p;
+        break;
+      }
+    }
+    if (firstMD) {
+      if (firstMD.month < curMonth || (firstMD.month === curMonth && firstMD.day < curDay)) {
+        baseYear = curYear + 1;
+      } else {
+        baseYear = curYear;
+      }
+    } else {
+      baseYear = curYear;
+    }
+  }
+
+  let rollingYear = baseYear;
+  let prevMonth = null;
+
+  return indexed.map(({ st }) => {
+    const pRaw = parseMonthDayFromRaw(st.fechaRaw || st.fecha);
+    const pIso = parseMonthDayFromRaw(st.fechaISO);
+
+    let y = null, mo = null, d = null;
+    if (pRaw && pRaw.hasYear) {
+      y = pRaw.year; mo = pRaw.month; d = pRaw.day;
+      rollingYear = y;
+    } else if (pRaw && !pRaw.hasYear) {
+      mo = pRaw.month; d = pRaw.day;
+      if (prevMonth !== null && mo < prevMonth && (prevMonth - mo) >= 6) {
+        rollingYear += 1;
+      }
+      y = rollingYear;
+    } else if (pIso && pIso.hasYear) {
+      mo = pIso.month; d = pIso.day;
+      if (anchorYear && pIso.year !== anchorYear && !pRaw?.hasYear) {
+        if (prevMonth !== null && mo < prevMonth && (prevMonth - mo) >= 6) {
+          rollingYear += 1;
         }
-        if (dt.includes('T') && dt.length >= 13) {
-          horaFmt = `${dt.slice(9,11)}:${dt.slice(11,13)}`;
-        }
-        return `RESERVA #${idx + 1}\nActividad: ${sum}\nCiudad: ${loc}\nFecha: ${fechaFmt}\nHora: ${horaFmt}\nNotas: ${desc}`;
-      }).join('\n---\n');
-      if (parsedIcs) raw = parsedIcs;
-    } else if (name.endsWith('.eml') || /Content-Transfer-Encoding:\s*quoted-printable/i.test(raw)) {
-      raw = decodificarQuotedPrintableEml(raw);
-      const tmp = document.createElement('div');
-      tmp.innerHTML = raw;
-      raw = tmp.innerText || tmp.textContent || raw;
-    } else if (name.endsWith('.html') || raw.includes('<body') || raw.includes('<table')) {
-      const tmp = document.createElement('div');
-      tmp.innerHTML = raw.replace(/<\/(tr|p|div|li|h[1-6]|br)>/gi, '$&\n');
-      raw = tmp.innerText || tmp.textContent || raw;
+        y = rollingYear;
+      } else {
+        y = pIso.year;
+        rollingYear = y;
+      }
     }
 
-    const input = document.getElementById('reservaRawInput');
-    if (input) {
-      input.value = raw.trim();
-      analizarTextoReserva();
+    if (y && mo && d) {
+      prevMonth = mo;
+      const moStr = String(mo).padStart(2, '0');
+      const dStr = String(d).padStart(2, '0');
+      st.fechaISO = `${y}-${moStr}-${dStr}`;
+      st.fecha = `${dStr}/${moStr}/${y}`;
     }
+    return st;
+  });
+}
+
+function compactStagesWithTransit(rawStages, options = {}) {
+  const defaultTransitLabel = options.defaultTransitLabel || 'En navegación';
+  const isCruise = options.isCruise !== false;
+  if (!Array.isArray(rawStages) || rawStages.length === 0) {
+    return { stops: [], totalDiasCalendario: 0, noches: 0 };
+  }
+
+  // Orden cronológico estable
+  const sorted = [...rawStages].sort((a, b) => {
+    if (a.fechaISO && b.fechaISO && a.fechaISO !== b.fechaISO) {
+      return a.fechaISO.localeCompare(b.fechaISO);
+    }
+    const da = Number(a.diaNum) || 0;
+    const db = Number(b.diaNum) || 0;
+    if (da && db && da !== db) return da - db;
+    return 0;
+  });
+
+  const stops = [];
+  let pendingTransitDays = 0;
+  let pendingTransitLabel = defaultTransitLabel;
+
+  for (const st of sorted) {
+    const cityStr = String(st.ciudad || '').trim();
+    const isSea = Boolean(st.esNavegacion) || /^(?:en\s+navegaci[oó]n|navegaci[oó]n|navegando|at\s+sea|alta\s+mar|cruising)$/i.test(cityStr);
+    if (isSea) {
+      pendingTransitDays += 1;
+      if (st.transitoEtiqueta) pendingTransitLabel = st.transitoEtiqueta;
+      continue;
+    }
+    if (!cityStr) continue;
+
+    const prevStop = stops[stops.length - 1] || null;
+    let diasTransitoPrevio = 0;
+    if (prevStop) {
+      const isoGap = (prevStop.fechaISO && st.fechaISO)
+        ? Math.max(0, diffCalendarDaysISO(prevStop.fechaISO, st.fechaISO) - 1)
+        : 0;
+      const numGap = (Number(prevStop.diaNum) > 0 && Number(st.diaNum) > Number(prevStop.diaNum))
+        ? Math.max(0, Number(st.diaNum) - Number(prevStop.diaNum) - 1)
+        : 0;
+      diasTransitoPrevio = Math.max(
+        pendingTransitDays,
+        isoGap,
+        numGap,
+        Number(st.diasTransitoPrevio) || 0
+      );
+    }
+    pendingTransitDays = 0;
+
+    const cleanNote = String(st.notaParada || st.notas || '').trim();
+    stops.push({
+      diaNum: Number(st.diaNum) || (stops.length + 1),
+      fecha: st.fecha || '',
+      fechaISO: st.fechaISO || '',
+      ciudad: cityStr,
+      esNavegacion: false,
+      diasTransitoPrevio,
+      transitoEtiqueta: diasTransitoPrevio > 0 ? (st.transitoEtiqueta || pendingTransitLabel || defaultTransitLabel) : '',
+      horaLlegada: String(st.horaLlegada || '').trim(),
+      horaSalida: String(st.horaSalida || '').trim(),
+      notaParada: cleanNote,
+      notas: cleanNote,
+      tipoParada: st.tipoParada || ''
+    });
+  }
+
+  // Asignar tipoParada semántico
+  const firstCityKey = stops.length > 0 ? normCityKeyImporter(stops[0].ciudad) : '';
+  const lastCityKey = stops.length > 1 ? normCityKeyImporter(stops[stops.length - 1].ciudad) : '';
+  const isCircular = stops.length >= 2 && firstCityKey && firstCityKey === lastCityKey;
+
+  stops.forEach((s, idx) => {
+    if (idx === 0) {
+      s.diasTransitoPrevio = 0;
+      s.transitoEtiqueta = '';
+      s.tipoParada = s.tipoParada || (isCruise || isCircular ? 'embarque' : 'estadia');
+      if (!s.notaParada && s.tipoParada === 'embarque') {
+        s.notaParada = 'Embarque en puerto';
+        s.notas = 'Embarque en puerto';
+      }
+    } else if (idx === stops.length - 1 && (isCruise || isCircular || (s.horaLlegada && !s.horaSalida))) {
+      s.tipoParada = s.tipoParada || 'desembarque';
+      if (!s.notaParada && s.tipoParada === 'desembarque') {
+        s.notaParada = 'Desembarque';
+        s.notas = 'Desembarque';
+      }
+    } else {
+      s.tipoParada = s.tipoParada || (isCruise ? 'escala' : 'estadia');
+    }
+  });
+
+  // Calcular total de días calendario y noches
+  let totalDiasCalendario = stops.reduce((sum, s) => sum + 1 + (Number(s.diasTransitoPrevio) || 0), 0);
+  if (stops.length >= 2 && stops[0].fechaISO && stops[stops.length - 1].fechaISO) {
+    const span = diffCalendarDaysISO(stops[0].fechaISO, stops[stops.length - 1].fechaISO) + 1;
+    if (span >= stops.length && span <= 120) {
+      totalDiasCalendario = span;
+    }
+  }
+  const noches = Math.max(0, totalDiasCalendario - 1);
+
+  return { stops, totalDiasCalendario, noches };
+}
+
+function extraerEtapasItinerarioTexto(clean) {
+  const etapas = [];
+  const seenKey = new Set();
+
+  // Normalizar paréntesis con espacios internos y saltos de línea
+  const rawLines = String(clean || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .split('\n')
+    .map(l => l.replace(/^[ \t]+|[ \t]+$/g, ''))
+    .filter(Boolean);
+
+  // Caso A: Filas de tabla de crucero (acepta espacios o \t entre columnas y líneas envueltas de tenders)
+  const rowRegex = /^(?:(?:lunes|martes|mi[eé]rcoles|miercoles|jueves|viernes|s[aá]bado|sabado|domingo)[\s\t]+)?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})[\s\t]+(.+?)[\s\t]+(\d{1,2}:\d{2}|--:--)[\s\t]+(\d{1,2}:\d{2}|--:--)\s*$/i;
+  const dateRowStartRegex = /^(?:(?:lunes|martes|mi[eé]rcoles|miercoles|jueves|viernes|s[aá]bado|sabado|domingo)[\s\t]+)?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})[\s\t]+/i;
+  const timesOnlyRegex = /^(\d{1,2}:\d{2}|--:--)[\s\t]+(\d{1,2}:\d{2}|--:--)$/;
+  const tenderContRegex = /^\(?\s*(?:(?:servicio(?:\s+de)?|de)\s+)?(?:tenders?|bote\s+auxiliar)(?:\s*\))?$/i;
+  const tenderParenLineRegex = /^\([^)]*(?:tender|bote\s+auxiliar)[^)]*\)$/i;
+
+  for (let i = 0; i < rawLines.length; i++) {
+    let line = rawLines[i];
+
+    // Si la línea empieza con fecha de itinerario pero le faltan los horarios, unir continuación inmediata (tender y/o horarios)
+    if (dateRowStartRegex.test(line) && !rowRegex.test(line)) {
+      let merged = line;
+      let consumed = 0;
+      for (let look = 1; look <= 2 && (i + look) < rawLines.length; look++) {
+        const nxt = rawLines[i + look];
+        if (dateRowStartRegex.test(nxt)) break;
+        if (timesOnlyRegex.test(nxt) || tenderContRegex.test(nxt) || tenderParenLineRegex.test(nxt) || /^de\s+tenders?\)$/i.test(nxt)) {
+          merged += ' ' + nxt;
+          consumed = look;
+          if (rowRegex.test(merged)) break;
+        }
+      }
+      if (consumed > 0 && rowRegex.test(merged)) {
+        line = merged;
+        i += consumed;
+      }
+    }
+
+    const m = line.match(rowRegex);
+    if (m) {
+      const norm = normalizarFechaTexto(m[1]);
+      let puertoRaw = m[2].replace(/\t+/g, ' ').replace(/\s+/g, ' ').trim();
+      let notas = '';
+
+      // Detectar nota tender completa inline: "(servicio de tenders)"
+      const tenderCompleteM = puertoRaw.match(/\(([^)]*(?:tender|bote\s+auxiliar)[^)]*)\)/i);
+      if (tenderCompleteM) {
+        notas = tenderCompleteM[1].trim();
+        puertoRaw = puertoRaw.replace(tenderCompleteM[0], '').trim();
+      }
+
+      // Detectar nota tender abierta al final por salto de línea: "Buzios, Brasil (servicio"
+      const tenderOpenM = puertoRaw.match(/\(\s*servicio(?:\s+de)?\s*$/i);
+      if (tenderOpenM) {
+        puertoRaw = puertoRaw.replace(tenderOpenM[0], '').trim();
+        notas = 'Servicio de tenders';
+      }
+
+      // Si la línea siguiente es la continuación "de tenders)" o "(servicio de tenders)", consumirla y adjuntarla a esta etapa
+      if (i + 1 < rawLines.length && !dateRowStartRegex.test(rawLines[i + 1])) {
+        const nextLine = rawLines[i + 1].trim();
+        if (tenderContRegex.test(nextLine) || tenderParenLineRegex.test(nextLine) || /^(?:\(?\s*servicio\s+de\s+tenders?\s*\)?|de\s+tenders?\))$/i.test(nextLine)) {
+          if (!notas) notas = 'Servicio de tenders';
+          i += 1;
+        }
+      }
+
+      // Normalizar capitalización de "servicio de tenders"
+      if (notas && /^servicio\s+de\s+tenders$/i.test(notas)) {
+        notas = 'Servicio de tenders';
+      }
+
+      puertoRaw = puertoRaw.replace(/\(\s*$/, '').replace(/\s+/g, ' ').trim();
+      const esNav = /en\s+navegaci[oó]n|navegaci[oó]n|at\s+sea|alta\s+mar/i.test(puertoRaw);
+      const llegada = m[3] === '--:--' ? '' : m[3].padStart(5, '0');
+      const salida = m[4] === '--:--' ? '' : m[4].padStart(5, '0');
+      const ciudad = esNav ? 'En Navegación' : puertoRaw;
+      const key = `${norm.iso}|${normCityKeyImporter(ciudad)}`;
+      if (norm.iso && !seenKey.has(key)) {
+        seenKey.add(key);
+        etapas.push({
+          diaNum: etapas.length + 1,
+          fecha: norm.display,
+          fechaISO: norm.iso,
+          ciudad,
+          esNavegacion: esNav,
+          horaLlegada: llegada,
+          horaSalida: salida,
+          notaParada: notas,
+          notas
+        });
+      }
+    }
+  }
+
+  // Caso B: Bloques de capturas tipo "DÍA 4 - 26 ENE\nRío de Janeiro\nLlegada 10:00 - Salida 20:00"
+  if (etapas.length === 0) {
+    const inferredYearMatch = clean.match(/\b(202[5-9]|203\d)\b/);
+    const anchorYear = inferredYearMatch ? Number(inferredYearMatch[1]) : null;
+    const dayBlockRegex = /D[IÍ]A\s*(\d{1,2})\s*[-·–]\s*(\d{1,2}\s+[A-ZÁÉÍÓÚÑ]{3,12}(?:\s+\d{4})?)([\s\S]{0,280}?)(?=D[IÍ]A\s*\d{1,2}\s*[-·–]|---|$)/gi;
+    const rawDayStages = [];
+    let dm;
+    while ((dm = dayBlockRegex.exec(clean)) !== null) {
+      const diaNum = parseInt(dm[1], 10);
+      const fechaRaw = dm[2].trim();
+      const body = dm[3];
+      const bodyLines = body.split(/\n/).map(s => s.trim()).filter(Boolean);
+      const llegadaM = body.match(/Llegada\s*(\d{1,2}:\d{2})/i);
+      const salidaM = body.match(/Salida\s*(\d{1,2}:\d{2})/i);
+      const esNav = /en\s+navegaci[oó]n|navegando|alta\s+mar/i.test(body);
+      let ciudad = esNav
+        ? 'En Navegación'
+        : (bodyLines[0] || '').replace(/^(Llegada|Salida|Tu hora|DESEMBARQUE).*$/i, '').trim();
+      if (!ciudad && !esNav && bodyLines.length > 1) ciudad = bodyLines[1];
+      let notas = '';
+      if (/desembarque\s+con\s+bote\s+auxiliar|tender/i.test(body)) notas = 'Desembarque con bote auxiliar (tenders)';
+      if (/hora de embarque/i.test(body)) notas = (notas ? notas + ' · ' : '') + 'Embarque en puerto';
+      if (ciudad && ciudad.length >= 2) {
+        rawDayStages.push({
+          diaNum,
+          fechaRaw,
+          ciudad,
+          esNavegacion: esNav,
+          horaLlegada: llegadaM ? llegadaM[1].padStart(5, '0') : '',
+          horaSalida: salidaM ? salidaM[1].padStart(5, '0') : '',
+          notaParada: notas,
+          notas
+        });
+      }
+    }
+    const dated = inferStageYearAndISO(rawDayStages, anchorYear);
+    dated.forEach(st => {
+      const key = `${st.fechaISO || st.diaNum}|${normCityKeyImporter(st.ciudad)}`;
+      if (!seenKey.has(key)) {
+        seenKey.add(key);
+        etapas.push(st);
+      }
+    });
+  }
+
+  return etapas;
+}
+
+function intentarParsearCruceroOItinerario(raw) {
+  const clean = String(raw || '').trim();
+  const isCruiseText = /(msc\s+cruceros|msc\s+splendida|costa\s+cruceros|royal\s+caribbean|norwegian\s+cruise|nave\s*:|cabina\s*:|fecha\s+de\s+embarque|fecha\s+de\s+desembarque|en\s+navegaci[oó]n|servicio\s+de\s+tenders|desembarque\s+con\s+bote\s+auxiliar)/i.test(clean);
+  const rawEtapas = extraerEtapasItinerarioTexto(clean);
+
+  if (!isCruiseText && rawEtapas.length < 2) return null;
+
+  // Todos los regex de metadatos cortan en [^\t\n\r]+ para aislar columnas derechas en PDFs
+  const naveM = clean.match(/(?:^|[\t\n\r])Nave\s*:[ \t]*([^\t\n\r]+)/i) ||
+                clean.match(/\b(MSC\s+[A-ZÁÉÍÓÚÑ0-9 ]+|Costa\s+[A-ZÁÉÍÓÚÑ0-9 ]+|Symphony of the Seas|Wonder of the Seas)\b/i);
+  const nave = naveM ? naveM[1].trim() : '';
+
+  const reservaM = clean.match(/N[uú]mero\s+de\s+Reserva\s*(?:\/\s*Presupuesto)?\s*[:#][ \t]*([A-Z0-9-]{4,16})/i) ||
+                   clean.match(/(?:^|[\t\n\r])(?:Reserva|Confirmaci[oó]n|Booking)\s*[:#][ \t]*([A-Z0-9-]{5,14})/i);
+  const ticketM = clean.match(/Ticket\s*(?:nr|no|n°|#)?\s*[:.][ \t]*([A-Z0-9-]{5,18})/i);
+  const codigo = (reservaM?.[1] || ticketM?.[1] || 'CRU-OK').toUpperCase();
+
+  const cabinaM = clean.match(/(?:^|[\t\n\r])Cabina\s*:[ \t]*([^\t\n\r]+)/i);
+  const cabinaClean = cabinaM ? cabinaM[1].replace(/[−–\-]+\s*$/g, '').trim() : '';
+  const catM = clean.match(/(?:^|[\t\n\r])Categor[ií]a\s*:?[ \t]*([^\t\n\r]+)/i);
+  const expM = clean.match(/(?:^|[\t\n\r])(?:Tu|Su)\s+experiencia\s*:[ \t]*([^\t\n\r]+)/i);
+  const cenaM = clean.match(/(?:^|[\t\n\r])Turno\s+De\s+Cena\s*:[ \t]*([^\t\n\r*]+)/i);
+  const paxCountM = clean.match(/Total\s+pasajeros\s*:[ \t]*(\d+)/i);
+  const guestsSet = new Set();
+  const guestsMatches = [];
+  for (const gm of clean.matchAll(/\b([A-ZÁÉÍÓÚÑ]{2,},\s*[A-ZÁÉÍÓÚÑ ]+?)\s*\(fecha\s+de\s+nacimiento[\s\S]{0,20}?\d{1,2}\/\d{1,2}\/\d{2,4}\)/gi)) {
+    const gName = gm[1].replace(/\s+/g, ' ').trim();
+    const gKey = gName.toLowerCase();
+    if (gName && !guestsSet.has(gKey)) {
+      guestsSet.add(gKey);
+      guestsMatches.push(gName);
+    }
+  }
+
+  const embarqueFechaM = clean.match(/Fecha\s+de\s+Embarque\s*:[ \t]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
+  const desembarqueFechaM = clean.match(/Fecha\s+de\s+Desembarque\s*:[ \t]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
+  const puertoEmbM = clean.match(/(?:^|[\t\n\r])Puerto\s*:[ \t]*([^\t\n\r]+)/i);
+  const puertoDesM = clean.match(/(?:^|[\t\n\r])Puerto\s+de\s+Desembarque\s*:[ \t]*([^\t\n\r]+)/i);
+  const itinerarioTituloM = clean.match(/(?:^|[\t\n\r])Itinerario\s+de\s+crucero\s*:[ \t]*([^\t\n\r]+)/i);
+
+  // Compactar etapas: eliminar filas "En Navegación" y convertirlas en diasTransitoPrevio sobre la parada siguiente
+  const { stops: etapas, totalDiasCalendario, noches: nochesCompact } = compactStagesWithTransit(rawEtapas, { isCruise: true });
+
+  const firstStage = etapas[0] || {};
+  const lastStage = etapas[etapas.length - 1] || {};
+  const embNorm = embarqueFechaM ? normalizarFechaTexto(embarqueFechaM[1]) : { display: firstStage.fecha || '', iso: firstStage.fechaISO || '' };
+  const desNorm = desembarqueFechaM ? normalizarFechaTexto(desembarqueFechaM[1]) : { display: lastStage.fecha || '', iso: lastStage.fechaISO || '' };
+
+  // Costos: distinguir Total vs Pagado vs Pendiente
+  let moneda = 'USD';
+  const monedaM = clean.match(/Moneda\s*:[ \t]*(EUR|ARS|USD)/i);
+  if (monedaM) moneda = monedaM[1].toUpperCase();
+
+  const totalM = clean.match(/Importe\s+total\s+a\s+pagar[^\d\n\r]*(?:\n[^\d\n\r]*)?([\d.,]+)/i) ||
+                 clean.match(/(?:^|[\t\n\r])Importe\s+Total[ \t:]+([\d.,]+)/i);
+  const pagadoM = clean.match(/Pago\s+al\s+momento[^\d\n\r]*([\d.,]+)/i) ||
+                  clean.match(/(?:^|[\t\n\r])Pagos[ \t:]+([\d.,]+)/i);
+  const saldoM = clean.match(/(?:Saldo\s+deudor|Importe\s+pendiente\s+de\s+pago)[^\d\n\r]*([\d.,]+)/i);
+
+  const costoTotal = parseAmountSmart(totalM?.[1]);
+  const montoPagado = parseAmountSmart(pagadoM?.[1]);
+  const saldoPendiente = parseAmountSmart(saldoM?.[1]);
+  const costo = costoTotal || (montoPagado + saldoPendiente) || 0;
+
+  const ciudadEmb = (puertoEmbM?.[1] || firstStage.ciudad || 'Buenos Aires').trim();
+  const ciudadDes = (puertoDesM?.[1] || lastStage.ciudad || ciudadEmb).trim();
+
+  const detallesExtra = [];
+  if (nave) detallesExtra.push({ label: 'Nave / Barco', value: nave });
+  if (cabinaClean) detallesExtra.push({ label: 'Cabina', value: cabinaClean + (catM ? ` (${catM[1].trim()})` : '') });
+  if (expM) detallesExtra.push({ label: 'Experiencia', value: expM[1].trim() + (cenaM ? ` · Cena ${cenaM[1].trim()}` : '') });
+  if (ticketM) detallesExtra.push({ label: 'N° Ticket', value: ticketM[1].trim() });
+  if (guestsMatches.length > 0 || paxCountM) {
+    detallesExtra.push({ label: `Pasajeros (${paxCountM?.[1] || guestsMatches.length})`, value: guestsMatches.join(' · ') || `${paxCountM[1]} huéspedes` });
+  }
+
+  let noches = nochesCompact || Math.max(1, etapas.length > 1 ? etapas.length - 1 : 1);
+  let diasCalendario = totalDiasCalendario || (noches + 1);
+  if (embNorm.iso && desNorm.iso) {
+    const diff = diffCalendarDaysISO(embNorm.iso, desNorm.iso);
+    if (diff >= 1 && diff <= 90) {
+      noches = diff;
+      diasCalendario = diff + 1;
+    }
+  }
+
+  const proveedor = /msc/i.test(clean) ? 'MSC Cruceros' : (/costa/i.test(clean) ? 'Costa Cruceros' : (nave || 'Naviera / Crucero'));
+  const titulo = nave
+    ? `Crucero ${nave}${itinerarioTituloM ? ' · ' + itinerarioTituloM[1].trim() : ''}`
+    : `Itinerario Crucero (${diasCalendario} días · ${ciudadEmb})`;
+
+  const notas = [
+    nave ? `Nave: ${nave}` : '',
+    cabinaClean ? `Cabina ${cabinaClean}` : '',
+    expM ? `Experiencia ${expM[1].trim()}` : '',
+    itinerarioTituloM ? `Ruta: ${itinerarioTituloM[1].trim()}` : ''
+  ].filter(Boolean).join(' · ');
+
+  const result = {
+    id: 'res_cruise_' + Date.now(),
+    tipo: 'crucero',
+    titulo,
+    ciudad: ciudadEmb,
+    origen: ciudadEmb,
+    ciudadDesembarque: ciudadDes,
+    proveedor,
+    nave,
+    cabina: cabinaClean,
+    codigo,
+    pin: '',
+    fecha: embNorm.display,
+    fechaISO: embNorm.iso,
+    fechaFin: desNorm.display,
+    fechaFinISO: desNorm.iso,
+    hora: firstStage.horaSalida || '18:00',
+    horaFin: lastStage.horaLlegada || '08:00',
+    duracion: noches * 24 * 60,
+    noches,
+    totalDiasCalendario: diasCalendario,
+    rawEtapasCount: rawEtapas.length,
+    costo,
+    montoPagado,
+    saldoPendiente,
+    moneda,
+    modoPrecio: 'total',
+    pagado: saldoPendiente <= 0 && costo > 0,
+    pagadoPor: 'Todos',
+    escalas: etapas.map(e => `${e.ciudad}${e.fecha ? ' (' + e.fecha + ')' : ''}`),
+    etapas,
+    detallesExtra,
+    notas: notas || 'Itinerario completo importado',
+    diaIndex: 0,
+    targetDestMode: 'auto',
+    sincronizarFechaInicio: true,
+    guardarEnTransporte: true,
+    expandirNoches: false,
+    imagePreview: pluxPendingImagePreview || null,
+    imagesCount: pluxPendingImages.length,
+    rawEmail: clean.slice(0, 4000),
+    agregadoAlViaje: false
   };
-  reader.readAsText(file);
+  result._syncKey = computeBookingSyncKey(result);
+  return result;
+}
+
+function unificarResultadosImportacion(visionBatches = [], docReservas = []) {
+  const safeDocs = Array.isArray(docReservas) ? docReservas.filter(Boolean).map(d => JSON.parse(JSON.stringify(d))) : [];
+  const safeBatches = Array.isArray(visionBatches) ? visionBatches.filter(Boolean) : [];
+
+  // Recolectar etapas y metadatos desde los lotes Vision
+  const rawVisionStages = [];
+  const mergedMeta = {
+    tipo: '',
+    titulo: '',
+    proveedor: '',
+    nave: '',
+    codigo: '',
+    cabina: '',
+    moneda: '',
+    costo: 0,
+    montoPagado: 0,
+    saldoPendiente: 0,
+    modoPrecio: '',
+    notas: '',
+    detallesExtra: []
+  };
+  const transcripts = [];
+
+  for (const batch of safeBatches) {
+    if (batch.transcript) transcripts.push(String(batch.transcript));
+    const bm = batch.bookingMeta || {};
+    if (bm.tipo && !mergedMeta.tipo) mergedMeta.tipo = bm.tipo;
+    if (bm.titulo && !mergedMeta.titulo) mergedMeta.titulo = bm.titulo;
+    if (bm.proveedor && !mergedMeta.proveedor) mergedMeta.proveedor = bm.proveedor;
+    if (bm.nave && !mergedMeta.nave) mergedMeta.nave = bm.nave;
+    if (isRealBookingCode(bm.codigo) && !isRealBookingCode(mergedMeta.codigo)) mergedMeta.codigo = bm.codigo;
+    if (bm.cabina && !mergedMeta.cabina) mergedMeta.cabina = bm.cabina;
+    if (bm.moneda && !mergedMeta.moneda) mergedMeta.moneda = bm.moneda;
+    if (Number(bm.costo) > 0 && !mergedMeta.costo) mergedMeta.costo = Number(bm.costo);
+    if (Number(bm.montoPagado) > 0 && !mergedMeta.montoPagado) mergedMeta.montoPagado = Number(bm.montoPagado);
+    if (Number(bm.saldoPendiente) > 0 && !mergedMeta.saldoPendiente) mergedMeta.saldoPendiente = Number(bm.saldoPendiente);
+    if (bm.modoPrecio && !mergedMeta.modoPrecio) mergedMeta.modoPrecio = bm.modoPrecio;
+    if (bm.notas && !mergedMeta.notas) mergedMeta.notas = bm.notas;
+    if (Array.isArray(bm.detallesExtra)) {
+      for (const det of bm.detallesExtra) {
+        if (det && det.label && det.value && !mergedMeta.detallesExtra.some(x => x.label.toLowerCase() === det.label.toLowerCase())) {
+          mergedMeta.detallesExtra.push({ label: String(det.label).trim(), value: String(det.value).trim() });
+        }
+      }
+    }
+
+    const stagesList = Array.isArray(batch.stages) ? batch.stages : (Array.isArray(batch.etapas) ? batch.etapas : []);
+    for (const st of stagesList) {
+      if (!st || typeof st !== 'object') continue;
+      const cityClean = String(st.ciudad || st.puerto || st.city || '').trim();
+      const esNav = Boolean(st.esNavegacion) || /^(?:en\s+navegaci[oó]n|navegando|at\s+sea|alta\s+mar)$/i.test(cityClean);
+      // Descartar fragmentos cortados de borde (ej. ciudad de 1 carácter o sin ciudad)
+      if (!esNav && cityClean.length < 2) continue;
+      rawVisionStages.push({
+        diaNum: Number(st.diaNum || st.day || st.dia) || 0,
+        fechaRaw: String(st.fechaRaw || st.fecha || st.date || '').trim(),
+        fechaISO: String(st.fechaISO || '').trim(),
+        ciudad: esNav ? 'En Navegación' : cityClean,
+        esNavegacion: esNav,
+        horaLlegada: String(st.horaLlegada || st.llegada || st.arrival || '').replace(/^--:--$/, '').trim(),
+        horaSalida: String(st.horaSalida || st.salida || st.departure || '').replace(/^--:--$/, '').trim(),
+        notaParada: String(st.notaParada || st.notas || st.notes || '').trim(),
+        notas: String(st.notaParada || st.notas || st.notes || '').trim()
+      });
+    }
+  }
+
+  // Buscar si existe un documento PDF multi-etapa (crucero) para anclar año y mergear
+  const docCruiseIdx = safeDocs.findIndex(d => d.tipo === 'crucero' || (Array.isArray(d.etapas) && d.etapas.length > 0));
+  const anchorDoc = docCruiseIdx >= 0 ? safeDocs[docCruiseIdx] : null;
+  let anchorYear = null;
+  if (anchorDoc) {
+    const mY = String(anchorDoc.fechaISO || anchorDoc.etapas?.[0]?.fechaISO || '').match(/^(\d{4})-/);
+    if (mY) anchorYear = Number(mY[1]);
+  }
+
+  // Inferir año (con rollover Dic -> Ene) y deduplicar etapas Vision
+  const datedVisionStages = inferStageYearAndISO(rawVisionStages, anchorYear);
+  const visionByKey = new Map();
+  for (const st of datedVisionStages) {
+    const key = st.fechaISO || `day_${st.diaNum}_${normCityKeyImporter(st.ciudad)}`;
+    const prev = visionByKey.get(key);
+    if (!prev) {
+      visionByKey.set(key, st);
+    } else {
+      // Conservar la etapa más completa (evita sobrescribir tarjeta completa con fragmento)
+      if (!prev.horaLlegada && st.horaLlegada) prev.horaLlegada = st.horaLlegada;
+      if (!prev.horaSalida && st.horaSalida) prev.horaSalida = st.horaSalida;
+      if (!prev.diaNum && st.diaNum) prev.diaNum = st.diaNum;
+      if (st.ciudad.length > prev.ciudad.length && !prev.esNavegacion) prev.ciudad = st.ciudad;
+      if (st.notas && !prev.notas) {
+        prev.notas = st.notas;
+        prev.notaParada = st.notas;
+      } else if (/tender|bote auxiliar/i.test(st.notas) && !/tender|bote auxiliar/i.test(prev.notas)) {
+        prev.notas = prev.notas ? `${prev.notas} · ${st.notas}` : st.notas;
+        prev.notaParada = prev.notas;
+      }
+    }
+  }
+  const dedupVisionStages = Array.from(visionByKey.values());
+
+  // Caso 1: Hay documento PDF de crucero + etapas Vision -> merge por fechaISO (PDF autoritativo en PNR/precio/cabina)
+  if (anchorDoc && dedupVisionStages.length > 0) {
+    const mergedByISO = new Map();
+    for (const pdfSt of (anchorDoc.etapas || [])) {
+      const k = pdfSt.fechaISO || `pdf_${normCityKeyImporter(pdfSt.ciudad)}_${pdfSt.diaNum}`;
+      mergedByISO.set(k, { ...pdfSt });
+    }
+    for (const vSt of dedupVisionStages) {
+      if (vSt.esNavegacion) continue;
+      const k = vSt.fechaISO || `vis_${normCityKeyImporter(vSt.ciudad)}_${vSt.diaNum}`;
+      const existing = mergedByISO.get(k);
+      if (existing) {
+        // PDF es autoritativo en ciudad/horarios; Vision aporta notas/horarios faltantes
+        if (!existing.horaLlegada && vSt.horaLlegada) existing.horaLlegada = vSt.horaLlegada;
+        if (!existing.horaSalida && vSt.horaSalida) existing.horaSalida = vSt.horaSalida;
+        if (/tender|bote auxiliar/i.test(vSt.notas) && !/tender|bote auxiliar/i.test(existing.notaParada || existing.notas || '')) {
+          existing.notaParada = vSt.notas;
+          existing.notas = vSt.notas;
+        }
+      } else {
+        mergedByISO.set(k, { ...vSt });
+      }
+    }
+    const { stops, totalDiasCalendario, noches } = compactStagesWithTransit(Array.from(mergedByISO.values()), { isCruise: true });
+    anchorDoc.etapas = stops;
+    anchorDoc.totalDiasCalendario = totalDiasCalendario;
+    anchorDoc.noches = noches;
+    anchorDoc.escalas = stops.map(e => `${e.ciudad}${e.fecha ? ' (' + e.fecha + ')' : ''}`);
+    if (pluxPendingImagePreview && !anchorDoc.imagePreview) anchorDoc.imagePreview = pluxPendingImagePreview;
+    anchorDoc.imagesCount = pluxPendingImages.length;
+    anchorDoc._syncKey = computeBookingSyncKey(anchorDoc);
+    return safeDocs;
+  }
+
+  // Caso 2: Solo etapas Vision (ej. 7 fotos WhatsApp sin PDF)
+  const results = [...safeDocs];
+  if (dedupVisionStages.length >= 2 || (dedupVisionStages.length === 1 && mergedMeta.tipo === 'crucero')) {
+    const isCruise = mergedMeta.tipo === 'crucero' || !mergedMeta.tipo || dedupVisionStages.some(s => /tender|bote auxiliar|embarque/i.test(s.notas || '') || s.esNavegacion);
+    const { stops, totalDiasCalendario, noches } = compactStagesWithTransit(dedupVisionStages, { isCruise });
+    if (stops.length > 0) {
+      const firstS = stops[0];
+      const lastS = stops[stops.length - 1];
+      const shipName = mergedMeta.nave || mergedMeta.proveedor || '';
+      const detallesExtra = [...mergedMeta.detallesExtra];
+      if (shipName && !detallesExtra.some(d => /nave|barco/i.test(d.label))) {
+        detallesExtra.push({ label: 'Nave / Barco', value: shipName });
+      }
+      if (mergedMeta.cabina && !detallesExtra.some(d => /cabina/i.test(d.label))) {
+        detallesExtra.push({ label: 'Cabina', value: mergedMeta.cabina });
+      }
+      const resObj = {
+        id: 'res_vision_' + Date.now(),
+        tipo: isCruise ? 'crucero' : (mergedMeta.tipo || 'crucero'),
+        titulo: mergedMeta.titulo || (shipName ? `Crucero ${shipName}` : `Itinerario Crucero (${totalDiasCalendario} días · ${firstS.ciudad})`),
+        ciudad: firstS.ciudad,
+        origen: firstS.ciudad,
+        ciudadDesembarque: lastS.ciudad,
+        proveedor: mergedMeta.proveedor || (isCruise ? 'Crucero' : 'Itinerario'),
+        nave: shipName,
+        cabina: mergedMeta.cabina || '',
+        codigo: isRealBookingCode(mergedMeta.codigo) ? mergedMeta.codigo.toUpperCase() : 'CRU-OK',
+        pin: '',
+        fecha: firstS.fecha,
+        fechaISO: firstS.fechaISO,
+        fechaFin: lastS.fecha,
+        fechaFinISO: lastS.fechaISO,
+        hora: firstS.horaSalida || firstS.horaLlegada || '18:00',
+        horaFin: lastS.horaLlegada || '08:00',
+        duracion: noches * 24 * 60,
+        noches,
+        totalDiasCalendario,
+        costo: Number(mergedMeta.costo) || 0,
+        montoPagado: Number(mergedMeta.montoPagado) || 0,
+        saldoPendiente: Number(mergedMeta.saldoPendiente) || 0,
+        moneda: mergedMeta.moneda || 'USD',
+        modoPrecio: mergedMeta.modoPrecio || 'total',
+        pagado: (Number(mergedMeta.saldoPendiente) || 0) <= 0 && (Number(mergedMeta.costo) || 0) > 0,
+        pagadoPor: 'Todos',
+        escalas: stops.map(e => `${e.ciudad}${e.fecha ? ' (' + e.fecha + ')' : ''}`),
+        etapas: stops,
+        detallesExtra,
+        notas: mergedMeta.notas || `Itinerario extraído desde ${pluxPendingImages.length || safeBatches.length} capturas`,
+        diaIndex: 0,
+        targetDestMode: 'auto',
+        sincronizarFechaInicio: true,
+        guardarEnTransporte: true,
+        expandirNoches: false,
+        imagePreview: pluxPendingImagePreview || null,
+        imagesCount: pluxPendingImages.length,
+        rawEmail: transcripts.join('\n---\n').slice(0, 4000),
+        agregadoAlViaje: false
+      };
+      resObj._syncKey = computeBookingSyncKey(resObj);
+      results.push(resObj);
+      return results;
+    }
+  }
+
+  // Caso 3: Vision extrajo una reserva simple (vuelo/hotel/tren/actividad) sin múltiples etapas
+  if (safeBatches.length > 0 && (mergedMeta.titulo || mergedMeta.codigo || transcripts.length > 0)) {
+    const combinedTranscript = transcripts.join('\n---\n').trim();
+    if (combinedTranscript && !mergedMeta.titulo) {
+      const parsedFromTxt = parsearTextoDocumentoAReservas(combinedTranscript);
+      results.push(...parsedFromTxt);
+    } else if (mergedMeta.titulo || dedupVisionStages.length === 1) {
+      const st0 = dedupVisionStages[0] || {};
+      const singleRes = {
+        id: 'res_vision_single_' + Date.now(),
+        tipo: mergedMeta.tipo || 'actividad',
+        titulo: mergedMeta.titulo || `Reserva en ${st0.ciudad || 'Destino'}`,
+        ciudad: st0.ciudad || 'Destino',
+        origen: '',
+        proveedor: mergedMeta.proveedor || 'Confirmación',
+        codigo: isRealBookingCode(mergedMeta.codigo) ? mergedMeta.codigo.toUpperCase() : 'CONF-IA',
+        pin: '',
+        fecha: st0.fecha || '',
+        fechaISO: st0.fechaISO || '',
+        fechaFin: '',
+        fechaFinISO: '',
+        hora: st0.horaSalida || st0.horaLlegada || '10:00',
+        horaFin: st0.horaSalida && st0.horaLlegada ? st0.horaSalida : '',
+        duracion: 120,
+        noches: 1,
+        costo: Number(mergedMeta.costo) || 0,
+        montoPagado: Number(mergedMeta.montoPagado) || 0,
+        saldoPendiente: Number(mergedMeta.saldoPendiente) || 0,
+        moneda: mergedMeta.moneda || 'USD',
+        modoPrecio: mergedMeta.modoPrecio || 'persona',
+        pagado: (Number(mergedMeta.saldoPendiente) || 0) <= 0,
+        pagadoPor: 'Todos',
+        escalas: [],
+        etapas: [],
+        detallesExtra: mergedMeta.detallesExtra,
+        notas: mergedMeta.notas || st0.notas || 'Extraído con Vision IA',
+        diaIndex: calcularDiaViajePorFechaISO(st0.fechaISO || ''),
+        targetDestMode: 'auto',
+        sincronizarFechaInicio: Boolean(st0.fechaISO) && !document.getElementById('fechaInicio')?.value,
+        guardarEnTransporte: ['vuelo', 'tren', 'hotel', 'crucero'].includes(mergedMeta.tipo),
+        expandirNoches: mergedMeta.tipo === 'hotel',
+        imagePreview: pluxPendingImagePreview || null,
+        rawEmail: combinedTranscript.slice(0, 3000),
+        agregadoAlViaje: false
+      };
+      singleRes._syncKey = computeBookingSyncKey(singleRes);
+      results.push(singleRes);
+    }
+  }
+
+  return results;
 }
 
 function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
@@ -3318,7 +4677,9 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
 
   // 1. Detectar Tipo de Reserva
   let tipo = 'actividad';
-  if (/(vuelo|flight|aerol[ií]nea|airline|iberia|latam|ryanair|air\s*europa|lufthansa|emirates|ita\s*airways|american\s*airlines|delta|united|avianca|copa|jetsmart|flybondi|vueling|british\s*airways|air\s*france|klm|qatar|boarding|embarque|terminal\s+[a-z0-9]|\b(?:IB|AR|LA|UX|AF|LH|AZ|AA|DL|UA|FR|VY|EK|QR|BA|KL|AV|CM|FO|WJ)\s?\d{3,4}\b)/i.test(clean) && !/(frecciarossa|trenitalia|renfe|billete\s+alta\s+velocidad|shinkansen)/i.test(clean)) {
+  if (/(crucero|msc\s+cruceros|nave\s*:|cabina\s*:|en\s+navegaci[oó]n|desembarque\s+con\s+bote)/i.test(clean)) {
+    tipo = 'crucero';
+  } else if (/(vuelo|flight|aerol[ií]nea|airline|iberia|latam|ryanair|air\s*europa|lufthansa|emirates|ita\s*airways|american\s*airlines|delta|united|avianca|copa|jetsmart|flybondi|vueling|british\s*airways|air\s*france|klm|qatar|terminal\s+[a-z0-9]|\b(?:IB|AR|LA|UX|AF|LH|AZ|AA|DL|UA|FR|VY|EK|QR|BA|KL|AV|CM|FO|WJ)\s?\d{3,4}\b)/i.test(clean) && !/(frecciarossa|trenitalia|renfe|billete\s+alta\s+velocidad|shinkansen)/i.test(clean)) {
     tipo = 'vuelo';
   } else if (/(hotel|booking\.com|airbnb|hostel|alojamiento|check-in|check\s*in|check-out|habitaci[oó]n|noches|nights|loft|apartamento|resort|estancia|hospedaje)/i.test(clean)) {
     tipo = 'hotel';
@@ -3328,14 +4689,14 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     tipo = 'auto';
   }
 
-  // 2. Detectar Código de Reserva / PNR / Voucher + PIN
+  // 2. Detectar Código de Reserva / PNR / Voucher + PIN (evitar falsos positivos como "CARLOS")
   let codigo = '';
-  const pnrMatch = clean.match(/(?:pnr|c[oó]digo(?:\s+de\s+reserva|\s+de\s+referencia)?|n[uú]mero\s+de\s+confirmaci[oó]n|confirmaci[oó]n|referencia|localizador|voucher|booking\s*ref)[:\s#]*([A-Z0-9-]{5,14})/i);
-  if (pnrMatch && pnrMatch[1]) {
+  const pnrMatch = clean.match(/(?:pnr|n[uú]mero\s+de\s+reserva(?:\s*\/\s*presupuesto)?|c[oó]digo(?:\s+de\s+reserva|\s+de\s+referencia)?|n[uú]mero\s+de\s+confirmaci[oó]n|localizador|booking\s*ref)[:\s#]+([A-Z0-9-]{5,14})/i);
+  if (pnrMatch && pnrMatch[1] && !/^(PARA|COPIA|ESTE|FECHA|TOTAL)$/i.test(pnrMatch[1])) {
     codigo = pnrMatch[1].toUpperCase();
   } else {
-    const fallbackPnr = clean.match(/\b([A-Z0-9]{2,4}-[0-9]{4,8}|[A-Z]{2}[0-9]{3,4}[A-Z]{1,2}|[A-Z0-9]{6})\b/);
-    if (fallbackPnr) codigo = fallbackPnr[1];
+    const fallbackPnr = clean.match(/\b([A-Z0-9]{2,4}-[0-9]{4,8}|[A-Z]{2}[0-9]{3,4}[A-Z]{1,2}|[A-Z]*\d+[A-Z0-9]*)\b/);
+    if (fallbackPnr && fallbackPnr[1].length >= 5 && fallbackPnr[1].length <= 12) codigo = fallbackPnr[1];
   }
   const pinMatch = clean.match(/\bPIN(?:\s+de\s+seguridad)?[:\s#]*(\d{4,6})\b/i);
   const pinCode = pinMatch ? pinMatch[1] : '';
@@ -3356,7 +4717,7 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
   let m;
   while ((m = iataRegex.exec(cleanWithoutEscala)) !== null) {
     const code = m[1];
-    if (PLUX_IATA_CITIES[code] && !['USD', 'EUR', 'ARS', 'PNR', 'AVE', 'VIP', 'GPS', 'PDF', 'IVA', 'PIN'].includes(code)) {
+    if (PLUX_IATA_CITIES[code] && !['USD', 'EUR', 'ARS', 'PNR', 'AVE', 'VIP', 'GPS', 'PDF', 'IVA', 'PIN', 'MSC'].includes(code)) {
       iataMatches.push({ code, city: PLUX_IATA_CITIES[code] });
     }
   }
@@ -3368,7 +4729,7 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     ciudad = iataMatches[0].city;
   }
 
-  const explicitCity = clean.match(/(?:ciudad|destino|estaci[oó]n\s+de\s+llegada|llegada\s+a)[:\s]+([^\n\r(\-·,]+)/i);
+  const explicitCity = clean.match(/(?:ciudad|destino|estaci[oó]n\s+de\s+llegada|llegada\s+a|puerto)[:\s]+([^\n\r(\-·,]+)/i);
   if (explicitCity && explicitCity[1]) {
     const candidate = explicitCity[1].trim();
     for (const kc of PLUX_KNOWN_CITIES) {
@@ -3377,7 +4738,7 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
         break;
       }
     }
-    if (!ciudad && candidate.length < 35) {
+    if (!ciudad && candidate.length > 2 && candidate.length < 35) {
       ciudad = candidate.replace(/\b(Termini|Santa Maria Novella|Centrale|Atocha|Sants|Gare du Nord|Fiumicino|Barajas)\b/gi, '').trim();
     }
   }
@@ -3421,7 +4782,7 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
   const hora = timeMatches[0] || (tipo === 'hotel' ? '15:00' : '10:00');
   const horaFin = timeMatches[1] || (tipo === 'hotel' ? '11:00' : '');
 
-  // 6. Detectar Noches (explícito o restando fechas de check-in y check-out)
+  // 6. Detectar Noches
   let noches = 1;
   const nochesMatch = clean.match(/(\d+)\s*(?:noches|nights|notti|nuits)/i);
   if (nochesMatch) {
@@ -3442,7 +4803,8 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
   // 7. Detectar Precio y Moneda
   let costo = 0;
   let moneda = 'USD';
-  const priceMatch = clean.match(/(?:total(?:\s+pagado)?|precio(?:\s+total)?|importe(?:\s+abonado)?|tarifa)?[:\s]*(USD|EUR|ARS|US\$|\$|€)\s*([\d.,]+)/i) ||
+  const priceMatch = clean.match(/(?:total(?:\s+pagado)?|precio(?:\s+total)?|importe(?:\s+abonado)?|tarifa)[:\s]*(USD|EUR|ARS|US\$|\$|€)\s*([\d.,]+)/i) ||
+                     clean.match(/(USD|EUR|ARS|€)\s*([\d.,]+)/i) ||
                      clean.match(/([\d.,]+)\s*(USD|EUR|ARS|€)/i);
   if (priceMatch) {
     const p1 = (priceMatch[1] || '').trim();
@@ -3457,7 +4819,7 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     if (!isNaN(parsedVal)) costo = parsedVal;
   }
 
-  // 8. Detectar Proveedor y Construir Título Inteligente
+  // 8. Detectar Proveedor y Construir Título
   let proveedor = '';
   let titulo = '';
 
@@ -3485,22 +4847,30 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     proveedor = provMatch ? provMatch[1] : 'Reserva Oficial';
   }
 
-  // 9. Extraer Notas útiles (Dirección, Asiento, Terminal, PIN, Equipaje)
+  // 9. Extraer Notas útiles y detalles dinámicos
   const noteParts = [];
-  if (pinCode) noteParts.push(`PIN: ${pinCode}`);
+  const detallesExtra = [];
+  if (pinCode) {
+    noteParts.push(`PIN: ${pinCode}`);
+    detallesExtra.push({ label: 'PIN de seguridad', value: pinCode });
+  }
   const addrMatch = clean.match(/(?:direcci[oó]n|ubicaci[oó]n|punto\s+de\s+encuentro)[:\s]+([^\n\r]+)/i);
-  if (addrMatch) noteParts.push(addrMatch[1].trim());
+  if (addrMatch) {
+    noteParts.push(addrMatch[1].trim());
+    detallesExtra.push({ label: 'Ubicación', value: addrMatch[1].trim() });
+  }
   const seatMatch = clean.match(/(?:asiento|seat|coche|vag[oó]n|terminal)[^\n\r]*/i);
-  if (seatMatch) noteParts.push(seatMatch[0].trim());
+  if (seatMatch) {
+    noteParts.push(seatMatch[0].trim());
+    detallesExtra.push({ label: 'Asiento / Terminal', value: seatMatch[0].trim() });
+  }
   const extraMatch = clean.match(/(?:notas|r[eé]gimen|equipaje|idioma\s+del\s+tour)[:\s]+([^\n\r]+)/i);
   if (extraMatch) noteParts.push(extraMatch[1].trim());
 
   const notas = noteParts.length > 0 ? noteParts.join(' · ') : 'Importado desde comprobante de reserva';
 
-  // 10. Detectar si es Vuelo/Transporte de Regreso a Casa (cuando ciudad coincide con lugarSalida)
   const salidaActual = (document.getElementById('lugarSalida')?.value || '').trim().toLowerCase();
   const isReturnHome = (tipo === 'vuelo' || tipo === 'tren') && salidaActual.length >= 3 && ciudad.toLowerCase().includes(salidaActual);
-
   const diaCalculado = calcularDiaViajePorFechaISO(fechaISO, earliestBatchISO);
 
   return {
@@ -3522,15 +4892,17 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     noches,
     costo,
     moneda,
-    modoPrecio: 'persona', // 'persona' | 'total'
+    modoPrecio: 'persona',
     pagado: true,
     pagadoPor: 'Todos',
     escalas,
+    etapas: [],
+    detallesExtra,
     notas,
     diaIndex: diaCalculado,
     targetDestMode: isReturnHome ? 'vuelta_casa' : 'auto',
     sincronizarFechaInicio: idx === 0 && !!fechaISO && !document.getElementById('fechaInicio')?.value,
-    guardarEnTransporte: tipo === 'vuelo' || tipo === 'tren' || tipo === 'hotel',
+    guardarEnTransporte: tipo === 'vuelo' || tipo === 'tren' || tipo === 'hotel' || tipo === 'crucero',
     expandirNoches: tipo === 'hotel',
     imagePreview: pluxPendingImagePreview || null,
     rawEmail: clean.slice(0, 2000),
@@ -3543,108 +4915,224 @@ function analizarTextoReserva(silent = false) {
   const raw = input ? input.value.trim() : '';
   if (!raw) {
     if (!silent && typeof window.showToast === 'function') {
-      window.showToast('Pega el texto de tu correo o sube un PDF/captura primero', 'info');
+      window.showToast('Pega el texto de tu correo o sube un PDF/capturas primero', 'info');
     }
     return;
   }
 
-  let blocks = raw.split(/\n\s*---+\s*\n|\n(?=RESERVA\s+\d+\s*:)/i).map(b => b.trim()).filter(Boolean);
-  if (blocks.length === 0) blocks = [raw];
+  const parsedDocs = parsearTextoDocumentoAReservas(raw);
+  pluxLastDocReservas = parsedDocs;
 
-  // Encontrar la fecha más temprana del lote para calcular los días relativos si el viaje aún no tiene #fechaInicio
-  let earliestISO = document.getElementById('fechaInicio')?.value || '';
-  if (!earliestISO) {
-    const allDates = extraerFechasDeTexto(raw).map(d => d.iso).filter(Boolean).sort();
-    if (allDates.length > 0) earliestISO = allDates[0];
+  if (pluxLastVisionBatches.length > 0) {
+    pluxDetectedReservas = unificarResultadosImportacion(pluxLastVisionBatches, pluxLastDocReservas);
+  } else {
+    pluxDetectedReservas = parsedDocs;
   }
-
-  pluxDetectedReservas = blocks.map((b, idx) => parsearBloqueIndividualReserva(b, idx, earliestISO));
   renderizarTarjetasReservasDetectadas();
 
   if (!silent && typeof window.showToast === 'function') {
-    window.showToast(`${pluxDetectedReservas.length} ${pluxDetectedReservas.length === 1 ? 'reserva estructurada' : 'reservas estructuradas'} con éxito`, 'success');
+    const firstMulti = pluxDetectedReservas.find(r => Array.isArray(r.etapas) && r.etapas.length > 0);
+    if (firstMulti) {
+      window.showToast(`Itinerario detectado con ${firstMulti.etapas.length} paradas (${firstMulti.totalDiasCalendario || firstMulti.etapas.length} días) listo para sincronizar`, 'success');
+    } else {
+      window.showToast(`${pluxDetectedReservas.length} ${pluxDetectedReservas.length === 1 ? 'reserva estructurada' : 'reservas estructuradas'} con éxito`, 'success');
+    }
   }
 }
 
 async function analizarReservaConIA() {
   const input = document.getElementById('reservaRawInput');
   const raw = input ? input.value.trim() : '';
-  if (!raw) {
+  if (!raw && pluxPendingImages.length === 0) {
     if (typeof window.showToast === 'function') {
-      window.showToast('Pega primero el correo o texto de tu reserva', 'info');
+      window.showToast('Pega el correo/texto o sube un PDF/imágenes primero', 'info');
     }
     return;
   }
 
-  analizarTextoReserva(true);
-
-  if (typeof window.GEMINI_ENDPOINT !== 'undefined' && window.GEMINI_ENDPOINT) {
-    try {
-      if (typeof window.showToast === 'function') {
-        window.showToast('Extrayendo datos de reserva con IA...', 'info');
-      }
-      const prompt = `Extrae todas las reservas de viaje del siguiente texto y devuelve ÚNICAMENTE un JSON Array válido donde cada objeto tenga:
-{"tipo":"vuelo|hotel|tren|actividad|auto","titulo":"string","ciudad":"string","origen":"string","proveedor":"string","codigo":"string","fecha":"DD/MM/YYYY","fechaISO":"YYYY-MM-DD","hora":"HH:MM","horaFin":"HH:MM","noches":1,"duracion":120,"costo":0,"moneda":"USD|EUR|ARS","notas":"string"}
-Texto:
-${raw.slice(0, 3500)}`;
-
-      const res = await fetch(window.GEMINI_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const replyText = data.reply || data.text || data.output || '';
-        const jsonMatch = replyText.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            pluxDetectedReservas = parsed.map((item, i) => ({
-              id: 'res_ai_' + Date.now() + '_' + i,
-              tipo: item.tipo || 'actividad',
-              titulo: item.titulo || 'Reserva Importada',
-              ciudad: item.ciudad || 'Roma',
-              origen: item.origen || '',
-              proveedor: item.proveedor || 'Confirmación',
-              codigo: (item.codigo || 'CONF-IA').toUpperCase(),
-              pin: '',
-              fecha: item.fecha || '',
-              fechaISO: item.fechaISO || normalizarFechaTexto(item.fecha).iso || '',
-              fechaFin: '',
-              fechaFinISO: '',
-              hora: item.hora || '10:00',
-              horaFin: item.horaFin || '',
-              duracion: Number(item.duracion) || 120,
-              noches: Number(item.noches) || 1,
-              costo: Number(item.costo) || 0,
-              moneda: item.moneda || 'USD',
-              modoPrecio: 'persona',
-              pagado: true,
-              pagadoPor: 'Todos',
-              escalas: [],
-              notas: item.notas || 'Extraído con IA de Plux',
-              diaIndex: calcularDiaViajePorFechaISO(item.fechaISO || normalizarFechaTexto(item.fecha).iso),
-              targetDestMode: 'auto',
-              sincronizarFechaInicio: i === 0 && !document.getElementById('fechaInicio')?.value,
-              guardarEnTransporte: item.tipo === 'vuelo' || item.tipo === 'tren' || item.tipo === 'hotel',
-              expandirNoches: item.tipo === 'hotel',
-              imagePreview: pluxPendingImagePreview || null,
-              rawEmail: raw.slice(0, 2000),
-              agregadoAlViaje: false
-            }));
+  // Si hay imágenes pendientes y aún no fueron analizadas o fallaron, ejecutar Vision-First Direct JSON
+  if (pluxPendingImages.length > 0 && (!raw || pluxPendingImages.some(img => img.status !== 'done'))) {
+    const imgsToRun = pluxPendingImages.filter(img => img.status !== 'done');
+    if (imgsToRun.length > 0 && !pluxOcrInProgress) {
+      pluxOcrInProgress = true;
+      try {
+        actualizarBannerArchivosReserva(`Analizando ${imgsToRun.length} ${imgsToRun.length === 1 ? 'imagen' : 'imágenes'} con Vision IA...`);
+        const { batches } = await analizarImagenesVisionDirecto(imgsToRun);
+        if (batches.length > 0) {
+          pluxLastVisionBatches = [...pluxLastVisionBatches, ...batches];
+          const unified = unificarResultadosImportacion(pluxLastVisionBatches, pluxLastDocReservas);
+          if (unified.length > 0) {
+            pluxDetectedReservas = unified;
             renderizarTarjetasReservasDetectadas();
             if (typeof window.showToast === 'function') {
-              window.showToast('Reservas extraídas con Inteligencia Artificial', 'success');
+              window.showToast('Itinerario extraído directamente con Vision IA', 'success');
             }
             return;
           }
         }
+      } finally {
+        pluxOcrInProgress = false;
+        actualizarBannerArchivosReserva();
       }
-    } catch (e) {
-      console.warn('Fallback heurístico local activado:', e);
     }
+  }
+
+  if (raw) analizarTextoReserva(true);
+  if (!raw) return;
+
+  const endpoint = (typeof window.GEMINI_ENDPOINT !== 'undefined' && window.GEMINI_ENDPOINT)
+    ? window.GEMINI_ENDPOINT
+    : 'https://pluxy.nibecar-cofeben.workers.dev/';
+
+  if (!navigator.onLine) {
+    if (typeof window.showToast === 'function') window.showToast('Sin conexión: usando análisis local', 'info');
+    return;
+  }
+
+  try {
+    if (typeof window.showToast === 'function') {
+      window.showToast('Extrayendo estructura completa con IA...', 'info');
+    }
+    const prompt = `Analiza el siguiente comprobante o conjunto de capturas de viaje (puede ser crucero, vuelo, hotel, tren, actividad o paquete completo) y extrae TODOS los datos sin limitarte a campos fijos.
+Devuelve ÚNICAMENTE un JSON Array válido donde cada reserva tenga:
+{
+  "tipo": "crucero|vuelo|hotel|tren|actividad|auto",
+  "titulo": "string descriptivo",
+  "ciudad": "ciudad/puerto principal o de embarque",
+  "origen": "ciudad/puerto de salida",
+  "ciudadDesembarque": "ciudad/puerto final si es crucero o ida y vuelta",
+  "proveedor": "compañía o naviera",
+  "codigo": "código de reserva o PNR real (NO nombres de pasajeros)",
+  "fecha": "DD/MM/YYYY fecha real del viaje/embarque (NO la fecha de emisión del presupuesto)",
+  "fechaISO": "YYYY-MM-DD",
+  "fechaFin": "DD/MM/YYYY",
+  "fechaFinISO": "YYYY-MM-DD",
+  "hora": "HH:MM",
+  "horaFin": "HH:MM",
+  "noches": 1,
+  "costo": 0,
+  "montoPagado": 0,
+  "saldoPendiente": 0,
+  "moneda": "USD|EUR|ARS",
+  "modoPrecio": "total|persona",
+  "notas": "resumen útil",
+  "detallesExtra": [{"label":"Ej: Nave / Cabina / Pasajeros / Experiencia","value":"valor real"}],
+  "etapas": [{"diaNum":1,"fecha":"DD/MM/YYYY","fechaISO":"YYYY-MM-DD","ciudad":"puerto o 'En Navegación'","esNavegacion":false,"horaLlegada":"HH:MM o ''","horaSalida":"HH:MM o ''","notas":"tenders, embarque, etc"}]
+}
+Texto del comprobante:
+${raw.slice(0, 14000)}`;
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: 'Eres un extractor estructurado de documentos de viaje. Responde SOLO con JSON válido, sin markdown ni texto adicional.',
+        prompt,
+        temperature: 0.1,
+        max_tokens: 3500
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const replyText = data.reply || data.text || data.output || '';
+      const parsed = extraerJsonDeRespuestaIA(replyText);
+      const parsedArr = Array.isArray(parsed) ? parsed : (parsed && typeof parsed === 'object' ? [parsed] : []);
+      if (parsedArr.length > 0) {
+        pluxDetectedReservas = parsedArr.map((item, i) => {
+          const normStart = normalizarFechaTexto(item.fechaISO || item.fecha);
+          const normEnd = normalizarFechaTexto(item.fechaFinISO || item.fechaFin);
+          const rawEtapasAI = Array.isArray(item.etapas) ? item.etapas.map((et, eIdx) => {
+            const eNorm = normalizarFechaTexto(et.fechaISO || et.fecha);
+            return {
+              diaNum: Number(et.diaNum) || (eIdx + 1),
+              fecha: eNorm.display || et.fecha || '',
+              fechaISO: eNorm.iso || et.fechaISO || '',
+              ciudad: et.ciudad || 'Destino',
+              esNavegacion: Boolean(et.esNavegacion) || /navegaci[oó]n|alta\s*mar|at\s*sea/i.test(et.ciudad || ''),
+              horaLlegada: et.horaLlegada || '',
+              horaSalida: et.horaSalida || '',
+              notaParada: et.notaParada || et.notas || '',
+              notas: et.notaParada || et.notas || ''
+            };
+          }) : [];
+          const { stops: etapasCompact, totalDiasCalendario, noches: nochesCompact } = rawEtapasAI.length > 0
+            ? compactStagesWithTransit(rawEtapasAI, { isCruise: (item.tipo || '') === 'crucero' })
+            : { stops: [], totalDiasCalendario: 0, noches: 0 };
+
+          const obj = {
+            id: 'res_ai_' + Date.now() + '_' + i,
+            tipo: item.tipo || (etapasCompact.length > 1 ? 'crucero' : 'actividad'),
+            titulo: item.titulo || 'Reserva Importada',
+            ciudad: item.ciudad || etapasCompact[0]?.ciudad || 'Destino',
+            origen: item.origen || '',
+            ciudadDesembarque: item.ciudadDesembarque || etapasCompact[etapasCompact.length - 1]?.ciudad || '',
+            proveedor: item.proveedor || 'Confirmación',
+            codigo: (item.codigo || 'CONF-IA').toUpperCase(),
+            pin: item.pin || '',
+            fecha: normStart.display || etapasCompact[0]?.fecha || item.fecha || '',
+            fechaISO: normStart.iso || etapasCompact[0]?.fechaISO || item.fechaISO || '',
+            fechaFin: normEnd.display || etapasCompact[etapasCompact.length - 1]?.fecha || item.fechaFin || '',
+            fechaFinISO: normEnd.iso || etapasCompact[etapasCompact.length - 1]?.fechaISO || item.fechaFinISO || '',
+            hora: item.hora || etapasCompact[0]?.horaSalida || '10:00',
+            horaFin: item.horaFin || etapasCompact[etapasCompact.length - 1]?.horaLlegada || '',
+            duracion: Number(item.duracion) || 120,
+            noches: Number(item.noches) || nochesCompact || Math.max(1, etapasCompact.length - 1),
+            totalDiasCalendario: totalDiasCalendario || 0,
+            costo: parseAmountSmart(item.costo),
+            montoPagado: parseAmountSmart(item.montoPagado),
+            saldoPendiente: parseAmountSmart(item.saldoPendiente),
+            moneda: item.moneda || 'USD',
+            modoPrecio: item.modoPrecio || (item.tipo === 'crucero' ? 'total' : 'persona'),
+            pagado: parseAmountSmart(item.saldoPendiente) <= 0,
+            pagadoPor: 'Todos',
+            escalas: etapasCompact.map(e => `${e.ciudad}${e.fecha ? ' (' + e.fecha + ')' : ''}`),
+            etapas: etapasCompact,
+            detallesExtra: Array.isArray(item.detallesExtra) ? item.detallesExtra : [],
+            notas: item.notas || 'Extraído con IA de Plux',
+            diaIndex: calcularDiaViajePorFechaISO(normStart.iso || item.fechaISO),
+            targetDestMode: 'auto',
+            sincronizarFechaInicio: i === 0 && !document.getElementById('fechaInicio')?.value,
+            guardarEnTransporte: ['vuelo', 'tren', 'hotel', 'crucero'].includes(item.tipo),
+            expandirNoches: item.tipo === 'hotel',
+            imagePreview: pluxPendingImagePreview || null,
+            rawEmail: raw.slice(0, 3000),
+            agregadoAlViaje: false
+          };
+          obj._syncKey = computeBookingSyncKey(obj);
+          return obj;
+        });
+        renderizarTarjetasReservasDetectadas();
+        if (typeof window.showToast === 'function') {
+          window.showToast('Datos completos extraídos con Inteligencia Artificial', 'success');
+        }
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('Fallback heurístico local activado:', e);
+  }
+}
+
+function actualizarFinanzasReservaDetectada(idx, field, value) {
+  const r = pluxDetectedReservas[idx];
+  if (!r) return;
+  const numVal = Math.max(0, parseFloat(value) || 0);
+  r[field] = numVal;
+  if (field === 'costo') {
+    if (Number(r.montoPagado) > 0 && Number(r.montoPagado) <= numVal) {
+      r.saldoPendiente = Number((numVal - Number(r.montoPagado)).toFixed(2));
+    } else if (r.pagado === false) {
+      r.saldoPendiente = numVal;
+    }
+  } else if (field === 'montoPagado') {
+    const total = Number(r.costo) || 0;
+    if (total > 0) {
+      r.saldoPendiente = Number(Math.max(0, total - numVal).toFixed(2));
+    }
+    r.pagado = (Number(r.saldoPendiente) || 0) <= 0 && numVal > 0;
+  } else if (field === 'saldoPendiente') {
+    r.pagado = numVal <= 0;
   }
 }
 
@@ -3659,7 +5147,7 @@ function renderizarTarjetasReservasDetectadas() {
       <div style="text-align:center; padding:42px 20px; color:var(--gris); border:1px dashed rgba(255,255,255,0.12); border-radius:16px;">
         <i class="fa-solid fa-ticket" style="font-size:2.3rem; color:rgba(56,189,248,0.45); margin-bottom:12px; display:block;"></i>
         <p style="margin:0 0 6px 0; font-weight:700; color:#e2e8f0; font-size:0.95rem;">Listo para analizar tus comprobantes</p>
-        <p style="margin:0; font-size:0.82rem; line-height:1.5;">Sube un <strong>PDF</strong>, una <strong>captura de pantalla</strong>, un calendario <strong>.ics</strong> o prueba con los botones de ejemplo de arriba para ver cómo Plux organiza vuelos, hoteles, días por fecha y costos.</p>
+        <p style="margin:0; font-size:0.82rem; line-height:1.5;">Sube uno o varios <strong>PDFs</strong>, <strong>capturas de pantalla</strong>, un calendario <strong>.ics</strong> o pega tu mail de confirmación para que Plux organice escalas, transporte, alojamiento y presupuesto sin duplicar gastos.</p>
       </div>
     `;
     return;
@@ -3670,6 +5158,7 @@ function renderizarTarjetasReservasDetectadas() {
   }
 
   const tipoBadgeMap = {
+    crucero: { icon: 'fa-ship', label: 'Crucero / Travesía', destPresupuesto: 'Arma paradas reales + días de navegación sin duplicar costo' },
     vuelo: { icon: 'fa-plane-departure', label: 'Vuelo / Aéreo', destPresupuesto: 'Se carga en Transporte del destino' },
     hotel: { icon: 'fa-hotel', label: 'Alojamiento', destPresupuesto: 'Se carga en Alojamiento + Check-in/out' },
     tren: { icon: 'fa-train', label: 'Tren / Bus', destPresupuesto: 'Se carga en Transporte del destino' },
@@ -3680,7 +5169,7 @@ function renderizarTarjetasReservasDetectadas() {
   const viajeros = obtenerViajerosParaReserva();
   const numP = (typeof numPersonas !== 'undefined' && Number(numPersonas) > 0) ? Number(numPersonas) : 1;
   const destsActuales = (typeof destinos !== 'undefined' && Array.isArray(destinos)) ? destinos : [];
-  const walletCodes = new Set(obtenerWalletReservas().map(w => (w.codigo || '').toUpperCase()).filter(c => c && c !== 'CONF-OK'));
+  const walletKeys = new Set(obtenerWalletReservas().map(w => w._syncKey || computeBookingSyncKey(w)));
 
   let html = '';
 
@@ -3709,8 +5198,14 @@ function renderizarTarjetasReservasDetectadas() {
 
   pluxDetectedReservas.forEach((r, idx) => {
     const meta = tipoBadgeMap[r.tipo] || tipoBadgeMap.actividad;
+    const isMultiStage = Array.isArray(r.etapas) && r.etapas.length > 0;
     const unitPreview = r.modoPrecio === 'total' && numP > 1 ? (Number(r.costo || 0) / numP).toFixed(2) : Number(r.costo || 0);
-    const yaEnWallet = r.codigo && r.codigo !== 'CONF-OK' && walletCodes.has(r.codigo.toUpperCase());
+    const syncKey = r._syncKey || computeBookingSyncKey(r);
+    const yaEnWallet = walletKeys.has(syncKey);
+    const hasPartialPayment = (Number(r.montoPagado) > 0 || Number(r.saldoPendiente) > 0);
+    const paidDisplay = hasPartialPayment ? Number(r.montoPagado || 0) : (r.pagado !== false ? Number(r.costo || 0) : 0);
+    const pendingDisplay = hasPartialPayment ? Number(r.saldoPendiente || 0) : (r.pagado === false ? Number(r.costo || 0) : 0);
+    const totalDaysLabel = r.totalDiasCalendario || (isMultiStage ? r.etapas.reduce((acc, e) => acc + 1 + (Number(e.diasTransitoPrevio) || 0), 0) : 0);
 
     html += `
       <div class="voucher-card" data-idx="${idx}">
@@ -3733,92 +5228,167 @@ function renderizarTarjetasReservasDetectadas() {
         </div>
 
         <div class="voucher-card-body">
-          <div class="voucher-fields-grid">
-            <div class="voucher-field voucher-field-full">
-              <label>Concepto / Título en tu Itinerario</label>
-              <input type="text" value="${escapeHtml(r.titulo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'titulo', this.value)">
-            </div>
-
-            <div class="voucher-field">
-              <label>Ciudad / Destino</label>
-              <input type="text" value="${escapeHtml(r.ciudad)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'ciudad', this.value)">
-            </div>
-
-            <div class="voucher-field">
-              <label>Ubicar en Destino del Viaje</label>
-              <select onchange="window.actualizarCampoReservaDetectada(${idx}, 'targetDestMode', this.value)">
-                <option value="auto" ${r.targetDestMode === 'auto' ? 'selected' : ''}>Automático (${escapeHtml(r.ciudad)})</option>
-                ${destsActuales.map(d => `<option value="dest_${d.id}" ${r.targetDestMode === 'dest_' + d.id ? 'selected' : ''}>Destino existente: ${escapeHtml(d.nombre)}</option>`).join('')}
-                ${(r.tipo === 'vuelo' || r.tipo === 'tren') ? `<option value="vuelta_casa" ${r.targetDestMode === 'vuelta_casa' ? 'selected' : ''}>Tramo de Regreso a Casa (Vuelta Global)</option>` : ''}
-              </select>
-            </div>
-
-            <div class="voucher-field">
-              <label>Fecha (${r.fechaISO ? 'Calcula el Día solo' : 'DD/MM/YYYY'})</label>
-              <input type="text" value="${escapeHtml(r.fecha)}" placeholder="Ej: 15/11/2026" onchange="window.actualizarFechaReservaDetectada(${idx}, this.value)">
-            </div>
-
-            <div class="voucher-field">
-              <label>Día asignado en el destino</label>
-              <select id="voucherDiaSelect-${idx}" onchange="window.actualizarCampoReservaDetectada(${idx}, 'diaIndex', Number(this.value))">
-                ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(dIdx => `
-                  <option value="${dIdx}" ${Number(r.diaIndex) === dIdx ? 'selected' : ''}>Día ${dIdx + 1}${Number(r.diaIndex) === dIdx && r.fecha ? ` (${escapeHtml(r.fecha)})` : ''}</option>
-                `).join('')}
-              </select>
-            </div>
-
-            <div class="voucher-field">
-              <label>Hora Inicio / Fin</label>
-              <div style="display:flex; gap:6px;">
-                <input type="text" value="${escapeHtml(r.hora)}" placeholder="10:00" style="width:50%;" oninput="window.actualizarCampoReservaDetectada(${idx}, 'hora', this.value)">
-                <input type="text" value="${escapeHtml(r.horaFin || '')}" placeholder="Fin" style="width:50%;" oninput="window.actualizarCampoReservaDetectada(${idx}, 'horaFin', this.value)">
+          ${isMultiStage ? `
+            <!-- Cabecera compacta para itinerario multi-etapa (oculta campos de reserva simple) -->
+            <div class="reserva-meta-grid">
+              <div class="reserva-meta-item" style="grid-column: 1 / -1;">
+                <label>Concepto / Nombre del Itinerario</label>
+                <input type="text" value="${escapeHtml(r.titulo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'titulo', this.value)">
+              </div>
+              <div class="reserva-meta-item">
+                <label>Código de Reserva / PNR</label>
+                <input type="text" value="${escapeHtml(r.codigo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'codigo', this.value.toUpperCase())">
+              </div>
+              <div class="reserva-meta-item">
+                <label>Fechas (${totalDaysLabel} días · ${r.noches || Math.max(0, totalDaysLabel - 1)} noches)</label>
+                <input type="text" value="${escapeHtml([r.fecha, r.fechaFin].filter(Boolean).join(' → '))}" readonly>
               </div>
             </div>
+          ` : `
+            <!-- Campos estándar para reserva simple (vuelo, hotel, tren, actividad, auto) -->
+            <div class="voucher-fields-grid">
+              <div class="voucher-field voucher-field-full">
+                <label>Concepto / Título en tu Itinerario</label>
+                <input type="text" value="${escapeHtml(r.titulo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'titulo', this.value)">
+              </div>
 
-            <div class="voucher-field">
-              <label>Código PNR / Referencia</label>
-              <input type="text" value="${escapeHtml(r.codigo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'codigo', this.value.toUpperCase())">
+              <div class="voucher-field">
+                <label>Ciudad / Destino</label>
+                <input type="text" value="${escapeHtml(r.ciudad)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'ciudad', this.value)">
+              </div>
+
+              <div class="voucher-field">
+                <label>Ubicar en Destino del Viaje</label>
+                <select onchange="window.actualizarCampoReservaDetectada(${idx}, 'targetDestMode', this.value)">
+                  <option value="auto" ${r.targetDestMode === 'auto' ? 'selected' : ''}>Automático (${escapeHtml(r.ciudad)})</option>
+                  ${destsActuales.map(d => `<option value="dest_${d.id}" ${r.targetDestMode === 'dest_' + d.id ? 'selected' : ''}>Destino existente: ${escapeHtml(d.nombre)}</option>`).join('')}
+                  ${(r.tipo === 'vuelo' || r.tipo === 'tren') ? `<option value="vuelta_casa" ${r.targetDestMode === 'vuelta_casa' ? 'selected' : ''}>Tramo de Regreso a Casa (Vuelta Global)</option>` : ''}
+                </select>
+              </div>
+
+              <div class="voucher-field">
+                <label>Fecha (${r.fechaISO ? 'Calcula el Día solo' : 'DD/MM/YYYY'})</label>
+                <input type="text" value="${escapeHtml(r.fecha)}" placeholder="Ej: 15/11/2026" onchange="window.actualizarFechaReservaDetectada(${idx}, this.value)">
+              </div>
+
+              <div class="voucher-field">
+                <label>Día asignado en el destino</label>
+                <select id="voucherDiaSelect-${idx}" onchange="window.actualizarCampoReservaDetectada(${idx}, 'diaIndex', Number(this.value))">
+                  ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(dIdx => `
+                    <option value="${dIdx}" ${Number(r.diaIndex) === dIdx ? 'selected' : ''}>Día ${dIdx + 1}${Number(r.diaIndex) === dIdx && r.fecha ? ` (${escapeHtml(r.fecha)})` : ''}</option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <div class="voucher-field">
+                <label>Hora Inicio / Fin</label>
+                <div style="display:flex; gap:6px;">
+                  <input type="text" value="${escapeHtml(r.hora)}" placeholder="10:00" style="width:50%;" oninput="window.actualizarCampoReservaDetectada(${idx}, 'hora', this.value)">
+                  <input type="text" value="${escapeHtml(r.horaFin || '')}" placeholder="Fin" style="width:50%;" oninput="window.actualizarCampoReservaDetectada(${idx}, 'horaFin', this.value)">
+                </div>
+              </div>
+
+              <div class="voucher-field">
+                <label>Código PNR / Referencia</label>
+                <input type="text" value="${escapeHtml(r.codigo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'codigo', this.value.toUpperCase())">
+              </div>
+
+              <div class="voucher-field voucher-field-full">
+                <label>Notas (Dirección, Asiento, Terminal, Escalas, Punto de encuentro)</label>
+                <input type="text" value="${escapeHtml(r.notas)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'notas', this.value)">
+              </div>
             </div>
+          `}
 
-            <div class="voucher-field">
-              <label>Importe y Moneda</label>
-              <div style="display:flex; gap:6px;">
-                <input type="number" value="${r.costo}" min="0" step="0.01" style="flex:1;" oninput="window.actualizarCampoReservaDetectada(${idx}, 'costo', parseFloat(this.value) || 0)">
-                <select style="width:74px;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'moneda', this.value)">
+          <!-- Metadatos dinámicos editables del comprobante -->
+          <div style="margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:0.72rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.4px;">Datos del comprobante</span>
+              <button type="button" onclick="window.agregarDetalleExtraReserva(${idx})" style="background:transparent; border:1px solid rgba(148,163,184,0.3); color:var(--texto); border-radius:6px; padding:2px 8px; font-size:0.7rem; cursor:pointer;">+ Dato</button>
+            </div>
+            ${Array.isArray(r.detallesExtra) && r.detallesExtra.length > 0 ? `
+              <div class="reserva-meta-grid">
+                ${r.detallesExtra.map((det, dIdx) => `
+                  <div class="reserva-meta-item">
+                    <label>${escapeHtml(det.label)}</label>
+                    <input type="text" value="${escapeHtml(det.value)}" oninput="window.actualizarDetalleExtraReserva(${idx}, ${dIdx}, this.value)">
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Barra Financiera Clara: Total / Pagado / Saldo pendiente -->
+          <div class="reserva-finance-bar">
+            <div class="reserva-finance-metric reserva-finance-pill">
+              <label>Total (${r.modoPrecio === 'total' ? 'Grupal' : 'Por persona'})</label>
+              <div style="display:flex; gap:5px; align-items:center;">
+                <input type="number" value="${Number(r.costo || 0)}" min="0" step="0.01" style="flex:1; min-width:0;" oninput="window.actualizarFinanzasReservaDetectada(${idx}, 'costo', this.value)">
+                <select style="width:66px; flex-shrink:0;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'moneda', this.value)">
                   <option value="USD" ${r.moneda === 'USD' ? 'selected' : ''}>USD</option>
                   <option value="EUR" ${r.moneda === 'EUR' ? 'selected' : ''}>EUR</option>
                   <option value="ARS" ${r.moneda === 'ARS' ? 'selected' : ''}>ARS</option>
                 </select>
               </div>
-            </div>
-
-            <div class="voucher-field">
-              <label>Cálculo en Presupuesto (${numP} ${numP === 1 ? 'viajero' : 'viajeros'})</label>
-              <select onchange="window.actualizarCampoReservaDetectada(${idx}, 'modoPrecio', this.value); window.renderizarTarjetasReservasDetectadas();">
-                <option value="persona" ${r.modoPrecio === 'persona' ? 'selected' : ''}>Monto es por persona ($${r.costo}/p)</option>
-                <option value="total" ${r.modoPrecio === 'total' ? 'selected' : ''}>Monto es total grupal ($${unitPreview}/p)</option>
+              <select style="margin-top:4px; width:100%;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'modoPrecio', this.value); window.renderizarTarjetasReservasDetectadas();">
+                <option value="total" ${r.modoPrecio === 'total' ? 'selected' : ''}>Total del grupo (${numP > 1 ? '$' + unitPreview + '/p' : 'sin multiplicar'})</option>
+                <option value="persona" ${r.modoPrecio === 'persona' ? 'selected' : ''}>Por persona ($${Number(r.costo || 0)} × ${numP})</option>
               </select>
             </div>
 
-            <div class="voucher-field">
-              <label>Estado y Quién Pagó</label>
-              <div style="display:flex; gap:6px;">
-                <select style="width:48%;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'pagado', this.value === 'true')">
-                  <option value="true" ${r.pagado !== false ? 'selected' : ''}>Pagado ✓</option>
-                  <option value="false" ${r.pagado === false ? 'selected' : ''}>Pendiente</option>
-                </select>
-                <select style="width:52%;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'pagadoPor', this.value)">
-                  <option value="Todos" ${r.pagadoPor === 'Todos' ? 'selected' : ''}>Todos</option>
-                  ${viajeros.map(v => `<option value="${escapeHtml(v)}" ${r.pagadoPor === v ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}
-                </select>
-              </div>
+            <div class="reserva-finance-metric reserva-finance-metric--paid reserva-finance-pill">
+              <label>Pagado (${escapeHtml(r.moneda || 'USD')})</label>
+              <input type="number" value="${paidDisplay}" min="0" step="0.01" oninput="window.actualizarFinanzasReservaDetectada(${idx}, 'montoPagado', this.value)">
+              <select style="margin-top:4px; width:100%;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'pagadoPor', this.value)">
+                <option value="Todos" ${r.pagadoPor === 'Todos' ? 'selected' : ''}>Pagó: Todos</option>
+                ${viajeros.map(v => `<option value="${escapeHtml(v)}" ${r.pagadoPor === v ? 'selected' : ''}>Pagó: ${escapeHtml(v)}</option>`).join('')}
+              </select>
             </div>
 
-            <div class="voucher-field voucher-field-full">
-              <label>Notas (Dirección, Asiento, Terminal, Escalas, Punto de encuentro)</label>
-              <input type="text" value="${escapeHtml(r.notas)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'notas', this.value)">
+            <div class="reserva-finance-metric ${pendingDisplay > 0 ? 'reserva-finance-metric--pending' : 'reserva-finance-metric--paid'} reserva-finance-pill">
+              <label>${pendingDisplay > 0 ? 'Saldo pendiente' : 'Estado de pago'}</label>
+              <input type="number" value="${pendingDisplay}" min="0" step="0.01" oninput="window.actualizarFinanzasReservaDetectada(${idx}, 'saldoPendiente', this.value)">
+              <div style="font-size:0.7rem; margin-top:4px; font-weight:700; color:${pendingDisplay > 0 ? '#f59e0b' : '#10b981'};">
+                ${pendingDisplay > 0 ? `Falta abonar ${escapeHtml(r.moneda || 'USD')} ${pendingDisplay.toFixed(2)}` : 'Saldado completo ✓'}
+              </div>
             </div>
           </div>
+
+          <!-- Timeline de Etapas Responsivo sin Scroll Horizontal -->
+          ${isMultiStage ? `
+            <div class="reserva-stages-box">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+                <span style="font-size:0.76rem; font-weight:800; color:var(--verde);">
+                  <i class="fa-solid fa-route"></i> ${r.etapas.length} paradas reales · ${totalDaysLabel} días calendario
+                </span>
+                <span style="font-size:0.7rem; color:var(--gris);">Días de navegación se conectan automáticamente entre puertos</span>
+              </div>
+              <div class="reserva-stages-list">
+                ${r.etapas.map((et, eIdx) => {
+                  const hasTender = /tender|bote auxiliar/i.test(et.notaParada || et.notas || '');
+                  const transitDays = Number(et.diasTransitoPrevio) || 0;
+                  return `
+                    ${transitDays > 0 ? `
+                      <div class="reserva-stage-transit-pill">
+                        <i class="fa-solid fa-ship"></i>
+                        ${transitDays} ${transitDays === 1 ? 'día' : 'días'} · ${escapeHtml(et.transitoEtiqueta || 'En navegación')}
+                      </div>
+                    ` : ''}
+                    <div class="reserva-stage-row">
+                      <input type="text" value="${escapeHtml(et.fecha)}" onchange="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'fecha', this.value)" title="Fecha">
+                      <div style="display:flex; align-items:center; gap:5px; min-width:0;">
+                        <input type="text" value="${escapeHtml(et.ciudad)}" oninput="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'ciudad', this.value)" style="flex:1; min-width:0; font-weight:600;" title="Puerto / Ciudad">
+                        ${hasTender ? '<span class="reserva-stage-tender-badge" title="Servicio de tenders / bote auxiliar">Tender</span>' : ''}
+                      </div>
+                      <input type="text" value="${escapeHtml(et.horaLlegada)}" placeholder="Lleg." oninput="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'horaLlegada', this.value)" title="Hora de llegada">
+                      <input type="text" value="${escapeHtml(et.horaSalida)}" placeholder="Sal." oninput="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'horaSalida', this.value)" title="Hora de salida">
+                      <button type="button" onclick="window.eliminarEtapaReservaDetectada(${idx}, ${eIdx})" title="Quitar parada" style="background:transparent; border:none; color:#f87171; cursor:pointer; font-size:0.95rem; padding:0;">&times;</button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
 
           <div style="display:flex; flex-wrap:wrap; gap:14px; font-size:0.78rem; color:var(--gris); padding-top:4px;">
             ${r.fechaISO ? `
@@ -3842,7 +5412,7 @@ function renderizarTarjetasReservasDetectadas() {
 
             <button type="button" class="btn-card-primary" style="padding:9px 16px; font-size:0.82rem; ${r.agregadoAlViaje ? 'background:rgba(16,185,129,0.25); color:var(--verde); border:1px solid var(--verde);' : ''}" onclick="window.importarReservaAlViaje(${idx})">
               <i class="fa-solid ${r.agregadoAlViaje ? 'fa-check' : 'fa-calendar-plus'}"></i>
-              ${r.agregadoAlViaje ? 'Sincronizada en tu Viaje' : 'Sincronizar con mi Viaje'}
+              ${r.agregadoAlViaje ? 'Sincronizada (actualizar)' : 'Sincronizar con mi Viaje'}
             </button>
           </div>
         </div>
@@ -3857,6 +5427,41 @@ function renderizarTarjetasReservasDetectadas() {
 function actualizarCampoReservaDetectada(idx, field, value) {
   if (!pluxDetectedReservas[idx]) return;
   pluxDetectedReservas[idx][field] = value;
+}
+
+function actualizarDetalleExtraReserva(idx, detIdx, value) {
+  if (!pluxDetectedReservas[idx]?.detallesExtra?.[detIdx]) return;
+  pluxDetectedReservas[idx].detallesExtra[detIdx].value = value;
+}
+
+function agregarDetalleExtraReserva(idx) {
+  const r = pluxDetectedReservas[idx];
+  if (!r) return;
+  const label = prompt('Nombre del campo (ej: Cabina, Terminal, Asiento):');
+  if (!label || !label.trim()) return;
+  r.detallesExtra = r.detallesExtra || [];
+  r.detallesExtra.push({ label: label.trim(), value: '' });
+  renderizarTarjetasReservasDetectadas();
+}
+
+function actualizarEtapaReservaDetectada(idx, etapaIdx, field, value) {
+  const et = pluxDetectedReservas[idx]?.etapas?.[etapaIdx];
+  if (!et) return;
+  et[field] = value;
+  if (field === 'fecha') {
+    const n = normalizarFechaTexto(value);
+    if (n.iso) {
+      et.fecha = n.display;
+      et.fechaISO = n.iso;
+    }
+  }
+}
+
+function eliminarEtapaReservaDetectada(idx, etapaIdx) {
+  const r = pluxDetectedReservas[idx];
+  if (!r || !Array.isArray(r.etapas)) return;
+  r.etapas.splice(etapaIdx, 1);
+  renderizarTarjetasReservasDetectadas();
 }
 
 function actualizarFechaReservaDetectada(idx, rawVal) {
@@ -3874,11 +5479,15 @@ function actualizarFechaReservaDetectada(idx, rawVal) {
 
 function guardarReservaEnWallet(resObj) {
   const wallet = obtenerWalletReservas();
+  const syncKey = resObj._syncKey || computeBookingSyncKey(resObj);
+  resObj._syncKey = syncKey;
   const existsIdx = wallet.findIndex(w =>
-    (w.codigo && w.codigo !== 'CONF-OK' && w.codigo === resObj.codigo && w.titulo === resObj.titulo) ||
+    (w._syncKey && w._syncKey === syncKey) ||
+    (isRealBookingCode(w.codigo) && isRealBookingCode(resObj.codigo) && w.codigo.toUpperCase() === resObj.codigo.toUpperCase() && w.tipo === resObj.tipo) ||
     w.id === resObj.id
   );
   const copy = JSON.parse(JSON.stringify(resObj));
+  copy._syncKey = syncKey;
   copy.savedAt = new Date().toISOString();
   if (existsIdx >= 0) {
     wallet[existsIdx] = copy;
@@ -3898,48 +5507,460 @@ function guardarSoloEnWallet(idx) {
   }
 }
 
-function insertarObjetoReservaEnViaje(res) {
+function setFechaInicioImportacion(isoYYYYMMDD, horaHHMM = '09:00', force = false) {
+  if (!isoYYYYMMDD) return '';
+  const fechaInicioInput = document.getElementById('fechaInicio');
+  if (!force && fechaInicioInput && fechaInicioInput.value) return fechaInicioInput.value;
+  if (window.pluxTripApi && typeof window.pluxTripApi.setTripStartDateISO === 'function') {
+    return window.pluxTripApi.setTripStartDateISO(isoYYYYMMDD, horaHHMM || '09:00');
+  }
+  const mDate = String(isoYYYYMMDD).match(/^(\d{4}-\d{2}-\d{2})/);
+  if (!mDate) return '';
+  const tClean = /^\d{1,2}:\d{2}$/.test(String(horaHHMM || '').trim())
+    ? String(horaHHMM).trim().padStart(5, '0')
+    : '09:00';
+  const normalized = `${mDate[1]}T${tClean}`;
+  if (fechaInicioInput) fechaInicioInput.value = normalized;
+  return normalized;
+}
+
+function bookingEstaPresenteEnViajeActual(res) {
+  if (typeof destinos === 'undefined' || !Array.isArray(destinos) || destinos.length === 0) return false;
+  const syncKey = res._syncKey || computeBookingSyncKey(res);
+  const realCode = isRealBookingCode(res.codigo) ? res.codigo.trim().toUpperCase() : '';
+  return destinos.some(d => {
+    if (!d) return false;
+    if (d.importSyncKey === syncKey) return true;
+    if (Array.isArray(d.tramos) && d.tramos.some(t => t && (t.importSyncKey === syncKey || (realCode && String(t.codigoReserva || '').toUpperCase() === realCode)))) {
+      return true;
+    }
+    if (Array.isArray(d.dias) && d.dias.some(dia => Array.isArray(dia?.eventos) && dia.eventos.some(ev => ev && (ev.importSyncKey === syncKey || (realCode && String(ev.codigoReserva || '').toUpperCase() === realCode))))) {
+      return true;
+    }
+    return false;
+  });
+}
+
+function finalizarSincronizacionImportacion() {
+  if (window.pluxTripApi && typeof window.pluxTripApi.commitImportedTripChanges === 'function') {
+    window.pluxTripApi.commitImportedTripChanges();
+  } else {
+    if (typeof renderDestinos === 'function') renderDestinos();
+    if (typeof renderVueltaCostos === 'function') renderVueltaCostos();
+    if (typeof autoSave === 'function') autoSave();
+  }
+}
+
+function solicitarDestinoSincronizacion(reservasArray, onConfirm) {
+  const list = Array.isArray(reservasArray) ? reservasArray.filter(Boolean) : [];
+  if (list.length === 0) return;
+
+  const hasActiveTrip = (window.pluxTripApi && typeof window.pluxTripApi.hasActiveTripContent === 'function')
+    ? window.pluxTripApi.hasActiveTripContent()
+    : (typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0);
+
+  // Si el lienzo está vacío, sincronizar directamente sin modal
+  if (!hasActiveTrip) {
+    onConfirm('current');
+    return;
+  }
+
+  // Si TODAS las reservas ya están en el viaje actual, actualizar idempotentemente in-place sin molestar
+  if (list.every(r => bookingEstaPresenteEnViajeActual(r))) {
+    onConfirm('current');
+    return;
+  }
+
+  // Mostrar modal de elección por encima de #modal-descubrir
+  const existingModal = document.getElementById('plux-sync-choice-modal');
+  if (existingModal) existingModal.remove();
+
+  const tripInfo = (window.pluxTripApi && typeof window.pluxTripApi.getActiveTripInfo === 'function')
+    ? window.pluxTripApi.getActiveTripInfo()
+    : {
+        nombre: document.getElementById('nombreViaje')?.value?.trim() || 'tu viaje actual',
+        destinosCount: (typeof destinos !== 'undefined' && Array.isArray(destinos)) ? destinos.length : 0,
+        isTemplate: Boolean(window.currentTripEmbajadorSlug || window.currentTripTemplateOrigin)
+      };
+
+  const tripName = tripInfo?.nombre || 'Viaje actual';
+  const destCount = Number(tripInfo?.destinosCount) || (Array.isArray(destinos) ? destinos.length : 0);
+  const firstRes = list[0];
+  const labelItem = list.length === 1
+    ? `«${firstRes.titulo || firstRes.ciudad || 'esta reserva'}»`
+    : `estas ${list.length} reservas`;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'plux-sync-choice-modal';
+  overlay.className = 'plux-sync-choice-modal';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+
+  overlay.innerHTML = `
+    <div class="plux-sync-choice-card">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+        <span style="width:36px; height:36px; border-radius:10px; background:rgba(16,185,129,0.16); color:var(--verde); display:inline-flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;">
+          <i class="fa-solid fa-compass-drafting"></i>
+        </span>
+        <div>
+          <h4 style="margin:0; font-size:1.05rem; font-weight:800;">¿Dónde querés sincronizar?</h4>
+          <span style="font-size:0.75rem; color:var(--gris);">Tu viaje abierto «${escapeHtml(tripName)}» ya tiene ${destCount} ${destCount === 1 ? 'destino' : 'destinos'}</span>
+        </div>
+      </div>
+      <p style="margin:8px 0 16px 0; font-size:0.84rem; line-height:1.48; opacity:0.9;">
+        Podés crear un viaje nuevo limpio para ${escapeHtml(labelItem)} (manteniendo «${escapeHtml(tripName)}» intacto en <strong>Mis Viajes</strong>), o sumarla al itinerario que tenés abierto.
+      </p>
+      <div class="plux-sync-choice-actions">
+        <button type="button" class="plux-sync-btn-primary" id="pluxSyncChoiceNewBtn">
+          <i class="fa-solid fa-plus"></i> Crear viaje nuevo con esta reserva
+        </button>
+        <button type="button" class="plux-sync-btn-secondary" id="pluxSyncChoiceCurrentBtn">
+          <i class="fa-solid fa-layer-group"></i> Sumar a «${escapeHtml(tripName)}»
+        </button>
+        <button type="button" class="plux-sync-btn-cancel" id="pluxSyncChoiceCancelBtn">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  `;
+
+  const cleanup = () => {
+    document.removeEventListener('keydown', onEsc);
+    overlay.remove();
+  };
+  const onEsc = (e) => { if (e.key === 'Escape') cleanup(); };
+  document.addEventListener('keydown', onEsc);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(); });
+
+  document.body.appendChild(overlay);
+
+  const btnNew = document.getElementById('pluxSyncChoiceNewBtn');
+  const btnCurrent = document.getElementById('pluxSyncChoiceCurrentBtn');
+  const btnCancel = document.getElementById('pluxSyncChoiceCancelBtn');
+
+  if (btnNew) {
+    btnNew.onclick = () => {
+      cleanup();
+      const firstStage = Array.isArray(firstRes.etapas) && firstRes.etapas.length > 0 ? firstRes.etapas[0] : null;
+      const newTripOpts = {
+        nombre: firstRes.titulo || `Viaje a ${firstRes.ciudad || 'Destino'}`,
+        lugarSalida: firstStage?.ciudad || firstRes.origen || firstRes.ciudad || '',
+        fechaInicioISO: firstStage?.fechaISO || firstRes.fechaISO || '',
+        horaInicio: firstStage?.horaSalida || firstRes.hora || '09:00'
+      };
+      if (window.pluxTripApi && typeof window.pluxTripApi.startCleanTripForImport === 'function') {
+        window.pluxTripApi.startCleanTripForImport(newTripOpts);
+      } else {
+        if (typeof window.empezarDeCeroSinPrompt === 'function') {
+          window.empezarDeCeroSinPrompt();
+        } else {
+          window.destinos = [];
+          if (typeof destinos !== 'undefined' && Array.isArray(destinos)) destinos.length = 0;
+        }
+        const nInput = document.getElementById('nombreViaje');
+        if (nInput && newTripOpts.nombre) nInput.value = newTripOpts.nombre;
+        const sInput = document.getElementById('lugarSalida');
+        if (sInput && newTripOpts.lugarSalida) sInput.value = newTripOpts.lugarSalida;
+        if (newTripOpts.fechaInicioISO) setFechaInicioImportacion(newTripOpts.fechaInicioISO, newTripOpts.horaInicio, true);
+      }
+      onConfirm('new');
+    };
+  }
+
+  if (btnCurrent) {
+    btnCurrent.onclick = () => {
+      cleanup();
+      onConfirm('current');
+    };
+  }
+
+  if (btnCancel) {
+    btnCancel.onclick = cleanup;
+  }
+}
+
+function upsertBookingInTrip(res) {
   if (typeof destinos === 'undefined' || !Array.isArray(destinos)) {
     window.destinos = [];
   }
 
+  const syncKey = computeBookingSyncKey(res);
+  res._syncKey = syncKey;
+  const realCode = isRealBookingCode(res.codigo) ? res.codigo.trim().toUpperCase() : '';
+
   const numP = (typeof numPersonas !== 'undefined' && Number(numPersonas) > 0) ? Number(numPersonas) : 1;
   const rawCosto = Number(res.costo) || 0;
-  const unitCosto = (res.modoPrecio === 'total' && numP > 1) ? Number((rawCosto / numP).toFixed(2)) : rawCosto;
+  const modoPrecio = res.modoPrecio === 'total' ? 'total' : 'persona';
+  const unitCosto = (modoPrecio === 'total' && numP > 1) ? Number((rawCosto / numP).toFixed(2)) : rawCosto;
+  const montoPagado = Number(res.montoPagado) || 0;
+  const saldoPendiente = Number(res.saldoPendiente) || 0;
 
-  // 1. Sincronizar #fechaInicio del viaje si está vacía y la reserva tiene fechaISO
-  const fechaInicioInput = document.getElementById('fechaInicio');
-  if (res.fechaISO && fechaInicioInput && (!fechaInicioInput.value || res.sincronizarFechaInicio)) {
-    if (!fechaInicioInput.value) {
-      fechaInicioInput.value = res.fechaISO;
+  // 1. Caso Crucero / Itinerario Multi-Etapa (modelo simplificado con diasTransitoPrevio + cubreParadas + desembarque colapsado)
+  if (Array.isArray(res.etapas) && res.etapas.length > 0) {
+    const { stops } = compactStagesWithTransit(res.etapas, { isCruise: res.tipo === 'crucero' });
+    if (stops.length === 0) return destinos[0] || null;
+
+    const firstStop = stops[0];
+    const lastStop = stops[stops.length - 1];
+    const firstValidDate = firstStop.fechaISO || res.fechaISO;
+    const firstHora = firstStop.horaSalida || res.hora || '18:00';
+    if (firstValidDate) {
+      setFechaInicioImportacion(firstValidDate, firstHora, Boolean(res.sincronizarFechaInicio));
     }
+
+    // Completar nombre del viaje si está vacío
+    const nombreViajeEl = document.getElementById('nombreViaje');
+    if (nombreViajeEl && !nombreViajeEl.value.trim() && res.titulo) {
+      nombreViajeEl.value = res.titulo;
+    }
+
+    // Completar lugarSalida con el puerto de embarque
+    if (firstStop && firstStop.ciudad) {
+      const inputSalida = document.getElementById('lugarSalida');
+      if (inputSalida) inputSalida.value = firstStop.ciudad;
+      if (typeof lugarSalida !== 'undefined') lugarSalida = firstStop.ciudad;
+    }
+
+    // En ruta circular (o desembarque final en destinos[last]), dejar vueltaGlobal vacío
+    const isCircularReturn = stops.length >= 2 && (
+      lastStop.tipoParada === 'desembarque' ||
+      normCityKeyImporter(firstStop.ciudad) === normCityKeyImporter(lastStop.ciudad)
+    );
+    if (isCircularReturn) {
+      if (typeof vueltaGlobal !== 'undefined') vueltaGlobal = '';
+      if (typeof vueltaPrecioGlobal !== 'undefined') vueltaPrecioGlobal = 0;
+      const vueltaEl = document.getElementById('vuelta');
+      if (vueltaEl) vueltaEl.value = '';
+      const vueltaPrecioEl = document.getElementById('vueltaPrecio');
+      if (vueltaPrecioEl) vueltaPrecioEl.value = 0;
+    }
+
+    const baseTs = Date.now();
+    const cabinInfo = res.cabina || (res.detallesExtra || []).find(d => /cabina/i.test(d.label))?.value || '';
+    const shipInfo = res.nave || (res.detallesExtra || []).find(d => /nave|barco/i.test(d.label))?.value || res.proveedor || 'Crucero';
+    const currentStageKeys = new Set();
+    let firstUpsertedDest = null;
+
+    stops.forEach((st, idx) => {
+      const tipoParada = st.tipoParada || (idx === 0 ? 'embarque' : (idx === stops.length - 1 ? 'desembarque' : 'escala'));
+      const importStageKey = `${syncKey}#${tipoParada || 'estadia'}#${st.fechaISO || idx}`;
+      currentStageKeys.add(importStageKey);
+
+      const diasTransitoPrevio = idx === 0 ? 0 : Math.max(0, Number(st.diasTransitoPrevio) || 0);
+      const transitoEtiqueta = diasTransitoPrevio > 0 ? (st.transitoEtiqueta || 'En navegación') : '';
+      const notaParada = String(st.notaParada || st.notas || '').trim();
+      const horarioWindow = [
+        st.horaLlegada ? `Llegada ${st.horaLlegada}` : '',
+        st.horaSalida ? `Salida ${st.horaSalida}` : ''
+      ].filter(Boolean).join(' · ');
+
+      // Construir eventos ancla etiquetados con importSyncKey
+      const anchorEvents = [];
+      if (tipoParada === 'embarque' || idx === 0) {
+        anchorEvents.push({
+          id: baseTs + idx * 10 + 1,
+          hora: st.horaSalida || res.hora || '18:00',
+          titulo: `Embarque y Zarpe · ${shipInfo}`,
+          notas: [realCode ? `Reserva: ${realCode}` : '', cabinInfo ? `Cabina: ${cabinInfo}` : '', notaParada].filter(Boolean).join(' · '),
+          costo: 0,
+          moneda: res.moneda || 'USD',
+          duracion: 120,
+          codigoReserva: res.codigo,
+          importSyncKey: syncKey
+        });
+      } else if (tipoParada === 'desembarque') {
+        anchorEvents.push({
+          id: baseTs + idx * 10 + 1,
+          hora: st.horaLlegada || res.horaFin || '08:00',
+          titulo: `Desembarque · ${shipInfo}`,
+          notas: [realCode ? `Reserva: ${realCode}` : '', notaParada || 'Fin de travesía'].filter(Boolean).join(' · '),
+          costo: 0,
+          moneda: res.moneda || 'USD',
+          duracion: 90,
+          codigoReserva: res.codigo,
+          importSyncKey: syncKey
+        });
+      } else {
+        if (st.horaLlegada) {
+          anchorEvents.push({
+            id: baseTs + idx * 10 + 1,
+            hora: st.horaLlegada,
+            titulo: `Arribo a ${st.ciudad}`,
+            notas: [notaParada || 'Escala en puerto', realCode ? `Ref: ${realCode}` : ''].filter(Boolean).join(' · '),
+            costo: 0,
+            moneda: res.moneda || 'USD',
+            duracion: 60,
+            codigoReserva: res.codigo,
+            importSyncKey: syncKey
+          });
+        }
+        if (st.horaSalida) {
+          anchorEvents.push({
+            id: baseTs + idx * 10 + 2,
+            hora: st.horaSalida,
+            titulo: `Zarpe desde ${st.ciudad}`,
+            notas: 'Regreso al barco con anticipación',
+            costo: 0,
+            moneda: res.moneda || 'USD',
+            duracion: 45,
+            codigoReserva: res.codigo,
+            importSyncKey: syncKey
+          });
+        }
+        if (!st.horaLlegada && !st.horaSalida) {
+          anchorEvents.push({
+            id: baseTs + idx * 10 + 1,
+            hora: '09:00',
+            titulo: `Escala en ${st.ciudad}`,
+            notas: notaParada,
+            costo: 0,
+            moneda: res.moneda || 'USD',
+            duracion: 240,
+            codigoReserva: res.codigo,
+            importSyncKey: syncKey
+          });
+        }
+      }
+
+      // Tramo maestro SOLO en el destino de embarque (idx === 0)
+      const masterTramoPayload = idx === 0 ? {
+        id: baseTs + 9,
+        medio: `${res.titulo}${realCode ? ' · Ref: ' + realCode : ''}`,
+        precio: rawCosto,
+        moneda: res.moneda || 'USD',
+        modoPrecio,
+        montoPagado,
+        saldoPendiente,
+        pagado: saldoPendiente <= 0 && (rawCosto > 0 ? res.pagado !== false : true),
+        pagadoPor: res.pagadoPor || 'Todos',
+        alojamiento: cabinInfo ? `Cabina ${cabinInfo} · ${shipInfo}` : `Camarote a bordo · ${shipInfo}`,
+        precioAlojamiento: 0,
+        monedaAlojamiento: res.moneda || 'USD',
+        escalas: stops.map(e => `${e.ciudad}${e.fecha ? ' (' + e.fecha + ')' : ''}`),
+        codigoReserva: res.codigo,
+        cubreParadas: true,
+        importSyncKey: syncKey
+      } : null;
+
+      // Match estricto por importStageKey (cero fusión difusa)
+      let existingDest = destinos.find(d => d && d.importStageKey === importStageKey);
+
+      if (existingDest) {
+        existingDest.nombre = st.ciudad;
+        existingDest.tipoParada = tipoParada;
+        existingDest.diasTransitoPrevio = diasTransitoPrevio;
+        existingDest.transitoEtiqueta = transitoEtiqueta;
+        existingDest.horaLlegada = st.horaLlegada || '';
+        existingDest.horaSalida = st.horaSalida || '';
+        existingDest.notaParada = notaParada;
+        existingDest.horarioEscala = horarioWindow;
+        existingDest.esNavegacion = false;
+        existingDest.importSyncKey = syncKey;
+        existingDest.importStageKey = importStageKey;
+
+        if (!Array.isArray(existingDest.dias) || existingDest.dias.length === 0) {
+          existingDest.dias = [{ id: 0, eventos: [], costosAdicionales: [] }];
+        }
+        const prevEvents = Array.isArray(existingDest.dias[0].eventos) ? existingDest.dias[0].eventos : [];
+        // Preservar eventos creados manualmente o por IA; reemplazar SOLO eventos con importSyncKey === syncKey
+        const preservedEvents = prevEvents.filter(ev =>
+          ev &&
+          ev.importSyncKey !== syncKey &&
+          !(realCode && ev.codigoReserva && String(ev.codigoReserva).toUpperCase() === realCode && !ev.importSyncKey)
+        );
+        existingDest.dias[0].eventos = [...preservedEvents, ...anchorEvents]
+          .sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
+
+        if (masterTramoPayload) {
+          if (!Array.isArray(existingDest.tramos)) existingDest.tramos = [];
+          const tIdx = existingDest.tramos.findIndex(t =>
+            t && (t.importSyncKey === syncKey || (realCode && String(t.codigoReserva || '').toUpperCase() === realCode))
+          );
+          if (tIdx >= 0) {
+            existingDest.tramos[tIdx] = { ...existingDest.tramos[tIdx], ...masterTramoPayload, id: existingDest.tramos[tIdx].id || masterTramoPayload.id };
+          } else {
+            existingDest.tramos.unshift(masterTramoPayload);
+          }
+        }
+      } else {
+        existingDest = {
+          id: baseTs + idx * 100 + Math.floor(Math.random() * 50),
+          nombre: st.ciudad,
+          tipoParada,
+          diasTransitoPrevio,
+          transitoEtiqueta,
+          horaLlegada: st.horaLlegada || '',
+          horaSalida: st.horaSalida || '',
+          notaParada,
+          horarioEscala: horarioWindow,
+          esNavegacion: false,
+          importSyncKey: syncKey,
+          importStageKey,
+          dias: [{ id: 0, eventos: anchorEvents, costosAdicionales: [] }],
+          tramos: masterTramoPayload ? [masterTramoPayload] : []
+        };
+        destinos.push(existingDest);
+      }
+
+      if (!firstUpsertedDest) firstUpsertedDest = existingDest;
+
+      if (idx === 0 && typeof openTransportDestIds !== 'undefined' && openTransportDestIds.add) {
+        openTransportDestIds.add(existingDest.id);
+      }
+      if (tipoParada === 'desembarque') {
+        if (window.pluxTripApi && typeof window.pluxTripApi.collapseDestino === 'function') {
+          window.pluxTripApi.collapseDestino(existingDest.id);
+        } else if (typeof collapsedEditorDestinos !== 'undefined' && collapsedEditorDestinos.add) {
+          collapsedEditorDestinos.add(existingDest.id);
+        }
+      }
+    });
+
+    // Eliminar etapas obsoletas del MISMO syncKey si el usuario quitó una parada antes de re-sincronizar
+    for (let i = destinos.length - 1; i >= 0; i--) {
+      const d = destinos[i];
+      if (d && d.importSyncKey === syncKey && d.importStageKey && !currentStageKeys.has(d.importStageKey)) {
+        destinos.splice(i, 1);
+      }
+    }
+
+    res.agregadoAlViaje = true;
+    return firstUpsertedDest || destinos[0];
   }
 
-  // 2. Si el usuario indicó que es el tramo de Regreso a Casa (Vuelta Global)
+  // 2. Reserva simple: sincronizar fechaInicio si está vacía
+  if (res.fechaISO) {
+    setFechaInicioImportacion(res.fechaISO, res.hora || '09:00', false);
+  }
+
+  // 3. Si el usuario indicó Tramo de Regreso a Casa (Vuelta Global)
   if (res.targetDestMode === 'vuelta_casa') {
-    const descVuelta = `${res.titulo}${res.codigo ? ' [PNR: ' + res.codigo + ']' : ''}${res.fecha ? ' · ' + res.fecha : ''}`;
+    const descVuelta = `${res.titulo}${realCode ? ' [PNR: ' + realCode + ']' : ''}${res.fecha ? ' · ' + res.fecha : ''}`;
     if (typeof vueltaGlobal !== 'undefined') vueltaGlobal = descVuelta;
     if (typeof vueltaPrecioGlobal !== 'undefined') vueltaPrecioGlobal = unitCosto;
     const vueltaEl = document.getElementById('vuelta');
     if (vueltaEl) vueltaEl.value = descVuelta;
     const vueltaPrecioEl = document.getElementById('vueltaPrecio');
     if (vueltaPrecioEl) vueltaPrecioEl.value = unitCosto;
-    if (typeof renderVueltaCostos === 'function') renderVueltaCostos();
+    res.agregadoAlViaje = true;
     return { nombre: 'Regreso a Casa' };
   }
 
-  // 3. Buscar o crear el Destino correspondiente
-  let targetDest = null;
-  if (res.targetDestMode && res.targetDestMode.startsWith('dest_')) {
+  // 4. Buscar o crear el Destino correspondiente (estricto por importSyncKey primero, luego destino explícito/ciudad)
+  let targetDest = destinos.find(d => d && (
+    d.importSyncKey === syncKey ||
+    (Array.isArray(d.tramos) && d.tramos.some(t => t && (t.importSyncKey === syncKey || (realCode && String(t.codigoReserva || '').toUpperCase() === realCode)))) ||
+    (Array.isArray(d.dias) && d.dias.some(dia => Array.isArray(dia?.eventos) && dia.eventos.some(ev => ev && ev.importSyncKey === syncKey)))
+  ));
+
+  if (!targetDest && res.targetDestMode && res.targetDestMode.startsWith('dest_')) {
     const did = Number(res.targetDestMode.replace('dest_', ''));
     targetDest = destinos.find(d => Number(d.id) === did);
   }
   const cityClean = (res.ciudad || 'Destino').trim();
   if (!targetDest) {
-    targetDest = destinos.find(d => d && d.nombre && (
-      d.nombre.toLowerCase().includes(cityClean.toLowerCase()) ||
-      cityClean.toLowerCase().includes(d.nombre.toLowerCase())
-    ));
+    const cityKey = normCityKeyImporter(cityClean);
+    targetDest = destinos.find(d => d && d.nombre && normCityKeyImporter(d.nombre) === cityKey);
   }
   if (!targetDest) {
     targetDest = {
@@ -3958,7 +5979,8 @@ function insertarObjetoReservaEnViaje(res) {
     targetDest.tramos = [];
   }
 
-  // 4. Asegurar cantidad de días suficientes para el día asignado
+  // 5. Asegurar cantidad de días suficientes para el día asignado
+  const fechaInicioInput = document.getElementById('fechaInicio');
   let diaIdx = Math.max(0, parseInt(res.diaIndex) || 0);
   if (res.fechaISO && fechaInicioInput && fechaInicioInput.value && diaIdx === 0) {
     diaIdx = calcularDiaViajePorFechaISO(res.fechaISO, fechaInicioInput.value);
@@ -3971,7 +5993,7 @@ function insertarObjetoReservaEnViaje(res) {
     });
   }
 
-  // 5. Completar lugarSalida si está vacío y la reserva tiene origen
+  // 6. Completar lugarSalida si está vacío y la reserva tiene origen
   if (res.origen) {
     const inputSalida = document.getElementById('lugarSalida');
     if (inputSalida && !inputSalida.value) {
@@ -3980,36 +6002,66 @@ function insertarObjetoReservaEnViaje(res) {
     }
   }
 
-  // 6. Sincronizar con Transporte y Alojamiento (targetDest.tramos) usando las propiedades reales de script.js
+  // Helper interno para upsert idempotente de eventos en un día
+  const upsertEventInDay = (dayObj, eventData, subKey = '') => {
+    if (!Array.isArray(dayObj.eventos)) dayObj.eventos = [];
+    const evKey = subKey ? `${syncKey}#${subKey}` : syncKey;
+    const matchIdx = dayObj.eventos.findIndex(e =>
+      e && (
+        (e.importStageKey && e.importStageKey === evKey) ||
+        (!subKey && e.importSyncKey === syncKey) ||
+        (realCode && e.codigoReserva && String(e.codigoReserva).toUpperCase() === realCode && e.titulo === eventData.titulo)
+      )
+    );
+    const payload = {
+      ...eventData,
+      importSyncKey: syncKey,
+      importStageKey: evKey,
+      codigoReserva: res.codigo
+    };
+    if (matchIdx >= 0) {
+      dayObj.eventos[matchIdx] = { ...dayObj.eventos[matchIdx], ...payload, id: dayObj.eventos[matchIdx].id };
+    } else {
+      dayObj.eventos.push({ id: Date.now() + Math.floor(Math.random() * 999), ...payload });
+    }
+    dayObj.eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
+  };
+
+  // 7. Sincronizar según tipo sin duplicar nunca
   if (res.tipo === 'vuelo' || res.tipo === 'tren') {
-    const medioTexto = `${res.titulo}${res.codigo ? ' · PNR: ' + res.codigo : ''}`;
+    const medioTexto = `${res.titulo}${realCode ? ' · PNR: ' + realCode : ''}`;
     let existingTramo = targetDest.tramos.find(t =>
-      (t.codigoReserva && t.codigoReserva === res.codigo) ||
-      (t.medio && res.codigo && t.medio.includes(res.codigo)) ||
-      (!t.medio && !t.precio)
+      t && (
+        t.importSyncKey === syncKey ||
+        (realCode && String(t.codigoReserva || '').toUpperCase() === realCode)
+      )
     );
     if (!existingTramo) {
-      existingTramo = {
+      existingTramo = targetDest.tramos.find(t => t && !t.medio && !t.precio && !t.importSyncKey);
+    }
+    const tramoFields = {
+      medio: medioTexto,
+      precio: rawCosto,
+      moneda: res.moneda || 'USD',
+      modoPrecio,
+      montoPagado,
+      saldoPendiente,
+      pagado: saldoPendiente <= 0 && res.pagado !== false,
+      pagadoPor: res.pagadoPor || 'Todos',
+      codigoReserva: res.codigo,
+      importSyncKey: syncKey
+    };
+    if (!existingTramo) {
+      targetDest.tramos.push({
         id: Date.now() + Math.floor(Math.random() * 500),
-        medio: medioTexto,
-        precio: unitCosto,
-        moneda: res.moneda || 'USD',
-        pagado: res.pagado !== false,
-        pagadoPor: res.pagadoPor || 'Todos',
         alojamiento: '',
         precioAlojamiento: 0,
         monedaAlojamiento: res.moneda || 'USD',
         escalas: Array.isArray(res.escalas) ? [...res.escalas] : [],
-        codigoReserva: res.codigo
-      };
-      targetDest.tramos.push(existingTramo);
+        ...tramoFields
+      });
     } else {
-      existingTramo.medio = medioTexto;
-      existingTramo.precio = unitCosto;
-      existingTramo.moneda = res.moneda || 'USD';
-      existingTramo.pagado = res.pagado !== false;
-      existingTramo.pagadoPor = res.pagadoPor || 'Todos';
-      existingTramo.codigoReserva = res.codigo;
+      Object.assign(existingTramo, tramoFields);
       if (Array.isArray(res.escalas) && res.escalas.length > 0) {
         existingTramo.escalas = [...res.escalas];
       }
@@ -4018,85 +6070,73 @@ function insertarObjetoReservaEnViaje(res) {
       openTransportDestIds.add(targetDest.id);
     }
 
-    // Agregar el hito horario en la agenda del Día con costo 0 (para NO duplicar el presupuesto de tramo.precio)
-    const targetDay = targetDest.dias[diaIdx];
-    if (!Array.isArray(targetDay.eventos)) targetDay.eventos = [];
     const notaCompleta = [
-      res.codigo ? `PNR: ${res.codigo}` : '',
+      realCode ? `PNR: ${realCode}` : '',
       res.proveedor ? `Operador: ${res.proveedor}` : '',
       res.horaFin ? `Llegada: ${res.horaFin}` : '',
       res.notas || ''
     ].filter(Boolean).join(' · ');
 
-    const existingEv = targetDay.eventos.find(e => e.codigoReserva === res.codigo && e.titulo === res.titulo);
-    if (!existingEv) {
-      targetDay.eventos.push({
-        id: Date.now() + Math.floor(Math.random() * 999),
-        hora: res.hora || '10:00',
-        titulo: res.titulo,
-        notas: notaCompleta,
-        costo: 0, // El costo ya está contabilizado en Transporte (tramo.precio)
-        moneda: res.moneda || 'USD',
-        duracion: Number(res.duracion) || 180,
-        codigoReserva: res.codigo
-      });
-    }
-    targetDay.eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
+    upsertEventInDay(targetDest.dias[diaIdx], {
+      hora: res.hora || '10:00',
+      titulo: res.titulo,
+      notas: notaCompleta,
+      costo: 0,
+      moneda: res.moneda || 'USD',
+      duracion: Number(res.duracion) || 180
+    }, 'main');
 
   } else if (res.tipo === 'hotel') {
     const cleanHotelName = res.titulo.replace(/^Check-in:\s*/i, '').trim();
-    const alojTexto = `${cleanHotelName} (${res.noches || 1} ${(res.noches || 1) === 1 ? 'noche' : 'noches'}${res.codigo ? ' · Ref: ' + res.codigo : ''}${res.pin ? ' · PIN: ' + res.pin : ''})`;
+    const alojTexto = `${cleanHotelName} (${res.noches || 1} ${(res.noches || 1) === 1 ? 'noche' : 'noches'}${realCode ? ' · Ref: ' + realCode : ''}${res.pin ? ' · PIN: ' + res.pin : ''})`;
 
-    let targetTramo = targetDest.tramos.find(t => !t.alojamiento || (res.codigo && t.alojamiento.includes(res.codigo))) || targetDest.tramos[0];
+    let targetTramo = targetDest.tramos.find(t =>
+      t && (t.importSyncKey === syncKey || (realCode && t.alojamiento && t.alojamiento.includes(realCode)))
+    ) || targetDest.tramos.find(t => t && !t.alojamiento) || targetDest.tramos[0];
+
+    const hotelFields = {
+      alojamiento: alojTexto,
+      precioAlojamiento: rawCosto,
+      monedaAlojamiento: res.moneda || 'USD',
+      modoPrecio,
+      montoPagado,
+      saldoPendiente,
+      alojamientoPagado: saldoPendiente <= 0 && res.pagado !== false,
+      alojamientoPagadoPor: res.pagadoPor || 'Todos',
+      importSyncKey: syncKey
+    };
+
     if (!targetTramo) {
-      targetTramo = {
+      targetDest.tramos.push({
         id: Date.now() + Math.floor(Math.random() * 500),
         medio: '',
         precio: 0,
         moneda: res.moneda || 'USD',
-        alojamiento: alojTexto,
-        precioAlojamiento: unitCosto,
-        monedaAlojamiento: res.moneda || 'USD',
-        alojamientoPagado: res.pagado !== false,
-        alojamientoPagadoPor: res.pagadoPor || 'Todos',
-        escalas: []
-      };
-      targetDest.tramos.push(targetTramo);
+        escalas: [],
+        ...hotelFields
+      });
     } else {
-      targetTramo.alojamiento = alojTexto;
-      targetTramo.precioAlojamiento = unitCosto;
-      targetTramo.monedaAlojamiento = res.moneda || 'USD';
-      targetTramo.alojamientoPagado = res.pagado !== false;
-      targetTramo.alojamientoPagadoPor = res.pagadoPor || 'Todos';
+      Object.assign(targetTramo, hotelFields);
     }
     if (typeof openTransportDestIds !== 'undefined' && openTransportDestIds.add) {
       openTransportDestIds.add(targetDest.id);
     }
 
-    // Agregar evento Check-in en el día de llegada (costo 0 para no duplicar precioAlojamiento)
-    const arrivalDay = targetDest.dias[diaIdx];
-    if (!Array.isArray(arrivalDay.eventos)) arrivalDay.eventos = [];
     const notaCheckin = [
-      res.codigo ? `Confirmación: ${res.codigo}` : '',
+      realCode ? `Confirmación: ${realCode}` : '',
       res.pin ? `PIN: ${res.pin}` : '',
       res.notas || ''
     ].filter(Boolean).join(' · ');
 
-    if (!arrivalDay.eventos.some(e => e.codigoReserva === res.codigo && /check-in/i.test(e.titulo))) {
-      arrivalDay.eventos.push({
-        id: Date.now() + Math.floor(Math.random() * 999),
-        hora: res.hora || '15:00',
-        titulo: `Check-in: ${cleanHotelName}`,
-        notas: notaCheckin,
-        costo: 0,
-        moneda: res.moneda || 'USD',
-        duracion: 45,
-        codigoReserva: res.codigo
-      });
-      arrivalDay.eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
-    }
+    upsertEventInDay(targetDest.dias[diaIdx], {
+      hora: res.hora || '15:00',
+      titulo: `Check-in: ${cleanHotelName}`,
+      notas: notaCheckin,
+      costo: 0,
+      moneda: res.moneda || 'USD',
+      duracion: 45
+    }, 'checkin');
 
-    // Expandir días de las noches de estadía y agregar Check-out el último día
     if (res.expandirNoches && Number(res.noches) >= 1) {
       const checkoutDiaIdx = Math.min(30, diaIdx + Number(res.noches));
       while (targetDest.dias.length <= checkoutDiaIdx) {
@@ -4106,106 +6146,98 @@ function insertarObjetoReservaEnViaje(res) {
           costosAdicionales: []
         });
       }
-      const checkoutDay = targetDest.dias[checkoutDiaIdx];
-      if (!Array.isArray(checkoutDay.eventos)) checkoutDay.eventos = [];
-      if (!checkoutDay.eventos.some(e => e.codigoReserva === res.codigo && /check-out/i.test(e.titulo))) {
-        checkoutDay.eventos.push({
-          id: Date.now() + Math.floor(Math.random() * 999) + 5,
-          hora: res.horaFin || '11:00',
-          titulo: `Check-out: ${cleanHotelName}`,
-          notas: `Fin de estadía (${res.noches} noches) · ${res.codigo ? 'Ref: ' + res.codigo : ''}`.trim(),
-          costo: 0,
-          moneda: res.moneda || 'USD',
-          duracion: 30,
-          codigoReserva: res.codigo
-        });
-        checkoutDay.eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
-      }
+      upsertEventInDay(targetDest.dias[checkoutDiaIdx], {
+        hora: res.horaFin || '11:00',
+        titulo: `Check-out: ${cleanHotelName}`,
+        notas: `Fin de estadía (${res.noches} noches)${realCode ? ' · Ref: ' + realCode : ''}`,
+        costo: 0,
+        moneda: res.moneda || 'USD',
+        duracion: 30
+      }, 'checkout');
     }
 
   } else {
-    // Actividades, Entradas, Tours, Autos -> van directo al Día con su costo real
-    const targetDay = targetDest.dias[diaIdx];
-    if (!Array.isArray(targetDay.eventos)) targetDay.eventos = [];
     const notaAct = [
-      res.codigo ? `Voucher: ${res.codigo}` : '',
+      realCode ? `Voucher: ${realCode}` : '',
       res.proveedor ? `Proveedor: ${res.proveedor}` : '',
       res.notas || ''
     ].filter(Boolean).join(' · ');
 
-    const existingAct = targetDay.eventos.find(e => e.codigoReserva === res.codigo && e.titulo === res.titulo);
-    if (existingAct) {
-      existingAct.hora = res.hora || '10:00';
-      existingAct.notas = notaAct;
-      existingAct.costo = unitCosto;
-      existingAct.moneda = res.moneda || 'USD';
-      existingAct.pagado = res.pagado !== false;
-      existingAct.pagadoPor = res.pagadoPor || 'Todos';
-    } else {
-      targetDay.eventos.push({
-        id: Date.now() + Math.floor(Math.random() * 999),
-        hora: res.hora || '10:00',
-        titulo: res.titulo,
-        notas: notaAct,
-        costo: unitCosto,
-        moneda: res.moneda || 'USD',
-        pagado: res.pagado !== false,
-        pagadoPor: res.pagadoPor || 'Todos',
-        duracion: Number(res.duracion) || 120,
-        codigoReserva: res.codigo
-      });
-    }
-    targetDay.eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
+    upsertEventInDay(targetDest.dias[diaIdx], {
+      hora: res.hora || '10:00',
+      titulo: res.titulo,
+      notas: notaAct,
+      costo: unitCosto,
+      moneda: res.moneda || 'USD',
+      pagado: saldoPendiente <= 0 && res.pagado !== false,
+      pagadoPor: res.pagadoPor || 'Todos',
+      duracion: Number(res.duracion) || 120
+    }, 'activity');
   }
 
+  res.agregadoAlViaje = true;
   return targetDest;
+}
+
+// Alias retrocompatible hacia el nuevo upsert estricto
+function insertarObjetoReservaEnViaje(res) {
+  return upsertBookingInTrip(res);
 }
 
 function importarReservaAlViaje(idx) {
   const res = pluxDetectedReservas[idx];
   if (!res) return;
 
-  const targetDest = insertarObjetoReservaEnViaje(res);
-  res.agregadoAlViaje = true;
-  guardarReservaEnWallet(res);
+  solicitarDestinoSincronizacion([res], () => {
+    const targetDest = upsertBookingInTrip(res);
+    res.agregadoAlViaje = true;
+    guardarReservaEnWallet(res);
 
-  if (typeof renderDestinos === 'function') renderDestinos();
-  if (typeof autoSave === 'function') autoSave();
-  renderizarTarjetasReservasDetectadas();
-  renderDescubrirParaTi();
+    finalizarSincronizacionImportacion();
+    renderizarTarjetasReservasDetectadas();
+    renderDescubrirParaTi();
 
-  if (typeof window.showToast === 'function' && targetDest) {
-    window.showToast(`"${res.titulo}" sincronizado en ${targetDest.nombre} (Día ${(Number(res.diaIndex) || 0) + 1})`, 'success');
-  }
+    if (typeof window.showToast === 'function' && targetDest) {
+      const stagesCount = Array.isArray(res.etapas) ? res.etapas.length : 0;
+      const msg = stagesCount > 0
+        ? `"${res.titulo}" sincronizado (${stagesCount} paradas)`
+        : `"${res.titulo}" sincronizado en ${targetDest.nombre} (Día ${(Number(res.diaIndex) || 0) + 1})`;
+      window.showToast(msg, 'success');
+    }
+  });
 }
 
 function importarTodasLasReservas() {
   if (!pluxDetectedReservas || pluxDetectedReservas.length === 0) return;
-  pluxDetectedReservas.forEach(res => {
-    insertarObjetoReservaEnViaje(res);
-    res.agregadoAlViaje = true;
-    guardarReservaEnWallet(res);
+
+  solicitarDestinoSincronizacion(pluxDetectedReservas, () => {
+    pluxDetectedReservas.forEach(res => {
+      upsertBookingInTrip(res);
+      res.agregadoAlViaje = true;
+      guardarReservaEnWallet(res);
+    });
+
+    finalizarSincronizacionImportacion();
+    renderizarTarjetasReservasDetectadas();
+    renderDescubrirParaTi();
+
+    if (typeof window.showToast === 'function') {
+      window.showToast(`${pluxDetectedReservas.length} reservas sincronizadas en Transporte, Alojamiento e Itinerario`, 'success');
+    }
   });
-
-  if (typeof renderDestinos === 'function') renderDestinos();
-  if (typeof autoSave === 'function') autoSave();
-  renderizarTarjetasReservasDetectadas();
-  renderDescubrirParaTi();
-
-  if (typeof window.showToast === 'function') {
-    window.showToast(`${pluxDetectedReservas.length} reservas sincronizadas en Transporte, Alojamiento e Itinerario`, 'success');
-  }
 }
 
 function sincronizarTodaLaWalletAlViaje() {
   const wallet = obtenerWalletReservas();
   if (wallet.length === 0) return;
-  wallet.forEach(w => insertarObjetoReservaEnViaje(w));
-  if (typeof renderDestinos === 'function') renderDestinos();
-  if (typeof autoSave === 'function') autoSave();
-  if (typeof window.showToast === 'function') {
-    window.showToast(`${wallet.length} vouchers de tu billetera sincronizados con el viaje actual`, 'success');
-  }
+
+  solicitarDestinoSincronizacion(wallet, () => {
+    wallet.forEach(w => upsertBookingInTrip(w));
+    finalizarSincronizacionImportacion();
+    if (typeof window.showToast === 'function') {
+      window.showToast(`${wallet.length} vouchers de tu billetera sincronizados sin duplicados`, 'success');
+    }
+  });
 }
 
 function irAlItinerarioDesdeReservas() {
@@ -4266,6 +6298,7 @@ function renderizarWalletReservas() {
   }
 
   const iconMap = {
+    crucero: 'fa-ship',
     vuelo: 'fa-plane',
     hotel: 'fa-hotel',
     tren: 'fa-train',
@@ -4435,12 +6468,13 @@ function reinsertarReservaWallet(id) {
   const wallet = obtenerWalletReservas();
   const item = wallet.find(w => String(w.id) === String(id));
   if (!item) return;
-  const dest = insertarObjetoReservaEnViaje(item);
-  if (typeof renderDestinos === 'function') renderDestinos();
-  if (typeof autoSave === 'function') autoSave();
-  if (typeof window.showToast === 'function' && dest) {
-    window.showToast(`"${item.titulo}" sincronizado en ${dest.nombre}`, 'success');
-  }
+  solicitarDestinoSincronizacion([item], () => {
+    const dest = upsertBookingInTrip(item);
+    finalizarSincronizacionImportacion();
+    if (typeof window.showToast === 'function' && dest) {
+      window.showToast(`"${item.titulo}" sincronizado en ${dest.nombre}`, 'success');
+    }
+  });
 }
 
 function eliminarReservaWallet(id) {
@@ -5653,9 +7687,10 @@ window.cambiarModoImportadorReserva = cambiarModoImportadorReserva;
 window.cambiarTipoExpressReserva = cambiarTipoExpressReserva;
 window.guardarReservaExpressDirecto = guardarReservaExpressDirecto;
 window.renderizarImportadorReservas = renderizarImportadorReservas;
-window.cargarEjemploReserva = cargarEjemploReserva;
 window.limpiarImportadorReserva = limpiarImportadorReserva;
 window.quitarImagenReservaAdjunta = quitarImagenReservaAdjunta;
+window.quitarImagenReservaIndividual = quitarImagenReservaIndividual;
+window.reintentarImagenesFallidasReserva = reintentarImagenesFallidasReserva;
 window.pegarPortapapelesReserva = pegarPortapapelesReserva;
 window.manejarDropArchivoReserva = manejarDropArchivoReserva;
 window.subirArchivoReserva = subirArchivoReserva;
@@ -5663,8 +7698,14 @@ window.analizarTextoReserva = analizarTextoReserva;
 window.analizarReservaConIA = analizarReservaConIA;
 window.renderizarTarjetasReservasDetectadas = renderizarTarjetasReservasDetectadas;
 window.actualizarCampoReservaDetectada = actualizarCampoReservaDetectada;
+window.actualizarFinanzasReservaDetectada = actualizarFinanzasReservaDetectada;
+window.actualizarDetalleExtraReserva = actualizarDetalleExtraReserva;
+window.agregarDetalleExtraReserva = agregarDetalleExtraReserva;
+window.actualizarEtapaReservaDetectada = actualizarEtapaReservaDetectada;
+window.eliminarEtapaReservaDetectada = eliminarEtapaReservaDetectada;
 window.actualizarFechaReservaDetectada = actualizarFechaReservaDetectada;
 window.guardarSoloEnWallet = guardarSoloEnWallet;
+window.upsertBookingInTrip = upsertBookingInTrip;
 window.importarReservaAlViaje = importarReservaAlViaje;
 window.importarTodasLasReservas = importarTodasLasReservas;
 window.sincronizarTodaLaWalletAlViaje = sincronizarTodaLaWalletAlViaje;
@@ -5676,6 +7717,14 @@ window.copiarCodigoPNR = copiarCodigoPNR;
 window.copiarResumenVoucher = copiarResumenVoucher;
 window.reinsertarReservaWallet = reinsertarReservaWallet;
 window.eliminarReservaWallet = eliminarReservaWallet;
+
+// Contrato JS oficial del importador (spec §4.2)
+window.pluxImporterApi = {
+  reconstructPageRows,
+  intentarParsearCruceroOItinerario,
+  computeBookingSyncKey,
+  unificarResultadosImportacion
+};
 
 window.renderizarComunidadForos = renderizarComunidadForos;
 window.refrescarPlantillasSincronizadasDescubrir = refrescarPlantillasSincronizadasDescubrir;

@@ -38,6 +38,10 @@
     'kyoto': { lat: 35.0116, lon: 135.7681 },
     'nueva york': { lat: 40.7128, lon: -74.0060 },
     'rio de janeiro': { lat: -22.9068, lon: -43.1729 },
+    'buzios': { lat: -22.7469, lon: -41.8817 },
+    'ilhabela': { lat: -23.7781, lon: -45.3581 },
+    'camboriu': { lat: -26.9926, lon: -48.6352 },
+    'punta del este': { lat: -34.9627, lon: -54.9437 },
     'santiago': { lat: -33.4489, lon: -70.6693 },
     'lima': { lat: -12.0464, lon: -77.0428 },
     'berlin': { lat: 52.5200, lon: 13.4050 },
@@ -108,9 +112,10 @@
     const reRelax = /spa|termas|relax|paseo|hotel|pileta|piscina|descanso|sauna|masaje|sol/i;
     const reNocturno = /fiesta|boliche|club|pub|noche|cocktail|tragos|karaoke|show|recital|concierto/i;
 
-    listDest.forEach((dest) => {
+    listDest.forEach((dest, destIdx) => {
       const dDias = (dest.dias && Array.isArray(dest.dias)) ? dest.dias.length : (parseInt(dest.dias, 10) || 1);
-      totalDias += (dDias > 0 ? dDias : 1);
+      const transitPrev = (destIdx > 0 && Number(dest.diasTransitoPrevio) > 0) ? Math.floor(Number(dest.diasTransitoPrevio)) : 0;
+      totalDias += (dDias > 0 ? dDias : 1) + transitPrev;
 
       // Revisar eventos de cada día
       if (dest.dias && Array.isArray(dest.dias)) {
@@ -120,7 +125,10 @@
 
           eventos.forEach((ev) => {
             const rawCost = parseFloat(ev.costo || ev.precio || 0) || 0;
-            totalGasto += rawCost * personas;
+            const convCost = (typeof window.convertirMonto === 'function')
+              ? window.convertirMonto(rawCost, ev.moneda || moneda, moneda)
+              : rawCost;
+            totalGasto += convCost * personas;
 
             const textScan = `${ev.titulo || ''} ${ev.notas || ''}`;
             if (reGourmet.test(textScan)) scoreCategorias.gourmet++;
@@ -129,21 +137,21 @@
             if (reRelax.test(textScan)) scoreCategorias.relax++;
             if (reNocturno.test(textScan)) scoreCategorias.nocturno++;
 
-            if (rawCost > maxCosto) {
-              maxCosto = rawCost;
+            if (convCost > maxCosto) {
+              maxCosto = convCost;
               joyaActividad = {
                 titulo: ev.titulo || 'Experiencia exclusiva',
-                costo: rawCost,
+                costo: convCost,
                 ciudad: dest.nombre,
                 dia: diaIdx + 1
               };
             }
 
-            if (rawCost < minCosto) {
-              minCosto = rawCost;
+            if (convCost < minCosto) {
+              minCosto = convCost;
               rinconEconomico = {
                 titulo: ev.titulo || 'Visita libre',
-                costo: rawCost,
+                costo: convCost,
                 ciudad: dest.nombre,
                 dia: diaIdx + 1
               };
@@ -152,11 +160,18 @@
         });
       }
 
-      // Sumar costos de tramos
+      // Sumar costos de tramos respetando modoPrecio ('total' vs 'persona')
       (dest.tramos || []).forEach(tr => {
-        const pTransp = parseFloat(tr.precio || 0) || 0;
-        const pAloj = parseFloat(tr.precioAlojamiento || 0) || 0;
-        totalGasto += (pTransp + pAloj) * personas;
+        const mult = tr.modoPrecio === 'total' ? 1 : personas;
+        const pTranspRaw = parseFloat(tr.precio || 0) || 0;
+        const pAlojRaw = parseFloat(tr.precioAlojamiento || 0) || 0;
+        const pTransp = (typeof window.convertirMonto === 'function')
+          ? window.convertirMonto(pTranspRaw, tr.moneda || moneda, moneda)
+          : pTranspRaw;
+        const pAloj = (typeof window.convertirMonto === 'function')
+          ? window.convertirMonto(pAlojRaw, tr.monedaAlojamiento || moneda, moneda)
+          : pAlojRaw;
+        totalGasto += (pTransp + pAloj) * mult;
       });
     });
 

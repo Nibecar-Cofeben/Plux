@@ -54,99 +54,15 @@ function extractCleanSyncCode(rawInput) {
 }
 
 /**
- * AutoSave blindado contra clonaciones accidentales
+ * AutoSave unificado — delega en pluxCoreAutoSave (script.js) para garantizar
+ * una única fuente de verdad de Plux_ActiveSession, scratch drafts, campos nuevos
+ * y sincronización colaborativa en Firestore sin shadowing.
  */
 function autoSave() {
-  if (typeof isSyncing !== 'undefined' && isSyncing) return;
-  if (typeof isReadOnlyMode === 'function' && isReadOnlyMode()) {
-    return;
-  }
-
-  const hasContent = (typeof destinos !== 'undefined' && destinos && destinos.length > 0) ||
-                     (typeof lugarSalida !== 'undefined' && lugarSalida && lugarSalida.trim()) ||
-                     (document.getElementById('fechaInicio')?.value);
-  if (!hasContent) return;
-
-  const tripId = typeof getCurrentTripId === 'function' ? getCurrentTripId() : (syncCode || 'trip_default');
-  const trips = typeof getStoredTrips === 'function' ? getStoredTrips() : [];
-  const meta = getActiveTripMetadata();
-
-  const tripData = {
-    nombre: meta.nombreViaje,
-    lugarSalida: typeof lugarSalida !== 'undefined' ? lugarSalida : '',
-    numPersonas: typeof numPersonas !== 'undefined' ? numPersonas : 1,
-    nombresPersonas: typeof nombresPersonasGlobal !== 'undefined' ? nombresPersonasGlobal : '',
-    listaViajeros: (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros)) ? [...listaViajeros] : [],
-    tripId: tripId,
-    fechaInicio: document.getElementById('fechaInicio')?.value || '',
-    destinos: typeof destinos !== 'undefined' ? destinos : [],
-    vueltaGlobal: typeof vueltaGlobal !== 'undefined' ? vueltaGlobal : '',
-    vueltaPrecioGlobal: typeof vueltaPrecioGlobal !== 'undefined' ? vueltaPrecioGlobal : 0,
-    vueltaCostosAdicionales: typeof vueltaCostosAdicionales !== 'undefined' ? vueltaCostosAdicionales : [],
-    syncCode: syncCode || null,
-    userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : null,
-    moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
-    cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : []
-  };
-
-  lastLocalTripJson = JSON.stringify(tripData);
-
-  // 1. Verificar si este viaje ya existe en Mis Viajes locales
-  let targetIndex = -1;
-  if (typeof loadedTripIndex !== 'undefined' && loadedTripIndex !== null && trips[loadedTripIndex]) {
-    // Si ya tenemos un viaje abierto en loadedTripIndex, SIEMPRE actualizar ese mismo índice in-place
-    targetIndex = loadedTripIndex;
-  } else if (trips.length > 0) {
-    targetIndex = trips.findIndex(t => t && (
-      (tripId && t.tripId === tripId) ||
-      (syncCode && t.syncCode === syncCode) ||
-      (syncCode && t.tripId === syncCode)
-    ));
-  }
-
-  // 2. Si NO es un viaje ajeno compartido (o si ya estaba guardado localmente), actualizar/guardar en localStorage
-  const isOwnerOrLocal = !window.isExternalSharedTrip || targetIndex !== -1 || (window.currentTripOwner && typeof currentNickname !== 'undefined' && currentNickname && window.currentTripOwner.toLowerCase() === currentNickname.toLowerCase());
-
-  if (isOwnerOrLocal) {
-    const tripDataToSave = {
-      ...tripData,
-      fecha: new Date().toISOString()
-    };
-
-    if (targetIndex !== -1) {
-      const existingName = trips[targetIndex].nombre;
-      const keepExistingName = existingName && existingName !== 'Viaje sin título' && existingName !== 'Mi Viaje' && !document.getElementById('nombreViaje')?.value?.trim();
-      trips[targetIndex] = {
-        ...trips[targetIndex],
-        ...tripDataToSave,
-        nombre: keepExistingName ? existingName : meta.nombreViaje,
-        syncCode: syncCode || trips[targetIndex].syncCode || null,
-        tripId: tripId || trips[targetIndex].tripId
-      };
-      loadedTripIndex = targetIndex;
-    } else {
-      trips.push(tripDataToSave);
-      loadedTripIndex = trips.length - 1;
-    }
-
-    if (typeof saveTrips === 'function') saveTrips(trips, true);
-    if (typeof renderTripLists === 'function') renderTripLists();
-  }
-
-  // 3. Sincronizar en tiempo real con Firestore si hay código activo y permisos de edición
-  if (typeof db !== 'undefined' && db && syncCode && window.currentTripRole !== 'viajero' && window.currentTripRole !== 'reader' && window.currentTripRole !== 'lector') {
-    const updatePayload = {
-      data: lastLocalTripJson,
-      nombreViaje: meta.nombreViaje,
-      destinosResumen: meta.destinosResumen,
-      ultimaEdicionPor: (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Viajero',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    if (typeof currentNickname !== 'undefined' && currentNickname) {
-      updatePayload.colaboradores = firebase.firestore.FieldValue.arrayUnion(currentNickname);
-    }
-    db.collection("plux_viajes_compartidos").doc(syncCode).set(updatePayload, { merge: true })
-      .catch(e => console.error("Error autosaving to Firestore:", e));
+  if (typeof window.pluxCoreAutoSave === 'function') {
+    return window.pluxCoreAutoSave({
+      getMetadata: getActiveTripMetadata
+    });
   }
 }
 window.autoSave = autoSave;
@@ -352,13 +268,20 @@ async function garantizarDocumentoColaborativoEnNube() {
     nombresPersonas: typeof nombresPersonasGlobal !== 'undefined' ? nombresPersonasGlobal : '',
     listaViajeros: (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros)) ? [...listaViajeros] : [],
     tripId: tripId,
-    fechaInicio: document.getElementById('fechaInicio')?.value || '',
+    fechaInicio: (typeof window.normalizeDateTimeLocal === 'function')
+      ? window.normalizeDateTimeLocal(document.getElementById('fechaInicio')?.value || '')
+      : (document.getElementById('fechaInicio')?.value || ''),
     destinos: (typeof destinos !== 'undefined' && Array.isArray(destinos)) ? destinos : [],
     vueltaGlobal: typeof vueltaGlobal !== 'undefined' ? vueltaGlobal : '',
     vueltaPrecioGlobal: typeof vueltaPrecioGlobal !== 'undefined' ? vueltaPrecioGlobal : 0,
     vueltaCostosAdicionales: typeof vueltaCostosAdicionales !== 'undefined' ? vueltaCostosAdicionales : [],
     syncCode: syncCode,
-    userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : {}
+    userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : {},
+    moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
+    cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : [],
+    embajadorSlug: window.currentTripEmbajadorSlug || null,
+    isTemplateClone: Boolean(window.currentTripTemplateOrigin || window.currentTripEmbajadorSlug),
+    templateOrigin: window.currentTripTemplateOrigin || null
   };
 
   try {
@@ -858,7 +781,14 @@ async function cargarViajeCompartido(rawCode) {
 
     if (data.data && typeof importarViajeString === 'function') {
       importarViajeString(data.data, false);
+      if (typeof window.normalizarDestinosLegacy === 'function' && Array.isArray(destinos)) {
+        destinos = window.normalizarDestinosLegacy(destinos);
+        if (typeof renderDestinos === 'function') renderDestinos();
+      }
       lastLocalTripJson = data.data;
+    }
+    if (typeof window.setActiveSession === 'function') {
+      window.setActiveSession({ mode: 'trip', explicit: false, tripId: code });
     }
 
     const urlParams = new URLSearchParams(window.location.search);

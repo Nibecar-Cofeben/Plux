@@ -2,6 +2,258 @@
     // ================== STORAGE & CONSTANTS ==================
     var TRIPS_STORAGE_KEY = 'Plux_trips';
     var TEMPLATE_KEY = 'Plux_templates';
+    var ACTIVE_SESSION_KEY = 'Plux_ActiveSession';
+    var DELETED_TRIPS_KEY = 'Plux_DeletedTripIds';
+
+    function normalizeDateTimeLocal(val, defaultTime = '09:00') {
+      if (!val) return '';
+      const s = String(val).trim();
+      const mFull = s.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{1,2}:\d{2})/);
+      if (mFull) {
+        const hm = mFull[2].padStart(5, '0');
+        return `${mFull[1]}T${hm}`;
+      }
+      const mDate = s.match(/^(\d{4}-\d{2}-\d{2})$/);
+      if (mDate) {
+        const t = /^\d{1,2}:\d{2}$/.test(String(defaultTime || '')) ? String(defaultTime).padStart(5, '0') : '09:00';
+        return `${mDate[1]}T${t}`;
+      }
+      return '';
+    }
+    window.normalizeDateTimeLocal = normalizeDateTimeLocal;
+
+    function parseLocalNoon(val) {
+      const m = String(val || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (!m) return null;
+      return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+    }
+    window.parseLocalNoon = parseLocalNoon;
+
+    function normCityName(s) {
+      return String(s || '').split(',')[0].trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+    window.normCityName = normCityName;
+
+    function getActiveSession() {
+      try {
+        const raw = localStorage.getItem(ACTIVE_SESSION_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return null;
+        return parsed;
+      } catch (e) {
+        return null;
+      }
+    }
+    window.getActiveSession = getActiveSession;
+
+    function setActiveSession(sessionObj) {
+      if (!sessionObj || typeof sessionObj !== 'object') return;
+      const payload = {
+        mode: sessionObj.mode || 'init',
+        explicit: Boolean(sessionObj.explicit),
+        tripId: sessionObj.tripId !== undefined ? sessionObj.tripId : null,
+        updatedAt: new Date().toISOString()
+      };
+      if (sessionObj.draft && typeof sessionObj.draft === 'object') {
+        payload.draft = sessionObj.draft;
+      }
+      try {
+        localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(payload));
+      } catch (e) {}
+    }
+    window.setActiveSession = setActiveSession;
+
+    function clearActiveSession() {
+      try { localStorage.removeItem(ACTIVE_SESSION_KEY); } catch (e) {}
+    }
+    window.clearActiveSession = clearActiveSession;
+
+    function getDeletedTripIds() {
+      try {
+        const raw = localStorage.getItem(DELETED_TRIPS_KEY);
+        const arr = JSON.parse(raw || '[]');
+        return Array.isArray(arr) ? arr.filter(Boolean).map(String) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    window.getDeletedTripIds = getDeletedTripIds;
+
+    function addDeletedTripIds(ids) {
+      const incoming = (Array.isArray(ids) ? ids : [ids]).filter(Boolean).map(String);
+      if (incoming.length === 0) return;
+      const existing = getDeletedTripIds();
+      const set = new Set(existing);
+      incoming.forEach(id => set.add(id));
+      const trimmed = Array.from(set).slice(-100);
+      try {
+        localStorage.setItem(DELETED_TRIPS_KEY, JSON.stringify(trimmed));
+      } catch (e) {}
+    }
+    window.addDeletedTripIds = addDeletedTripIds;
+
+    function shouldAutoLoadCloudTrip() {
+      const session = getActiveSession();
+      if (session && session.mode === 'scratch' && session.explicit === true) return false;
+      if (typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0) return false;
+      return true;
+    }
+    window.shouldAutoLoadCloudTrip = shouldAutoLoadCloudTrip;
+
+    function resolveLoadedTripIndex(tripsList) {
+      const trips = Array.isArray(tripsList) ? tripsList : getStoredTrips();
+      const tid = (typeof currentTripId !== 'undefined' && currentTripId) ? currentTripId : null;
+      const sc = (typeof syncCode !== 'undefined' && syncCode) ? syncCode : null;
+      if (!tid && !sc) {
+        if (loadedTripIndex !== null && !trips[loadedTripIndex]) loadedTripIndex = null;
+        return loadedTripIndex;
+      }
+      const found = trips.findIndex(t => t && (
+        (tid && (t.tripId === tid || t.syncCode === tid)) ||
+        (sc && (t.syncCode === sc || t.tripId === sc))
+      ));
+      loadedTripIndex = found !== -1 ? found : null;
+      return loadedTripIndex;
+    }
+    window.resolveLoadedTripIndex = resolveLoadedTripIndex;
+
+    function esDestinoNavegacion(nombre) {
+      if (!nombre) return false;
+      const n = String(nombre).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      return /^(en\s+)?navegaci[oó]n\b|^alta\s*mar\b|^at\s*sea\b|^sea\s*day\b|^d[ií]a\s+de\s+navegaci[oó]n/i.test(n);
+    }
+    window.esDestinoNavegacion = esDestinoNavegacion;
+
+    function parseLegacyHorarioEscala(horarioStr) {
+      const res = { horaLlegada: '', horaSalida: '' };
+      if (!horarioStr) return res;
+      const s = String(horarioStr).trim();
+      const rangeMatch = s.match(/(\d{1,2}:\d{2})\s*[-–—a]\s*(\d{1,2}:\d{2})/i);
+      if (rangeMatch) {
+        res.horaLlegada = rangeMatch[1].padStart(5, '0');
+        res.horaSalida = rangeMatch[2].padStart(5, '0');
+        return res;
+      }
+      const arrMatch = s.match(/(?:llegada|arribo|arr\.?)[^\d]*(\d{1,2}:\d{2})/i);
+      const depMatch = s.match(/(?:salida|zarpe|embarque|dep\.?)[^\d]*(\d{1,2}:\d{2})/i);
+      if (arrMatch) res.horaLlegada = arrMatch[1].padStart(5, '0');
+      if (depMatch) res.horaSalida = depMatch[1].padStart(5, '0');
+      return res;
+    }
+
+    function normalizarDestinosLegacy(rawDestinos) {
+      if (!Array.isArray(rawDestinos)) return [];
+      const result = [];
+      let pendingTransitDays = 0;
+      let pendingTransitLabel = '';
+      let pendingEvents = [];
+
+      const hasSubsequentEmptyTramos = rawDestinos.length > 1 && rawDestinos.slice(1).some(x => x && (!Array.isArray(x.tramos) || x.tramos.length === 0));
+
+      rawDestinos.forEach((rawDest) => {
+        if (!rawDest || typeof rawDest !== 'object') return;
+        if (esDestinoNavegacion(rawDest.nombre)) {
+          const daysCount = Math.max(1, Array.isArray(rawDest.dias) && rawDest.dias.length > 0 ? rawDest.dias.length : 1);
+          pendingTransitDays += daysCount;
+          if (!pendingTransitLabel) {
+            pendingTransitLabel = (rawDest.transitoEtiqueta || '').trim() || 'En navegación';
+          }
+          if (Array.isArray(rawDest.dias)) {
+            rawDest.dias.forEach((dia) => {
+              (dia?.eventos || []).forEach((ev) => {
+                if (ev && ev.titulo && !/^(en\s+)?navegaci[oó]n|d[ií]a\s+en\s+alta\s+mar/i.test(String(ev.titulo).trim())) {
+                  pendingEvents.push({ ...ev });
+                }
+              });
+            });
+          }
+          return;
+        }
+
+        const dest = { ...rawDest };
+        const ownTransit = Math.max(0, Math.floor(Number(dest.diasTransitoPrevio) || 0));
+        const totalTransit = result.length === 0 ? 0 : (ownTransit + pendingTransitDays);
+        dest.diasTransitoPrevio = totalTransit;
+        if (totalTransit > 0) {
+          dest.transitoEtiqueta = (dest.transitoEtiqueta || '').trim() || pendingTransitLabel || 'En navegación';
+        } else if (dest.transitoEtiqueta === undefined) {
+          dest.transitoEtiqueta = '';
+        }
+        pendingTransitDays = 0;
+        pendingTransitLabel = '';
+
+        dest.dias = Array.isArray(dest.dias) ? dest.dias.map((dia, dIdx) => ({
+          id: dia && dia.id !== undefined ? dia.id : dIdx,
+          eventos: Array.isArray(dia?.eventos) ? dia.eventos : [],
+          costosAdicionales: Array.isArray(dia?.costosAdicionales) ? dia.costosAdicionales : [],
+          ...(dia?.alojamiento ? { alojamiento: dia.alojamiento } : {})
+        })) : [];
+
+        if (pendingEvents.length > 0) {
+          const host = result.length > 0 ? result[result.length - 1] : dest;
+          if (!host.dias || host.dias.length === 0) {
+            host.dias = [{ id: 0, eventos: [], costosAdicionales: [] }];
+          }
+          const targetDay = result.length > 0 ? host.dias[host.dias.length - 1] : host.dias[0];
+          pendingEvents.forEach((ev) => {
+            targetDay.eventos.push({
+              ...ev,
+              notas: ev.notas ? `[Tránsito] ${ev.notas}` : 'Nota migrada de día en tránsito'
+            });
+          });
+          pendingEvents = [];
+        }
+
+        if (!dest.horaLlegada && !dest.horaSalida && dest.horarioEscala) {
+          const parsedH = parseLegacyHorarioEscala(dest.horarioEscala);
+          if (parsedH.horaLlegada) dest.horaLlegada = parsedH.horaLlegada;
+          if (parsedH.horaSalida) dest.horaSalida = parsedH.horaSalida;
+        }
+
+        dest.tramos = Array.isArray(dest.tramos) ? dest.tramos.map((tr) => {
+          if (!tr || typeof tr !== 'object') return tr;
+          const nextTr = { ...tr };
+          if (nextTr.cubreParadas === undefined && hasSubsequentEmptyTramos && /crucero|barco|msc\b|costa\b|royal caribbean|norwegian/i.test(nextTr.medio || '')) {
+            nextTr.cubreParadas = true;
+          }
+          if (!nextTr.modoPrecio) nextTr.modoPrecio = 'persona';
+          return nextTr;
+        }) : [];
+
+        if (!dest.tipoParada) dest.tipoParada = 'estadia';
+        result.push(dest);
+      });
+
+      if (result.length > 0 && result[0].diasTransitoPrevio > 0) {
+        result[0].diasTransitoPrevio = 0;
+      }
+      return result;
+    }
+    window.normalizarDestinosLegacy = normalizarDestinosLegacy;
+
+    function resolveSharedBookingForDest(destIdx) {
+      if (typeof destinos === 'undefined' || !Array.isArray(destinos)) return null;
+      const curr = destinos[destIdx];
+      if (!curr || curr.ignoraTramoCompartido) return null;
+      if (Array.isArray(curr.tramos) && curr.tramos.length > 0) return null;
+      for (let i = destIdx - 1; i >= 0; i--) {
+        const prev = destinos[i];
+        if (!prev) continue;
+        // Un desembarque previo cierra el ciclo compartido (soporta viajes híbridos: crucero + días extra en hotel!)
+        if (prev.tipoParada === 'desembarque') return null;
+        if (Array.isArray(prev.tramos) && prev.tramos.length > 0) {
+          const master = prev.tramos.find(t => t && t.cubreParadas);
+          if (master) return { tramo: master, hostDest: prev, hostIdx: i };
+          return null;
+        }
+      }
+      return null;
+    }
+    window.resolveSharedBookingForDest = resolveSharedBookingForDest;
+
+    window.currentTripTitle = '';
+    window.currentTripTemplateOrigin = null;
 
     function getStoredTrips() {
       try {
@@ -535,7 +787,8 @@
       const countriesSet = new Set();
       
       trips.forEach(trip => {
-        totalDays += (trip.destinos || []).reduce((sum, d) => sum + (d.dias?.length || 0), 0);
+        const tripPers = Number(trip.numPersonas) || numPersonas || 1;
+        totalDays += (trip.destinos || []).reduce((sum, d, idx) => sum + (d.dias?.length || 0) + (idx > 0 ? (Math.floor(Number(d.diasTransitoPrevio) || 0)) : 0), 0);
         totalEvents += (trip.destinos || []).reduce((sum, d) => sum + (d.dias || []).reduce((s, dia) => s + (dia.eventos?.length || 0), 0), 0);
         totalDestinations += (trip.destinos || []).length;
         
@@ -543,15 +796,16 @@
         (trip.destinos || []).forEach(dest => {
           (dest.dias || []).forEach(dia => {
             (dia.eventos || []).forEach(ev => {
-              if (ev.costo) totalBudget += ev.costo * (numPersonas || 1);
+              if (ev.costo) totalBudget += (Number(ev.costo) || 0) * tripPers;
             });
             (dia.costosAdicionales || []).forEach(c => {
-              if (c.precio) totalBudget += c.precio;
+              if (c.precio) totalBudget += Number(c.precio) || 0;
             });
           });
           (dest.tramos || []).forEach(tramo => {
+            const mult = tramo.modoPrecio === 'total' ? 1 : tripPers;
             const sum = (Number(tramo.precio)||0) + (Number(tramo.precioAlojamiento)||0);
-            if (sum) totalBudget += sum * (numPersonas || 1);
+            if (sum) totalBudget += sum * mult;
           });
           
           // Try to extract country from destination name
@@ -559,7 +813,7 @@
             countriesSet.add(dest.nombre.split(',').pop().trim());
           }
         });
-        if (trip.vueltaPrecio) totalBudget += trip.vueltaPrecio * (numPersonas || 1);
+        if (trip.vueltaPrecio) totalBudget += trip.vueltaPrecio * tripPers;
       });
       
       // Update stat values safely
@@ -614,6 +868,7 @@
 
         if (borrarTodo) {
           localStorage.removeItem(TRIPS_STORAGE_KEY);
+          localStorage.removeItem(DELETED_TRIPS_KEY);
           localStorage.removeItem('PluxSocialChats_V2');
           localStorage.removeItem('Plux_Viajes');
           localStorage.removeItem('Plux_ActiveTrip');
@@ -632,10 +887,17 @@
             if (typeof renderChannelsList === 'function') renderChannelsList();
           }
           destinos = [];
+          loadedTripIndex = null;
+          currentTripId = null;
+          syncCode = null;
+          window.currentTripEmbajadorSlug = null;
+          window.currentTripTemplateOrigin = null;
+          window.currentTripTitle = '';
           if (typeof renderDestinos === 'function') renderDestinos();
           if (typeof renderTripLists === 'function') renderTripLists();
         }
 
+        clearActiveSession();
         localStorage.removeItem('Plux_Nickname');
         localStorage.removeItem('Plux_Uid');
         localStorage.removeItem('Plux_UserProfile_Photo');
@@ -977,7 +1239,8 @@
         if (userData.preferencias) userPreferences = userData.preferencias;
         
         renderTripLists();
-        if ((!destinos || destinos.length === 0) && mergedTrips.length > 0) {
+        resolveLoadedTripIndex(mergedTrips);
+        if (shouldAutoLoadCloudTrip() && mergedTrips.length > 0) {
           cargarViaje(mergedTrips.length - 1, false);
         }
         if (typeof listenUserIncomingConversations === 'function') listenUserIncomingConversations(nick);
@@ -1147,8 +1410,15 @@
 
     // Helpers de Fusión (Merge) para sincronización multidispositivo y login
     function mergeTrips(localTrips, cloudTrips) {
-      const local = Array.isArray(localTrips) ? localTrips : [];
-      const cloud = Array.isArray(cloudTrips) ? cloudTrips : [];
+      const deletedSet = new Set(getDeletedTripIds());
+      const isDeletedTrip = (tr) => {
+        if (!tr) return true;
+        if (tr.tripId && deletedSet.has(String(tr.tripId))) return true;
+        if (tr.syncCode && deletedSet.has(String(tr.syncCode))) return true;
+        return false;
+      };
+      const local = (Array.isArray(localTrips) ? localTrips : []).filter(t => !isDeletedTrip(t));
+      const cloud = (Array.isArray(cloudTrips) ? cloudTrips : []).filter(t => !isDeletedTrip(t));
       const result = [...cloud];
       
       local.forEach(lTrip => {
@@ -1399,9 +1669,10 @@
           
           updateUserButtonDisplay();
           renderTripLists();
+          resolveLoadedTripIndex(mergedTrips);
 
-          // Auto-load latest trip in editor if currently empty
-          if ((!destinos || destinos.length === 0) && mergedTrips.length > 0) {
+          // Auto-load latest trip in editor ONLY when permitted (never clobber explicit scratch)
+          if (shouldAutoLoadCloudTrip() && mergedTrips.length > 0) {
             cargarViaje(mergedTrips.length - 1, false);
           }
 
@@ -1422,8 +1693,9 @@
                   const updatedMerged = mergeTrips(currLocal, liveData.viajes_guardados);
                   if (JSON.stringify(currLocal) !== JSON.stringify(updatedMerged)) {
                     saveTrips(updatedMerged, false);
+                    resolveLoadedTripIndex(updatedMerged);
                     renderTripLists();
-                    if ((!destinos || destinos.length === 0) && updatedMerged.length > 0) {
+                    if (shouldAutoLoadCloudTrip() && updatedMerged.length > 0) {
                       cargarViaje(updatedMerged.length - 1, false);
                     }
                   }
@@ -1965,9 +2237,17 @@
           }
           if (Array.isArray(d.tramos)) {
             d.tramos.forEach(t => {
-              if (typeof t.precio === 'number' && t.precio > 0) {
-                if (!t.moneda || t.moneda === monedaAnterior) {
+              if (!t.moneda || t.moneda === monedaAnterior) {
+                if (typeof t.precio === 'number' && t.precio > 0) {
                   t.precio = redondearMoneda(convertirMonto(t.precio, monedaAnterior, monedaNueva), monedaNueva);
+                }
+                if (typeof t.montoPagado === 'number' && t.montoPagado > 0) {
+                  t.montoPagado = redondearMoneda(convertirMonto(t.montoPagado, monedaAnterior, monedaNueva), monedaNueva);
+                }
+                if (typeof t.saldoPendiente === 'number' && t.saldoPendiente > 0) {
+                  t.saldoPendiente = redondearMoneda(convertirMonto(t.saldoPendiente, monedaAnterior, monedaNueva), monedaNueva);
+                }
+                if ((typeof t.precio === 'number' && t.precio > 0) || (typeof t.montoPagado === 'number' && t.montoPagado > 0)) {
                   t.moneda = monedaNueva;
                 }
               }
@@ -3121,34 +3401,65 @@
 
 
 
-    function autoSave() {
-      if (isSyncing) return;
+    function pluxCoreAutoSave(opts = {}) {
+      if (isSyncing) return null;
       if (typeof isReadOnlyMode === 'function' && isReadOnlyMode()) {
         console.log("AutoSave blocked: Read-only mode active");
-        return;
+        return null;
       }
 
-      const hasContent = (destinos && destinos.length > 0) || (lugarSalida && lugarSalida.trim()) || (document.getElementById('fechaInicio')?.value);
-      if (!hasContent) return;
-      
+      const nombreViajeInputVal = document.getElementById('nombreViaje')?.value?.trim() || '';
+      const hasRealContent = (Array.isArray(destinos) && destinos.length > 0) ||
+                             Boolean(typeof vueltaGlobal !== 'undefined' && vueltaGlobal && String(vueltaGlobal).trim()) ||
+                             Boolean(nombreViajeInputVal);
+
+      const session = getActiveSession();
+      const fechaInicioNorm = normalizeDateTimeLocal(document.getElementById('fechaInicio')?.value || '');
+
+      if (!hasRealContent) {
+        if (session && session.mode === 'scratch') {
+          setActiveSession({
+            mode: 'scratch',
+            explicit: session.explicit !== false,
+            tripId: session.tripId || currentTripId || null,
+            draft: {
+              nombre: nombreViajeInputVal,
+              lugarSalida: typeof lugarSalida !== 'undefined' ? lugarSalida : '',
+              numPersonas: typeof numPersonas !== 'undefined' ? (parseInt(numPersonas, 10) || 1) : 1,
+              fechaInicio: fechaInicioNorm,
+              moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
+              listaViajeros: Array.isArray(listaViajeros) ? [...listaViajeros] : []
+            }
+          });
+        }
+        return { saved: false, scratchUpdated: Boolean(session && session.mode === 'scratch') };
+      }
+
       const tripId = getCurrentTripId();
       const trips = getStoredTrips();
 
-      // 1. Localizar el viaje existente si ya está en la lista de viajes
+      // 1. Localizar viaje existente por tripId / syncCode primero, luego loadedTripIndex
       let targetIndex = -1;
-      if (loadedTripIndex !== null && trips[loadedTripIndex]) {
-        if (!trips[loadedTripIndex].tripId || trips[loadedTripIndex].tripId === tripId || (syncCode && trips[loadedTripIndex].syncCode === syncCode)) {
+      if (trips.length > 0) {
+        targetIndex = trips.findIndex(t => t && (
+          (tripId && (t.tripId === tripId || t.syncCode === tripId)) ||
+          (syncCode && (t.syncCode === syncCode || t.tripId === syncCode))
+        ));
+      }
+      if (targetIndex === -1 && loadedTripIndex !== null && trips[loadedTripIndex]) {
+        const cand = trips[loadedTripIndex];
+        if (!cand.tripId || cand.tripId === tripId || (syncCode && cand.syncCode === syncCode)) {
           targetIndex = loadedTripIndex;
         }
       }
 
-      if (targetIndex === -1 && trips.length > 0) {
-        targetIndex = trips.findIndex(t => t && ((tripId && t.tripId === tripId) || (syncCode && t.syncCode === syncCode)));
+      // Nombre amigable dinámico
+      const untitledVal = (typeof t === 'function') ? t('untitled_event') : 'Viaje sin título';
+      let tripTitle = nombreViajeInputVal;
+      if (!tripTitle && window.currentTripTitle && window.currentTripTitle !== untitledVal && window.currentTripTitle !== 'Viaje sin título') {
+        tripTitle = window.currentTripTitle;
       }
-
-      // Nombre amigable dinámico si no fue fijado manualmente
-      let tripTitle = document.getElementById('nombreViaje')?.value?.trim();
-      if (!tripTitle && targetIndex !== -1 && trips[targetIndex] && trips[targetIndex].nombre && trips[targetIndex].nombre !== t('untitled_event') && trips[targetIndex].nombre !== 'Viaje sin título') {
+      if (!tripTitle && targetIndex !== -1 && trips[targetIndex]?.nombre && trips[targetIndex].nombre !== untitledVal && trips[targetIndex].nombre !== 'Viaje sin título' && trips[targetIndex].nombre !== 'Mi Viaje') {
         tripTitle = trips[targetIndex].nombre;
       }
       if (!tripTitle) {
@@ -3158,9 +3469,16 @@
         } else if (lugarSalida && lugarSalida.trim()) {
           tripTitle = `Viaje desde ${lugarSalida.trim()}`;
         } else {
-          tripTitle = t('untitled_event') || 'Mi Viaje';
+          tripTitle = untitledVal || 'Mi Viaje';
         }
       }
+      window.currentTripTitle = tripTitle;
+
+      const destResumen = (destinos || []).map(d => d.nombre).filter(Boolean).join(', ') || 'Sin destinos aún';
+      const existingTrip = targetIndex !== -1 ? trips[targetIndex] : null;
+      const embSlug = window.currentTripEmbajadorSlug || existingTrip?.embajadorSlug || null;
+      const tplOrigin = window.currentTripTemplateOrigin || existingTrip?.templateOrigin || null;
+      const isTplClone = Boolean(embSlug || tplOrigin || existingTrip?.isTemplateClone);
 
       const tripDataToSave = {
         nombre: tripTitle,
@@ -3170,48 +3488,50 @@
         nombresPersonas: nombresPersonasGlobal || '',
         listaViajeros: (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros)) ? [...listaViajeros] : [],
         tripId: tripId,
-        fechaInicio: document.getElementById('fechaInicio')?.value || '',
+        fechaInicio: fechaInicioNorm,
         destinos: destinos || [],
         vueltaGlobal: typeof vueltaGlobal !== 'undefined' ? vueltaGlobal : '',
         vueltaPrecioGlobal: typeof vueltaPrecioGlobal !== 'undefined' ? vueltaPrecioGlobal : 0,
         vueltaCostosAdicionales: typeof vueltaCostosAdicionales !== 'undefined' ? vueltaCostosAdicionales : [],
-        syncCode: syncCode || null,
+        syncCode: syncCode || existingTrip?.syncCode || null,
         userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : null,
         moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
         cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : [],
-        embajadorSlug: window.currentTripEmbajadorSlug || (targetIndex !== -1 && trips[targetIndex]?.embajadorSlug) || null
+        embajadorSlug: embSlug,
+        isTemplateClone: isTplClone,
+        templateOrigin: tplOrigin
       };
 
-      if (targetIndex !== -1) {
-        // Actualizar el viaje existente en su posición (1 solo registro, no duplicar)
-        trips[targetIndex] = {
-          ...trips[targetIndex],
-          ...tripDataToSave,
-          nombre: (trips[targetIndex].nombre && trips[targetIndex].nombre !== t('untitled_event') && trips[targetIndex].nombre !== 'Viaje sin título' && !document.getElementById('nombreViaje')?.value?.trim()) ? trips[targetIndex].nombre : tripTitle
-        };
-        loadedTripIndex = targetIndex;
-      } else {
-        // Nuevo viaje: agregar 1 sola vez y fijar loadedTripIndex
-        trips.push(tripDataToSave);
-        loadedTripIndex = trips.length - 1;
+      lastLocalTripJson = JSON.stringify(tripDataToSave);
+
+      // Si NO es un viaje ajeno compartido (o ya está en Mis Viajes), persistir localmente
+      const isOwnerOrLocal = !window.isExternalSharedTrip || targetIndex !== -1 ||
+        (window.currentTripOwner && typeof currentNickname !== 'undefined' && currentNickname && window.currentTripOwner.toLowerCase() === currentNickname.toLowerCase());
+
+      if (isOwnerOrLocal) {
+        if (targetIndex !== -1) {
+          const existingName = trips[targetIndex].nombre;
+          const keepExistingName = existingName && existingName !== untitledVal && existingName !== 'Viaje sin título' && existingName !== 'Mi Viaje' && !nombreViajeInputVal;
+          trips[targetIndex] = {
+            ...trips[targetIndex],
+            ...tripDataToSave,
+            nombre: keepExistingName ? existingName : tripTitle,
+            syncCode: syncCode || trips[targetIndex].syncCode || null,
+            tripId: tripId || trips[targetIndex].tripId
+          };
+          loadedTripIndex = targetIndex;
+        } else {
+          trips.push(tripDataToSave);
+          loadedTripIndex = trips.length - 1;
+        }
+        saveTrips(trips, true);
+        renderTripLists();
       }
 
-      saveTrips(trips, true);
-      renderTripLists();
-      
-      const tripData = {
-        lugarSalida, numPersonas, 
-        nombresPersonas: nombresPersonasGlobal,
-        listaViajeros: [...listaViajeros],
-        tripId: tripId,
-        fechaInicio: document.getElementById('fechaInicio')?.value || '',
-        destinos, vueltaGlobal, vueltaPrecioGlobal, vueltaCostosAdicionales,
-        syncCode, userPreferences
-      };
-      lastLocalTripJson = JSON.stringify(tripData);
+      setActiveSession({ mode: 'trip', explicit: false, tripId: tripId });
 
-      // Also upload to Firestore if syncCode exists and we have permissions
-      if (syncCode && window.currentTripRole !== 'viajero' && window.currentTripRole !== 'reader' && window.currentTripRole !== 'lector') {
+      // Sincronizar con Firestore si hay código colaborativo activo y permisos de edición
+      if (syncCode && !opts.skipCloudCollab && window.currentTripRole !== 'viajero' && window.currentTripRole !== 'reader' && window.currentTripRole !== 'lector') {
         if (!navigator.onLine || !db) {
           try {
             localStorage.setItem('Plux_Pending_Collab_Sync', JSON.stringify({ syncCode, data: lastLocalTripJson }));
@@ -3219,10 +3539,19 @@
           } catch (_) {}
         }
         if (db) {
-          db.collection("plux_viajes_compartidos").doc(syncCode).set({
+          const updatePayload = {
             data: lastLocalTripJson,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true }).catch(e => {
+            nombreViaje: tripTitle,
+            destinosResumen: destResumen,
+            ultimaEdicionPor: (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Viajero',
+            timestamp: (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+              ? firebase.firestore.FieldValue.serverTimestamp()
+              : new Date().toISOString()
+          };
+          if (typeof currentNickname !== 'undefined' && currentNickname && typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue) {
+            updatePayload.colaboradores = firebase.firestore.FieldValue.arrayUnion(currentNickname);
+          }
+          db.collection("plux_viajes_compartidos").doc(syncCode).set(updatePayload, { merge: true }).catch(e => {
             try {
               localStorage.setItem('Plux_Pending_Collab_Sync', JSON.stringify({ syncCode, data: lastLocalTripJson }));
               localStorage.setItem('Plux_Pending_Cloud_Sync', '1');
@@ -3231,6 +3560,12 @@
           });
         }
       }
+      return { saved: true, tripData: tripDataToSave };
+    }
+    window.pluxCoreAutoSave = pluxCoreAutoSave;
+
+    function autoSave() {
+      return pluxCoreAutoSave();
     }
     window.autoSave = autoSave;
 
@@ -3238,8 +3573,64 @@
     let unsubSnapshot = null; // Store active Firestore listener
     function loadFromStorage() {
       const trips = getStoredTrips();
+      const session = getActiveSession();
+
+      if (session) {
+        if (session.mode === 'scratch') {
+          destinos = [];
+          loadedTripIndex = null;
+          syncCode = null;
+          window.isExternalSharedTrip = false;
+          window.currentTripEmbajadorSlug = null;
+          window.currentTripTemplateOrigin = null;
+          currentTripId = session.tripId || ('trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4));
+          const draft = session.draft || {};
+          lugarSalida = draft.lugarSalida || '';
+          numPersonas = parseInt(draft.numPersonas, 10) || 1;
+          listaViajeros = Array.isArray(draft.listaViajeros) ? [...draft.listaViajeros] : [];
+          nombresPersonasGlobal = listaViajeros.join(', ');
+          window.currentTripTitle = draft.nombre || '';
+          vueltaGlobal = '';
+          vueltaPrecioGlobal = 0;
+          vueltaCostosAdicionales = [];
+          const fNom = document.getElementById('nombreViaje'); if (fNom) fNom.value = draft.nombre || '';
+          const fSal = document.getElementById('lugarSalida'); if (fSal) fSal.value = lugarSalida;
+          const fPer = document.getElementById('numPersonas'); if (fPer) fPer.value = numPersonas;
+          const fFecha = document.getElementById('fechaInicio'); if (fFecha) fFecha.value = normalizeDateTimeLocal(draft.fechaInicio || '');
+          const fVue = document.getElementById('vuelta'); if (fVue) fVue.value = '';
+          const fVueP = document.getElementById('vueltaPrecio'); if (fVueP) fVueP.value = 0;
+          if (draft.moneda && typeof setMonedaActiva === 'function') setMonedaActiva(draft.moneda, false, false);
+          if (typeof window.renderTravelerChips === 'function') window.renderTravelerChips();
+          renderDestinos();
+          return;
+        }
+        if (session.mode === 'trip') {
+          let targetIdx = -1;
+          if (session.tripId && trips.length > 0) {
+            targetIdx = trips.findIndex(t => t && (t.tripId === session.tripId || (t.syncCode && t.syncCode === session.tripId)));
+          }
+          if (targetIdx === -1 && trips.length > 0) {
+            targetIdx = trips.length - 1;
+          }
+          if (targetIdx !== -1) {
+            cargarViaje(targetIdx, false);
+            return;
+          }
+          setActiveSession({ mode: 'init', explicit: false, tripId: null });
+          return;
+        }
+        // mode === 'init'
+        if (trips.length > 0) {
+          cargarViaje(trips.length - 1, false);
+        }
+        return;
+      }
+
+      // Primera visita sin Plux_ActiveSession previa
       if (trips.length > 0) {
         cargarViaje(trips.length - 1, false);
+      } else {
+        setActiveSession({ mode: 'init', explicit: false, tripId: null });
       }
     }
 
@@ -3376,11 +3767,14 @@
           const data = JSON.parse(jsonStr);
           lugarSalida = data.lugarSalida || '';
           numPersonas = data.numPersonas || 1;
-          destinos = data.destinos || [];
+          destinos = normalizarDestinosLegacy(data.destinos || []);
           vueltaGlobal = data.vueltaGlobal || '';
           vueltaPrecioGlobal = data.vueltaPrecioGlobal || 0;
           vueltaCostosAdicionales = data.vueltaCostosAdicionales || [];
           if (data.tripId) currentTripId = data.tripId;
+          if (data.nombre) window.currentTripTitle = data.nombre;
+          if (data.embajadorSlug !== undefined) window.currentTripEmbajadorSlug = data.embajadorSlug || null;
+          if (data.templateOrigin !== undefined) window.currentTripTemplateOrigin = data.templateOrigin || null;
 
           if (data.listaViajeros && Array.isArray(data.listaViajeros)) {
             listaViajeros = [...data.listaViajeros];
@@ -3396,7 +3790,12 @@
           
           if (document.getElementById('lugarSalida')) document.getElementById('lugarSalida').value = lugarSalida;
           if (document.getElementById('numPersonas')) document.getElementById('numPersonas').value = numPersonas;
-          if (document.getElementById('fechaInicio') && data.fechaInicio) document.getElementById('fechaInicio').value = data.fechaInicio;
+          if (document.getElementById('fechaInicio')) {
+            document.getElementById('fechaInicio').value = normalizeDateTimeLocal(data.fechaInicio || '');
+          }
+          if (data.moneda && typeof setMonedaActiva === 'function') {
+            setMonedaActiva(data.moneda, false, false);
+          }
 
           if (Array.isArray(data.cartelitos)) {
             cartelitosNotasViaje = [...data.cartelitos];
@@ -5288,14 +5687,16 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         }
       });
 
-      if (!document.getElementById('fechaInicio').value) {
+      const _postLoadSession = getActiveSession();
+      const _fechaInicioEl = document.getElementById('fechaInicio');
+      if (_fechaInicioEl && !_fechaInicioEl.value && _postLoadSession?.mode !== 'scratch' && loadedTripIndex === null && (!destinos || destinos.length === 0)) {
         const hoy = new Date();
         const año = hoy.getFullYear();
         const mes = String(hoy.getMonth()+1).padStart(2,'0');
         const dia = String(hoy.getDate()).padStart(2,'0');
         const horas = String(hoy.getHours()).padStart(2,'0');
         const minutos = String(hoy.getMinutes()).padStart(2,'0');
-        document.getElementById('fechaInicio').value = `${año}-${mes}-${dia}T${horas}:${minutos}`;
+        _fechaInicioEl.value = `${año}-${mes}-${dia}T${horas}:${minutos}`;
       }
 
       // LABS: Atajo de teclado y checklist render
@@ -5407,13 +5808,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const fechaInicioVal = fechaInicioEl ? fechaInicioEl.value : '';
         if (!fechaInicioVal) return;
         
-        const hoy = new Date();
-        const fi = new Date(fechaInicioVal);
-        fi.setHours(0, 0, 0, 0);
-        hoy.setHours(hoy.getHours(), hoy.getMinutes(), hoy.getSeconds(), 0);
+        const hoyNow = new Date();
+        const hoyNoon = new Date(hoyNow.getFullYear(), hoyNow.getMonth(), hoyNow.getDate(), 12, 0, 0);
+        const fiNoon = parseLocalNoon(fechaInicioVal);
+        if (!fiNoon) return;
         
-        const diffMs = hoy.getTime() - fi.getTime();
-        const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const diffMs = hoyNoon.getTime() - fiNoon.getTime();
+        const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
         
         const appTitle = document.getElementById('appTitle');
         if (diffDias >= 0 && viajeActivoEnabled) {
@@ -5470,29 +5871,46 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         let html = '';
         let eventosHoy = 0;
         let tieneContenido = false;
-        let offsetDias = 0;
-        const fmt = (val) => (typeof formatMoneda === 'function') ? formatMoneda(Number(val) || 0) : `${val}€`;
-        
-        destinos.forEach(d => {
-            const diasDest = Array.isArray(d.dias) ? d.dias : [];
-            const localDiaIdx = diaIndex - offsetDias;
-            offsetDias += diasDest.length;
-            if (localDiaIdx >= 0 && localDiaIdx < diasDest.length) {
+        const fmt = (val) => (typeof formatMoneda === 'function') ? formatMoneda(Number(val) || 0) : `${val}`;
+
+        const schedule = buildTripDaySchedule();
+        const slot = schedule.find(s => s.globalDayIndex === diaIndex);
+
+        if (slot && slot.isTransit) {
+            tieneContenido = true;
+            html += `
+              <div style="margin-bottom:20px; padding:18px; background:rgba(56,189,248,0.08); border-radius:12px; border-left:4px solid #38bdf8;">
+                <h3 style="color:#38bdf8; margin:0 0 8px 0; font-size:1.2rem;"><i class="fa-solid fa-ship" style="margin-right:8px;"></i>${escapeHtml(slot.transitLabel || 'En navegación / tránsito')} hacia ${escapeHtml(slot.destName || '')}</h3>
+                <p style="color:var(--gris); margin:0; font-size:0.9rem;">
+                  ${slot.dateLabel ? `<strong>${escapeHtml(slot.dateLabel)}</strong> · ` : ''}Día de tránsito ${slot.transitIndex + 1} de ${slot.transitTotal}. Próxima parada: <strong>${escapeHtml(slot.destName || '')}</strong>.
+                </p>
+              </div>`;
+            content.innerHTML = html;
+            return;
+        }
+
+        if (slot && !slot.isDestOnly) {
+            const dIdx = destinos.findIndex(x => x.id === slot.destId);
+            const d = dIdx !== -1 ? destinos[dIdx] : null;
+            const dia = d?.dias?.find(x => x.id === slot.diaId);
+            if (d && dia) {
                 tieneContenido = true;
-                const dia = diasDest[localDiaIdx];
+                const shared = resolveSharedBookingForDest(dIdx);
                 html += `<div style="margin-bottom:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; border-left:4px solid var(--verde);">`;
-                html += `<h3 style="color:var(--verde); margin:0 0 15px 0; font-size:1.3rem;">📍 ${escapeHtml(d.nombre)} <small style="color:var(--gris); font-size:0.85rem;">(Día ${localDiaIdx + 1} en destino)</small></h3>`;
-                
-                // TRANSPORTE LLEGADA
+                html += `<h3 style="color:var(--verde); margin:0 0 15px 0; font-size:1.3rem;">📍 ${escapeHtml(d.nombre)} <small style="color:var(--gris); font-size:0.85rem;">(Día ${slot.diaNum} en destino${slot.dateLabel ? ' · ' + escapeHtml(slot.dateLabel) : ''})</small></h3>`;
+
+                // TRANSPORTE LLEGADA / RESERVA COMPARTIDA
                 if (d.tramos && d.tramos.length > 0) {
                     html += `<div style="margin-bottom:12px;">`;
                     html += `<p style="color:var(--rosa); font-weight:bold; font-size:0.9rem; margin:0;">🚗 TRANSPORTE:</p>`;
                     d.tramos.forEach(tramo => {
-                        html += `<p style="color:var(--gris); margin:4px 0; font-size:0.85rem;">${escapeHtml(tramo.origen || '')} → ${escapeHtml(tramo.destino || '')} | ${escapeHtml(tramo.medio || '')} (${fmt(tramo.precio)})</p>`;
+                        html += `<p style="color:var(--gris); margin:4px 0; font-size:0.85rem;">${escapeHtml(tramo.origen || '')} → ${escapeHtml(tramo.destino || d.nombre)} | ${escapeHtml(tramo.medio || '')} (${fmt(tramo.precio)})</p>`;
                     });
                     html += `</div>`;
+                } else if (shared && shared.tramo) {
+                    html += `<div style="margin-bottom:12px; padding:8px 10px; background:rgba(56,189,248,0.08); border-radius:8px; font-size:0.85rem; color:var(--gris);">Cubierto por <strong style="color:var(--texto);">${escapeHtml(shared.tramo.medio || 'Reserva compartida')}</strong>${shared.tramo.alojamiento ? ' · ' + escapeHtml(shared.tramo.alojamiento) : ''}</div>`;
                 }
-                
+
                 // ALOJAMIENTO
                 if (dia.alojamiento) {
                     html += `<div style="margin-bottom:12px; padding:10px; background:rgba(16,185,129,0.1); border-radius:8px;">`;
@@ -5500,7 +5918,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                     html += `<p style="color:var(--gris); margin:4px 0; font-size:0.85rem;">${escapeHtml(dia.alojamiento.nombre || '')} - ${fmt(dia.alojamiento.precioTotal)}</p>`;
                     html += `</div>`;
                 }
-                
+
                 // EVENTOS
                 if (dia.eventos && dia.eventos.length > 0) {
                     html += `<div style="margin-bottom:12px;">`;
@@ -5517,7 +5935,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                     });
                     html += `</div>`;
                 }
-                
+
                 // COSTOS ADICIONALES
                 if (dia.costosAdicionales && dia.costosAdicionales.length > 0) {
                     html += `<div style="margin-bottom:12px;">`;
@@ -5527,13 +5945,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                     });
                     html += `</div>`;
                 }
-                
+
                 if (!dia.eventos || dia.eventos.length === 0) {
                     html += `<p style="color:var(--gris); font-style:italic; font-size:0.9rem;">Sin eventos programados para este día</p>`;
                 }
                 html += `</div>`;
             }
-        });
+        }
         
         if (!tieneContenido || eventosHoy === 0) {
             html = '<p style="color:var(--gris); padding:20px; text-align:center; font-size:1rem;">No tienes eventos programados para hoy.</p>';
@@ -5549,26 +5967,30 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         activeNotificationTimeouts.forEach(t => clearTimeout(t));
         activeNotificationTimeouts = [];
         
+        const schedule = buildTripDaySchedule();
+        const slot = schedule.find(s => s.globalDayIndex === diaIndex);
+        if (!slot || slot.isTransit || slot.isDestOnly) return;
+
+        const dest = destinos.find(d => d.id === slot.destId);
+        const dia = dest?.dias?.find(x => x.id === slot.diaId);
+        if (!dest || !dia) return;
+
         const hoy = new Date();
-        destinos.forEach(d => {
-            if (d.dias && d.dias[diaIndex]) {
-                (d.dias[diaIndex].eventos || []).forEach(ev => {
-                    if (ev.hora) {
-                        const [horas, minutos] = ev.hora.split(':');
-                        const fechaEvento = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), parseInt(horas), parseInt(minutos), 0);
-                        const tiempoHastaAviso = fechaEvento.getTime() - hoy.getTime() - (15 * 60000);
-                        
-                        if (tiempoHastaAviso > 0) {
-                            const timerId = setTimeout(() => {
-                                new Notification(`¡Es hora de tu evento en ${d.nombre}!`, {
-                                    body: ev.titulo,
-                                    icon: 'https://cdn-icons-png.flaticon.com/512/3180/3180209.png'
-                                });
-                            }, tiempoHastaAviso);
-                            activeNotificationTimeouts.push(timerId);
-                        }
-                    }
-                });
+        (dia.eventos || []).forEach(ev => {
+            if (ev.hora) {
+                const [horas, minutos] = String(ev.hora).split(':');
+                const fechaEvento = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), parseInt(horas, 10) || 0, parseInt(minutos, 10) || 0, 0);
+                const tiempoHastaAviso = fechaEvento.getTime() - hoy.getTime() - (15 * 60000);
+                
+                if (tiempoHastaAviso > 0) {
+                    const timerId = setTimeout(() => {
+                        new Notification(`¡Es hora de tu evento en ${dest.nombre}!`, {
+                            body: ev.titulo,
+                            icon: 'https://cdn-icons-png.flaticon.com/512/3180/3180209.png'
+                        });
+                    }, tiempoHastaAviso);
+                    activeNotificationTimeouts.push(timerId);
+                }
             }
         });
     }
@@ -5579,9 +6001,35 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const input = document.getElementById("nuevoDestino");
       const nombre = input.value.trim();
       if (!nombre) return showToast('Escribe un destino', 'error');
+
+      // Evitar crear tarjetas falsas "En navegación" / "Alta mar": sumar como día de tránsito previo o guiar al panel de logística
+      if (esDestinoNavegacion(nombre)) {
+        input.value = "";
+        if (destinos.length >= 2) {
+          const target = destinos[destinos.length - 1];
+          target.diasTransitoPrevio = (Math.floor(Number(target.diasTransitoPrevio) || 0)) + 1;
+          if (!target.transitoEtiqueta) target.transitoEtiqueta = 'En navegación';
+          renderDestinos();
+          autoSave();
+          showToast(`Sumado +1 día de tránsito antes de ${target.nombre}. Podés editarlo en su panel de transporte/logística.`, 'info');
+        } else {
+          showToast('Los días en navegación o tránsito se configuran desde el panel de transporte de la próxima parada.', 'info');
+        }
+        return;
+      }
+
       const id = Date.now();
       destinos.push({
-        id, nombre, dias: [], tramos: []
+        id,
+        nombre,
+        dias: [],
+        tramos: [],
+        diasTransitoPrevio: 0,
+        transitoEtiqueta: '',
+        tipoParada: 'estadia',
+        horaLlegada: '',
+        horaSalida: '',
+        notaParada: ''
       });
       input.value = "";
       renderDestinos();
@@ -6465,6 +6913,72 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       }
     }
 
+    function getStopTimeBadgeText(d) {
+      if (!d) return '';
+      const arr = (d.horaLlegada || '').trim();
+      const dep = (d.horaSalida || '').trim();
+      if (arr && dep) return `${arr} – ${dep}`;
+      if (arr) return `Llegada ${arr}`;
+      if (dep) return `Salida ${dep}`;
+      if (d.horarioEscala) return String(d.horarioEscala).trim();
+      return '';
+    }
+
+    function getTransportIconForMedio(medio) {
+      const m = String(medio || '');
+      if (/crucero|barco|navegaci[oó]n|ferry|msc\b|costa\b|royal caribbean|norwegian/i.test(m)) return 'fa-ship';
+      if (/tren|train|frecciarossa|renfe|eurostar|ave\b/i.test(m)) return 'fa-train';
+      if (/bus|omnibus|micro|autocar|colectivo/i.test(m)) return 'fa-bus';
+      if (/auto|coche|car|motorhome|camper|alquiler/i.test(m)) return 'fa-car';
+      return 'fa-plane';
+    }
+
+    window.abrirLogisticaParada = function(destId) {
+      openTransportDestIds.add(destId);
+      collapsedEditorDestinos.delete(destId);
+      renderDestinos();
+      const el = document.getElementById(`transport-${destId}`);
+      if (el) {
+        el.classList.add('show');
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    };
+
+    window.actualizarTransitoPrevio = function(destId, nuevoValor) {
+      if (!checkEditPermission()) return;
+      const idx = destinos.findIndex(d => d.id === destId);
+      if (idx <= 0) return;
+      const val = Math.max(0, Math.min(30, Math.floor(Number(nuevoValor) || 0)));
+      destinos[idx].diasTransitoPrevio = val;
+      if (val > 0 && !destinos[idx].transitoEtiqueta) {
+        const shared = resolveSharedBookingForDest(idx);
+        const medio = (destinos[idx].tramos?.[0]?.medio) || shared?.tramo?.medio || '';
+        destinos[idx].transitoEtiqueta = /crucero|barco|ferry|msc\b|costa\b/i.test(medio) ? 'En navegación' : 'En tránsito';
+      }
+      renderDestinos();
+      autoSave();
+    };
+
+    window.stepTransitoPrevio = function(destId, delta) {
+      if (!checkEditPermission()) return;
+      const idx = destinos.findIndex(d => d.id === destId);
+      if (idx <= 0) return;
+      const curr = Math.max(0, Math.floor(Number(destinos[idx].diasTransitoPrevio) || 0));
+      window.actualizarTransitoPrevio(destId, curr + delta);
+    };
+
+    window.actualizarCampoParada = function(destId, campo, valor) {
+      if (!checkEditPermission()) return;
+      const dest = destinos.find(d => d.id === destId);
+      if (!dest) return;
+      dest[campo] = valor;
+      if (campo === 'horaLlegada' || campo === 'horaSalida') {
+        dest.horarioEscala = getStopTimeBadgeText(dest);
+      }
+      renderDestinos();
+      autoSave();
+    };
+
     function renderDestinos() {
       const cont = document.getElementById("destinos");
       if (!cont) return;
@@ -6472,13 +6986,40 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         window.renderActiveTripEmbajadorSeal();
       }
       // Sync openTransportDestIds with current DOM state before clearing
-      const openTransports = cont.querySelectorAll('.transport-section.show');
+      const openTransports = cont.querySelectorAll('.transport-fields.show, .transport-section.show');
       openTransports.forEach(el => {
         const did = parseInt(el.id.replace('transport-', ''), 10);
         if (!isNaN(did)) openTransportDestIds.add(did);
       });
       cont.innerHTML = "";
+      const schedule = buildTripDaySchedule();
+
       destinos.forEach((d, destIdx) => {
+        // Conector compacto de tránsito SOLO cuando diasTransitoPrevio > 0 (y nunca en índice 0)
+        const transitDays = (destIdx > 0 && Number(d.diasTransitoPrevio) > 0) ? Math.floor(Number(d.diasTransitoPrevio)) : 0;
+        if (transitDays > 0) {
+          const transitSlots = schedule.filter(s => s.isTransit && s.destId === d.id);
+          const transitLabel = (d.transitoEtiqueta || '').trim() || 'En navegación';
+          let rangeLabel = '';
+          if (transitSlots.length === 1 && transitSlots[0].dateLabel) {
+            rangeLabel = transitSlots[0].dateLabel;
+          } else if (transitSlots.length > 1 && transitSlots[0].dateLabel && transitSlots[transitSlots.length - 1].dateLabel) {
+            rangeLabel = `${transitSlots[0].dateLabel} – ${transitSlots[transitSlots.length - 1].dateLabel}`;
+          }
+          const transitIconClass = /navegaci[oó]n|mar|crucero|ferry/i.test(transitLabel) ? 'fa-ship' : (/tren|train/i.test(transitLabel) ? 'fa-train' : 'fa-route');
+          const connectorEl = document.createElement('div');
+          connectorEl.className = 'plux-transit-connector';
+          connectorEl.dataset.destId = d.id;
+          connectorEl.innerHTML = `
+            <span class="plux-transit-connector-pill" onclick="window.abrirLogisticaParada(${d.id})" title="Editar días en tránsito">
+              <i class="fa-solid ${transitIconClass}"></i>
+              <span>${transitDays} ${transitDays === 1 ? 'día' : 'días'} · ${escapeHtml(transitLabel)}${rangeLabel ? ` · ${escapeHtml(rangeLabel)}` : ''}</span>
+            </span>
+            <button type="button" class="plux-transit-remove-btn" onclick="event.stopPropagation(); window.actualizarTransitoPrevio(${d.id}, 0)" title="Quitar días en tránsito">×</button>
+          `;
+          cont.appendChild(connectorEl);
+        }
+
         const isCollapsed = collapsedEditorDestinos.has(d.id);
         const div = document.createElement("div");
         div.className = "destino";
@@ -6512,12 +7053,39 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           }
         }
 
+        const isSeaDay = esDestinoNavegacion(d.nombre);
+        const sharedBooking = resolveSharedBookingForDest(destIdx);
+        const effectiveMedio = (d.tramos && d.tramos[0] && d.tramos[0].medio) || (sharedBooking && sharedBooking.tramo && sharedBooking.tramo.medio) || '';
+        const transportIconClass = isSeaDay ? 'fa-ship' : getTransportIconForMedio(effectiveMedio);
+
+        const stopTypeMap = {
+          embarque: { cls: 'plux-stop-badge--embarque', label: 'Embarque' },
+          escala: { cls: 'plux-stop-badge--escala', label: 'Escala' },
+          desembarque: { cls: 'plux-stop-badge--desembarque', label: 'Desembarque' }
+        };
+        const stopTypeInfo = d.tipoParada && stopTypeMap[d.tipoParada] ? stopTypeMap[d.tipoParada] : null;
+        const stopTypeBadge = stopTypeInfo
+          ? `<span class="plux-stop-badge ${stopTypeInfo.cls}">${stopTypeInfo.label}</span>`
+          : '';
+
+        const timeWindowStr = getStopTimeBadgeText(d);
+        const portWindowBadge = timeWindowStr
+          ? `<span class="plux-stop-badge">${escapeHtml(timeWindowStr)}</span>`
+          : '';
+
+        const isTenderStop = /tender|bote auxiliar/i.test(d.notaParada || '');
+        const tenderBadge = isTenderStop
+          ? `<span class="plux-stop-badge plux-stop-badge--tender" title="${escapeHtml(d.notaParada)}">Bote auxiliar (tenders)</span>`
+          : '';
+
+        const addTramoBtnText = sharedBooking ? '+ Agregar traslado local opcional' : t('agregar_tramo');
+
         div.innerHTML = `
           <div class="destino-header" onclick="toggleEditorDestino(${d.id}, event)" style="cursor:pointer; user-select:none;">
             <div class="destino-header-top-row" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;">
               <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden;">
                 <span class="drag-handle drag-handle-dest" data-drag-type="dest" data-dest-id="${d.id}" data-dest-idx="${destIdx}" title="Arrastra o mantén presionado para reordenar destino" onclick="event.stopPropagation()">⠿</span>
-                <div class="bubble-name" style="flex-shrink:0;">${d.nombre.slice(0,3).toUpperCase()}</div>
+                <div class="bubble-name" style="flex-shrink:0;">${isSeaDay ? 'MAR' : d.nombre.slice(0,3).toUpperCase()}</div>
                 <h2 style="margin:0; font-size:1.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${escapeHtml(d.nombre)}</h2>
               </div>
               <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
@@ -6526,25 +7094,30 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               </div>
             </div>
             <div class="destino-header-badges-row" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:8px; padding-left:36px;">
+              ${isSeaDay ? '' : `
               <button type="button" class="btn-dest-info" onclick="event.stopPropagation(); window.abrirModalInfoDestinoPorId(${d.id}, 'desc')" title="Ver ficha y recomendaciones de ${escapeHtml(d.nombre)}">
                 <i class="fa-solid fa-circle-info"></i>
                 <span>Ficha</span>
-              </button>
+              </button>`}
               ${advisoryBtnHtml}
               <span style="font-size:0.75rem; font-weight:600; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:999px; white-space:nowrap;">${numDiasDest} ${numDiasDest === 1 ? 'día' : 'días'}</span>
+              ${stopTypeBadge}
+              ${portWindowBadge}
+              ${tenderBadge}
             </div>
           </div>
           <div id="editor-dest-body-${d.id}" style="display:${isCollapsed ? 'none' : 'block'};">
             <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; align-items:center;">
-              <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;" title="Transporte y alojamiento"><i class="fa-solid fa-plane"></i></div>
+              <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;" title="Transporte, logística y alojamiento"><i class="fa-solid ${transportIconClass}"></i></div>
               <button onclick="generarItinerarioAuto(${d.id})" style="padding:6px 14px; font-size:0.8rem; background:linear-gradient(135deg, #6366f1, #8b5cf6); border:none; color:white; border-radius:8px; cursor:pointer;">${t('generar_itinerario_btn')}</button>
               <button type="button" onclick="window.abrirImportadorParaDestino && window.abrirImportadorParaDestino('${escapeHtml(d.nombre)}')" style="padding:6px 12px; font-size:0.78rem; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.32); color:#38bdf8; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-weight:700;" title="Importar vuelo, hotel, tren o entrada para ${escapeHtml(d.nombre)}">
                 <i class="fa-solid fa-file-import"></i> Importar reserva
               </button>
             </div>
             <div class="transport-fields ${isTransportOpen ? 'show' : ''}" id="transport-${d.id}">
+              <div class="plux-stop-logistics-box" id="logistics-${d.id}"></div>
               <div class="tramos-container" id="tramos-${d.id}"></div>
-              <button onclick="agregarTramo(${d.id})">${t('agregar_tramo')}</button>
+              <button type="button" id="btn-add-tramo-${d.id}" onclick="agregarTramo(${d.id})" style="${sharedBooking ? 'display:none;' : ''}">${addTramoBtnText}</button>
             </div>
             <div class="dias" id="dias-${d.id}"></div>
             <button onclick="agregarDia(${d.id})">${t('add_day_button')}</button>
@@ -6563,56 +7136,96 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       setTimeout(() => { if (typeof actualizarHilitos === 'function') actualizarHilitos(); }, 120);
     }
 
-    // Tourist place keywords (at least one must appear in title OR it's a short proper noun)
-    const TOURIST_KEYWORDS = ['iglesia','museo','palacio','plaza','castillo','catedral','basílica','monumento','parque','jardín','textro','ópera','ponte','foro','coliseo','torre','villa','fontana','piazza','galleria','ponte','pantheon','templo','mezquita','abadía','santuario','anfitextro','ruinas','mercado','barrio','playa','lago','río','montaña','valle','puente','puerta','arco'];
-    const SPAM_KEYWORDS = ['edición','premios','campeonato','elección','municipio','sindicato','partido','decreto','comité','asociación','consejo','artículo','lista','ley ','acta','convenio','federación','incendio','batalla','muerte','guerra','desastre','provincia de','imperio de','reino de','cuidadano','concejo'];
+    // Filtro de calidad para POIs turísticos de Wikipedia (usado en cargarSugerenciasWiki y generarItinerarioWikiFallback)
+    const WIKI_REJECT_REGEX = /\b(mesorregi[oó]n|microrregi[oó]n|regi[oó]n metropolitana|munic[ií]pio|municipio|distrito|comuna|provincia de|arrondissement|subprefectura|divisi[oó]n administrativa|entidad subnacional|subdivisi[oó]n|empresa|petrolera|petrobras|corporaci[oó]n|compa[ñn][ií]a|multinacional|banco|ferrocarril|tren de cercan[ií]as|red ferroviaria|red de transporte|rer|l[ií]nea\s+\d|estaci[oó]n de metro|metro de|subte|aeropuerto|hospital|cl[ií]nica|universidad|facultad|colegio|escuela|sindicato|partido pol[ií]tico|ministerio|senado|c[aá]mara de diputados|club de f[uú]tbol|equipo de f[uú]tbol|canal de televisi[oó]n|peri[oó]dico|antigua ciudad|asentamiento romano|ciudad romana|ciudad antigua|lutecia|lut[eè]ce|edici[oó]n|premios|campeonato|elecci[oó]n|batalla|incendio|guerra|muerte|desastre|decreto|comit[eé]|asociaci[oó]n|consejo|art[ií]culo|lista de|anexo:|ley\s|acta|convenio|federaci[oó]n|imperio de|reino de|ciudadano|concejo|terremoto|masacre|atentado|pandemia|epidemia)\b/i;
+    const WIKI_BAD_THUMB_REGEX = /(?:^|[^a-z])(map|mapa|locat|flag|bandera|logo|coat_of_arms|escudo|blason|emblem|icon)|\.svg/i;
+    const WIKI_POSITIVE_POI_REGEX = /\b(museo|museum|catedral|cathedral|bas[ií]lica|iglesia|church|palacio|palace|castillo|castle|monumento|monument|estatua|statue|cristo|teatro|theater|theatre|[oó]pera|biblioteca|library|parque|park|jard[ií]n|garden|playa|beach|praia|isla|island|ilha|fuerte|fort|fortaleza|plaza|square|piazza|mercado|market|ruinas|ruins|templo|temple|torre|tower|puente|bridge|ponte|faro|lighthouse|mirador|overlook|telef[eé]rico|morro|anfiteatro|coliseo|colosseum|galer[ií]a|gallery|galleria|fuente|fontana|fountain|abad[ií]a|santuario|mezquita|acueducto|arco|puerta|obelisco|pante[oó]n|pantheon|acuario|zool[oó]gico|bot[aá]nico|paseo|rambla|malec[oó]n|costanera|escalera|escalinata|cabo|pen[ií]nsula|bah[ií]a|cascada|cataratas|laguna|volc[aá]n|glaciar|reserva natural|patrimonio|atracci[oó]n tur[ií]stica|lugar tur[ií]stico|sitio hist[oó]rico|centro cultural)\b/i;
 
-    function esTuristico(page) {
-      const title = (page.title || '').toLowerCase();
-      // Hard exclude spam keywords
-      if (SPAM_KEYWORDS.some(w => title.includes(w))) return false;
-      // Exclude if title has a year (4 digits)  usually historical events
-      if (/\b\d{4}\b/.test(page.title)) return false;
-      // Exclude if title has ordinal numbers like "50ª" or "V edición"
-      if (/\b\d+(°|º|ª|ava|avo)\b/.test(page.title)) return false;
-      // Accept if tourist keyword found in title
-      if (TOURIST_KEYWORDS.some(w => title.includes(w))) return true;
-      // Accept if title is short ( words) and has thumbnail  likely a landmark
-      const wordCount = page.title.trim().split(/\s+/).length;
-      if (wordCount <= 4 && page.thumbnail) return true;
-      // Accept if title doesn't contain any spam  benefit of the doubt for short titles
-      return wordCount <= 3;
+    function scoreTouristPlace(page, destNombre = '') {
+      if (!page || !page.title) return -100;
+      const titleRaw = String(page.title).trim();
+      const titleLower = titleRaw.toLowerCase();
+      const descLower = String(page.description || '').toLowerCase();
+      const extractLower = String(page.extract || '').toLowerCase();
+
+      // Rechazar si coincide con el nombre de la propia ciudad
+      if (destNombre && normCityName(titleRaw) === normCityName(destNombre)) return -100;
+
+      // Rechazar años de 4 dígitos y ordinales históricos/eventos en título
+      if (/\b\d{4}\b/.test(titleRaw)) return -100;
+      if (/\b\d+(°|º|ª|ava|avo)\b/i.test(titleRaw)) return -100;
+
+      // Rechazar listas, anexos, categorías, desambiguaciones
+      if (/^(anexo|categor[ií]a|lista)\b/i.test(titleRaw) || /\(desambiguaci[oó]n\)/i.test(titleRaw)) return -100;
+
+      // Rechazar divisiones administrativas, empresas, transporte masivo, historia/meta
+      if (WIKI_REJECT_REGEX.test(titleLower) || WIKI_REJECT_REGEX.test(descLower)) return -100;
+
+      // Rechazar thumbnails que sean mapas, logos, banderas, escudos o SVG
+      const thumbSrc = page.thumbnail?.source || '';
+      if (thumbSrc && WIKI_BAD_THUMB_REGEX.test(thumbSrc)) return -50;
+
+      // Coincidencia positiva obligatoria con POI turístico real (sin 'río', sin typos, sin wordCount <= 4)
+      const titleHit = WIKI_POSITIVE_POI_REGEX.test(titleLower);
+      const descHit = WIKI_POSITIVE_POI_REGEX.test(descLower);
+      const extractHit = !descLower && WIKI_POSITIVE_POI_REGEX.test(extractLower);
+      if (!titleHit && !descHit && !extractHit) return 0;
+
+      let score = 0;
+      if (titleHit) score += 40;
+      if (descHit) score += 30;
+      if (extractHit) score += 15;
+      if (thumbSrc) score += 20;
+      if (descLower) score += 5;
+      return score;
+    }
+    window.scoreTouristPlace = scoreTouristPlace;
+
+    function esTuristico(page, destNombre = '') {
+      return scoreTouristPlace(page, destNombre) > 0;
     }
 
     async function cargarSugerenciasWiki(destId) {
       const dest = destinos.find(d => d.id === destId);
       const container = document.getElementById(`wiki-${destId}`);
-      if (!container) return;
+      if (!container || !dest) return;
+      if (esDestinoNavegacion(dest.nombre)) {
+        container.innerHTML = '';
+        return;
+      }
       container.innerHTML = `<div style="color:var(--gris);font-size:0.9rem;">Buscando lugares turísticos...</div>`;
       try {
         const coords = await geocode(dest.nombre);
         if(!coords) { container.innerHTML=''; return; }
-        const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts|coordinates|pageimages&exintro&explaintext&exchars=80&pithumbsize=200&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=50&format=json&origin=*`;
+        const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts|coordinates|pageimages|description&exintro&explaintext&exchars=100&pithumbsize=240&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=50&format=json&origin=*`;
         const res = await fetch(url);
         const data = await res.json();
         if(!data.query || !data.query.pages) { container.innerHTML=''; return; }
         
-        const touristPlaces = Object.values(data.query.pages).filter(esTuristico).slice(0, 6);
+        const touristPlaces = Object.values(data.query.pages)
+          .map(p => ({ page: p, score: scoreTouristPlace(p, dest.nombre) }))
+          .filter(item => item.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 6)
+          .map(item => item.page);
         
         if (touristPlaces.length === 0) { container.innerHTML = ''; return; }
 
         let html = `<h4 style="color:var(--verde); margin-bottom:8px;">${t('lugares_turisticos_cercanos')}</h4>`;
-        html += '<div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;">';
+        html += '<div class="wiki-suggestions-strip" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;">';
         
         touristPlaces.forEach(page => {
           const img = page.thumbnail?.source ? `<img src="${page.thumbnail.source}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:8px;">` : '';
-          let extract = page.extract ? page.extract.substring(0, 70) + '...' : 'Punto de interés turístico';
+          const descSummary = page.description
+            ? escapeHtml(page.description)
+            : (page.extract ? escapeHtml(page.extract.substring(0, 70) + '...') : 'Punto de interés turístico');
+          const safeTitleJs = String(page.title || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
           html += `
             <div style="min-width:180px; max-width:220px; background:rgba(0,0,0,0.3); padding:10px; border-radius:10px; border:1px solid var(--border); flex-shrink:0;">
               ${img}
-              <strong style="color:var(--rosa); font-size:0.85rem;">${page.title}</strong>
-              <p style="font-size:0.75rem; color:var(--gris); margin:5px 0;">${extract}</p>
-              <button onclick="agregarEventoDesdeWiki(${destId}, '${page.title.replace(/'/g, "\\'")}'); event.stopPropagation();" style="padding:4px 8px; font-size:0.75rem; background:var(--azul); width:100%;">+ Añadir</button>
+              <strong style="color:var(--rosa); font-size:0.85rem;">${escapeHtml(page.title)}</strong>
+              <p style="font-size:0.75rem; color:var(--gris); margin:5px 0;">${descSummary}</p>
+              <button onclick="agregarEventoDesdeWiki(${destId}, '${safeTitleJs}'); event.stopPropagation();" style="padding:4px 8px; font-size:0.75rem; background:var(--azul); width:100%;">+ Añadir</button>
             </div>
            `;
         });
@@ -6730,6 +7343,42 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       return '📵 No hay señal.';
     }
 
+    function computeStopEffectiveWindow(dest) {
+      const toMin = (hhmm) => {
+        const m = String(hhmm || '').trim().match(/^(\d{1,2}):(\d{2})/);
+        return m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : null;
+      };
+      const fmtMin = (mins) => {
+        const clamped = Math.max(0, Math.min(23 * 60 + 59, Math.round(mins)));
+        return `${String(Math.floor(clamped / 60)).padStart(2, '0')}:${String(clamped % 60).padStart(2, '0')}`;
+      };
+      let arrStr = (dest?.horaLlegada || '').trim();
+      let depStr = (dest?.horaSalida || '').trim();
+      if (!arrStr && !depStr && dest?.horarioEscala) {
+        const parsed = parseLegacyHorarioEscala(dest.horarioEscala);
+        arrStr = parsed.horaLlegada;
+        depStr = parsed.horaSalida;
+      }
+      const arrMin = toMin(arrStr);
+      const depMin = toMin(depStr);
+      const isTender = /tender|bote auxiliar/i.test(dest?.notaParada || '');
+      if (arrMin === null && depMin === null) {
+        return { hasWindow: false, startMin: 9 * 60, endMin: 19 * 60, startStr: '09:00', endStr: '19:00', isTender, rawLabel: '' };
+      }
+      const startMin = arrMin !== null ? (arrMin + (isTender ? 45 : 30)) : Math.max(8 * 60, (depMin - 240));
+      const endMin = depMin !== null ? (depMin - (isTender ? 60 : 45)) : Math.min(21 * 60, startMin + 360);
+      const safeEnd = Math.max(startMin + 60, endMin);
+      return {
+        hasWindow: true,
+        startMin,
+        endMin: safeEnd,
+        startStr: fmtMin(startMin),
+        endStr: fmtMin(safeEnd),
+        isTender,
+        rawLabel: `${arrStr || '—'} – ${depStr || '—'}`
+      };
+    }
+
     // ================== GENERADOR AUTOMÁTICO DE ITINERARIO ==================
     async function generarItinerarioAuto(destId, diasForzados = null) {
       if (!checkEditPermission()) return;
@@ -6740,7 +7389,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const dest = destinos.find(d => d.id === destId);
       if (!dest) return;
       
-      const btn = event?.target;
+      const btn = typeof event !== 'undefined' ? event?.target : null;
       const oldText = btn ? btn.innerText : '';
       if(btn) {
           btn.innerText = 'Generando...';
@@ -6748,30 +7397,51 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           btn.style.opacity = '0.7';
       }
 
+      const stopWin = computeStopEffectiveWindow(dest);
       let numDias = diasForzados || (dest.dias ? dest.dias.length : 0);
       if (numDias === 0) {
-        numDias = 3;
-        showToast('Generando itinerario de 3 días...', 'info');
+        numDias = (esDestinoNavegacion(dest.nombre) || stopWin.hasWindow || dest.tipoParada === 'escala' || dest.tipoParada === 'embarque' || dest.tipoParada === 'desembarque') ? 1 : 3;
+        showToast(`Generando itinerario de ${numDias} ${numDias === 1 ? 'día' : 'días'}...`, 'info');
       } else if (diasForzados) {
         showToast(`Generando itinerario de ${numDias} días...`, 'info');
       }
+
+      // Preservar intactos los eventos ancla importados (Embarque, Arribo, Zarpe, Desembarque) y costos adicionales
+      const preservedAnchorsByDay = (dest.dias || []).map(dia => (dia.eventos || []).filter(ev => Boolean(ev && ev.importSyncKey)));
+      const preservedExtrasByDay = (dest.dias || []).map(dia => Array.isArray(dia.costosAdicionales) ? [...dia.costosAdicionales] : []);
+
       try {
-        const prompt = `Genera un itinerario turístico de ${numDias} días para ${dest.nombre}. Sugiere exactamente ${userPreferences.eventsPerDay || 3} actividades por día con horarios realistas y precios estimados en euros (ej. costo: 15, 25, 0 si es libre). Responde ESTRICTAMENTE con un objeto JSON válido: {"dias":[{"eventos":[{"hora":"09:00","titulo":"Lugar o Actividad","notas":"Descripción breve","costo":25,"duracion":90}]}]}`;
+        let prompt;
+        if (esDestinoNavegacion(dest.nombre)) {
+          prompt = `Genera un itinerario de ${numDias} ${numDias === 1 ? 'día' : 'días'} de actividades a bordo de un crucero (en navegación / alta mar). Sugiere ${userPreferences.eventsPerDay || 3} actividades por día (desayuno con vista al mar, piscina/solarium, spa, espectáculo de teatro, cena, etc.) con costo 0 si están incluidas. Responde ESTRICTAMENTE con un objeto JSON válido: {"dias":[{"eventos":[{"hora":"10:00","titulo":"Actividad a bordo","notas":"Descripción breve","costo":0,"duracion":90}]}]}`;
+        } else if (stopWin.hasWindow) {
+          const tenderHint = stopWin.isTender
+            ? ' Esta escala utiliza bote auxiliar (tenders), por lo que el tiempo efectivo en tierra ya incluye +45 min para bajar y -60 min para regresar.'
+            : '';
+          prompt = `Genera un itinerario turístico de ${numDias} ${numDias === 1 ? 'día' : 'días'} para una escala en ${dest.nombre} respetando estrictamente la ventana efectiva en tierra de ${stopWin.startStr} a ${stopWin.endStr} (horario puerto: ${stopWin.rawLabel}).${tenderHint} Sugiere ${userPreferences.eventsPerDay || 3} actividades realistas y cercanas al puerto dentro de ese horario con precios estimados en euros. Responde ESTRICTAMENTE con un objeto JSON válido: {"dias":[{"eventos":[{"hora":"${stopWin.startStr}","titulo":"Lugar o Actividad","notas":"Descripción breve","costo":20,"duracion":90}]}]}`;
+        } else {
+          prompt = `Genera un itinerario turístico de ${numDias} días para ${dest.nombre}. Sugiere exactamente ${userPreferences.eventsPerDay || 3} actividades por día con horarios realistas y precios estimados en euros (ej. costo: 15, 25, 0 si es libre). Responde ESTRICTAMENTE con un objeto JSON válido: {"dias":[{"eventos":[{"hora":"09:00","titulo":"Lugar o Actividad","notas":"Descripción breve","costo":25,"duracion":90}]}]}`;
+        }
         const textContent = await callAI(prompt);
         if (!textContent) throw new Error('No AI response');
         
         const jsonStr = textContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         const itinerary = JSON.parse(jsonStr);
         
-        dest.dias = [];
-        itinerary.dias.forEach((dia, d) => {
-          const diaObj = { id: d, eventos: [], costosAdicionales: [] };
-          if (dia.eventos) {
+        const newDias = [];
+        const srcDias = Array.isArray(itinerary.dias) && itinerary.dias.length > 0 ? itinerary.dias : Array.from({ length: numDias }, () => ({ eventos: [] }));
+        srcDias.forEach((dia, d) => {
+          const diaObj = {
+            id: d,
+            eventos: [...(preservedAnchorsByDay[d] || [])],
+            costosAdicionales: [...(preservedExtrasByDay[d] || [])]
+          };
+          if (Array.isArray(dia.eventos)) {
             dia.eventos.forEach((ev, i) => {
               const evCost = parseFloat(ev.costo || ev.precio || 0) || 0;
               diaObj.eventos.push({
                 id: Date.now() + d * 100 + i,
-                hora: ev.hora || '10:00',
+                hora: ev.hora || stopWin.startStr || '10:00',
                 titulo: ev.titulo || 'Actividad',
                 notas: ev.notas || '',
                 costo: evCost,
@@ -6780,8 +7450,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               });
             });
           }
-          dest.dias.push(diaObj);
+          diaObj.eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
+          newDias.push(diaObj);
         });
+        dest.dias = newDias;
         
         renderDias(destId);
         autoSave();
@@ -6806,42 +7478,65 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     async function generarItinerarioWikiFallback(destId, numDias) {
       if (!checkEditPermission()) return;
       const dest = destinos.find(d => d.id === destId);
+      if (!dest) return;
+      const preservedAnchorsByDay = (dest.dias || []).map(dia => (dia.eventos || []).filter(ev => Boolean(ev && ev.importSyncKey)));
+      const preservedExtrasByDay = (dest.dias || []).map(dia => Array.isArray(dia.costosAdicionales) ? [...dia.costosAdicionales] : []);
+      const stopWin = computeStopEffectiveWindow(dest);
+
       try {
         const coords = await geocode(dest.nombre);
         if (!coords) { showToast('No se pudo ubicar el destino', 'error'); return; }
-        const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro&explaintext&exchars=100&pithumbsize=200&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=50&format=json&origin=*`;
+        const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|description&exintro&explaintext&exchars=100&pithumbsize=240&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=50&format=json&origin=*`;
         const res = await fetch(url);
         const data = await res.json();
         if (!data.query?.pages) { showToast('Sin resultados', 'error'); return; }
         
-        const forbidden = ['incendio','batalla','muerte','guerra','desastre','comité','línea','consejo','asociación'];
-        const allPlaces = Object.values(data.query.pages).filter(p => {
-          const t = p.title.toLowerCase();
-          return !p.title.match(/\d{3,4}/) && !forbidden.some(w => t.includes(w));
-        });
+        const allPlaces = Object.values(data.query.pages)
+          .map(p => ({ page: p, score: scoreTouristPlace(p, dest.nombre) }))
+          .filter(item => item.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .map(item => item.page);
+
+        if (allPlaces.length === 0) {
+          showToast('No se encontraron puntos turísticos destacados en Wikipedia para este destino', 'warning');
+          return;
+        }
         
-        dest.dias = [];
-        const horasBase = ['09:00', '11:00', '13:30', '16:00', '18:30'];
-        const perDay = 4; // Hard limit to 4 events per day to prevent 50 events in 3 days
-        
+        const perDay = stopWin.hasWindow ? Math.min(3, Math.max(1, Math.floor((stopWin.endMin - stopWin.startMin) / 100))) : 4;
+        const horasBase = ['09:30', '11:30', '14:30', '17:00'];
+        const fmtMin = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+
+        const newDias = [];
         for (let d = 0; d < numDias; d++) {
-          const dia = { id: d, eventos: [], costosAdicionales: [] };
+          const dia = {
+            id: d,
+            eventos: [...(preservedAnchorsByDay[d] || [])],
+            costosAdicionales: [...(preservedExtrasByDay[d] || [])]
+          };
           const dayPlaces = allPlaces.slice(d * perDay, (d + 1) * perDay);
           dayPlaces.forEach((place, i) => {
+            let slotHora = horasBase[i % horasBase.length];
+            if (stopWin.hasWindow) {
+              const span = Math.max(60, stopWin.endMin - stopWin.startMin);
+              const step = dayPlaces.length > 1 ? Math.floor(span / dayPlaces.length) : 0;
+              slotHora = fmtMin(Math.min(stopWin.endMin - 45, stopWin.startMin + i * step));
+            }
             dia.eventos.push({
               id: Date.now() + d * 100 + i,
-              hora: horasBase[i % horasBase.length],
+              hora: slotHora,
               titulo: place.title,
-              notas: place.extract ? place.extract.substring(0, 80) : 'Punto de interés',
+              notas: place.description || (place.extract ? place.extract.substring(0, 80) : 'Punto de interés'),
               costo: 0,
-              duracion: 60 + Math.floor(Math.random() * 60)
+              duracion: 60
             });
           });
-          dest.dias.push(dia);
+          dia.eventos.sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
+          newDias.push(dia);
         }
+        dest.dias = newDias;
         renderDias(destId);
         autoSave();
-        showToast(`Itinerario generado con ${allPlaces.length} lugares`, 'success');
+        showToast(`Itinerario generado con ${Math.min(allPlaces.length, numDias * perDay)} lugares turísticos`, 'success');
       } catch(e) {
         showToast('Error al generar itinerario', 'error');
       }
@@ -6888,25 +7583,42 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     }
 
     function obtenerFechasDestino(destId) {
-      const fInicio = document.getElementById('fechaInicio')?.value;
-      let baseDate = fInicio ? new Date(fInicio) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      if (isNaN(baseDate.getTime())) baseDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      
-      let acumulados = 0;
-      for (let i = 0; i < destinos.length; i++) {
-        if (destinos[i].id === destId) break;
-        acumulados += (destinos[i].dias || []).length || 1;
-      }
-      
-      const checkinDate = new Date(baseDate.getTime() + (acumulados * 24 * 60 * 60 * 1000));
-      const currentDest = destinos.find(d => d.id === destId);
-      const duracionDias = (currentDest && currentDest.dias && currentDest.dias.length) ? currentDest.dias.length : 3;
-      const checkoutDate = new Date(checkinDate.getTime() + (duracionDias * 24 * 60 * 60 * 1000));
-
       const pad = n => String(n).padStart(2, '0');
       const formatYmd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
       const formatDmy = d => `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
-      
+      const currentDest = destinos.find(d => d.id === destId);
+      const duracionDias = (currentDest && currentDest.dias && currentDest.dias.length) ? currentDest.dias.length : 3;
+
+      const schedule = buildTripDaySchedule();
+      const destSlots = schedule.filter(s => !s.isTransit && s.destId === destId);
+      if (destSlots.length > 0 && destSlots[0].dateStr) {
+        const checkinDate = parseLocalNoon(destSlots[0].dateStr);
+        const lastSlot = destSlots[destSlots.length - 1];
+        const lastDate = parseLocalNoon(lastSlot.dateStr || destSlots[0].dateStr);
+        const checkoutDate = lastSlot.isDestOnly
+          ? new Date(checkinDate.getFullYear(), checkinDate.getMonth(), checkinDate.getDate() + duracionDias, 12, 0, 0)
+          : new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate() + 1, 12, 0, 0);
+        return {
+          checkinYmd: formatYmd(checkinDate),
+          checkinDmy: formatDmy(checkinDate),
+          checkoutYmd: formatYmd(checkoutDate),
+          checkoutDmy: formatDmy(checkoutDate),
+          dias: duracionDias
+        };
+      }
+
+      const now = new Date();
+      const baseDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 12, 0, 0);
+      let acumulados = 0;
+      for (let i = 0; i < destinos.length; i++) {
+        if (i > 0) acumulados += Math.max(0, Math.floor(Number(destinos[i].diasTransitoPrevio) || 0));
+        if (destinos[i].id === destId) break;
+        acumulados += (destinos[i].dias || []).length || 1;
+      }
+
+      const checkinDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() + acumulados, 12, 0, 0);
+      const checkoutDate = new Date(checkinDate.getFullYear(), checkinDate.getMonth(), checkinDate.getDate() + duracionDias, 12, 0, 0);
+
       return {
         checkinYmd: formatYmd(checkinDate),
         checkinDmy: formatDmy(checkinDate),
@@ -7276,15 +7988,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         : (lugarSalida || 'Origen');
       
       const fInicio = document.getElementById('fechaInicio')?.value;
-      let baseDate = fInicio ? new Date(fInicio) : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-      if (isNaN(baseDate.getTime())) baseDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      const nowFallback = new Date();
+      let baseDate = parseLocalNoon(fInicio) || new Date(nowFallback.getFullYear(), nowFallback.getMonth(), nowFallback.getDate() + 14, 12, 0, 0);
       let totalDias = 0;
       if (destinos && destinos.length > 0) {
-        destinos.forEach(d => { totalDias += (d.dias || []).length || 1; });
+        destinos.forEach((d, idx) => {
+          totalDias += ((d.dias || []).length || 1) + (idx > 0 ? Math.max(0, Math.floor(Number(d.diasTransitoPrevio) || 0)) : 0);
+        });
       } else {
         totalDias = 5;
       }
-      const returnDate = new Date(baseDate.getTime() + (totalDias * 24 * 60 * 60 * 1000));
+      const returnDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() + totalDias, 12, 0, 0);
       
       const pad = n => String(n).padStart(2, '0');
       const returnYmd = `${returnDate.getFullYear()}-${pad(returnDate.getMonth()+1)}-${pad(returnDate.getDate())}`;
@@ -7354,15 +8068,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         ? inputSalida.value.trim() 
         : (lugarSalida || 'Origen');
       const fInicio = document.getElementById('fechaInicio')?.value;
-      let baseDate = fInicio ? new Date(fInicio) : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-      if (isNaN(baseDate.getTime())) baseDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      const nowFallback = new Date();
+      let baseDate = parseLocalNoon(fInicio) || new Date(nowFallback.getFullYear(), nowFallback.getMonth(), nowFallback.getDate() + 14, 12, 0, 0);
       let totalDias = 0;
       if (destinos && destinos.length > 0) {
-        destinos.forEach(d => { totalDias += (d.dias || []).length || 1; });
+        destinos.forEach((d, idx) => {
+          totalDias += ((d.dias || []).length || 1) + (idx > 0 ? Math.max(0, Math.floor(Number(d.diasTransitoPrevio) || 0)) : 0);
+        });
       } else {
         totalDias = 5;
       }
-      const returnDate = new Date(baseDate.getTime() + (totalDias * 24 * 60 * 60 * 1000));
+      const returnDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() + totalDias, 12, 0, 0);
       
       const pad = n => String(n).padStart(2, '0');
       const returnYmd = `${returnDate.getFullYear()}-${pad(returnDate.getMonth()+1)}-${pad(returnDate.getDate())}`;
@@ -7402,19 +8118,105 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       }
     });
 
+    function renderStopLogistics(destId) {
+      const destIdx = destinos.findIndex(d => d.id === destId);
+      const dest = destIdx !== -1 ? destinos[destIdx] : null;
+      const box = document.getElementById(`logistics-${destId}`);
+      if (!box || !dest) return;
+
+      const transitVal = destIdx > 0 ? Math.max(0, Math.floor(Number(dest.diasTransitoPrevio) || 0)) : 0;
+      const tipoVal = dest.tipoParada || 'estadia';
+
+      box.innerHTML = `
+        <div class="plux-stop-logistics-row">
+          ${destIdx > 0 ? `
+          <div class="plux-stop-logistics-field">
+            <label>Días de tránsito previos</label>
+            <div class="plux-transit-stepper">
+              <button type="button" onclick="window.stepTransitoPrevio(${destId}, -1)" title="Restar día de tránsito">−</button>
+              <span>${transitVal}</span>
+              <button type="button" onclick="window.stepTransitoPrevio(${destId}, 1)" title="Sumar día de tránsito">+</button>
+            </div>
+          </div>
+          <div class="plux-stop-logistics-field">
+            <label>Etiqueta tránsito</label>
+            <input type="text" value="${escapeHtml(dest.transitoEtiqueta || '')}" placeholder="En navegación / En tránsito" onchange="window.actualizarCampoParada(${destId}, 'transitoEtiqueta', this.value)">
+          </div>` : ''}
+          <div class="plux-stop-logistics-field">
+            <label>Tipo de parada</label>
+            <select onchange="window.actualizarCampoParada(${destId}, 'tipoParada', this.value)">
+              <option value="estadia" ${tipoVal === 'estadia' ? 'selected' : ''}>Estadía</option>
+              <option value="embarque" ${tipoVal === 'embarque' ? 'selected' : ''}>Embarque</option>
+              <option value="escala" ${tipoVal === 'escala' ? 'selected' : ''}>Escala</option>
+              <option value="desembarque" ${tipoVal === 'desembarque' ? 'selected' : ''}>Desembarque</option>
+            </select>
+          </div>
+          <div class="plux-stop-logistics-field">
+            <label>Llegada (HH:MM)</label>
+            <input type="time" value="${escapeHtml(dest.horaLlegada || '')}" onchange="window.actualizarCampoParada(${destId}, 'horaLlegada', this.value)">
+          </div>
+          <div class="plux-stop-logistics-field">
+            <label>Salida (HH:MM)</label>
+            <input type="time" value="${escapeHtml(dest.horaSalida || '')}" onchange="window.actualizarCampoParada(${destId}, 'horaSalida', this.value)">
+          </div>
+          <div class="plux-stop-logistics-field plux-stop-logistics-field--wide">
+            <label>Nota logística</label>
+            <input type="text" value="${escapeHtml(dest.notaParada || '')}" placeholder="Ej. Bote auxiliar (tenders), terminal, muelle..." onchange="window.actualizarCampoParada(${destId}, 'notaParada', this.value)">
+          </div>
+        </div>
+      `;
+    }
+
     function renderTramos(destId) {
-      const dest = destinos.find(d => d.id === destId);
+      const destIdx = destinos.findIndex(d => d.id === destId);
+      const dest = destIdx !== -1 ? destinos[destIdx] : null;
       const container = document.getElementById(`tramos-${destId}`);
       if (!container || !dest) return;
+      renderStopLogistics(destId);
       container.innerHTML = "";
       dest.tramos = dest.tramos || [];
+
+      const sharedBooking = resolveSharedBookingForDest(destIdx);
+      const addBtn = document.getElementById(`btn-add-tramo-${destId}`);
+      if (addBtn) {
+        addBtn.style.display = sharedBooking ? 'none' : '';
+        addBtn.textContent = sharedBooking ? '+ Agregar traslado local opcional' : t('agregar_tramo');
+      }
+
+      if (dest.tramos.length === 0 && sharedBooking) {
+        const shTramo = sharedBooking.tramo;
+        const shIcon = getTransportIconForMedio(shTramo.medio);
+        const chip = document.createElement('div');
+        chip.className = 'plux-shared-booking-chip';
+        chip.innerHTML = `
+          <div class="plux-shared-booking-chip-info">
+            <i class="fa-solid ${shIcon}"></i>
+            <span>Cubierto por <strong>${escapeHtml(shTramo.medio || 'Reserva compartida')}</strong>${shTramo.alojamiento ? ` · ${escapeHtml(shTramo.alojamiento)}` : ''} · presupuestado en <strong>${escapeHtml(sharedBooking.hostDest.nombre)}</strong></span>
+          </div>
+          <button type="button" class="plux-shared-booking-btn" onclick="agregarTramo(${destId})">+ Agregar traslado local opcional</button>
+        `;
+        container.appendChild(chip);
+        return;
+      }
+
       dest.tramos.forEach((tramo, ida) => {
         const tramoDiv = document.createElement("div");
         tramoDiv.className = "tramo-item";
         tramoDiv.style = "background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:15px; margin-bottom:15px; position:relative;";
+        const tramoIcon = getTransportIconForMedio(tramo.medio);
+        const modoPrecio = tramo.modoPrecio === 'total' ? 'total' : 'persona';
+        const tramoMoneda = tramo.moneda || getMonedaActiva();
+        const hasPartialInfo = (Number(tramo.montoPagado) > 0 || Number(tramo.saldoPendiente) > 0);
+        const partialBarHtml = hasPartialInfo
+          ? `<div style="margin-top:8px; font-size:0.78rem; color:var(--gris); display:flex; gap:12px; flex-wrap:wrap;">
+               <span style="color:#34d399;">Pagado: <strong>${formatMoneda(Number(tramo.montoPagado) || 0, tramoMoneda)}</strong></span>
+               <span style="color:#fbbf24;">Saldo pendiente: <strong>${formatMoneda(Number(tramo.saldoPendiente) || 0, tramoMoneda)}</strong></span>
+             </div>`
+          : '';
+
         tramoDiv.innerHTML = `
           <div class="tramo-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h6 style="margin:0; color:var(--rosa); font-weight:700; letter-spacing:0.5px;"><i class="fa-solid fa-plane" style="margin-right:6px;"></i> ${t('transport').toUpperCase()} Y ${t('accommodation').toUpperCase()} #${ida+1}</h6>
+            <h6 style="margin:0; color:var(--rosa); font-weight:700; letter-spacing:0.5px;"><i class="fa-solid ${tramoIcon}" style="margin-right:6px;"></i> ${t('transport').toUpperCase()} Y ${t('accommodation').toUpperCase()} #${ida+1}</h6>
             <button class="close-icon" onclick="eliminarTramo(${destId}, ${ida})">×</button>
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
@@ -7425,17 +8227,22 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                   <i class="fa-solid fa-compass" style="margin-right:4px;"></i> <span>Buscar transporte</span>
                 </button>
               </div>
-              <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="Avión, Tren, Bus, Auto..." value="${escapeHtml(tramo.medio || '')}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="Avión, Crucero, Tren, Bus, Auto..." value="${escapeHtml(tramo.medio || '')}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
               <div id="dropdown-transporte-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:99999;"></div>
             </div>
             <div class="field-boa">
-              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('transport_price') || 'PRECIO TRANSPORTE'} (${getSimboloMoneda(tramo.moneda || getMonedaActiva())})</label>
-              <div style="display:flex; gap:6px; align-items:center;">
-                <input type="number" id="tramo-precio-${destId}-${ida}" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="flex:1; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
-                <select class="plux-moneda-select" onchange="actualizarTramo(${destId}, ${ida}, 'moneda', this.value)" style="width:78px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.8rem; font-weight:600;" title="Moneda transporte">
-                  ${renderCurrencyOptions(tramo.moneda || getMonedaActiva())}
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('transport_price') || 'PRECIO TRANSPORTE'} (${getSimboloMoneda(tramoMoneda)})</label>
+              <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                <input type="number" id="tramo-precio-${destId}-${ida}" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="flex:1; min-width:90px; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+                <select class="plux-moneda-select" onchange="actualizarTramo(${destId}, ${ida}, 'moneda', this.value)" style="width:78px; min-width:70px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.8rem; font-weight:600;" title="Moneda transporte">
+                  ${renderCurrencyOptions(tramoMoneda)}
+                </select>
+                <select onchange="actualizarTramo(${destId}, ${ida}, 'modoPrecio', this.value)" style="width:108px; min-width:96px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.76rem; font-weight:600;" title="Tipo de importe">
+                  <option value="persona" ${modoPrecio === 'persona' ? 'selected' : ''}>Por persona</option>
+                  <option value="total" ${modoPrecio === 'total' ? 'selected' : ''}>Total grupo</option>
                 </select>
               </div>
+              ${partialBarHtml}
             </div>
             <div class="field-boa" style="grid-column: 1 / -1; position:relative;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
@@ -7457,6 +8264,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               </div>
             </div>
           </div>
+          <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:0.8rem; color:var(--gris); cursor:pointer;">
+            <input type="checkbox" ${tramo.cubreParadas ? 'checked' : ''} onchange="actualizarTramo(${destId}, ${ida}, 'cubreParadas', this.checked)" style="width:auto; min-width:0; height:auto; margin:0;">
+            <span>Cubre transporte y alojamiento en paradas siguientes (crucero, tren nocturno, motorhome)</span>
+          </label>
           <div class="escalas-container" id="escalas-${destId}-${ida}" style="margin-top:12px;"></div>
           <button class="add-escala-btn" onclick="agregarEscala(${destId}, ${ida})" style="margin-top:10px; background:transparent; border:1px dashed var(--border); color:var(--gris); width:100%; padding:8px; border-radius:8px; cursor:pointer;">${t('agregar_escala_btn')}</button>
         `;
@@ -7503,7 +8314,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const dest = destinos.find(d => d.id === destId);
       if (dest && dest.tramos) {
         dest.tramos.splice(tramoIda, 1);
-        renderTramos(destId);
+        renderDestinos();
         autoSave();
       }
     }
@@ -7511,12 +8322,15 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function actualizarTramo(destId, tramoIda, campo, valor) {
       if (!checkEditPermission()) return;
       const dest = destinos.find(d => d.id === destId);
+      if (!dest || !dest.tramos || !dest.tramos[tramoIda]) return;
       dest.tramos[tramoIda][campo] = valor;
-      if (campo === 'moneda' || campo === 'monedaAlojamiento') {
+      if (campo === 'cubreParadas' || campo === 'medio') {
+        renderDestinos();
+      } else if (campo === 'moneda' || campo === 'monedaAlojamiento' || campo === 'modoPrecio') {
         renderTramos(destId);
-        const pantResumen = document.getElementById('pantalla-resumen');
-        if (pantResumen && pantResumen.style.display === 'flex') mostrarResumen();
       }
+      const pantResumen = document.getElementById('pantalla-resumen');
+      if (pantResumen && pantResumen.style.display === 'flex') mostrarResumen();
       autoSave();
     }
 
@@ -7547,6 +8361,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function eliminarDestino(id) {
       if (!checkEditPermission()) return;
       destinos = destinos.filter(d => d.id !== id);
+      if (collapsedEditorDestinos) collapsedEditorDestinos.delete(id);
+      if (openTransportDestIds) openTransportDestIds.delete(id);
+      if (destinos.length > 0 && destinos[0].diasTransitoPrevio > 0) {
+        destinos[0].diasTransitoPrevio = 0;
+      }
       renderDestinos();
       autoSave();
     }
@@ -7571,7 +8390,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       dest.dias.forEach((dia, diaIdx) => {
         const key = `${destId}_${dia.id}`;
         const isCollapsed = collapsedEditorDias.has(key);
-        const daySched = schedule.find(s => s.destId === destId && s.diaId === dia.id);
+        const daySched = schedule.find(s => !s.isTransit && s.destId === destId && s.diaId === dia.id);
         const dateStr = daySched?.dateStr || '';
         const fidx = daySched?.forecastIndex ?? '';
         const evCount = (dia.eventos || []).length;
@@ -7739,6 +8558,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= destinos.length || toIdx >= destinos.length) return;
       const [moved] = destinos.splice(fromIdx, 1);
       destinos.splice(toIdx, 0, moved);
+      if (destinos.length > 0 && destinos[0].diasTransitoPrevio > 0) {
+        destinos[0].diasTransitoPrevio = 0;
+      }
       renderDestinos();
       autoSave();
       showToast(`Destino "${moved.nombre}" reordenado`, 'info');
@@ -8290,7 +9112,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     }
 
     function cerrarResumen() {
-      document.getElementById("pantalla-resumen").style.display = "none";
+      const el = document.getElementById("pantalla-resumen");
+      if (el) el.style.display = "none";
     }
 
     function toggleVistaResumen() {
@@ -8388,26 +9211,46 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       else cont.classList.remove('vista-linea-tiempo');
 
       // Calculate stats & collect expenses
+      const monedaActiva = getMonedaActiva();
       destinos.forEach((dest, destIdx) => {
+        const transitPrev = (destIdx > 0 && Number(dest.diasTransitoPrevio) > 0) ? Math.floor(Number(dest.diasTransitoPrevio)) : 0;
         const numDiasDest = dest.dias ? dest.dias.length : 0;
-        totalDias += numDiasDest;
+        totalDias += transitPrev + numDiasDest;
         let costoDest = 0;
 
-        const monedaActiva = getMonedaActiva();
-
         (dest.tramos || []).forEach((tramo, tramoIdx) => {
+          const mult = tramo.modoPrecio === 'total' ? 1 : numPersonas;
+          const tramoMoneda = tramo.moneda || monedaActiva;
           const precioTranspRaw = Number(tramo.precio) || 0;
           const precioAlojRaw = Number(tramo.precioAlojamiento) || 0;
-          const precioTransp = convertirMonto(precioTranspRaw, tramo.moneda || monedaActiva, monedaActiva);
+          const precioTransp = convertirMonto(precioTranspRaw, tramoMoneda, monedaActiva);
           const precioAloj = convertirMonto(precioAlojRaw, tramo.monedaAlojamiento || monedaActiva, monedaActiva);
 
           if (precioTransp > 0) {
-            const cTransp = precioTransp * numPersonas;
+            const cTransp = precioTransp * mult;
             costoGlobal += cTransp;
             costoTransporte += cTransp;
             costoDest += cTransp;
-            const isPaid = tramo.pagado === true;
-            if (isPaid) totalPagado += cTransp; else totalPendiente += cTransp;
+
+            const hasPartial = (Number(tramo.montoPagado) > 0 || Number(tramo.saldoPendiente) > 0);
+            let paidAmt = 0;
+            let pendingAmt = 0;
+            let isPaid = tramo.pagado === true;
+            if (hasPartial) {
+              const rawPagado = Math.max(0, Number(tramo.montoPagado) || 0);
+              const hasSaldoNum = tramo.saldoPendiente !== undefined && tramo.saldoPendiente !== null && !isNaN(Number(tramo.saldoPendiente));
+              paidAmt = convertirMonto(rawPagado, tramoMoneda, monedaActiva);
+              pendingAmt = hasSaldoNum
+                ? convertirMonto(Math.max(0, Number(tramo.saldoPendiente) || 0), tramoMoneda, monedaActiva)
+                : Math.max(0, cTransp - paidAmt);
+              isPaid = pendingAmt <= 0.01 && paidAmt > 0;
+            } else {
+              paidAmt = isPaid ? cTransp : 0;
+              pendingAmt = isPaid ? 0 : cTransp;
+            }
+            totalPagado += paidAmt;
+            totalPendiente += pendingAmt;
+
             allExpenses.push({
               tipo: 'tramo_transporte',
               destId: dest.id,
@@ -8416,15 +9259,19 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               itemIndex: tramoIdx,
               concepto: `Transporte a ${dest.nombre} (${tramo.medio || 'Trayecto'})`,
               categoria: 'Transporte',
-              costoUnitario: precioTransp,
+              costoUnitario: redondearMoneda(precioTransp, monedaActiva),
               costoTotal: cTransp,
+              modoPrecio: tramo.modoPrecio === 'total' ? 'total' : 'persona',
+              montoPagado: paidAmt,
+              saldoPendiente: pendingAmt,
+              esPagoParcial: hasPartial && paidAmt > 0 && pendingAmt > 0.01,
               pagadoPor: tramo.pagadoPor || 'Todos',
               pagado: isPaid,
               ubicacion: dest.nombre
             });
           }
           if (precioAloj > 0) {
-            const cAloj = precioAloj * numPersonas;
+            const cAloj = precioAloj * mult;
             costoGlobal += cAloj;
             costoAlojamiento += cAloj;
             costoDest += cAloj;
@@ -8438,8 +9285,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               itemIndex: tramoIdx,
               concepto: `Alojamiento en ${dest.nombre} (${tramo.alojamiento || 'Estancia'})`,
               categoria: 'Alojamiento',
-              costoUnitario: precioAloj,
+              costoUnitario: redondearMoneda(precioAloj, monedaActiva),
               costoTotal: cAloj,
+              modoPrecio: tramo.modoPrecio === 'total' ? 'total' : 'persona',
               pagadoPor: tramo.alojamientoPagadoPor || 'Todos',
               pagado: isPaid,
               ubicacion: dest.nombre
@@ -8555,7 +9403,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       // Update hero subtitle
       const fechaEl = document.getElementById('fechaInicio');
-      const fecha = fechaEl?.value ? new Date(fechaEl.value).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      const fechaParsed = fechaEl?.value ? parseLocalNoon(fechaEl.value) : null;
+      const fecha = fechaParsed ? fechaParsed.toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
       const subtitleEl = document.getElementById('resumen-subtitle');
       if (subtitleEl) {
         let sub = fecha ? `Salida: ${fecha} • ${destinos.map(d => d.nombre).join(' → ')}` : destinos.map(d => d.nombre).join(' → ');
@@ -8598,90 +9447,108 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         `;
       }
 
-      // Mini-map with Leaflet
+      // Mini-map with Leaflet (comparte filtrado sin tránsito y deduplicación circular con dibujarMapa)
       const mapContainer = document.getElementById('resumen-map-mini');
       if (mapContainer && window.L && destinos.length > 0) {
         mapContainer.innerHTML = '';
         if (window._resumenMap) { try { window._resumenMap.remove(); } catch(e){} window._resumenMap = null; }
         if (mapContainer._leaflet_id) { mapContainer._leaflet_id = null; }
-        
-        const geocodePromises = destinos.map(dest => geocode(dest.nombre));
-        Promise.allSettled(geocodePromises).then(results => {
-          const points = [];
-          results.forEach((res, i) => {
-            if (res.status === 'fulfilled' && res.value) {
-              const { lat, lon } = res.value;
-              points.push([lat, lon]);
-            }
-          });
-          
-          if (points.length === 0) {
+
+        collectMapRoutePoints().then(({ puntos }) => {
+          if (!puntos || puntos.length === 0) {
             mapContainer.innerHTML = '<p style="color:var(--gris);text-align:center;padding:20px;">No se pudieron geocodificar destinos</p>';
             return;
           }
-          
           if (window._resumenMap) { try { window._resumenMap.remove(); } catch(e){} window._resumenMap = null; }
           if (mapContainer._leaflet_id) { mapContainer._leaflet_id = null; }
           const miniMap = L.map('resumen-map-mini', { zoomControl: true, scrollWheelZoom: false });
           window._resumenMap = miniMap;
           L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: 'Tiles &copy; Esri' }).addTo(miniMap);
-          
-          results.forEach((res, i) => {
-            if (res.status === 'fulfilled' && res.value) {
-              const { lat, lon } = res.value;
-              L.marker([lat, lon]).addTo(miniMap).bindPopup(`<b>${destinos[i].nombre}</b>`);
-            }
+
+          const latlngs = puntos.map(p => [p.lat, p.lon]);
+          puntos.forEach((p) => {
+            if (p.isReturnClone || p.isCircularReturn) return;
+            const sub = p.isCircularOrigin ? 'Salida y Regreso' : (p.isOrigin ? 'Punto de partida' : (getStopTimeBadgeText(p) || `${p.dias} ${p.dias === 1 ? 'día' : 'días'}`));
+            L.marker([p.lat, p.lon]).addTo(miniMap).bindPopup(`<b>${escapeHtml(p.nombre)}</b><br><small>${escapeHtml(sub)}</small>`);
           });
-          
-          if (points.length >= 2) {
-            L.polyline(points, { color: '#38bdf8', weight: 3, dashArray: '6 6', opacity: 0.85 }).addTo(miniMap);
+
+          if (latlngs.length >= 2) {
+            L.polyline(latlngs, { color: '#38bdf8', weight: 3, dashArray: '6 6', opacity: 0.85 }).addTo(miniMap);
           }
-          
-          if (points.length === 1) {
-            miniMap.setView(points[0], 10);
+
+          if (latlngs.length === 1) {
+            miniMap.setView(latlngs[0], 10);
           } else {
-            miniMap.fitBounds(points, { padding: [30, 30] });
+            miniMap.fitBounds(latlngs, { padding: [30, 30] });
           }
         });
       }
 
       // Detail Content: Timeline vs Standard Collapsible View
       const tripSchedule = buildTripDaySchedule();
+      const skipDupOriginBlock = Boolean(lugarSalida && destinos.length > 0 && normCityName(lugarSalida) === normCityName(destinos[0].nombre));
+
+      const buildResumenTransitBadge = (dest, destIdx) => {
+        const transitDays = (destIdx > 0 && Number(dest.diasTransitoPrevio) > 0) ? Math.floor(Number(dest.diasTransitoPrevio)) : 0;
+        if (transitDays <= 0) return '';
+        const tSlots = tripSchedule.filter(s => s.isTransit && s.destId === dest.id);
+        const label = (dest.transitoEtiqueta || '').trim() || 'En navegación';
+        let rangeText = '';
+        if (tSlots.length === 1 && tSlots[0].dateLabel) rangeText = tSlots[0].dateLabel;
+        else if (tSlots.length > 1 && tSlots[0].dateLabel && tSlots[tSlots.length - 1].dateLabel) {
+          rangeText = `${tSlots[0].dateLabel} – ${tSlots[tSlots.length - 1].dateLabel}`;
+        }
+        return `<div class="plux-transit-connector" style="margin:8px 0 12px;"><span class="plux-transit-connector-pill" style="cursor:default;"><i class="fa-solid fa-ship"></i><span>${transitDays} ${transitDays === 1 ? 'día' : 'días'} · ${escapeHtml(label)}${rangeText ? ' · ' + escapeHtml(rangeText) : ''}</span></span></div>`;
+      };
+
       if (isTimeline) {
         // ORIGINAL TIMELINE VIEW (FAITHFUL REPRODUCTION)
-        if (lugarSalida) {
+        if (lugarSalida && !skipDupOriginBlock) {
           cont.innerHTML += `
             <div class="ciudad-block timeline" style="border-left:none; margin-bottom:24px;">
               <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:700;">PUNTO DE PARTIDA</div>
-              <div style="font-size:1.1rem; font-weight:700; color:#f8fafc; margin-top:4px;">${lugarSalida}</div>
+              <div style="font-size:1.1rem; font-weight:700; color:#f8fafc; margin-top:4px;">${escapeHtml(lugarSalida)}</div>
             </div>
           `;
         }
 
         destinos.forEach((dest, destIdx) => {
-          let html = `
+          const sharedBooking = resolveSharedBookingForDest(destIdx);
+          const stopTimeStr = getStopTimeBadgeText(dest);
+          let html = buildResumenTransitBadge(dest, destIdx);
+          html += `
             <div class="ciudad-block timeline" style="border-left:none; margin-bottom:32px;">
-              <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:8px;">
-                <h3 style="color:#38bdf8; margin:0; font-size:1.3rem; font-weight:700;">${destIdx + 1}. ${dest.nombre}</h3>
-                ${(dest.tramos || []).length ? `<small style="color:var(--gris); font-size:0.82rem;">${dest.tramos.map(t => t.medio || 'Trayecto').join(' • ')}</small>` : ''}
+              <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:8px; gap:8px; flex-wrap:wrap;">
+                <h3 style="color:#38bdf8; margin:0; font-size:1.3rem; font-weight:700;">${destIdx + 1}. ${escapeHtml(dest.nombre)}${stopTimeStr ? ` <small style="color:var(--gris); font-size:0.8rem; font-weight:500;">(${escapeHtml(stopTimeStr)})</small>` : ''}</h3>
+                ${(dest.tramos || []).length ? `<small style="color:var(--gris); font-size:0.82rem;">${dest.tramos.map(t => escapeHtml(t.medio || 'Trayecto')).join(' • ')}</small>` : (sharedBooking ? `<small style="color:var(--gris); font-size:0.82rem;">${escapeHtml(sharedBooking.tramo.medio || 'Reserva compartida')}</small>` : '')}
               </div>
           `;
 
           // Tramos
           (dest.tramos || []).forEach((tramo, i) => {
-            const sum = (Number(tramo.precio) || 0) + (Number(tramo.precioAlojamiento) || 0);
+            const mult = tramo.modoPrecio === 'total' ? 1 : numPersonas;
+            const cTransp = convertirMonto(Number(tramo.precio) || 0, tramo.moneda || monedaActiva, monedaActiva) * mult;
+            const cAloj = convertirMonto(Number(tramo.precioAlojamiento) || 0, tramo.monedaAlojamiento || monedaActiva, monedaActiva) * mult;
+            const sumConv = cTransp + cAloj;
             html += `
               <div style="margin-bottom:12px; font-size:0.88rem; color:var(--gris); background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:8px;">
-                <strong style="color:#f8fafc;">Transporte / Estancia ${i + 1}:</strong> ${tramo.medio || 'Trayecto'}
-                ${tramo.alojamiento ? ` • Alojamiento: ${tramo.alojamiento}` : ''}
-                ${sum ? ` — <span style="color:#34d399; font-weight:600;">${formatMoneda(sum * numPersonas)}</span>` : ''}
+                <strong style="color:#f8fafc;">Transporte / Estancia ${i + 1}:</strong> ${escapeHtml(tramo.medio || 'Trayecto')}
+                ${tramo.alojamiento ? ` • Alojamiento: ${escapeHtml(tramo.alojamiento)}` : ''}
+                ${sumConv ? ` — <span style="color:#34d399; font-weight:600;">${formatMoneda(sumConv)}</span>` : ''}
               </div>
             `;
           });
+          if ((!dest.tramos || dest.tramos.length === 0) && sharedBooking) {
+            html += `
+              <div style="margin-bottom:12px; font-size:0.84rem; color:var(--gris); background:rgba(56,189,248,0.06); padding:8px 12px; border-radius:8px; border:1px solid rgba(56,189,248,0.18);">
+                Cubierto por <strong style="color:#f8fafc;">${escapeHtml(sharedBooking.tramo.medio || 'Reserva compartida')}</strong>${sharedBooking.tramo.alojamiento ? ` · ${escapeHtml(sharedBooking.tramo.alojamiento)}` : ''} · presupuestado en ${escapeHtml(sharedBooking.hostDest.nombre)}
+              </div>
+            `;
+          }
 
           // Days
           (dest.dias || []).forEach((dia, diaIdx) => {
-            const daySched = tripSchedule.find(s => s.destId === dest.id && s.diaId === dia.id);
+            const daySched = tripSchedule.find(s => !s.isTransit && s.destId === dest.id && s.diaId === dia.id);
             const dateStr = daySched?.dateStr || '';
             const fidx = daySched?.forecastIndex ?? '';
 
@@ -8699,15 +9566,16 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               html += `<p style="color:var(--gris); font-size:0.85rem; margin:6px 0; font-style:italic;">Sin actividades registradas</p>`;
             } else {
               dia.eventos.forEach(ev => {
+                const evCostConv = convertirMonto(Number(ev.costo) || 0, ev.moneda || monedaActiva, monedaActiva);
                 html += `
                   <div class="evento-resumen timeline">
                     <span class="hora-t">${ev.hora || '--:--'}</span>
                     <div class="ev-info">
-                      <strong style="color:#f8fafc; font-size:0.95rem;">${ev.titulo || t('untitled_event')}</strong>
+                      <strong style="color:#f8fafc; font-size:0.95rem;">${escapeHtml(ev.titulo || t('untitled_event'))}</strong>
                       ${ev.duracion ? `<small style="color:var(--gris); margin-left:8px;">[${ev.duracion} min]</small>` : ''}
-                      ${ev.costo ? `<small style="color:#fbbf24; margin-left:8px; font-weight:700;">${formatMoneda(ev.costo * numPersonas)}</small>` : ''}
-                      ${ev.lugar ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.82rem;">Ubicacion: ${ev.lugar}</p>` : ''}
-                      ${ev.notas ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.85rem;">↳ ${ev.notas}</p>` : ''}
+                      ${evCostConv ? `<small style="color:#fbbf24; margin-left:8px; font-weight:700;">${formatMoneda(evCostConv * numPersonas)}</small>` : ''}
+                      ${ev.lugar ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.82rem;">Ubicacion: ${escapeHtml(ev.lugar)}</p>` : ''}
+                      ${ev.notas ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.85rem;">↳ ${escapeHtml(ev.notas)}</p>` : ''}
                     </div>
                   </div>
                 `;
@@ -8716,10 +9584,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
             (dia.costosAdicionales || []).forEach(c => {
               if (c.precio || c.concepto) {
+                const extraConv = convertirMonto(Number(c.precio) || 0, c.moneda || monedaActiva, monedaActiva);
                 html += `
                   <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--gris); padding:4px 0; border-top:1px dashed rgba(255,255,255,0.05); margin-top:6px;">
-                    <span>Costo adicional: ${c.concepto || 'Extra'}</span>
-                    <span style="color:#f472b6; font-weight:600;">${formatMoneda(Number(c.precio) || 0)}</span>
+                    <span>Costo adicional: ${escapeHtml(c.concepto || 'Extra')}</span>
+                    <span style="color:#f472b6; font-weight:600;">${formatMoneda(extraConv)}</span>
                   </div>
                 `;
               }
@@ -8733,21 +9602,22 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         });
 
         if (vueltaGlobal || vueltaCostosAdicionales.length) {
+          const vConv = convertirMonto(Number(vueltaPrecioGlobal) || 0, (typeof vueltaMonedaGlobal !== 'undefined' && vueltaMonedaGlobal) || monedaActiva, monedaActiva);
           let vueltaHtml = `
             <div class="ciudad-block timeline" style="border-left:none; margin-top:20px;">
               <h3 style="color:#f472b6; margin:0 0 8px 0; font-size:1.15rem; font-weight:700;">Regreso / Vuelta</h3>
-              <div><strong style="color:#f8fafc;">${vueltaGlobal || 'Viaje de retorno'}</strong>${vueltaPrecioGlobal ? ` — <span style="color:#f472b6; font-weight:700;">${formatMoneda(vueltaPrecioGlobal * numPersonas)}</span>` : ''}</div>
+              <div><strong style="color:#f8fafc;">${escapeHtml(vueltaGlobal || 'Viaje de retorno')}</strong>${vConv ? ` — <span style="color:#f472b6; font-weight:700;">${formatMoneda(vConv * numPersonas)}</span>` : ''}</div>
             </div>
           `;
           cont.innerHTML += vueltaHtml;
         }
       } else {
         // STANDARD VIEW (COLLAPSIBLE CARDS)
-        if (lugarSalida) {
+        if (lugarSalida && !skipDupOriginBlock) {
           cont.innerHTML += `
             <div class="ciudad-block" style="border-left: 3px solid #38bdf8; margin-bottom: 16px;">
               <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:700;">PUNTO DE PARTIDA</div>
-              <div style="font-size:1.05rem; font-weight:600; color:#f8fafc; margin-top:2px;">${lugarSalida}</div>
+              <div style="font-size:1.05rem; font-weight:600; color:#f8fafc; margin-top:2px;">${escapeHtml(lugarSalida)}</div>
             </div>
           `;
         }
@@ -8755,14 +9625,18 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         destinos.forEach((dest, destIdx) => {
           const isDestCollapsed = collapsedResumenDestinos.has(dest.id);
           const destStats = costosPorDestino.find(cd => cd.id === dest.id) || { costo: 0, diasCount: 0 };
+          const sharedBooking = resolveSharedBookingForDest(destIdx);
+          const stopTimeStr = getStopTimeBadgeText(dest);
           
-          let html = `
+          let html = buildResumenTransitBadge(dest, destIdx);
+          html += `
             <div class="collapsible-card" style="margin-bottom: 20px;">
               <div class="collapsible-header" onclick="toggleResumenDestino(${dest.id})">
-                <div style="display:flex; align-items:center; gap:12px;">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                   <span id="resumen-dest-chev-${dest.id}" class="chevron-indicator" style="transform:${isDestCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
                   <span style="background:rgba(56,189,248,0.12); color:#38bdf8; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:6px; letter-spacing:0.04em;">DESTINO ${destIdx + 1}</span>
-                  <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#f8fafc;">${dest.nombre}</h3>
+                  <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#f8fafc;">${escapeHtml(dest.nombre)}</h3>
+                  ${stopTimeStr ? `<span class="plux-stop-badge">${escapeHtml(stopTimeStr)}</span>` : ''}
                 </div>
                 <div style="font-size:0.82rem; color:var(--gris); font-weight:500;">
                   ${destStats.diasCount} ${destStats.diasCount === 1 ? 'dia' : 'dias'}${destStats.costo > 0 ? ` • <span style="color:#34d399; font-weight:600;">${formatMoneda(destStats.costo)}</span>` : ''}
@@ -8773,25 +9647,37 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
           // Tramos summary
           (dest.tramos || []).forEach((tramo, i) => {
-            const sum = (Number(tramo.precio) || 0) + (Number(tramo.precioAlojamiento) || 0);
+            const mult = tramo.modoPrecio === 'total' ? 1 : numPersonas;
+            const cTransp = convertirMonto(Number(tramo.precio) || 0, tramo.moneda || monedaActiva, monedaActiva) * mult;
+            const cAloj = convertirMonto(Number(tramo.precioAlojamiento) || 0, tramo.monedaAlojamiento || monedaActiva, monedaActiva) * mult;
+            const sumConv = cTransp + cAloj;
             html += `
               <div class="transp-summary-card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
                   <div>
-                    <strong>Transporte / Estancia ${i + 1}:</strong> ${tramo.medio || 'Trayecto'}
-                    ${tramo.alojamiento ? `<span style="color:var(--gris);"> • Alojamiento: ${tramo.alojamiento}</span>` : ''}
+                    <strong>Transporte / Estancia ${i + 1}:</strong> ${escapeHtml(tramo.medio || 'Trayecto')}
+                    ${tramo.alojamiento ? `<span style="color:var(--gris);"> • Alojamiento: ${escapeHtml(tramo.alojamiento)}</span>` : ''}
                   </div>
-                  ${sum ? `<span style="color:#38bdf8; font-weight:600; font-size:0.85rem;">${formatMoneda(sum * numPersonas)}</span>` : ''}
+                  ${sumConv ? `<span style="color:#38bdf8; font-weight:600; font-size:0.85rem;">${formatMoneda(sumConv)}</span>` : ''}
                 </div>
               </div>
             `;
           });
+          if ((!dest.tramos || dest.tramos.length === 0) && sharedBooking) {
+            html += `
+              <div class="transp-summary-card" style="background:rgba(56,189,248,0.06); border-color:rgba(56,189,248,0.18);">
+                <div style="font-size:0.84rem; color:var(--gris);">
+                  Cubierto por <strong style="color:#f8fafc;">${escapeHtml(sharedBooking.tramo.medio || 'Reserva compartida')}</strong>${sharedBooking.tramo.alojamiento ? ` · ${escapeHtml(sharedBooking.tramo.alojamiento)}` : ''} · presupuestado en ${escapeHtml(sharedBooking.hostDest.nombre)}
+                </div>
+              </div>
+            `;
+          }
 
           // Days
           (dest.dias || []).forEach((dia, diaIdx) => {
             const dayKey = `${dest.id}_${dia.id}`;
             const isDiaCollapsed = collapsedResumenDias.has(dayKey);
-            const daySched = tripSchedule.find(s => s.destId === dest.id && s.diaId === dia.id);
+            const daySched = tripSchedule.find(s => !s.isTransit && s.destId === dest.id && s.diaId === dia.id);
             const dateStr = daySched?.dateStr || '';
             const fidx = daySched?.forecastIndex ?? '';
             const evCount = dia.eventos ? dia.eventos.length : 0;
@@ -8816,18 +9702,19 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             } else {
               dia.eventos.forEach(ev => {
                 const hasDetails = Boolean(ev.notas || ev.lugar || ev.categoria);
+                const evCostConv = convertirMonto(Number(ev.costo) || 0, ev.moneda || monedaActiva, monedaActiva);
                 html += `
                   <div class="evento-row-compact" onclick="toggleResumenEventoDetails(this)" title="${hasDetails ? 'Click para ver mas detalles' : ''}">
                     <div class="ev-main-line">
                       <span class="ev-time">${ev.hora || '--:--'}</span>
-                      <span class="ev-title">${ev.titulo || t('untitled_event')}</span>
+                      <span class="ev-title">${escapeHtml(ev.titulo || t('untitled_event'))}</span>
                       ${ev.duracion ? `<span class="ev-dur">${ev.duracion} min</span>` : ''}
-                      ${ev.costo ? `<span class="ev-cost">${formatMoneda(ev.costo * numPersonas)}</span>` : ''}
+                      ${evCostConv ? `<span class="ev-cost">${formatMoneda(evCostConv * numPersonas)}</span>` : ''}
                     </div>
                     ${hasDetails ? `
                       <div class="ev-details">
-                        ${ev.lugar ? `<div style="font-weight:600; margin-bottom:2px;">Ubicacion: ${ev.lugar}</div>` : ''}
-                        ${ev.notas ? `<div>${ev.notas}</div>` : ''}
+                        ${ev.lugar ? `<div style="font-weight:600; margin-bottom:2px;">Ubicacion: ${escapeHtml(ev.lugar)}</div>` : ''}
+                        ${ev.notas ? `<div>${escapeHtml(ev.notas)}</div>` : ''}
                       </div>
                     ` : ''}
                   </div>
@@ -8837,10 +9724,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
             (dia.costosAdicionales || []).forEach(c => {
               if (c.precio || c.concepto) {
+                const extraConv = convertirMonto(Number(c.precio) || 0, c.moneda || monedaActiva, monedaActiva);
                 html += `
                   <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--gris); padding:4px 8px; border-top:1px dashed rgba(255,255,255,0.05); margin-top:4px;">
-                    <span>Costo adicional: ${c.concepto || 'Extra'}</span>
-                    <span style="color:#f472b6; font-weight:600;">${formatMoneda(Number(c.precio) || 0)}</span>
+                    <span>Costo adicional: ${escapeHtml(c.concepto || 'Extra')}</span>
+                    <span style="color:#f472b6; font-weight:600;">${formatMoneda(extraConv)}</span>
                   </div>
                 `;
               }
@@ -8854,12 +9742,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         });
 
         if (vueltaGlobal || vueltaCostosAdicionales.length) {
+          const vConv = convertirMonto(Number(vueltaPrecioGlobal) || 0, (typeof vueltaMonedaGlobal !== 'undefined' && vueltaMonedaGlobal) || monedaActiva, monedaActiva);
           let vueltaHtml = `
             <div class="collapsible-card" style="border-left: 3px solid #f472b6; margin-top: 16px; padding: 14px 18px;">
               <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#f472b6; font-weight:700;">REGRESO / VUELTA</div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-                <div style="font-weight:600; color:#f8fafc; font-size:1rem;">${vueltaGlobal || 'Viaje de vuelta'}</div>
-                ${vueltaPrecioGlobal ? `<span style="color:#f472b6; font-weight:700; font-size:1rem;">${formatMoneda(vueltaPrecioGlobal * numPersonas)}</span>` : ''}
+                <div style="font-weight:600; color:#f8fafc; font-size:1rem;">${escapeHtml(vueltaGlobal || 'Viaje de vuelta')}</div>
+                ${vConv ? `<span style="color:#f472b6; font-weight:700; font-size:1rem;">${formatMoneda(vConv * numPersonas)}</span>` : ''}
               </div>
             </div>
           `;
@@ -8984,8 +9873,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const aportesPorPersona = {};
       listaViajerosTotal.forEach(v => { aportesPorPersona[v] = 0; });
       allExpenses.forEach(exp => {
-        if (exp.pagado && exp.pagadoPor && exp.pagadoPor !== 'Todos') {
-          aportesPorPersona[exp.pagadoPor] = (aportesPorPersona[exp.pagadoPor] || 0) + exp.costoTotal;
+        if (exp.pagadoPor && exp.pagadoPor !== 'Todos') {
+          const paidContribution = exp.montoPagado !== undefined ? exp.montoPagado : (exp.pagado ? exp.costoTotal : 0);
+          if (paidContribution > 0) {
+            aportesPorPersona[exp.pagadoPor] = (aportesPorPersona[exp.pagadoPor] || 0) + paidContribution;
+          }
         }
       });
 
@@ -9057,7 +9949,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                   <input type="number" step="any" min="0" value="${exp.costoUnitario}" 
                     style="width:75px; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:6px; padding:4px 6px; color:#f8fafc; font-weight:700;"
                     onchange="window.actualizarGastoResumen('${exp.tipo}', ${exp.destId !== null ? exp.destId : 'null'}, ${exp.subId !== null ? exp.subId : 'null'}, ${exp.itemIndex !== null ? exp.itemIndex : 'null'}, 'costo', this.value)">
-                  <span style="font-size:0.75rem; color:var(--gris);">${getSimboloMoneda()}${numPersonas > 1 && (exp.tipo === 'evento' || exp.tipo === 'tramo_transporte' || exp.tipo === 'tramo_alojamiento' || exp.tipo === 'vuelta') ? ` (x${numPersonas})` : ''}</span>
+                  <span style="font-size:0.75rem; color:var(--gris);">${getSimboloMoneda()}${numPersonas > 1 && exp.modoPrecio !== 'total' && (exp.tipo === 'evento' || exp.tipo === 'tramo_transporte' || exp.tipo === 'tramo_alojamiento' || exp.tipo === 'vuelta') ? ` (x${numPersonas})` : (exp.modoPrecio === 'total' ? ' (total)' : '')}</span>
                 </td>
                 <td>
                   <select style="background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:6px; padding:4px 8px; color:#f8fafc; font-size:0.82rem;"
@@ -9068,7 +9960,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <td>
                   <span class="badge-pago ${exp.pagado ? 'pagado' : 'pendiente'}" 
                     onclick="window.toggleEstadoPago('${exp.tipo}', ${exp.destId !== null ? exp.destId : 'null'}, ${exp.subId !== null ? exp.subId : 'null'}, ${exp.itemIndex !== null ? exp.itemIndex : 'null'})">
-                    ${exp.pagado ? 'Pagado' : 'Pendiente'}
+                    ${exp.esPagoParcial ? `Parcial (${formatMoneda(exp.montoPagado)})` : (exp.pagado ? 'Pagado' : 'Pendiente')}
                   </span>
                 </td>
               </tr>
@@ -9086,48 +9978,87 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (transpContEl) {
         let trHtml = '';
 
-        // Route overview nodes
-        trHtml += `
-          <div class="transporte-route-overview">
-            <div class="route-node"><span>${lugarSalida || 'Origen'}</span></div>
-        `;
-        destinos.forEach(dest => {
-          trHtml += `
-            <div class="route-arrow">➔</div>
-            <div class="route-node"><span>${dest.nombre}</span></div>
-          `;
+        // Route overview nodes (suprimir Origen duplicado cuando coincide con destinos[0])
+        const showInitialOriginNode = destinos.length === 0 || (lugarSalida && normCityName(lugarSalida) !== normCityName(destinos[0].nombre));
+        trHtml += `<div class="transporte-route-overview">`;
+        if (showInitialOriginNode) {
+          trHtml += `<div class="route-node"><span>${escapeHtml(lugarSalida || 'Origen')}</span></div>`;
+        }
+        destinos.forEach((dest, dIdx) => {
+          if (showInitialOriginNode || dIdx > 0) {
+            trHtml += `<div class="route-arrow">➔</div>`;
+          }
+          trHtml += `<div class="route-node"><span>${escapeHtml(dest.nombre)}</span></div>`;
         });
         if (vueltaGlobal) {
           trHtml += `
             <div class="route-arrow">➔</div>
-            <div class="route-node"><span>Vuelta: ${lugarSalida || 'Retorno'}</span></div>
+            <div class="route-node"><span>Vuelta: ${escapeHtml(lugarSalida || 'Retorno')}</span></div>
           `;
         }
         trHtml += `</div>`;
 
-        // Segment cards for destinations
+        // Segment cards for destinations (SIN mutar dest.tramos durante el render!)
         destinos.forEach((dest, destIdx) => {
-          const tramos = dest.tramos || [];
+          const tramos = Array.isArray(dest.tramos) ? dest.tramos : [];
+          const sharedBooking = resolveSharedBookingForDest(destIdx);
+          const origenNombre = destIdx === 0 ? (lugarSalida || dest.nombre || 'Origen') : (destinos[destIdx - 1]?.nombre || 'Origen');
+
           if (tramos.length === 0) {
-            // Default placeholder tramo if none explicitly added
-            tramos.push({ medio: 'Vuelo', horaSalida: '10:00', duracion: 120, retraso: 0, precio: 0, alojamiento: '', precioAlojamiento: 0 });
-            dest.tramos = tramos;
+            if (sharedBooking && sharedBooking.tramo) {
+              const sh = sharedBooking.tramo;
+              const stopTimeStr = getStopTimeBadgeText(dest);
+              trHtml += `
+                <div class="transporte-segment-card" style="border-left: 3px solid #38bdf8;">
+                  <div class="transporte-card-header">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                      <span class="transporte-mode-badge">${escapeHtml(sh.medio || 'Reserva compartida')}</span>
+                      <h3 style="margin:0; font-size:1.1rem; color:#f8fafc;">${escapeHtml(origenNombre)} ➔ ${escapeHtml(dest.nombre)}</h3>
+                    </div>
+                    ${stopTimeStr ? `<span class="plux-stop-badge">${escapeHtml(stopTimeStr)}</span>` : ''}
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:0.85rem; color:var(--gris); padding-top:6px;">
+                    <div>
+                      Cubierto por <strong style="color:#f8fafc;">${escapeHtml(sh.medio || 'Reserva compartida')}</strong>${sh.alojamiento ? ` · ${escapeHtml(sh.alojamiento)}` : ''}${dest.notaParada ? ` · <em>${escapeHtml(dest.notaParada)}</em>` : ''}
+                    </div>
+                    <span style="color:#34d399; font-weight:600;">Incluido en ${escapeHtml(sharedBooking.hostDest.nombre)}</span>
+                  </div>
+                </div>
+              `;
+            } else {
+              trHtml += `
+                <div class="transporte-segment-card" style="opacity:0.85;">
+                  <div class="transporte-card-header">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                      <span class="transporte-mode-badge">Sin asignar</span>
+                      <h3 style="margin:0; font-size:1.05rem; color:#f8fafc;">${escapeHtml(origenNombre)} ➔ ${escapeHtml(dest.nombre)}</h3>
+                    </div>
+                    <span style="font-size:0.8rem; color:var(--gris);">Sin transporte cargado en el editor</span>
+                  </div>
+                </div>
+              `;
+            }
+            return;
           }
 
           tramos.forEach((tramo, tramoIdx) => {
-            const horaSalida = tramo.horaSalida || '10:00';
+            const horaSalida = tramo.horaSalida || dest.horaSalida || '10:00';
             const duracion = parseInt(tramo.duracion, 10) || 120;
             const retraso = parseInt(tramo.retraso, 10) || 0;
             const horaLlegada = calcularHoraLlegada(horaSalida, duracion, retraso);
-            const origenNombre = destIdx === 0 ? (lugarSalida || 'Origen') : (destinos[destIdx - 1]?.nombre || 'Origen');
+            const segTitle = (destIdx === 0 && normCityName(origenNombre) === normCityName(dest.nombre))
+              ? dest.nombre
+              : `${origenNombre} ➔ ${dest.nombre}`;
             const searchUrl = `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(origenNombre)}+to+${encodeURIComponent(dest.nombre)}`;
+            const mult = tramo.modoPrecio === 'total' ? 1 : numPersonas;
+            const tramoPrecioConv = convertirMonto(Number(tramo.precio) || 0, tramo.moneda || monedaActivaGlobal, monedaActivaGlobal) * mult;
 
             trHtml += `
               <div class="transporte-segment-card">
                 <div class="transporte-card-header">
                   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <span class="transporte-mode-badge">${tramo.medio || 'Transporte'}</span>
-                    <h3 style="margin:0; font-size:1.15rem; color:#f8fafc;">${origenNombre} ➔ ${dest.nombre}</h3>
+                    <span class="transporte-mode-badge">${escapeHtml(tramo.medio || 'Transporte')}</span>
+                    <h3 style="margin:0; font-size:1.15rem; color:#f8fafc;">${escapeHtml(segTitle)}</h3>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px;">
                     <a href="${searchUrl}" target="_blank" rel="noopener" style="font-size:0.78rem; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); padding:5px 12px; border-radius:8px; text-decoration:none;">
@@ -9169,10 +10100,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:0.85rem; color:var(--gris); border-top:1px solid rgba(255,255,255,0.04); padding-top:10px;">
                   <div>
-                    ${tramo.alojamiento ? `<span>Alojamiento al llegar: <strong style="color:#f8fafc;">${tramo.alojamiento}</strong></span>` : '<span>Sin alojamiento asignado</span>'}
+                    ${tramo.alojamiento ? `<span>Alojamiento al llegar: <strong style="color:#f8fafc;">${escapeHtml(tramo.alojamiento)}</strong></span>` : '<span>Sin alojamiento asignado</span>'}
                   </div>
                   <div>
-                    <span>Precio tramo: <strong style="color:#38bdf8;">${(Number(tramo.precio) || 0) * numPersonas}€</strong></span>
+                    <span>Precio tramo: <strong style="color:#38bdf8;">${formatMoneda(tramoPrecioConv)}</strong></span>
                   </div>
                 </div>
               </div>
@@ -9189,13 +10120,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const ultimoDest = destinos.length > 0 ? destinos[destinos.length - 1].nombre : 'Destino';
           const origenVuelta = lugarSalida || 'Origen';
           const searchVueltaUrl = `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(ultimoDest)}+to+${encodeURIComponent(origenVuelta)}`;
+          const vueltaPrecioConv = convertirMonto(Number(vueltaPrecioGlobal) || 0, (typeof vueltaMonedaGlobal !== 'undefined' && vueltaMonedaGlobal) || monedaActivaGlobal, monedaActivaGlobal) * numPersonas;
 
           trHtml += `
             <div class="transporte-segment-card" style="border-left: 3px solid #f472b6;">
               <div class="transporte-card-header">
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                   <span class="transporte-mode-badge" style="background:rgba(244,114,182,0.12); color:#f472b6; border-color:rgba(244,114,182,0.3);">Regreso</span>
-                  <h3 style="margin:0; font-size:1.15rem; color:#f8fafc;">${ultimoDest} ➔ ${origenVuelta}</h3>
+                  <h3 style="margin:0; font-size:1.15rem; color:#f8fafc;">${escapeHtml(ultimoDest)} ➔ ${escapeHtml(origenVuelta)}</h3>
                 </div>
                 <div>
                   <a href="${searchVueltaUrl}" target="_blank" rel="noopener" style="font-size:0.78rem; font-weight:700; color:#f472b6; background:rgba(244,114,182,0.1); border:1px solid rgba(244,114,182,0.3); padding:5px 12px; border-radius:8px; text-decoration:none;">
@@ -9236,8 +10168,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               ` : ''}
 
               <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:0.85rem; color:var(--gris); border-top:1px solid rgba(255,255,255,0.04); padding-top:10px;">
-                <div><span>Detalle: <strong style="color:#f8fafc;">${vueltaGlobal || 'Viaje de retorno'}</strong></span></div>
-                <div><span>Precio vuelta: <strong style="color:#f472b6;">${(Number(vueltaPrecioGlobal) || 0) * numPersonas}€</strong></span></div>
+                <div><span>Detalle: <strong style="color:#f8fafc;">${escapeHtml(vueltaGlobal || 'Viaje de retorno')}</strong></span></div>
+                <div><span>Precio vuelta: <strong style="color:#f472b6;">${formatMoneda(vueltaPrecioConv)}</strong></span></div>
               </div>
             </div>
           `;
@@ -9268,9 +10200,26 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } else if (tipo === 'tramo_transporte') {
         const dest = destinos.find(d => d.id === destId);
         if (dest && dest.tramos && dest.tramos[itemIndex]) {
-          if (campo === 'costo') dest.tramos[itemIndex].precio = parseFloat(valor) || 0;
-          if (campo === 'pagadoPor') dest.tramos[itemIndex].pagadoPor = valor;
-          if (campo === 'pagado') dest.tramos[itemIndex].pagado = Boolean(valor);
+          const tramo = dest.tramos[itemIndex];
+          if (campo === 'costo') {
+            const monedaActiva = getMonedaActiva();
+            const valConverted = convertirMonto(parseFloat(valor) || 0, monedaActiva, tramo.moneda || monedaActiva);
+            tramo.precio = redondearMoneda(valConverted, tramo.moneda || monedaActiva);
+            const totalTramo = tramo.precio * (tramo.modoPrecio === 'total' ? 1 : (numPersonas || 1));
+            if (tramo.pagado) {
+              tramo.montoPagado = totalTramo;
+              tramo.saldoPendiente = 0;
+            } else if (tramo.montoPagado !== undefined || tramo.saldoPendiente !== undefined) {
+              tramo.saldoPendiente = Math.max(0, redondearMoneda(totalTramo - (Number(tramo.montoPagado) || 0), tramo.moneda || monedaActiva));
+            }
+          }
+          if (campo === 'pagadoPor') tramo.pagadoPor = valor;
+          if (campo === 'pagado') {
+            const totalTramo = (Number(tramo.precio) || 0) * (tramo.modoPrecio === 'total' ? 1 : (numPersonas || 1));
+            tramo.pagado = Boolean(valor);
+            tramo.montoPagado = tramo.pagado ? totalTramo : 0;
+            tramo.saldoPendiente = tramo.pagado ? 0 : totalTramo;
+          }
         }
       } else if (tipo === 'tramo_alojamiento') {
         const dest = destinos.find(d => d.id === destId);
@@ -9315,7 +10264,19 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } else if (tipo === 'tramo_transporte') {
         const dest = destinos.find(d => d.id === destId);
         if (dest && dest.tramos && dest.tramos[itemIndex]) {
-          dest.tramos[itemIndex].pagado = !dest.tramos[itemIndex].pagado;
+          const tramo = dest.tramos[itemIndex];
+          const mult = tramo.modoPrecio === 'total' ? 1 : (numPersonas || 1);
+          const totalTramo = (Number(tramo.precio) || 0) * mult;
+          const currentlyPaid = tramo.pagado === true || (Number(tramo.montoPagado) > 0 && (Number(tramo.saldoPendiente) || 0) <= 0.01);
+          const nextPaid = !currentlyPaid;
+          tramo.pagado = nextPaid;
+          if (nextPaid) {
+            tramo.montoPagado = totalTramo;
+            tramo.saldoPendiente = 0;
+          } else {
+            tramo.montoPagado = 0;
+            tramo.saldoPendiente = totalTramo;
+          }
         }
       } else if (tipo === 'tramo_alojamiento') {
         const dest = destinos.find(d => d.id === destId);
@@ -9354,15 +10315,27 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     // ================== PRESENTACI ==================
     function abrirPresentacion() {
       presentacionLista = [];
-      destinos.forEach(dest => {
-        dest.dias.forEach((dia, ida) => {
-          dia.eventos.forEach(ev => {
-            presentacionLista.push({ destino: dest.nombre, dia: ida+1, ...ev });
+      destinos.forEach((dest, destIdx) => {
+        const transitDays = (destIdx > 0 && Number(dest.diasTransitoPrevio) > 0) ? Math.floor(Number(dest.diasTransitoPrevio)) : 0;
+        if (transitDays > 0) {
+          presentacionLista.push({
+            destino: `Rumbo a ${dest.nombre}`,
+            dia: 0,
+            titulo: `${transitDays} ${transitDays === 1 ? 'día' : 'días'} · ${dest.transitoEtiqueta || 'En navegación'}`,
+            hora: '',
+            notas: `Tránsito hacia ${dest.nombre}`
+          });
+        }
+        const stopTimeStr = getStopTimeBadgeText(dest);
+        const destTitle = stopTimeStr ? `${dest.nombre} (${stopTimeStr})` : dest.nombre;
+        (dest.dias || []).forEach((dia, ida) => {
+          (dia.eventos || []).forEach(ev => {
+            presentacionLista.push({ destino: destTitle, dia: ida+1, ...ev });
           });
           if (dia.costosAdicionales) {
             dia.costosAdicionales.forEach(c => {
-              if (c.descripcion) {
-                presentacionLista.push({ destino: dest.nombre, dia: ida+1, titulo: c.descripcion, costo: c.precio, notas: "Costo adicional" });
+              if (c.descripcion || c.concepto) {
+                presentacionLista.push({ destino: destTitle, dia: ida+1, titulo: c.descripcion || c.concepto, costo: c.precio, notas: "Costo adicional" });
               }
             });
           }
@@ -9395,13 +10368,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const ev = presentacionLista[presentacionIndex];
       const cont = document.getElementById('presentacion-contenido');
       cont.innerHTML = `
-        <div class="presentacion-dia">${ev.destino} ${ev.dia>0 ? `- ${t('day_prefix')} ${ev.dia}` : ''}</div>
+        <div class="presentacion-dia">${escapeHtml(ev.destino)} ${ev.dia>0 ? `- ${t('day_prefix')} ${ev.dia}` : ''}</div>
         <div class="presentacion-evento">
-          <h3>${ev.titulo || t('untitled_event')}</h3>
-          <p><strong>Hora:</strong> ${ev.hora || '--:--'}</p>
+          <h3>${escapeHtml(ev.titulo || t('untitled_event'))}</h3>
+          <p><strong>Hora:</strong> ${escapeHtml(ev.hora || '--:--')}</p>
           ${ev.duracion ? `<p><strong>Duración:</strong> ${ev.duracion} min</p>` : ''}
-          ${ev.costo ? `<p><strong>Costo:</strong> ${ev.costo.toFixed(2)}€</p>` : ''}
-          ${ev.notas ? `<p>${ev.notas}</p>` : ''}
+          ${ev.costo ? `<p><strong>Costo:</strong> ${formatMoneda(Number(ev.costo) || 0)}</p>` : ''}
+          ${ev.notas ? `<p>${escapeHtml(ev.notas)}</p>` : ''}
         </div>
       `;
     }
@@ -9750,6 +10723,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     async function geocode(lugar) {
       if (!lugar) return null;
       const cleanLugar = lugar.trim();
+      if (typeof esDestinoNavegacion === 'function' && esDestinoNavegacion(cleanLugar)) {
+        return null;
+      }
 
       if (typeof isMalvinasQuery === 'function' && isMalvinasQuery(cleanLugar)) {
         return {
@@ -10045,26 +11021,61 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function getTripStartDate() {
       const val = document.getElementById('fechaInicio')?.value;
       if (!val) return null;
-      const d = new Date(val);
-      return isNaN(d.getTime()) ? null : d;
+      return parseLocalNoon(val);
     }
 
-    /** Días del viaje en orden: destino 1 día 1,2… destino 2 día 1,2… con fecha calendario si hay fechaInicio */
+    /** Días del viaje en orden: incluye días de tránsito previos (diaId: 'tr_<destId>_<idx>') + días de cada parada con aritmética a mediodía local */
     function buildTripDaySchedule() {
       const start = getTripStartDate();
       const schedule = [];
       let globalOffset = 0;
-      destinos.forEach(dest => {
+      destinos.forEach((dest, destIdx) => {
+        const transitDays = (destIdx > 0 && Number(dest.diasTransitoPrevio) > 0) ? Math.floor(Number(dest.diasTransitoPrevio)) : 0;
+        const transitLabel = (dest.transitoEtiqueta || '').trim() || 'En navegación';
+        for (let tIdx = 0; tIdx < transitDays; tIdx++) {
+          let dateStr = null;
+          let dateLabel = '';
+          if (start) {
+            const td = new Date(start.getFullYear(), start.getMonth(), start.getDate() + globalOffset, 12, 0, 0);
+            dateStr = formatDateISO(td);
+            dateLabel = td.toLocaleDateString(weatherLang(), { weekday: 'short', day: 'numeric', month: 'short' });
+          }
+          schedule.push({
+            isTransit: true,
+            transitLabel,
+            transitIndex: tIdx,
+            transitTotal: transitDays,
+            destId: dest.id,
+            destName: dest.nombre,
+            diaId: 'tr_' + dest.id + '_' + tIdx,
+            diaNum: tIdx + 1,
+            globalDayIndex: globalOffset,
+            dateStr,
+            dateLabel,
+            forecastIndex: globalOffset,
+            isDestOnly: false
+          });
+          globalOffset++;
+        }
+
         const dias = dest.dias || [];
         if (dias.length === 0) {
+          let dateStr = null;
+          let dateLabel = '';
+          if (start) {
+            const d0 = new Date(start.getFullYear(), start.getMonth(), start.getDate() + globalOffset, 12, 0, 0);
+            dateStr = formatDateISO(d0);
+            dateLabel = d0.toLocaleDateString(weatherLang(), { weekday: 'short', day: 'numeric', month: 'short' });
+          }
           schedule.push({
+            isTransit: false,
             destId: dest.id,
             destName: dest.nombre,
             diaId: null,
             diaNum: 0,
             globalDayIndex: globalOffset,
-            dateStr: null,
-            dateLabel: '',
+            dateStr,
+            dateLabel,
             forecastIndex: globalOffset,
             isDestOnly: true
           });
@@ -10074,12 +11085,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           let dateStr = null;
           let dateLabel = '';
           if (start) {
-            const d = new Date(start);
-            d.setDate(d.getDate() + globalOffset);
+            const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + globalOffset, 12, 0, 0);
             dateStr = formatDateISO(d);
             dateLabel = d.toLocaleDateString(weatherLang(), { weekday: 'short', day: 'numeric', month: 'short' });
           }
           schedule.push({
+            isTransit: false,
             destId: dest.id,
             destName: dest.nombre,
             diaId: dia.id,
@@ -10095,6 +11106,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       });
       return schedule;
     }
+    window.buildTripDaySchedule = buildTripDaySchedule;
 
     function getSeasonalWeatherEstimate(city, dateStr) {
       let month = new Date().getMonth();
@@ -10159,7 +11171,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       }
       feed.innerHTML = `<p class="clima-placeholder">${t('weather_loading')}</p>`;
       const schedule = buildTripDaySchedule();
-      const cities = [...new Set(destinos.map(d => d.nombre))];
+      const realDests = destinos.filter(d => d && !esDestinoNavegacion(d.nombre));
+      const cities = [...new Set(realDests.map(d => d.nombre))];
       const weatherByCity = {};
       await Promise.all(cities.map(async city => {
         try {
@@ -10170,10 +11183,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       }));
 
       let html = `<h3 class="clima-feed-title">${t('clima_feed_title')}</h3>`;
-      destinos.forEach(dest => {
+      realDests.forEach(dest => {
         const w = weatherByCity[dest.nombre];
-        const destDays = schedule.filter(s => s.destId === dest.id);
-        html += `<div class="clima-feed-dest"><h4>📍 ${dest.nombre}</h4>`;
+        const destDays = schedule.filter(s => !s.isTransit && s.destId === dest.id);
+        html += `<div class="clima-feed-dest"><h4>📍 ${escapeHtml(dest.nombre)}</h4>`;
         if (!destDays.length) {
           html += renderClimaDayRowHTML({ destName: dest.nombre, isDestOnly: true, diaNum: 0, dateLabel: '' }, null, w);
         } else {
@@ -10308,7 +11321,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     function refreshAllWeatherWidgets() {
       buildTripDaySchedule().forEach(s => {
-        if (s.isDestOnly || s.diaId == null) return;
+        if (s.isTransit || s.isDestOnly || s.diaId == null) return;
         const wid = `weather-day-${s.destId}-${s.diaId}`;
         if (document.getElementById(wid)) {
           loadWeatherForTripDay(wid, s.destName, s.dateStr, s.forecastIndex);
@@ -10321,11 +11334,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     }
 
     async function getWeatherContextForTrip() {
-      const schedule = buildTripDaySchedule().filter(s => !s.isDestOnly);
+      const schedule = buildTripDaySchedule().filter(s => !s.isTransit && !s.isDestOnly);
       if (!schedule.length && !destinos.length) return '';
       const parts = [];
       const seen = new Set();
       for (const s of schedule.slice(0, 12)) {
+        if (esDestinoNavegacion(s.destName)) continue;
         const key = `${s.destName}|${s.dateStr || s.forecastIndex}`;
         if (seen.has(key)) continue;
         seen.add(key);
@@ -10338,7 +11352,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         } catch (e) { /* skip */ }
       }
       if (!parts.length && destinos.length) {
-        for (const d of destinos.slice(0, 3)) {
+        for (const d of destinos.filter(x => x && !esDestinoNavegacion(x.nombre)).slice(0, 3)) {
           try {
             const w = await fetchWeatherData(d.nombre);
             parts.push(`${w.city}: ${w.temp}°C ${w.desc}`);
@@ -10473,6 +11487,76 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       resP.innerText = `Resultado: ${res.toFixed(2)} ${unit}`;
     }
 
+    async function collectMapRoutePoints() {
+      const puntos = [];
+      const salidaNombre = (document.getElementById('lugarSalida')?.value || (typeof lugarSalida !== 'undefined' ? lugarSalida : '') || '').trim();
+      const realDests = (Array.isArray(destinos) ? destinos : []).filter(d => d && d.nombre && !esDestinoNavegacion(d.nombre));
+      const firstDestName = realDests[0]?.nombre?.trim() || '';
+
+      if (salidaNombre && (!firstDestName || normCityName(salidaNombre) !== normCityName(firstDestName))) {
+        const salidaCoord = await geocode(salidaNombre);
+        if (salidaCoord) {
+          puntos.push({ ...salidaCoord, nombre: salidaNombre, dias: 0, eventos: 0, isOrigin: true, label: '0' });
+        }
+      }
+
+      let stepNum = 0;
+      for (let i = 0; i < realDests.length; i++) {
+        const dest = realDests[i];
+        const coord = await geocode(dest.nombre);
+        if (coord) {
+          stepNum++;
+          const diasDest = (dest.dias || []).length;
+          const eventosDest = (dest.dias || []).reduce((s, d) => s + (d.eventos || []).length, 0);
+          puntos.push({
+            ...coord,
+            nombre: dest.nombre,
+            dias: diasDest,
+            eventos: eventosDest,
+            horaLlegada: dest.horaLlegada || '',
+            horaSalida: dest.horaSalida || '',
+            horarioEscala: getStopTimeBadgeText(dest),
+            tipoParada: dest.tipoParada || 'estadia',
+            notaParada: dest.notaParada || '',
+            label: String(stepNum)
+          });
+        }
+      }
+
+      // Detectar circuito circular (vuelta al mismo puerto/ciudad de salida)
+      const hasVueltaTexto = Boolean((typeof vueltaGlobal !== 'undefined' && vueltaGlobal) || document.getElementById('vuelta')?.value);
+      let isCircular = false;
+      if (puntos.length >= 2) {
+        const p0 = puntos[0];
+        const pLast = puntos[puntos.length - 1];
+        const sameCityOrCoord = normCityName(p0.nombre) === normCityName(pLast.nombre) ||
+          (Math.abs(p0.lat - pLast.lat) < 0.15 && Math.abs(p0.lon - pLast.lon) < 0.15);
+        if (sameCityOrCoord) {
+          isCircular = true;
+          p0.isCircularOrigin = true;
+          p0.diasTotalCircular = p0.dias + pLast.dias;
+          p0.eventosTotalCircular = p0.eventos + pLast.eventos;
+          pLast.isCircularReturn = true;
+        } else if (hasVueltaTexto && salidaNombre && p0.isOrigin) {
+          isCircular = true;
+          p0.isCircularOrigin = true;
+          puntos.push({ ...p0, isReturnClone: true });
+        } else if (hasVueltaTexto && salidaNombre) {
+          const sCoord = await geocode(salidaNombre);
+          if (sCoord) {
+            const sameAsFirst = Math.abs(sCoord.lat - p0.lat) < 0.15 && Math.abs(sCoord.lon - p0.lon) < 0.15;
+            if (sameAsFirst) {
+              isCircular = true;
+              p0.isCircularOrigin = true;
+              puntos.push({ ...p0, isReturnClone: true });
+            }
+          }
+        }
+      }
+
+      return { puntos, isCircular };
+    }
+
     async function dibujarMapa(containerId='map') {
       if (!map) {
         map = L.map(containerId, {
@@ -10491,23 +11575,29 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         });
       }
 
-      const puntos = [];
-      for (let i = 0; i < destinos.length; i++) {
-        const dest = destinos[i];
-        const coord = await geocode(dest.nombre);
-        if (coord) {
-          puntos.push({ ...coord, nombre: dest.nombre, dias: dest.dias.length, eventos: dest.dias.reduce((s, d) => s + d.eventos.length, 0) });
-          const numIcon = L.divIcon({
-            className: 'map-num-icon',
-            html: `<div style="background:linear-gradient(135deg,#6366f1,#ec4899); color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; box-shadow:0 2px 10px rgba(0,0,0,0.5); border:2px solid white;">${i + 1}</div>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16]
-          });
-          L.marker([coord.lat, coord.lon], { icon: numIcon })
-            .bindPopup(`<div style="font-family:system-ui;"><strong>${dest.nombre}</strong><br><span style="color:#6366f1;">${dest.dias.length} días · ${dest.dias.reduce((s, d) => s + d.eventos.length, 0)} eventos</span></div>`)
-            .addTo(markersLayer);
+      const { puntos } = await collectMapRoutePoints();
+
+      puntos.forEach((p) => {
+        if (p.isReturnClone || p.isCircularReturn) {
+          return; // No duplicar marcador sobre el puerto/ciudad de salida y regreso
         }
-      }
+        const badgeLabel = p.isOrigin ? '<i class="fa-solid fa-flag-checkered" style="font-size:12px;"></i>' : p.label;
+        const bgStyle = p.isCircularOrigin
+          ? 'background:linear-gradient(135deg,#10b981,#0ea5e9);'
+          : 'background:linear-gradient(135deg,#6366f1,#ec4899);';
+        const numIcon = L.divIcon({
+          className: 'map-num-icon',
+          html: `<div style="${bgStyle} color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; box-shadow:0 2px 10px rgba(0,0,0,0.5); border:2px solid white;">${badgeLabel}</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+        const subtitle = p.isCircularOrigin
+          ? `Salida y Regreso · ${p.diasTotalCircular || p.dias} días · ${p.eventosTotalCircular || p.eventos} eventos`
+          : (p.isOrigin ? 'Punto de partida' : `${p.dias} ${p.dias === 1 ? 'día' : 'días'} · ${p.eventos} eventos${p.horarioEscala ? ' · ' + p.horarioEscala : ''}`);
+        L.marker([p.lat, p.lon], { icon: numIcon })
+          .bindPopup(`<div style="font-family:system-ui;"><strong>${escapeHtml(p.nombre)}</strong><br><span style="color:#6366f1;">${escapeHtml(subtitle)}</span></div>`)
+          .addTo(markersLayer);
+      });
 
       if (puntos.length >= 2) {
         const latlngs = puntos.map(p => [p.lat, p.lon]);
@@ -10576,73 +11666,134 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       document.getElementById('calendario-grid').innerHTML = html;
     }
     function tieneEventosEnFecha(fechaStr) {
-      const fechaBase = document.getElementById('fechaInicio').value;
-      if (!fechaBase) return false;
-      let offsetDias = 0;
-      for (let dest of destinos) {
-        for (let [ida, dia] of (dest.dias || []).entries()) {
-          const fechaEvento = new Date(fechaBase);
-          fechaEvento.setDate(fechaEvento.getDate() + offsetDias + ida);
-          const fechaEventoStr = fechaEvento.toISOString().split('T')[0];
-          if (fechaEventoStr === fechaStr && dia.eventos && dia.eventos.length > 0) return true;
-        }
-        offsetDias += (dest.dias || []).length;
+      if (!getTripStartDate()) return false;
+      const schedule = buildTripDaySchedule();
+      for (const slot of schedule) {
+        if (slot.dateStr !== fechaStr) continue;
+        if (slot.isTransit) return true;
+        if (slot.isDestOnly) continue;
+        const dest = destinos.find(d => d.id === slot.destId);
+        const dia = dest?.dias?.find(x => x.id === slot.diaId);
+        if (dia && Array.isArray(dia.eventos) && dia.eventos.length > 0) return true;
       }
       return false;
     }
     function seleccionarDia(fechaStr) {
       diaSeleccionado = fechaStr;
-      const fechaBase = document.getElementById('fechaInicio').value;
-      if (!fechaBase) { document.getElementById('eventos-dia-lista').innerHTML = '<p>No hay fecha de inicio</p>'; return; }
-      let eventos = [];
-      let offsetDias = 0;
-      destinos.forEach(dest => {
-        (dest.dias || []).forEach((dia, ida) => {
-          const fechaEvento = new Date(fechaBase);
-          fechaEvento.setDate(fechaEvento.getDate() + offsetDias + ida);
-          if (fechaEvento.toISOString().split('T')[0] === fechaStr) {
-            (dia.eventos || []).forEach(ev => eventos.push({ destino: dest.nombre, dia: ida+1, ...ev }));
-          }
-        });
-        offsetDias += (dest.dias || []).length;
-      });
+      const listEl = document.getElementById('eventos-dia-lista');
+      if (!listEl) return;
+      if (!getTripStartDate()) { listEl.innerHTML = '<p>No hay fecha de inicio</p>'; return; }
+      const schedule = buildTripDaySchedule().filter(s => s.dateStr === fechaStr);
       let html = '';
-      if (eventos.length===0) html = '<p>No hay eventos</p>';
-      else eventos.forEach(ev => {
-        html += `<div class="evento-item"><strong>${escapeHtml(ev.titulo||'Evento')}</strong> <small style="color:var(--gris);">(${escapeHtml(ev.destino || '')})</small> - ${escapeHtml(ev.hora||'--:--')}</div>`;
+      let foundCount = 0;
+
+      schedule.forEach(slot => {
+        if (slot.isTransit) {
+          foundCount++;
+          html += `<div class="evento-item" style="border-left:3px solid #38bdf8;"><strong>${escapeHtml(slot.transitLabel || 'En navegación')}</strong> <small style="color:var(--gris);">hacia ${escapeHtml(slot.destName || '')} (Día ${slot.transitIndex + 1}/${slot.transitTotal})</small></div>`;
+          return;
+        }
+        if (slot.isDestOnly) return;
+        const dest = destinos.find(d => d.id === slot.destId);
+        const dia = dest?.dias?.find(x => x.id === slot.diaId);
+        if (!dest || !dia) return;
+        (dia.eventos || []).forEach(ev => {
+          foundCount++;
+          html += `<div class="evento-item"><strong>${escapeHtml(ev.titulo || 'Evento')}</strong> <small style="color:var(--gris);">(${escapeHtml(dest.nombre || '')})</small> - ${escapeHtml(ev.hora || '--:--')}</div>`;
+        });
       });
-      document.getElementById('eventos-dia-lista').innerHTML = html;
+
+      if (foundCount === 0) html = '<p>No hay eventos</p>';
+      listEl.innerHTML = html;
     }
 
     // ================== GOOGLE CALENDAR ==================
-    // ================== CALENDAR (.ICS) ==================
-    function exportarGoogleCalendar() {
-      const fechaBase = document.getElementById('fechaInicio').value;
-      if (!fechaBase) { showToast('Selecciona fecha de inicio', 'error'); return; }
-      
-      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//PluxTravel Planner//ES\n";
-      let offsetDias = 0;
-      
-      destinos.forEach(dest => {
-        (dest.dias || []).forEach((dia, dIda) => {
-          const fechaEv = new Date(fechaBase);
-          fechaEv.setDate(fechaEv.getDate() + offsetDias + dIda);
-          const fStr = fechaEv.toISOString().split('T')[0].replace(/-/g, '');
-          
-          (dia.eventos || []).forEach(ev => {
-            const h = ev.hora || "09:00";
-            const hStr = h.replace(/:/g, '');
-            icsContent += "BEGIN:VEVENT\n";
-            icsContent += `SUMMARY:${ev.titulo || 'Evento Plux'} (${dest.nombre})\n`;
-            icsContent += `DTSTART:${fStr}T${hStr}00\n`;
-            icsContent += `DESCRIPTION:${ev.notas || ''}\n`;
-            icsContent += "END:VEVENT\n";
-          });
+    // ================== CALENDAR (.ICS) RFC 5545 ==================
+    function escapeIcsText(str) {
+      return String(str || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/\r?\n/g, '\\n')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,');
+    }
+
+    function formatIcsUtcStamp(dateObj = new Date()) {
+      const p = n => String(n).padStart(2, '0');
+      return `${dateObj.getUTCFullYear()}${p(dateObj.getUTCMonth()+1)}${p(dateObj.getUTCDate())}T${p(dateObj.getUTCHours())}${p(dateObj.getUTCMinutes())}${p(dateObj.getUTCSeconds())}Z`;
+    }
+
+    function formatIcsLocalRange(dateStr, rawHora, duracionMin) {
+      const m = String(rawHora || '09:00').trim().match(/^(\d{1,2}):(\d{2})/);
+      const hh = m ? Math.min(23, Math.max(0, parseInt(m[1], 10))) : 9;
+      const mm = m ? Math.min(59, Math.max(0, parseInt(m[2], 10))) : 0;
+      const dur = Math.max(15, parseInt(duracionMin, 10) || 60);
+      const base = parseLocalNoon(dateStr);
+      const startDt = new Date(base.getFullYear(), base.getMonth(), base.getDate(), hh, mm, 0);
+      const endDt = new Date(startDt.getTime() + dur * 60000);
+      const p = n => String(n).padStart(2, '0');
+      const startYmd = dateStr.replace(/-/g, '');
+      const endYmd = formatDateISO(endDt).replace(/-/g, '');
+      return {
+        dtStart: `${startYmd}T${p(hh)}${p(mm)}00`,
+        dtEnd: `${endYmd}T${p(endDt.getHours())}${p(endDt.getMinutes())}00`
+      };
+    }
+
+    function buildTripIcsContent() {
+      const start = getTripStartDate();
+      if (!start) return null;
+      const schedule = buildTripDaySchedule();
+      const safeTripId = String(getCurrentTripId() || 'trip').replace(/[^a-zA-Z0-9_-]/g, '');
+      const dtStamp = formatIcsUtcStamp(new Date());
+      const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//PluxTravel Planner//ES',
+        'CALSCALE:GREGORIAN'
+      ];
+      let evCounter = 0;
+
+      schedule.forEach(slot => {
+        if (!slot.dateStr) return;
+        if (slot.isTransit) {
+          const { dtStart, dtEnd } = formatIcsLocalRange(slot.dateStr, '09:00', 60);
+          lines.push('BEGIN:VEVENT');
+          lines.push(`UID:plux-${safeTripId}-${evCounter++}@plux.app`);
+          lines.push(`DTSTAMP:${dtStamp}`);
+          lines.push(`DTSTART:${dtStart}`);
+          lines.push(`DTEND:${dtEnd}`);
+          lines.push(`SUMMARY:${escapeIcsText(`${slot.transitLabel || 'En navegación'} → ${slot.destName || ''}`)}`);
+          lines.push(`DESCRIPTION:${escapeIcsText(`Día en tránsito ${slot.transitIndex + 1} de ${slot.transitTotal} rumbo a ${slot.destName || ''}`)}`);
+          lines.push('END:VEVENT');
+          return;
+        }
+        if (slot.isDestOnly) return;
+        const dest = destinos.find(d => d.id === slot.destId);
+        const dia = dest?.dias?.find(x => x.id === slot.diaId);
+        if (!dest || !dia) return;
+
+        (dia.eventos || []).forEach(ev => {
+          const { dtStart, dtEnd } = formatIcsLocalRange(slot.dateStr, ev.hora || '09:00', ev.duracion || 60);
+          lines.push('BEGIN:VEVENT');
+          lines.push(`UID:plux-${safeTripId}-${evCounter++}@plux.app`);
+          lines.push(`DTSTAMP:${dtStamp}`);
+          lines.push(`DTSTART:${dtStart}`);
+          lines.push(`DTEND:${dtEnd}`);
+          lines.push(`SUMMARY:${escapeIcsText(`${ev.titulo || 'Evento Plux'} (${dest.nombre})`)}`);
+          lines.push(`DESCRIPTION:${escapeIcsText(ev.notas || '')}`);
+          lines.push('END:VEVENT');
         });
-        offsetDias += (dest.dias || []).length;
       });
+
+      lines.push('END:VCALENDAR');
+      return lines.join('\r\n') + '\r\n';
+    }
+    window.buildTripIcsContent = buildTripIcsContent;
+
+    function exportarGoogleCalendar() {
+      const icsContent = buildTripIcsContent();
+      if (!icsContent) { showToast('Selecciona fecha de inicio', 'error'); return ''; }
       
-      icsContent += "END:VCALENDAR";
       const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
       const link = document.createElement('a');
       link.href = window.URL.createObjectURL(blob);
@@ -10653,37 +11804,45 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         format: 'calendar',
         destinations_count: destinos.length
       });
+      return icsContent;
     }
 
     // ================== COMPARTIR ==================
     function compartirViaje() {
       let texto = t('shared_text');
       texto += `Personas: ${numPersonas}\n\n`;
-      destinos.forEach(d => {
-        texto += ` ${d.nombre}\n`;
-        d.tramos.forEach((t,i) => {
-          texto += `   Tramo ${i+1}: ${t.origen||''}   ${t.destino||''} ${t.medio||''} ${t.precio?`(${t.precio})`:''}\n`;
-          if (t.escalas && t.escalas.length) texto += `     Escalas: ${t.escalas.join(', ')}\n`;
+      destinos.forEach((d, dIdx) => {
+        const transitDays = (dIdx > 0 && Number(d.diasTransitoPrevio) > 0) ? Math.floor(Number(d.diasTransitoPrevio)) : 0;
+        if (transitDays > 0) {
+          texto += `  ↷ ${transitDays} ${transitDays === 1 ? 'día' : 'días'} · ${d.transitoEtiqueta || 'En navegación'}\n`;
+        }
+        const stopTimeStr = getStopTimeBadgeText(d);
+        texto += ` ${d.nombre}${stopTimeStr ? ` (${stopTimeStr})` : ''}${d.notaParada ? ` · ${d.notaParada}` : ''}\n`;
+        (d.tramos || []).forEach((tr, i) => {
+          const mult = tr.modoPrecio === 'total' ? 1 : numPersonas;
+          const totalTr = (Number(tr.precio) || 0) * mult;
+          texto += `   Tramo ${i+1}: ${tr.origen||''}   ${tr.destino||''} ${tr.medio||''} ${totalTr ? `(${formatMoneda(totalTr, tr.moneda || getMonedaActiva())})` : ''}\n`;
+          if (tr.escalas && tr.escalas.length) texto += `     Escalas: ${tr.escalas.join(', ')}\n`;
         });
-        d.dias.forEach(dia => {
-          texto += `  ${t('day_prefix')} ${dia.id+1}:\n`;
-          dia.eventos.forEach(ev => {
+        (d.dias || []).forEach((dia, diaIdx) => {
+          texto += `  ${t('day_prefix')} ${diaIdx+1}:\n`;
+          (dia.eventos || []).forEach(ev => {
             texto += `    ⬢ ${ev.hora||'--:--'} - ${ev.titulo||t('untitled_event')}`;
-            if (ev.costo) texto += ` (${ev.costo*numPersonas})`;
+            if (ev.costo) texto += ` (${formatMoneda((Number(ev.costo)||0)*numPersonas, ev.moneda || getMonedaActiva())})`;
             if (ev.duracion) texto += ` [${ev.duracion} min]`;
             texto += '\n';
           });
           if (dia.costosAdicionales) {
             dia.costosAdicionales.forEach(c => {
-              if (c.descripcion) texto += `    ⬢ ${c.descripcion}: ${c.precio}`;
+              if (c.descripcion || c.concepto) texto += `    ⬢ ${c.descripcion || c.concepto}: ${c.precio}\n`;
             });
           }
         });
       });
       if (vueltaGlobal) {
-        texto += `\n Vuelta: ${vueltaGlobal} ${vueltaPrecioGlobal?`(${vueltaPrecioGlobal*numPersonas})`:''}\n`;
+        texto += `\n Vuelta: ${vueltaGlobal} ${vueltaPrecioGlobal?`(${formatMoneda(vueltaPrecioGlobal*numPersonas)})`:''}\n`;
         vueltaCostosAdicionales.forEach(c => {
-          if (c.descripcion) texto += `   ⬢ ${c.descripcion}: ${c.precio}`;
+          if (c.descripcion || c.concepto) texto += `   ⬢ ${c.descripcion || c.concepto}: ${c.precio}\n`;
         });
       }
       navigator.clipboard?.writeText(texto).then(()=>showToast('Enlace copiado', 'success')).catch(()=>fallbackCompartir(texto));
@@ -10776,9 +11935,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 // [MODULARIZADO] Movido a js/plux-templates.js
     function guardarViaje() {
       if (!checkEditPermission()) return;
-      let nombre = document.getElementById('nombreViaje').value.trim();
+      const nombreEl = document.getElementById('nombreViaje');
+      let nombre = nombreEl ? nombreEl.value.trim() : '';
       if (!nombre) {
-        if (destinos && destinos.length > 0) {
+        if (window.currentTripTitle) {
+          nombre = window.currentTripTitle;
+        } else if (destinos && destinos.length > 0) {
           const nombres = destinos.map(d => d.nombre).slice(0, 3).join(' & ');
           nombre = `Viaje a ${nombres}`;
         } else {
@@ -10787,6 +11949,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       }
 
       const tripId = getCurrentTripId();
+      const fechaInicioNorm = normalizeDateTimeLocal(document.getElementById('fechaInicio')?.value || '');
       const viaje = {
         nombre,
         fecha: new Date().toISOString(),
@@ -10796,21 +11959,27 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         listaViajeros: [...listaViajeros],
         tripId: tripId,
         syncCode: syncCode || null,
-        fechaInicio: document.getElementById('fechaInicio').value,
+        fechaInicio: fechaInicioNorm,
         destinos,
         vueltaGlobal,
         vueltaPrecioGlobal,
         vueltaCostosAdicionales,
-        embajadorSlug: window.currentTripEmbajadorSlug || null
+        moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
+        cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : [],
+        embajadorSlug: window.currentTripEmbajadorSlug || null,
+        isTemplateClone: Boolean(window.currentTripEmbajadorSlug || window.currentTripTemplateOrigin),
+        templateOrigin: window.currentTripTemplateOrigin || null
       };
 
       const trips = getStoredTrips();
-      if (loadedTripIndex !== null && trips[loadedTripIndex]) {
-        trips[loadedTripIndex].nombre = nombre;
-        trips[loadedTripIndex].tripId = tripId;
-        trips[loadedTripIndex].syncCode = syncCode || null;
-        trips[loadedTripIndex].listaViajeros = [...listaViajeros];
-        trips[loadedTripIndex].nombresPersonas = nombresPersonasGlobal;
+      let targetIdx = trips.findIndex(t => t && ((tripId && t.tripId === tripId) || (syncCode && t.syncCode === syncCode)));
+      if (targetIdx === -1 && loadedTripIndex !== null && trips[loadedTripIndex]) {
+        targetIdx = loadedTripIndex;
+      }
+      const isNewTrip = targetIdx === -1;
+      if (!isNewTrip) {
+        trips[targetIdx] = { ...trips[targetIdx], ...viaje };
+        loadedTripIndex = targetIdx;
         saveTrips(trips);
         showToast('Viaje actualizado correctamente', 'success');
       } else {
@@ -10819,13 +11988,15 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         saveTrips(trips);
         showToast('Viaje guardado correctamente', 'success');
       }
+      window.currentTripTitle = nombre;
+      setActiveSession({ mode: 'trip', explicit: false, tripId: tripId });
       trackEvent('create_itinerary', {
         action: 'save_itinerary',
         trip_name: nombre,
-        is_new: loadedTripIndex === null
+        is_new: isNewTrip
       });
       renderTripLists();
-      document.getElementById('nombreViaje').value = '';
+      if (nombreEl) nombreEl.value = '';
     }
 
     function cargarViaje(index, autoStart = true) {
@@ -10841,24 +12012,37 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       lugarSalida = viaje.lugarSalida || '';
       numPersonas = viaje.numPersonas || 1;
-      nombresPersonasGlobal = viaje.nombresPersonasGlobal || '';
+      nombresPersonasGlobal = viaje.nombresPersonas ?? viaje.nombresPersonasGlobal ?? '';
       if (viaje.listaViajeros && Array.isArray(viaje.listaViajeros)) {
         listaViajeros = [...viaje.listaViajeros];
-      } else if (viaje.nombresPersonas) {
-        listaViajeros = viaje.nombresPersonas.split(',').map(s=>s.trim()).filter(Boolean);
+      } else if (nombresPersonasGlobal) {
+        listaViajeros = nombresPersonasGlobal.split(',').map(s=>s.trim()).filter(Boolean);
       } else {
         listaViajeros = [];
       }
+      if (!nombresPersonasGlobal && listaViajeros.length > 0) {
+        nombresPersonasGlobal = listaViajeros.join(', ');
+      }
+      const fNom = document.getElementById('nombreViaje');
+      if (fNom) fNom.value = '';
+      window.currentTripTitle = viaje.nombre || '';
       if (document.getElementById('lugarSalida')) document.getElementById('lugarSalida').value = lugarSalida;
       if (document.getElementById('numPersonas')) document.getElementById('numPersonas').value = numPersonas;
+      const npInput = document.getElementById('nombresPersonas');
+      if (npInput) npInput.value = nombresPersonasGlobal;
       if (typeof window.renderTravelerChips === 'function') window.renderTravelerChips();
-      if (document.getElementById('fechaInicio')) document.getElementById('fechaInicio').value = viaje.fechaInicio || '';
-      destinos = viaje.destinos || [];
+      if (document.getElementById('fechaInicio')) {
+        document.getElementById('fechaInicio').value = normalizeDateTimeLocal(viaje.fechaInicio || '');
+      }
+      destinos = normalizarDestinosLegacy(viaje.destinos || []);
       vueltaGlobal = viaje.vueltaGlobal || '';
       vueltaPrecioGlobal = viaje.vueltaPrecioGlobal || 0;
       vueltaCostosAdicionales = viaje.vueltaCostosAdicionales || [];
+      if (document.getElementById('vuelta')) document.getElementById('vuelta').value = vueltaGlobal;
+      if (document.getElementById('vueltaPrecio')) document.getElementById('vueltaPrecio').value = vueltaPrecioGlobal;
       loadedTripIndex = index;
       window.currentTripEmbajadorSlug = viaje.embajadorSlug || null;
+      window.currentTripTemplateOrigin = viaje.templateOrigin || (viaje.isTemplateClone ? viaje.nombre : null) || null;
       if (typeof window.renderActiveTripEmbajadorSeal === 'function') {
         window.renderActiveTripEmbajadorSeal();
       }
@@ -10879,6 +12063,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         window.currentTripRole = 'owner';
         if (typeof ocultarAdvertenciaSoloLectura === 'function') ocultarAdvertenciaSoloLectura();
       }
+
+      setActiveSession({ mode: 'trip', explicit: false, tripId: currentTripId });
 
       if (typeof pluxChatUnsubscribe === 'function' && pluxChatUnsubscribe) {
         pluxChatUnsubscribe();
@@ -10924,11 +12110,24 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     function eliminarViaje(index) {
       const trips = getStoredTrips();
       const delTrip = trips[index];
-      if (delTrip && delTrip.tripId && typeof pluxSocialChats !== 'undefined' && pluxSocialChats) {
+      if (!delTrip) return;
+      addDeletedTripIds([delTrip.tripId, delTrip.syncCode]);
+      if (delTrip.tripId && typeof pluxSocialChats !== 'undefined' && pluxSocialChats) {
         delete pluxSocialChats['trip_' + delTrip.tripId];
         localStorage.setItem('PluxSocialChats_V2', JSON.stringify(pluxSocialChats));
       }
+      const deletedWasActive = (loadedTripIndex === index) ||
+        (delTrip.tripId && currentTripId && delTrip.tripId === currentTripId) ||
+        (delTrip.syncCode && syncCode && delTrip.syncCode === syncCode);
+
       trips.splice(index, 1);
+
+      if (deletedWasActive) {
+        empezarDeCeroSinPrompt({ explicit: true, skipDefaultOrigin: true });
+      } else if (loadedTripIndex !== null && index < loadedTripIndex) {
+        loadedTripIndex--;
+      }
+
       saveTrips(trips);
       renderTripLists();
     }
@@ -10940,16 +12139,22 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     function exportarViajeActual() {
       const viaje = {
-        nombre: 'viaje_exportado',
+        nombre: document.getElementById('nombreViaje')?.value?.trim() || window.currentTripTitle || 'viaje_exportado',
         fecha: new Date().toISOString(),
         lugarSalida,
         numPersonas,
-        fechaInicio: document.getElementById('fechaInicio').value,
+        nombresPersonas: nombresPersonasGlobal || '',
+        listaViajeros: Array.isArray(listaViajeros) ? [...listaViajeros] : [],
+        fechaInicio: normalizeDateTimeLocal(document.getElementById('fechaInicio')?.value || ''),
         destinos,
         vueltaGlobal,
         vueltaPrecioGlobal,
         vueltaCostosAdicionales,
-        embajadorSlug: window.currentTripEmbajadorSlug || null
+        moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
+        cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : [],
+        embajadorSlug: window.currentTripEmbajadorSlug || null,
+        isTemplateClone: Boolean(window.currentTripEmbajadorSlug || window.currentTripTemplateOrigin),
+        templateOrigin: window.currentTripTemplateOrigin || null
       };
       const blob = new Blob([JSON.stringify(viaje, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -10971,18 +12176,46 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       reader.onload = function(ev) {
         try {
           const viaje = JSON.parse(ev.target.result);
+          loadedTripIndex = null;
+          syncCode = null;
+          try { localStorage.removeItem('PluxSyncCode'); } catch (_) {}
+          currentTripId = 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
+          window.isExternalSharedTrip = false;
+          window.currentTripEmbajadorSlug = viaje.embajadorSlug || null;
+          window.currentTripTemplateOrigin = viaje.templateOrigin || null;
+          window.currentTripTitle = viaje.nombre || '';
+
           lugarSalida = viaje.lugarSalida || '';
           numPersonas = viaje.numPersonas || 1;
+          if (Array.isArray(viaje.listaViajeros)) {
+            listaViajeros = [...viaje.listaViajeros];
+          } else if (viaje.nombresPersonas) {
+            listaViajeros = viaje.nombresPersonas.split(',').map(s => s.trim()).filter(Boolean);
+          } else {
+            listaViajeros = [];
+          }
+          nombresPersonasGlobal = listaViajeros.join(', ');
+          if (document.getElementById('nombresPersonas')) document.getElementById('nombresPersonas').value = nombresPersonasGlobal;
+          if (typeof window.renderTravelerChips === 'function') window.renderTravelerChips();
+
           document.getElementById('lugarSalida').value = lugarSalida;
           document.getElementById('numPersonas').value = numPersonas;
-          document.getElementById('fechaInicio').value = viaje.fechaInicio || '';
-          destinos = viaje.destinos || [];
+          document.getElementById('fechaInicio').value = normalizeDateTimeLocal(viaje.fechaInicio || '');
+          destinos = normalizarDestinosLegacy(viaje.destinos || []);
           vueltaGlobal = viaje.vueltaGlobal || '';
           vueltaPrecioGlobal = viaje.vueltaPrecioGlobal || 0;
           vueltaCostosAdicionales = viaje.vueltaCostosAdicionales || [];
+          if (document.getElementById('vuelta')) document.getElementById('vuelta').value = vueltaGlobal;
+          if (document.getElementById('vueltaPrecio')) document.getElementById('vueltaPrecio').value = vueltaPrecioGlobal;
+          if (viaje.moneda && typeof setMonedaActiva === 'function') setMonedaActiva(viaje.moneda, false, false);
+          if (Array.isArray(viaje.cartelitos)) {
+            cartelitosNotasViaje = [...viaje.cartelitos];
+            if (typeof renderCartelitos === 'function') renderCartelitos();
+          }
 
           renderDestinos();
           renderVueltaCostos();
+          autoSave();
           cerrarModalViajes();
           showToast('Viaje importado correctamente', 'success');
         } catch(err) {
@@ -11962,6 +13195,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 currentTripId = code;
                 localStorage.setItem('PluxSyncCode', code);
                 importarViajeString(docSnap.data().data, false);
+                setActiveSession({ mode: 'trip', explicit: false, tripId: code });
                 const data = docSnap.data();
                 const colabs = data.colaboradores || [];
                 const roles = data.colaboradores_roles || {};
@@ -12355,77 +13589,49 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     function empezarDeCero() {
       if (destinos.length > 0 && !confirm(t('confirm_scratch'))) return;
-      
-      lugarSalida = '';
-      numPersonas = 1;
-      destinos = [];
-      vueltaGlobal = '';
-      vueltaPrecioGlobal = 0;
-      vueltaCostosAdicionales = [];
-      syncCode = null;
-      localStorage.removeItem('PluxSyncCode');
-      loadedTripIndex = null;
-      window.currentTripRole = 'editor';
-      window.currentTripEmbajadorSlug = null;
-      if (typeof window.renderActiveTripEmbajadorSeal === 'function') window.renderActiveTripEmbajadorSeal();
-      
-      // Reset lista de viajeros y UI
-      listaViajeros = [];
-      nombresPersonasGlobal = '';
-      const fNp = document.getElementById('nombresPersonas'); if (fNp) fNp.value = '';
-      const fChip = document.getElementById('traveler-chip-input'); if (fChip) fChip.value = '';
-      if (typeof window.renderTravelerChips === 'function') window.renderTravelerChips();
-
-      // Reset ID de viaje e inicializar chat nuevo y limpio
-      currentTripId = 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
-      if (typeof pluxChatUnsubscribe === 'function' && pluxChatUnsubscribe) {
-        pluxChatUnsubscribe();
-        pluxChatUnsubscribe = null;
-      }
-      if (typeof initNewTripChatChannel === 'function') {
-        initNewTripChatChannel();
-      }
-
-      // Reset inputs
-      const fSal = document.getElementById('lugarSalida'); if (fSal) fSal.value = '';
-      const fPer = document.getElementById('numPersonas'); if (fPer) fPer.value = 1;
-      const fFecha = document.getElementById('fechaInicio'); if (fFecha) fFecha.value = '';
-      const fVue = document.getElementById('vuelta'); if (fVue) fVue.value = '';
-      const fVueP = document.getElementById('vueltaPrecio'); if (fVueP) fVueP.value = 0;
-      
-      // Clear old destinations display
-      const destContainer = document.getElementById('destinos');
-      if (destContainer) destContainer.innerHTML = '';
-      
-      ocultarAdvertenciaSoloLectura();
-      cerrarResumen();
+      empezarDeCeroSinPrompt({ skipDefaultOrigin: true, explicit: true });
       empezar();
       showToast(t('btn_start_scratch'), 'success');
     }
 
-    function empezarDeCeroSinPrompt() {
-      // Usar residencia de Info Personal por defecto si existe
+    function empezarDeCeroSinPrompt(opts = {}) {
+      if (typeof unsubSnapshot === 'function' && unsubSnapshot) {
+        try { unsubSnapshot(); } catch (_) {}
+        unsubSnapshot = null;
+      }
+
+      // Usar residencia de Info Personal por defecto si existe (salvo que skipDefaultOrigin o lugarSalida explícito)
       let defaultOrigin = '';
-      try {
-        const raw = localStorage.getItem('Plux_PersonalInfo');
-        if (raw) {
-          const info = JSON.parse(raw);
-          if (info && info.location && info.location.trim()) defaultOrigin = info.location.trim();
-        }
-      } catch(e) {}
+      if (opts && typeof opts.lugarSalida === 'string') {
+        defaultOrigin = opts.lugarSalida.trim();
+      } else if (!opts || !opts.skipDefaultOrigin) {
+        try {
+          const raw = localStorage.getItem('Plux_PersonalInfo');
+          if (raw) {
+            const info = JSON.parse(raw);
+            if (info && info.location && info.location.trim()) defaultOrigin = info.location.trim();
+          }
+        } catch(e) {}
+      }
 
       lugarSalida = defaultOrigin;
-      numPersonas = 1;
+      numPersonas = (opts && parseInt(opts.numPersonas, 10)) || 1;
       destinos = [];
       vueltaGlobal = '';
       vueltaPrecioGlobal = 0;
       vueltaCostosAdicionales = [];
       syncCode = null;
-      localStorage.removeItem('PluxSyncCode');
+      try { localStorage.removeItem('PluxSyncCode'); } catch (_) {}
       loadedTripIndex = null;
       window.currentTripRole = 'editor';
+      window.isExternalSharedTrip = false;
       window.currentTripEmbajadorSlug = null;
+      window.currentTripTemplateOrigin = null;
+      window.currentTripTitle = (opts && opts.nombre) ? String(opts.nombre).trim() : '';
       if (typeof window.renderActiveTripEmbajadorSeal === 'function') window.renderActiveTripEmbajadorSeal();
+
+      if (collapsedEditorDestinos && typeof collapsedEditorDestinos.clear === 'function') collapsedEditorDestinos.clear();
+      if (openTransportDestIds && typeof openTransportDestIds.clear === 'function') openTransportDestIds.clear();
       
       // Reset lista de viajeros y UI
       listaViajeros = [];
@@ -12444,10 +13650,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         initNewTripChatChannel();
       }
 
+      const normFecha = (opts && opts.fechaInicio) ? normalizeDateTimeLocal(opts.fechaInicio) : '';
+
       // Reset inputs
+      const fNom = document.getElementById('nombreViaje'); if (fNom) fNom.value = window.currentTripTitle;
       const fSal = document.getElementById('lugarSalida'); if (fSal) fSal.value = defaultOrigin;
-      const fPer = document.getElementById('numPersonas'); if (fPer) fPer.value = 1;
-      const fFecha = document.getElementById('fechaInicio'); if (fFecha) fFecha.value = '';
+      const fPer = document.getElementById('numPersonas'); if (fPer) fPer.value = numPersonas;
+      const fFecha = document.getElementById('fechaInicio'); if (fFecha) fFecha.value = normFecha;
       const fVue = document.getElementById('vuelta'); if (fVue) fVue.value = '';
       const fVueP = document.getElementById('vueltaPrecio'); if (fVueP) fVueP.value = 0;
       
@@ -12458,8 +13667,22 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       cartelitosNotasViaje = [];
       if (typeof renderCartelitos === 'function') renderCartelitos();
 
-      ocultarAdvertenciaSoloLectura();
-      cerrarResumen();
+      setActiveSession({
+        mode: 'scratch',
+        explicit: opts && opts.explicit === false ? false : true,
+        tripId: currentTripId,
+        draft: {
+          nombre: window.currentTripTitle,
+          lugarSalida: defaultOrigin,
+          numPersonas: numPersonas,
+          fechaInicio: normFecha,
+          moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
+          listaViajeros: []
+        }
+      });
+
+      if (typeof ocultarAdvertenciaSoloLectura === 'function') ocultarAdvertenciaSoloLectura();
+      if (typeof cerrarResumen === 'function') cerrarResumen();
     }
 
     function onStartBtnClick() {
@@ -12484,15 +13707,25 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     function decisionViajeNuevo() {
       cerrarModalDecisionViaje();
-      empezarDeCeroSinPrompt();
+      empezarDeCeroSinPrompt({ explicit: true });
       empezar();
     }
 
     function decisionViajeContinuar() {
       cerrarModalDecisionViaje();
+      const session = getActiveSession();
+      if (session && session.mode === 'scratch') {
+        loadFromStorage();
+        empezar();
+        return;
+      }
       const trips = getStoredTrips();
       if (trips.length > 0) {
-        cargarViaje(trips.length - 1);
+        let targetIdx = -1;
+        if (session && session.mode === 'trip' && session.tripId) {
+          targetIdx = trips.findIndex(t => t && (t.tripId === session.tripId || (t.syncCode && t.syncCode === session.tripId)));
+        }
+        cargarViaje(targetIdx !== -1 ? targetIdx : trips.length - 1);
       }
       empezar();
     }
@@ -12728,6 +13961,73 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
   window.mobileActionInvitar = mobileActionInvitar;
   window.mobileActionEmpezarDeCero = mobileActionEmpezarDeCero;
   window.mobileActionImportar = mobileActionImportar;
+
+  // ================== CONTRATO PÚBLICO window.pluxTripApi (§4.2) ==================
+  window.pluxTripApi = {
+    hasActiveTripContent: () => Array.isArray(destinos) && destinos.length > 0,
+    getActiveTripInfo: () => {
+      const trips = getStoredTrips();
+      const savedTrip = (loadedTripIndex !== null && trips[loadedTripIndex]) ? trips[loadedTripIndex] : null;
+      const nombre = document.getElementById('nombreViaje')?.value?.trim()
+        || window.currentTripTitle
+        || savedTrip?.nombre
+        || (Array.isArray(destinos) && destinos.length > 0
+          ? `Viaje a ${destinos.map(d => d.nombre).filter(Boolean).slice(0, 3).join(' & ')}`
+          : 'Viaje actual');
+      const embajadorSlug = window.currentTripEmbajadorSlug || savedTrip?.embajadorSlug || null;
+      const isTemplate = Boolean(embajadorSlug || window.currentTripTemplateOrigin || savedTrip?.isTemplateClone || savedTrip?.templateOrigin);
+      return {
+        nombre,
+        tripId: getCurrentTripId(),
+        isTemplate,
+        embajadorSlug,
+        destinosCount: Array.isArray(destinos) ? destinos.length : 0
+      };
+    },
+    startCleanTripForImport: ({ nombre = '', lugarSalida: salida = '', fechaInicioISO = '', horaInicio = '09:00' } = {}) => {
+      const normFecha = fechaInicioISO ? normalizeDateTimeLocal(fechaInicioISO, horaInicio || '09:00') : '';
+      empezarDeCeroSinPrompt({
+        nombre: nombre || '',
+        lugarSalida: salida || '',
+        fechaInicio: normFecha,
+        skipDefaultOrigin: Boolean(salida),
+        explicit: false
+      });
+      if (nombre) {
+        const fNom = document.getElementById('nombreViaje');
+        if (fNom) fNom.value = nombre;
+        window.currentTripTitle = nombre;
+      }
+      if (salida) {
+        lugarSalida = salida;
+        const fSal = document.getElementById('lugarSalida');
+        if (fSal) fSal.value = salida;
+      }
+      if (fechaInicioISO) {
+        window.pluxTripApi.setTripStartDateISO(fechaInicioISO, horaInicio || '09:00');
+      }
+    },
+    setTripStartDateISO: (isoYYYYMMDD, horaHHMM = '09:00') => {
+      const normalized = normalizeDateTimeLocal(isoYYYYMMDD, horaHHMM || '09:00');
+      const el = document.getElementById('fechaInicio');
+      if (el && normalized) {
+        el.value = normalized;
+      }
+      return normalized;
+    },
+    commitImportedTripChanges: () => {
+      destinos = normalizarDestinosLegacy(destinos);
+      if (typeof renderDestinos === 'function') renderDestinos();
+      if (typeof renderVueltaCostos === 'function') renderVueltaCostos();
+      if (typeof autoSave === 'function') autoSave();
+    },
+    collapseDestino: (destId) => {
+      if (destId != null && collapsedEditorDestinos && typeof collapsedEditorDestinos.add === 'function') {
+        collapsedEditorDestinos.add(destId);
+      }
+    },
+    scoreTouristPlace: (page, destNombre = '') => scoreTouristPlace(page, destNombre)
+  };
   function explorarInspo(ciudad) {
     if (!ciudad) return;
     const ciudadLower = ciudad.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();

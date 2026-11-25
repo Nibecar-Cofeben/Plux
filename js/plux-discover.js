@@ -2509,6 +2509,8 @@ const PLUX_RESERVAS_WALLET_KEY = 'Plux_Reservas_Wallet_V1';
 let pluxDetectedReservas = [];
 let pluxWalletFilter = 'todas';
 let pluxWalletSearch = '';
+let pluxWalletScope = 'trip'; // 'trip' | 'all'
+let pluxWalletScopeUserPicked = false;
 let pluxReservaInputMode = 'smart'; // 'smart' | 'express' | 'wallet'
 let pluxExpressTipo = 'vuelo';
 let pluxPreselectedDestino = '';
@@ -2644,9 +2646,211 @@ function computeBookingSyncKey(res) {
   return `${tipo}:fp_${fnv1aHex(sig || 'empty')}`;
 }
 
+function esTituloBasuraOCR(titulo) {
+  const t = String(titulo || '').trim();
+  if (!t || t.length < 3) return true;
+  // Solo símbolos o caracteres OCR repetidos
+  if (/^[|\-•.\s_="'~#*]+$/.test(t)) return true;
+  if (/[|]{2,}|[|]\s*[|]/.test(t)) return true;
+
+  const nonSpace = t.replace(/\s+/g, '');
+  if (nonSpace.length < 3) return true;
+  const symbols = nonSpace.replace(/[a-zA-Z0-9ÁÉÍÓÚáéíóúÜüÑñ]/g, '');
+  if ((symbols.length / nonSpace.length) > 0.25) return true;
+
+  // Debe contener al menos una palabra alfabética de al menos 3 letras
+  if (!/[a-zA-ZÁÉÍÓÚáéíóúÜüÑñ]{3,}/.test(t)) return true;
+
+  // Si todas las palabras son de 1-2 letras (ej: "La EJ IT", "- CNE my")
+  const tokens = t.split(/\s+/).filter(Boolean);
+  const wordsWith3Plus = tokens.filter(tok => /[a-zA-ZÁÉÍÓÚáéíóúÜüÑñ]{3,}/.test(tok.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÜüÑñ]/g, '')));
+  if (wordsWith3Plus.length === 0) return true;
+
+  return false;
+}
+
+function esTextoReservaValido(rawBlock) {
+  const text = String(rawBlock || '').trim();
+  if (text.length < 15) return false;
+
+  const nonSpace = text.replace(/\s+/g, '');
+  if (nonSpace.length < 10) return false;
+
+  // Rechazar bloques donde >35% de los caracteres no-espacio son símbolos/puntuación (ruido OCR)
+  const symbolChars = nonSpace.replace(/[a-zA-Z0-9ÁÉÍÓÚáéíóúÜüÑñ]/g, '');
+  if ((symbolChars.length / nonSpace.length) > 0.35) return false;
+
+  const hasPrice = /(?:USD|EUR|ARS|US\$|€)\s*\d|\d[\d.,]*\s*(?:USD|EUR|ARS|€)/i.test(text);
+  const hasExplicitCode = /(?:pnr|n[uú]mero\s+de\s+reserva|c[oó]digo(?:\s+de\s+reserva|\s+de\s+referencia)?|confirmaci[oó]n|localizador|booking\s*ref|ticket(?:\s*nr|\s*no|\s*n°)?)\s*[:#.]\s*[A-Z0-9-]{4,16}/i.test(text);
+  const hasCruiseKeyword = /(?:msc\s+cruceros|costa\s+cruceros|royal\s+caribbean|norwegian\s+cruise|nave\s*:|cabina\s*:|puerto\s+de\s+embarque|en\s+navegaci[oó]n)/i.test(text);
+  const hasTransportHotelKeyword = /(?:vuelo\b|flight|aerol[ií]nea|hotel\b|booking\.com|airbnb|hostel|check-?in|tren\b|frecciarossa|renfe|ave\b|ouigo|alquiler\s+de\s+auto)/i.test(text);
+  const hasActivityKeyword = /(?:tour\b|excursi[oó]n|visita\s+guiada|entrada\b|museo\b|civitatis|getyourguide|viator)/i.test(text);
+
+  // Si no tiene código explícito, ni precio, ni palabra clave de reserva real, descartar
+  if (!hasExplicitCode && !hasPrice && !hasCruiseKeyword && !hasTransportHotelKeyword && !hasActivityKeyword) {
+    return false;
+  }
+
+  // Descartar textos de disclaimer legal, teléfonos sueltos de contacto o notas de desembarque que no son reservas
+  if (/^(?:cuando\s+planees\s+tu\s+regreso|de\s+acuerdo\s+a\s+las\s+necesidades\s+operativas|tel\s*:\s*\d|reservas@)/i.test(text) && !hasExplicitCode) {
+    return false;
+  }
+
+  return true;
+}
+
+function esVoucherCorruptoOCR(v) {
+  if (!v || typeof v !== 'object') return true;
+  if (Array.isArray(v.etapas) && v.etapas.length > 0) return false;
+  const codigo = String(v.codigo || '').trim().toUpperCase();
+  const costo = Number(v.costo) || 0;
+  const titulo = String(v.titulo || '').trim();
+  const tipo = String(v.tipo || 'actividad').toLowerCase();
+  const hasRealCode = isRealBookingCode(codigo);
+
+  // Si el título es basura OCR, SIEMPRE es corrupto (tenga fecha o no)
+  if (esTituloBasuraOCR(titulo)) return true;
+
+  // Si es actividad sin código real ni costo
+  if (tipo === 'actividad' && !hasRealCode && costo === 0) {
+    if (!/(?:tour|excursi[oó]n|entrada|visita|museo|ticket|pase|ferry)/i.test(titulo)) {
+      return true;
+    }
+  }
+
+  // Si no tiene código real ni costo ni fechas ni título de al menos 4 letras
+  if (!hasRealCode && costo === 0 && !/[a-zA-ZÁÉÍÓÚáéíóúÑñ]{4,}/.test(titulo)) {
+    return true;
+  }
+
+  return false;
+}
+
+function esReservaDetectadaValida(r) {
+  if (!r || typeof r !== 'object') return false;
+  if (Array.isArray(r.etapas) && r.etapas.length > 0) return true;
+  if (esVoucherCorruptoOCR(r)) return false;
+
+  const tipo = String(r.tipo || 'actividad').toLowerCase();
+  const codigo = String(r.codigo || '').trim().toUpperCase();
+  const hasRealCode = isRealBookingCode(codigo);
+  const hasCosto = (Number(r.costo) || 0) > 0;
+  const titulo = String(r.titulo || '').trim();
+
+  if (esTituloBasuraOCR(titulo)) return false;
+
+  // Para actividad: si no tiene código real ni costo, solo pasa si el título es explícitamente un tour/entrada
+  if (tipo === 'actividad' && !hasRealCode && !hasCosto) {
+    if (!/(?:tour|excursi[oó]n|entrada|visita|museo|ticket|pase|ferry)/i.test(titulo)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function deduplicarReservasPorSyncKey(lista) {
+  const map = new Map();
+  for (const r of (Array.isArray(lista) ? lista : [])) {
+    if (!r || !esReservaDetectadaValida(r)) continue;
+    const key = r._syncKey || computeBookingSyncKey(r);
+    r._syncKey = key;
+    const prev = map.get(key);
+    if (!prev) {
+      map.set(key, r);
+    } else {
+      const score = (x) =>
+        (Array.isArray(x.etapas) ? x.etapas.length * 10 : 0) +
+        (Number(x.costo) > 0 ? 5 : 0) +
+        (isRealBookingCode(x.codigo) ? 5 : 0) +
+        (x.fechaISO ? 2 : 0);
+      if (score(r) >= score(prev)) map.set(key, r);
+    }
+  }
+  return Array.from(map.values());
+}
+
+function obtenerInfoViajeActivoImportador() {
+  const apiInfo = (window.pluxTripApi && typeof window.pluxTripApi.getActiveTripInfo === 'function')
+    ? window.pluxTripApi.getActiveTripInfo()
+    : null;
+  const nombreRaw = String(apiInfo?.nombre || document.getElementById('nombreViaje')?.value || '').trim();
+  const tripId = apiInfo?.tripId || null;
+  const destinosCount = apiInfo
+    ? Number(apiInfo.destinosCount || 0)
+    : ((typeof destinos !== 'undefined' && Array.isArray(destinos)) ? destinos.length : 0);
+  const hasNamedTrip = Boolean(nombreRaw && nombreRaw !== 'Viaje actual');
+  const hasTrip = Boolean(tripId || destinosCount > 0 || hasNamedTrip);
+  const displayLabel = hasNamedTrip
+    ? nombreRaw
+    : (destinosCount > 0 ? (nombreRaw || 'Viaje actual') : 'Viaje nuevo sin guardar');
+  return {
+    nombre: displayLabel,
+    tripId,
+    destinosCount,
+    isTemplate: Boolean(apiInfo?.isTemplate),
+    hasTrip
+  };
+}
+
+function purgarVouchersCorruptosDelViajeActivo() {
+  try {
+    if (window.pluxTripApi?.getTripVouchers && window.pluxTripApi?.removeTripVoucher) {
+      const list = window.pluxTripApi.getTripVouchers();
+      if (Array.isArray(list) && list.length > 0) {
+        const junkIds = list.filter(v => esVoucherCorruptoOCR(v)).map(v => v.id).filter(Boolean);
+        junkIds.forEach(id => window.pluxTripApi.removeTripVoucher(id));
+      }
+    }
+
+    // Purgar eventos corruptos dentro de los destinos del viaje activo
+    if (typeof destinos !== 'undefined' && Array.isArray(destinos)) {
+      let changed = false;
+      destinos.forEach(d => {
+        if (Array.isArray(d?.dias)) {
+          d.dias.forEach(dia => {
+            if (Array.isArray(dia?.eventos)) {
+              const origLen = dia.eventos.length;
+              dia.eventos = dia.eventos.filter(ev => !esTituloBasuraOCR(ev.titulo) && (!ev.codigoReserva || ev.codigoReserva !== 'CONF-OK' || !esTituloBasuraOCR(ev.titulo)));
+              if (dia.eventos.length !== origLen) changed = true;
+            }
+          });
+        }
+      });
+
+      // Purgar destino fantasma "Roma" si el viaje tiene paradas de crucero/itinerario y Roma no tiene paradas de crucero ni eventos válidos
+      const hasCruise = destinos.some(d => d.tipoParada === 'embarque' || d.tipoParada === 'escala' || d.cubreParadas || (Number(d.diasTransitoPrevio) > 0));
+      if (hasCruise) {
+        const romaIdx = destinos.findIndex(d =>
+          d && /roma/i.test(d.nombre || '') && (!d.tipoParada || d.tipoParada === 'estadia') &&
+          (!Array.isArray(d.dias) || d.dias.length === 0 || d.dias.every(dia => !Array.isArray(dia.eventos) || dia.eventos.length === 0 || dia.eventos.every(ev => esTituloBasuraOCR(ev.titulo))))
+        );
+        if (romaIdx >= 0) {
+          console.log('🧹 [Plux Importer] Purgando destino fantasma Roma creado por OCR:', destinos[romaIdx].nombre);
+          destinos.splice(romaIdx, 1);
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        if (typeof renderDestinos === 'function') renderDestinos();
+        if (typeof autoSave === 'function') autoSave();
+      }
+    }
+  } catch (e) {
+    console.warn('Error purgando vouchers corruptos del viaje:', e);
+  }
+}
+
 function obtenerWalletReservas() {
   try {
-    return JSON.parse(localStorage.getItem(PLUX_RESERVAS_WALLET_KEY) || '[]');
+    const raw = JSON.parse(localStorage.getItem(PLUX_RESERVAS_WALLET_KEY) || '[]');
+    if (!Array.isArray(raw)) return [];
+    const cleaned = raw.filter(v => !esVoucherCorruptoOCR(v));
+    if (cleaned.length !== raw.length) {
+      guardarWalletReservasStorage(cleaned);
+    }
+    return cleaned;
   } catch (e) {
     return [];
   }
@@ -2864,7 +3068,15 @@ function renderizarImportadorReservas() {
   const container = document.getElementById('descubrir-reservas-content');
   if (!container) return;
 
+  purgarVouchersCorruptosDelViajeActivo();
   const wallet = obtenerWalletReservas();
+  const activeTrip = obtenerInfoViajeActivoImportador();
+  const tripVouchers = (window.pluxTripApi?.getTripVouchers ? window.pluxTripApi.getTripVouchers() : []).filter(v => !esVoucherCorruptoOCR(v));
+  const mergedKeys = new Set();
+  tripVouchers.forEach(v => mergedKeys.add(v._syncKey || v.id || (v.codigo + '|' + v.titulo)));
+  wallet.forEach(w => mergedKeys.add(w._syncKey || w.id || (w.codigo + '|' + w.titulo)));
+  const totalWalletCount = mergedKeys.size;
+
   const hasActiveDestinos = (typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0);
   const fechaInicioActual = document.getElementById('fechaInicio')?.value || '';
   const viajeros = obtenerViajerosParaReserva();
@@ -2877,6 +3089,12 @@ function renderizarImportadorReservas() {
         <p>Importa PDFs de pasajes, capturas de pantalla, calendarios (.ics) o mails de confirmación. Se sincroniza con Transporte, Alojamiento, Días por fecha y Presupuesto sin duplicar gastos.</p>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <span class="importador-active-trip-pill ${activeTrip.hasTrip ? 'has-trip' : 'new-trip'}" title="Destino de sincronización actual">
+          <i class="fa-solid fa-suitcase-rolling"></i>
+          ${activeTrip.hasTrip
+            ? `Viaje activo: <strong>${escapeHtml(activeTrip.nombre)}</strong>`
+            : `<strong>Viaje nuevo sin guardar</strong>`}
+        </span>
         ${hasActiveDestinos ? `
           <button class="btn-card-secondary" onclick="window.irAlItinerarioDesdeReservas()" style="padding:9px 15px;">
             <i class="fa-solid fa-calendar-check" style="color:var(--verde);"></i> Ver itinerario (${destinos.length} ${destinos.length === 1 ? 'destino' : 'destinos'})
@@ -2895,14 +3113,21 @@ function renderizarImportadorReservas() {
           <i class="fa-solid fa-bolt"></i> Carga Rápida Manual (Express)
         </button>
         <button type="button" class="subswitch-btn ${pluxReservaInputMode === 'wallet' ? 'active' : ''}" onclick="window.cambiarModoImportadorReserva('wallet')">
-          <i class="fa-solid fa-wallet"></i> Billetera de Vouchers (${wallet.length})
+          <i class="fa-solid fa-wallet"></i> Billetera de Vouchers (<span id="walletTabCountBadge">${totalWalletCount}</span>)
         </button>
       </div>
 
-      <div style="display:flex; align-items:center; gap:10px; font-size:0.78rem; color:var(--gris); background:rgba(15,23,42,0.7); padding:7px 13px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
-        <span><i class="fa-regular fa-calendar" style="color:#38bdf8;"></i> Inicio del viaje: <strong style="color:#fff;">${fechaInicioActual || 'Se autodetecta al importar'}</strong></span>
-        <span>·</span>
-        <span><i class="fa-solid fa-users" style="color:var(--verde);"></i> <strong style="color:#fff;">${numP} ${numP === 1 ? 'viajero' : 'viajeros'}</strong></span>
+      <div class="importador-active-trip-bar" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <span style="display:inline-flex; align-items:center; gap:8px;">
+          <i class="fa-solid fa-link" style="color:#38bdf8;"></i>
+          Sincronizando con: <strong style="color:#fff; font-size:0.86rem;">${escapeHtml(activeTrip.nombre || 'Viaje actual')}</strong>
+          <span style="font-size:0.75rem; color:#94a3b8;">(${activeTrip.destinosCount} ${activeTrip.destinosCount === 1 ? 'destino' : 'destinos'})</span>
+        </span>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span><i class="fa-regular fa-calendar" style="color:#38bdf8;"></i> Inicio: <strong style="color:#fff;">${fechaInicioActual || 'Se autodetecta al importar'}</strong></span>
+          <span>·</span>
+          <span><i class="fa-solid fa-users" style="color:var(--verde);"></i> <strong style="color:#fff;">${numP} ${numP === 1 ? 'viajero' : 'viajeros'}</strong></span>
+        </div>
       </div>
     </div>
 
@@ -2976,13 +3201,21 @@ function renderizarImportadorReservas() {
       <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
         <div>
           <h4 style="margin:0; font-size:1.15rem; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:8px;">
-            <i class="fa-solid fa-wallet" style="color:var(--verde);"></i> Billetera Offline de Boarding Passes & Vouchers (<span id="walletCountBadge">${wallet.length}</span>)
+            <i class="fa-solid fa-wallet" style="color:var(--verde);"></i> Billetera Offline de Boarding Passes & Vouchers (<span id="walletCountBadge">${totalWalletCount}</span>)
           </h4>
           <p style="margin:2px 0 0 0; font-size:0.82rem; color:var(--gris);">Ordenados cronológicamente con código PNR, PIN de hotel y vista de pase completo para mostrar en recepción o embarque.</p>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <div id="walletScopeSwitch" class="wallet-scope-switch" role="tablist" aria-label="Alcance de vouchers">
+            <button type="button" id="walletScopeBtnTrip" class="wallet-scope-btn ${pluxWalletScope === 'trip' ? 'active' : ''}" onclick="window.cambiarScopeWalletReservas('trip')">
+              <i class="fa-solid fa-suitcase-rolling"></i> De este viaje (<span id="walletTripCount">0</span>)
+            </button>
+            <button type="button" id="walletScopeBtnAll" class="wallet-scope-btn ${pluxWalletScope === 'all' ? 'active' : ''}" onclick="window.cambiarScopeWalletReservas('all')">
+              <i class="fa-solid fa-layer-group"></i> Todos los viajes (<span id="walletAllCount">${totalWalletCount}</span>)
+            </button>
+          </div>
           <input type="text" id="walletSearchInput" value="${escapeHtml(pluxWalletSearch)}" placeholder="Buscar por PNR, ciudad, hotel..." oninput="window.buscarEnWalletReservas(this.value)" style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.14); border-radius:10px; padding:7px 12px; color:#fff; font-size:0.8rem; outline:none; min-width:190px;">
-          ${wallet.length > 0 ? `
+          ${totalWalletCount > 0 ? `
             <button type="button" class="btn-card-secondary" style="padding:7px 12px; font-size:0.78rem;" onclick="window.sincronizarTodaLaWalletAlViaje()">
               <i class="fa-solid fa-arrows-rotate" style="color:var(--verde);"></i> Volcar todas al viaje actual
             </button>
@@ -2991,7 +3224,7 @@ function renderizarImportadorReservas() {
       </div>
 
       <div class="descubrir-chips-filter" id="walletCategoryChips" style="margin-top:12px;">
-        <button type="button" class="filter-chip ${pluxWalletFilter === 'todas' ? 'active' : ''}" onclick="window.filtrarWalletReservas('todas', this)">Todas (${wallet.length})</button>
+        <button type="button" id="walletChipTodas" class="filter-chip ${pluxWalletFilter === 'todas' ? 'active' : ''}" onclick="window.filtrarWalletReservas('todas', this)">Todas (${totalWalletCount})</button>
         <button type="button" class="filter-chip ${pluxWalletFilter === 'crucero' ? 'active' : ''}" onclick="window.filtrarWalletReservas('crucero', this)"><i class="fa-solid fa-ship"></i> Cruceros</button>
         <button type="button" class="filter-chip ${pluxWalletFilter === 'vuelo' ? 'active' : ''}" onclick="window.filtrarWalletReservas('vuelo', this)"><i class="fa-solid fa-plane"></i> Vuelos</button>
         <button type="button" class="filter-chip ${pluxWalletFilter === 'hotel' ? 'active' : ''}" onclick="window.filtrarWalletReservas('hotel', this)"><i class="fa-solid fa-hotel"></i> Hoteles / Airbnb</button>
@@ -3011,7 +3244,7 @@ function renderizarImportadorReservas() {
 }
 
 function renderizarFormularioExpressReservaHTML(viajeros) {
-  const defaultCity = pluxPreselectedDestino || (typeof destinos !== 'undefined' && destinos[0]?.nombre) || 'Roma';
+  const defaultCity = pluxPreselectedDestino || (typeof destinos !== 'undefined' && destinos[0]?.nombre) || '';
   const rawTripStart = document.getElementById('fechaInicio')?.value || '';
   const defaultDate = rawTripStart ? rawTripStart.slice(0, 10) : new Date().toISOString().slice(0, 10);
 
@@ -3129,7 +3362,7 @@ function cambiarTipoExpressReserva(tipo) {
 
 function guardarReservaExpressDirecto() {
   const tituloRaw = document.getElementById('expInputTitulo')?.value?.trim();
-  const ciudad = document.getElementById('expInputCiudad')?.value?.trim() || 'Roma';
+  const ciudad = document.getElementById('expInputCiudad')?.value?.trim() || '';
   const origen = document.getElementById('expInputOrigen')?.value?.trim() || '';
   const codigo = document.getElementById('expInputCodigo')?.value?.trim().toUpperCase() || 'CONF-OK';
   const fechaISO = document.getElementById('expInputFecha')?.value || '';
@@ -3211,6 +3444,36 @@ function limpiarImportadorReserva() {
   pluxOcrStatusText = '';
   actualizarBannerArchivosReserva();
   renderizarTarjetasReservasDetectadas();
+}
+
+function resetImportadorEstadoPorCambioViaje() {
+  pluxDetectedReservas = [];
+  pluxPendingImages = [];
+  pluxPendingImagePreview = null;
+  pluxLastVisionBatches = [];
+  pluxLastDocReservas = [];
+  pluxOcrInProgress = false;
+  pluxOcrStatusText = '';
+  pluxPreselectedDestino = '';
+  pluxWalletScope = 'trip';
+  pluxWalletScopeUserPicked = false;
+
+  const input = document.getElementById('reservaRawInput');
+  if (input) input.value = '';
+
+  const modal = document.getElementById('modal-descubrir');
+  const isModalOpen = Boolean(
+    modal &&
+    modal.style.display !== 'none' &&
+    (typeof window.getComputedStyle !== 'function' || window.getComputedStyle(modal).display !== 'none')
+  );
+  if (isModalOpen && document.getElementById('descubrir-reservas-content')) {
+    renderizarImportadorReservas();
+  } else {
+    actualizarBannerArchivosReserva();
+    renderizarTarjetasReservasDetectadas();
+    renderizarWalletReservas();
+  }
 }
 
 function quitarImagenReservaAdjunta() {
@@ -3399,7 +3662,7 @@ REGLAS CRÍTICAS:
     system: 'Eres un motor Vision-AI de extracción estructurada para comprobantes, itinerarios y capturas de viaje. Responde SOLO con JSON válido sin bloques markdown.',
     messages: [{ role: 'user', content: contentParts }],
     temperature: 0.1,
-    max_tokens: 3000
+    max_tokens: 4000
   };
 
   subImgs.forEach(img => { img.status = 'processing'; img.errorMsg = ''; });
@@ -3409,6 +3672,26 @@ REGLAS CRÍTICAS:
     const resp = await fetchVisionWorkerConTimeout(payload, 35000);
     if (!resp.ok) {
       const status = resp.status;
+      let errBody = null;
+      try { errBody = await resp.json(); } catch (_) {}
+      // Si el worker ya reportó que todos los proveedores Vision fallaron, no reintentar en cascada 16 veces
+      if (status === 502 && errBody && errBody.visionFailed) {
+        if (subImgs.length > 1 && retryAttempt === 0) {
+          // Intentar solo 1 imagen de muestra por si el proveedor rechazó multi-imagen; si falla, marcar todas
+          const firstRes = await analizarSubloteVisionDirecto([subImgs[0]], 1);
+          if (firstRes.length > 0) {
+            const rest = [];
+            for (let k = 1; k < subImgs.length; k++) {
+              const r = await analizarSubloteVisionDirecto([subImgs[k]], 1);
+              rest.push(...r);
+            }
+            return [...firstRes, ...rest];
+          }
+        }
+        subImgs.forEach(img => { img.status = 'failed'; img.errorMsg = 'Vision IA no disponible (502)'; });
+        actualizarBannerArchivosReserva();
+        return [];
+      }
       // Split immediately on payload too large / bad request with >1 image
       if ((status === 400 || status === 413) && subImgs.length > 1) {
         const mid = Math.ceil(subImgs.length / 2);
@@ -3416,17 +3699,10 @@ REGLAS CRÍTICAS:
         const right = await analizarSubloteVisionDirecto(subImgs.slice(mid), 0);
         return [...left, ...right];
       }
-      // Retry once with 1.2s backoff on 429/502/5xx
+      // Retry once with 1.2s backoff on 429/5xx
       if ((status === 429 || status >= 500) && retryAttempt < 1) {
         await new Promise(r => setTimeout(r, 1200));
         return analizarSubloteVisionDirecto(subImgs, retryAttempt + 1);
-      }
-      // If still failing with >1 image, split to salvage individually
-      if (subImgs.length > 1) {
-        const mid = Math.ceil(subImgs.length / 2);
-        const left = await analizarSubloteVisionDirecto(subImgs.slice(0, mid), 0);
-        const right = await analizarSubloteVisionDirecto(subImgs.slice(mid), 0);
-        return [...left, ...right];
       }
       subImgs.forEach(img => { img.status = 'failed'; img.errorMsg = `HTTP ${status}`; });
       actualizarBannerArchivosReserva();
@@ -3454,11 +3730,12 @@ REGLAS CRÍTICAS:
       return [batchObj];
     }
 
-    // Fallback: valid plain-text transcript (never reject just for containing "error")
+    // Fallback: valid plain-text transcript (handles concise responses like "DÍA 1 - 23 ENE\nBuenos Aires\nSalida 18:00")
     if (replyTxt && !esRechazoVisualExplicito(replyTxt)) {
       const stagesFromTxt = extraerEtapasItinerarioTexto(replyTxt);
       const cruiseFromTxt = intentarParsearCruceroOItinerario(replyTxt);
-      if (stagesFromTxt.length > 0 || cruiseFromTxt || replyTxt.length > 25) {
+      const isValidPlainText = esTextoReservaValido(replyTxt);
+      if (stagesFromTxt.length > 0 || cruiseFromTxt || isValidPlainText) {
         subImgs.forEach(img => {
           img.status = 'done';
           img.errorMsg = '';
@@ -3525,25 +3802,47 @@ async function leerTextoImagenesTesseractFallback(imagesList) {
     if (window.Tesseract) {
       const worker = await window.Tesseract.createWorker('spa+eng');
       const ocrBlocks = [];
+      let unreadableCount = 0;
       for (let i = 0; i < imagesList.length; i++) {
         imagesList[i].status = 'processing';
         actualizarBannerArchivosReserva(`OCR local (offline) ${i + 1}/${imagesList.length}...`);
         const res = await worker.recognize(imagesList[i].dataUrl);
         const t = (res?.data?.text || '').trim();
-        if (t) {
+        const hasUsefulStages = t ? extraerEtapasItinerarioTexto(t).length > 0 : false;
+        const hasUsefulCruise = t ? Boolean(intentarParsearCruceroOItinerario(t)) : false;
+        const isReadable = Boolean(t && (hasUsefulStages || hasUsefulCruise || esTextoReservaValido(t)));
+        if (isReadable) {
           imagesList[i].status = 'done';
+          imagesList[i].errorMsg = '';
           imagesList[i].ocrText = t;
           ocrBlocks.push(t);
         } else {
+          unreadableCount += 1;
           imagesList[i].status = 'failed';
+          imagesList[i].errorMsg = 'Texto ilegible en captura (OCR)';
+          imagesList[i].ocrText = '';
         }
       }
       await worker.terminate();
       actualizarBannerArchivosReserva();
+      if (unreadableCount > 0 && typeof window.showToast === 'function') {
+        if (ocrBlocks.length === 0) {
+          window.showToast(`No se pudo leer texto legible en ${unreadableCount === 1 ? 'la captura' : 'las ' + unreadableCount + ' capturas'}. Usa "Reintentar fallidas" con Vision IA o sube el PDF.`, 'error');
+        } else {
+          window.showToast(`${unreadableCount} ${unreadableCount === 1 ? 'captura no tuvo' : 'capturas no tuvieron'} texto legible y fueron marcadas como fallidas.`, 'info');
+        }
+      }
       return ocrBlocks.join('\n---\n');
     }
   } catch (e2) {
     console.warn('Error en Tesseract OCR fallback:', e2);
+    imagesList.forEach(img => {
+      if (img.status === 'processing' || img.status === 'pending') {
+        img.status = 'failed';
+        img.errorMsg = 'OCR local falló';
+      }
+    });
+    actualizarBannerArchivosReserva();
   }
   return '';
 }
@@ -3620,15 +3919,17 @@ function parsearTextoDocumentoAReservas(rawText) {
   const cruiseParsed = intentarParsearCruceroOItinerario(clean);
   if (cruiseParsed) return [cruiseParsed];
 
-  let blocks = clean.split(/\n\s*---+\s*\n|\n(?=RESERVA\s+\d+\s*:)/i).map(b => b.trim()).filter(Boolean);
-  if (blocks.length === 0) blocks = [clean];
+  const rawBlocks = clean.split(/\n\s*---+\s*\n|\n(?=RESERVA\s+\d+\s*:)/i).map(b => b.trim()).filter(Boolean);
+  const validBlocks = rawBlocks.filter(b => esTextoReservaValido(b));
+  if (validBlocks.length === 0) return [];
 
   let earliestISO = (document.getElementById('fechaInicio')?.value || '').slice(0, 10);
   if (!earliestISO) {
     const allDates = extraerFechasDeTexto(clean).map(d => d.iso).filter(Boolean).sort();
     if (allDates.length > 0) earliestISO = allDates[0];
   }
-  return blocks.map((b, idx) => parsearBloqueIndividualReserva(b, idx, earliestISO));
+  const parsed = validBlocks.map((b, idx) => parsearBloqueIndividualReserva(b, idx, earliestISO));
+  return deduplicarReservasPorSyncKey(parsed);
 }
 
 async function procesarMultiplesArchivosReserva(files) {
@@ -3647,25 +3948,30 @@ async function procesarMultiplesArchivosReserva(files) {
   const input = document.getElementById('reservaRawInput');
   const docTextParts = [];
 
-  // 1. Procesar PDFs, ICS, EML, TXT
+  // 1. Procesar PDFs, ICS, EML, TXT (deduplicando pluxLastDocReservas por _syncKey)
   for (const f of docFiles) {
     const txt = await extraerTextoArchivoDocumento(f);
     if (txt) {
       docTextParts.push(txt);
       const parsedDocs = parsearTextoDocumentoAReservas(txt);
       if (parsedDocs.length > 0) {
-        pluxLastDocReservas = [...pluxLastDocReservas, ...parsedDocs];
+        pluxLastDocReservas = deduplicarReservasPorSyncKey([...pluxLastDocReservas, ...parsedDocs]);
       }
     }
   }
 
-  // Si ya había texto previo pegado y no había docReservas, conservarlo si se adjuntan solo imágenes
   if (docFiles.length > 0 && input && docTextParts.length > 0) {
     const docCombined = docTextParts.join('\n---\n').trim();
-    input.value = input.value.trim() ? `${input.value.trim()}\n---\n${docCombined}` : docCombined;
+    const prevVal = input.value.trim();
+    if (!prevVal) {
+      input.value = docCombined;
+    } else if (!prevVal.includes(docCombined.slice(0, 120))) {
+      input.value = `${prevVal}\n---\n${docCombined}`;
+    }
   }
 
   // 2. Procesar imágenes con Vision-First Direct JSON (siempre protegido con try/finally)
+  let imagesHadAllFailed = false;
   if (imageFiles.length > 0) {
     pluxOcrInProgress = true;
     try {
@@ -3689,12 +3995,18 @@ async function procesarMultiplesArchivosReserva(files) {
         window.showToast(`Analizando ${compressed.length} ${compressed.length === 1 ? 'imagen' : 'imágenes'} con Vision IA...`, 'info');
       }
 
-      const { batches } = await analizarImagenesVisionDirecto(compressed);
+      const { batches, usedFallbackOcr } = await analizarImagenesVisionDirecto(compressed);
+      imagesHadAllFailed = batches.length === 0 && compressed.every(img => img.status === 'failed');
       if (batches.length > 0) {
         pluxLastVisionBatches = [...pluxLastVisionBatches, ...batches];
-        const transcripts = batches.map(b => b.transcript).filter(Boolean).join('\n---\n');
-        if (input && transcripts) {
-          input.value = input.value.trim() ? `${input.value.trim()}\n---\n${transcripts}` : transcripts;
+        const readableTranscripts = batches
+          .map(b => String(b.transcript || '').trim())
+          .filter(t => t && (!usedFallbackOcr || esTextoReservaValido(t) || extraerEtapasItinerarioTexto(t).length > 0))
+          .join('\n---\n');
+        // No ensuciar el textarea con texto OCR crudo si ya hay un PDF/documento estructurado como ancla
+        const hasAnchorDoc = pluxLastDocReservas.some(d => d.tipo === 'crucero' || (Array.isArray(d.etapas) && d.etapas.length > 0));
+        if (input && readableTranscripts && !(usedFallbackOcr && hasAnchorDoc)) {
+          input.value = input.value.trim() ? `${input.value.trim()}\n---\n${readableTranscripts}` : readableTranscripts;
         }
       }
     } finally {
@@ -3704,21 +4016,21 @@ async function procesarMultiplesArchivosReserva(files) {
   }
 
   // 3. Unificar resultados (PDF + Vision batches) directamente en pluxDetectedReservas
-  const unified = unificarResultadosImportacion(pluxLastVisionBatches, pluxLastDocReservas);
+  const unified = deduplicarReservasPorSyncKey(unificarResultadosImportacion(pluxLastVisionBatches, pluxLastDocReservas));
   if (unified.length > 0) {
     pluxDetectedReservas = unified;
     renderizarTarjetasReservasDetectadas();
     const totalStages = unified.reduce((acc, r) => acc + (Array.isArray(r.etapas) ? r.etapas.length : 0), 0);
-    if (typeof window.showToast === 'function') {
+    if (typeof window.showToast === 'function' && !(imagesHadAllFailed && docFiles.length === 0)) {
       if (totalStages > 0) {
         window.showToast(`Itinerario estructurado: ${totalStages} paradas detectadas listas para sincronizar`, 'success');
       } else {
         window.showToast(`${unified.length} ${unified.length === 1 ? 'reserva detectada' : 'reservas detectadas'} y listas para revisar`, 'success');
       }
     }
-  } else if (input && input.value.trim()) {
+  } else if (!imagesHadAllFailed && input && input.value.trim()) {
     analizarTextoReserva();
-  } else if (imageFiles.length > 0 && typeof window.showToast === 'function') {
+  } else if (imageFiles.length > 0 && typeof window.showToast === 'function' && !imagesHadAllFailed) {
     window.showToast('Imágenes adjuntadas. Si alguna falló, usa "Reintentar fallidas" o "Extraer con IA".', 'info');
   }
 }
@@ -4231,7 +4543,7 @@ function extraerEtapasItinerarioTexto(clean) {
   if (etapas.length === 0) {
     const inferredYearMatch = clean.match(/\b(202[5-9]|203\d)\b/);
     const anchorYear = inferredYearMatch ? Number(inferredYearMatch[1]) : null;
-    const dayBlockRegex = /D[IÍ]A\s*(\d{1,2})\s*[-·–]\s*(\d{1,2}\s+[A-ZÁÉÍÓÚÑ]{3,12}(?:\s+\d{4})?)([\s\S]{0,280}?)(?=D[IÍ]A\s*\d{1,2}\s*[-·–]|---|$)/gi;
+    const dayBlockRegex = /D[IÍ]A\s*(\d{1,2})\s*[-·–:|•—]\s*(\d{1,2}\s+(?:de\s+)?[A-ZÁÉÍÓÚÑ]{3,12}(?:\s+(?:de\s+)?\d{4})?|\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)([\s\S]{0,280}?)(?=D[IÍ]A\s*\d{1,2}\s*[-·–:|•—]|---|$)/gi;
     const rawDayStages = [];
     let dm;
     while ((dm = dayBlockRegex.exec(clean)) !== null) {
@@ -4421,7 +4733,9 @@ function intentarParsearCruceroOItinerario(raw) {
 }
 
 function unificarResultadosImportacion(visionBatches = [], docReservas = []) {
-  const safeDocs = Array.isArray(docReservas) ? docReservas.filter(Boolean).map(d => JSON.parse(JSON.stringify(d))) : [];
+  const safeDocs = deduplicarReservasPorSyncKey(
+    Array.isArray(docReservas) ? docReservas.filter(Boolean).map(d => JSON.parse(JSON.stringify(d))) : []
+  );
   const safeBatches = Array.isArray(visionBatches) ? visionBatches.filter(Boolean) : [];
 
   // Recolectar etapas y metadatos desde los lotes Vision
@@ -4521,42 +4835,44 @@ function unificarResultadosImportacion(visionBatches = [], docReservas = []) {
   }
   const dedupVisionStages = Array.from(visionByKey.values());
 
-  // Caso 1: Hay documento PDF de crucero + etapas Vision -> merge por fechaISO (PDF autoritativo en PNR/precio/cabina)
-  if (anchorDoc && dedupVisionStages.length > 0) {
-    const mergedByISO = new Map();
-    for (const pdfSt of (anchorDoc.etapas || [])) {
-      const k = pdfSt.fechaISO || `pdf_${normCityKeyImporter(pdfSt.ciudad)}_${pdfSt.diaNum}`;
-      mergedByISO.set(k, { ...pdfSt });
-    }
-    for (const vSt of dedupVisionStages) {
-      if (vSt.esNavegacion) continue;
-      const k = vSt.fechaISO || `vis_${normCityKeyImporter(vSt.ciudad)}_${vSt.diaNum}`;
-      const existing = mergedByISO.get(k);
-      if (existing) {
-        // PDF es autoritativo en ciudad/horarios; Vision aporta notas/horarios faltantes
-        if (!existing.horaLlegada && vSt.horaLlegada) existing.horaLlegada = vSt.horaLlegada;
-        if (!existing.horaSalida && vSt.horaSalida) existing.horaSalida = vSt.horaSalida;
-        if (/tender|bote auxiliar/i.test(vSt.notas) && !/tender|bote auxiliar/i.test(existing.notaParada || existing.notas || '')) {
-          existing.notaParada = vSt.notas;
-          existing.notas = vSt.notas;
-        }
-      } else {
-        mergedByISO.set(k, { ...vSt });
+  // Caso 1: Hay documento PDF de crucero -> PDF es autoritativo; mergear etapas Vision válidas si hay,
+  // y NUNCA emitir tarjetas basura de actividades desde transcripciones ruidosas de OCR/Vision
+  if (anchorDoc) {
+    if (dedupVisionStages.length > 0) {
+      const mergedByISO = new Map();
+      for (const pdfSt of (anchorDoc.etapas || [])) {
+        const k = pdfSt.fechaISO || `pdf_${normCityKeyImporter(pdfSt.ciudad)}_${pdfSt.diaNum}`;
+        mergedByISO.set(k, { ...pdfSt });
       }
+      for (const vSt of dedupVisionStages) {
+        if (vSt.esNavegacion) continue;
+        const k = vSt.fechaISO || `vis_${normCityKeyImporter(vSt.ciudad)}_${vSt.diaNum}`;
+        const existing = mergedByISO.get(k);
+        if (existing) {
+          // PDF es autoritativo en ciudad/horarios; Vision aporta notas/horarios faltantes
+          if (!existing.horaLlegada && vSt.horaLlegada) existing.horaLlegada = vSt.horaLlegada;
+          if (!existing.horaSalida && vSt.horaSalida) existing.horaSalida = vSt.horaSalida;
+          if (/tender|bote auxiliar/i.test(vSt.notas) && !/tender|bote auxiliar/i.test(existing.notaParada || existing.notas || '')) {
+            existing.notaParada = vSt.notas;
+            existing.notas = vSt.notas;
+          }
+        } else {
+          mergedByISO.set(k, { ...vSt });
+        }
+      }
+      const { stops, totalDiasCalendario, noches } = compactStagesWithTransit(Array.from(mergedByISO.values()), { isCruise: true });
+      anchorDoc.etapas = stops;
+      anchorDoc.totalDiasCalendario = totalDiasCalendario;
+      anchorDoc.noches = noches;
+      anchorDoc.escalas = stops.map(e => `${e.ciudad}${e.fecha ? ' (' + e.fecha + ')' : ''}`);
     }
-    const { stops, totalDiasCalendario, noches } = compactStagesWithTransit(Array.from(mergedByISO.values()), { isCruise: true });
-    anchorDoc.etapas = stops;
-    anchorDoc.totalDiasCalendario = totalDiasCalendario;
-    anchorDoc.noches = noches;
-    anchorDoc.escalas = stops.map(e => `${e.ciudad}${e.fecha ? ' (' + e.fecha + ')' : ''}`);
     if (pluxPendingImagePreview && !anchorDoc.imagePreview) anchorDoc.imagePreview = pluxPendingImagePreview;
     anchorDoc.imagesCount = pluxPendingImages.length;
     anchorDoc._syncKey = computeBookingSyncKey(anchorDoc);
-    return safeDocs;
+    return deduplicarReservasPorSyncKey(safeDocs);
   }
 
   // Caso 2: Solo etapas Vision (ej. 7 fotos WhatsApp sin PDF)
-  const results = [...safeDocs];
   if (dedupVisionStages.length >= 2 || (dedupVisionStages.length === 1 && mergedMeta.tipo === 'crucero')) {
     const isCruise = mergedMeta.tipo === 'crucero' || !mergedMeta.tipo || dedupVisionStages.some(s => /tender|bote auxiliar|embarque/i.test(s.notas || '') || s.esNavegacion);
     const { stops, totalDiasCalendario, noches } = compactStagesWithTransit(dedupVisionStages, { isCruise });
@@ -4614,24 +4930,34 @@ function unificarResultadosImportacion(visionBatches = [], docReservas = []) {
         agregadoAlViaje: false
       };
       resObj._syncKey = computeBookingSyncKey(resObj);
-      results.push(resObj);
-      return results;
+      // NUNCA arrastrar fragmentos de texto crudo OCR del mismo crucero como actividades separadas
+      const independentDocs = safeDocs.filter(d =>
+        d && isRealBookingCode(d.codigo) &&
+        d.codigo !== resObj.codigo &&
+        !esVoucherCorruptoOCR(d) &&
+        (Number(d.costo) > 0 || d.tipo === 'vuelo' || d.tipo === 'hotel')
+      );
+      return deduplicarReservasPorSyncKey([...independentDocs, resObj]);
     }
   }
+
+  const results = [...safeDocs];
 
   // Caso 3: Vision extrajo una reserva simple (vuelo/hotel/tren/actividad) sin múltiples etapas
   if (safeBatches.length > 0 && (mergedMeta.titulo || mergedMeta.codigo || transcripts.length > 0)) {
     const combinedTranscript = transcripts.join('\n---\n').trim();
     if (combinedTranscript && !mergedMeta.titulo) {
       const parsedFromTxt = parsearTextoDocumentoAReservas(combinedTranscript);
-      results.push(...parsedFromTxt);
+      results.push(...parsedFromTxt.filter(r => esReservaDetectadaValida(r)));
     } else if (mergedMeta.titulo || dedupVisionStages.length === 1) {
       const st0 = dedupVisionStages[0] || {};
+      const cityVal = String(st0.ciudad || '').trim();
       const singleRes = {
         id: 'res_vision_single_' + Date.now(),
         tipo: mergedMeta.tipo || 'actividad',
-        titulo: mergedMeta.titulo || `Reserva en ${st0.ciudad || 'Destino'}`,
-        ciudad: st0.ciudad || 'Destino',
+        titulo: mergedMeta.titulo || (cityVal ? `Reserva en ${cityVal}` : 'Reserva'),
+        ciudad: cityVal,
+        _hasExplicitCity: Boolean(cityVal),
         origen: '',
         proveedor: mergedMeta.proveedor || 'Confirmación',
         codigo: isRealBookingCode(mergedMeta.codigo) ? mergedMeta.codigo.toUpperCase() : 'CONF-IA',
@@ -4665,11 +4991,13 @@ function unificarResultadosImportacion(visionBatches = [], docReservas = []) {
         agregadoAlViaje: false
       };
       singleRes._syncKey = computeBookingSyncKey(singleRes);
-      results.push(singleRes);
+      if (esReservaDetectadaValida(singleRes)) {
+        results.push(singleRes);
+      }
     }
   }
 
-  return results;
+  return deduplicarReservasPorSyncKey(results);
 }
 
 function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
@@ -4729,7 +5057,7 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     ciudad = iataMatches[0].city;
   }
 
-  const explicitCity = clean.match(/(?:ciudad|destino|estaci[oó]n\s+de\s+llegada|llegada\s+a|puerto)[:\s]+([^\n\r(\-·,]+)/i);
+  const explicitCity = clean.match(/(?:(?:ciudad|destino|estaci[oó]n\s+de\s+llegada|puerto)\s*:\s*|llegada\s+a\s+)([^\n\r(\-·,]+)/i);
   if (explicitCity && explicitCity[1]) {
     const candidate = explicitCity[1].trim();
     for (const kc of PLUX_KNOWN_CITIES) {
@@ -4738,7 +5066,7 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
         break;
       }
     }
-    if (!ciudad && candidate.length > 2 && candidate.length < 35) {
+    if (!ciudad && candidate.length > 2 && candidate.length < 35 && /[a-zA-ZÁÉÍÓÚáéíóúÑñ]{3,}/.test(candidate) && !/^\d/.test(candidate)) {
       ciudad = candidate.replace(/\b(Termini|Santa Maria Novella|Centrale|Atocha|Sants|Gare du Nord|Fiumicino|Barajas)\b/gi, '').trim();
     }
   }
@@ -4748,20 +5076,20 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     origen = explicitOrigin[1].trim();
   }
 
-  if (!ciudad) {
+  if (!ciudad && (tipo === 'hotel' || tipo === 'vuelo' || tipo === 'tren' || tipo === 'crucero')) {
+    // Solo buscar ciudad contextual precedida de preposición para evitar direcciones legales en el pie de página
     for (const kc of PLUX_KNOWN_CITIES) {
-      const regexCity = new RegExp(`\\b${kc}\\b`, 'i');
+      const regexCity = new RegExp(`(?:en|hacia|a|llegada\\s+a|destino|puerto\\s+de)\\s+${kc}\\b`, 'i');
       if (regexCity.test(clean)) {
         ciudad = kc;
         break;
       }
     }
   }
-  if (!ciudad && pluxPreselectedDestino) ciudad = pluxPreselectedDestino;
-  if (!ciudad && typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0) {
-    ciudad = destinos[0].nombre || 'Roma';
+  const _hasExplicitCity = Boolean(ciudad);
+  if (!ciudad) {
+    ciudad = '';
   }
-  if (!ciudad) ciudad = 'Roma';
 
   // 4. Detectar Fechas (Naturales y Numéricas)
   const fechasExtraidas = extraerFechasDeTexto(clean);
@@ -4829,20 +5157,22 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     const airlineMatch = clean.match(/(Iberia|Aerol[ií]neas Argentinas|LATAM|Air Europa|ITA Airways|Lufthansa|Air France|Ryanair|Vueling|American Airlines|Delta|United|Emirates|Qatar Airways|British Airways|Avianca|Copa Airlines|JetSMART|Flybondi)/i);
     proveedor = airlineMatch ? airlineMatch[1] : (flightNum ? `Vuelo ${flightNum}` : 'Aerolínea');
     const origShort = origen ? origen.split(' - ')[0] : 'Origen';
-    titulo = `Vuelo ${flightNum ? flightNum + ' · ' : ''}${origShort} → ${ciudad}`;
+    titulo = `Vuelo ${flightNum ? flightNum + ' · ' : ''}${origShort}${ciudad ? ' → ' + ciudad : ''}`;
   } else if (tipo === 'hotel') {
     const propMatch = clean.match(/(?:propiedad|hotel|alojamiento)[:\s]+([^\n\r]+)/i) ||
                       clean.match(/((?:Hotel|Hostel|Loft|Apartamento|Suite|Resort)\s+[^\n\r,]+)/i);
-    const propName = propMatch ? propMatch[1].trim() : `Alojamiento en ${ciudad}`;
+    const propName = propMatch ? propMatch[1].trim() : (ciudad ? `Alojamiento en ${ciudad}` : 'Alojamiento Confirmado');
     proveedor = /airbnb/i.test(clean) ? 'Airbnb' : (/booking/i.test(clean) ? 'Booking.com' : 'Alojamiento Confirmado');
     titulo = `Check-in: ${propName}`;
   } else if (tipo === 'tren') {
     const trenMatch = clean.match(/(Frecciarossa\s*\d*|Trenitalia\s*\d*|Renfe\s*AVE\s*\d*|Eurostar\s*\d*|Ouigo\s*\d*|Iryo\s*\d*|Italo\s*\d*|Shinkansen\s*\w*|FlixBus\s*\w*)/i);
     proveedor = trenMatch ? trenMatch[1].trim() : 'Tren Alta Velocidad';
-    titulo = `Tren ${proveedor} · ${origen ? origen + ' → ' : 'Hacia '}${ciudad}`;
+    const routeSuffix = origen ? `${origen}${ciudad ? ' → ' + ciudad : ''}` : (ciudad ? `Hacia ${ciudad}` : '');
+    titulo = `Tren ${proveedor}${routeSuffix ? ' · ' + routeSuffix : ''}`;
   } else {
     const actMatch = clean.match(/(?:actividad|tour|entrada|excursi[oó]n|veh[ií]culo)\s*:\s*([^\n\r]+)/i);
-    titulo = actMatch ? actMatch[1].trim() : (clean.split('\n')[0] || `Reserva en ${ciudad}`).slice(0, 68);
+    const firstLine = (clean.split('\n').map(l => l.trim()).find(Boolean) || '').slice(0, 68);
+    titulo = actMatch ? actMatch[1].trim() : (firstLine || (ciudad ? `Reserva en ${ciudad}` : 'Reserva'));
     const provMatch = clean.match(/(GetYourGuide|Civitatis|Viator|Tiqets|Parco Archeologico|Musei Vaticani|Booking|Hertz|Avis|Europcar)/i);
     proveedor = provMatch ? provMatch[1] : 'Reserva Oficial';
   }
@@ -4873,11 +5203,12 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
   const isReturnHome = (tipo === 'vuelo' || tipo === 'tren') && salidaActual.length >= 3 && ciudad.toLowerCase().includes(salidaActual);
   const diaCalculado = calcularDiaViajePorFechaISO(fechaISO, earliestBatchISO);
 
-  return {
+  const parsedRes = {
     id: 'res_' + Date.now() + '_' + idx + '_' + Math.floor(Math.random() * 999),
     tipo,
     titulo,
     ciudad,
+    _hasExplicitCity,
     origen,
     proveedor,
     codigo: codigo || 'CONF-OK',
@@ -4908,6 +5239,8 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     rawEmail: clean.slice(0, 2000),
     agregadoAlViaje: false
   };
+  parsedRes._syncKey = computeBookingSyncKey(parsedRes);
+  return parsedRes;
 }
 
 function analizarTextoReserva(silent = false) {
@@ -4920,17 +5253,21 @@ function analizarTextoReserva(silent = false) {
     return;
   }
 
-  const parsedDocs = parsearTextoDocumentoAReservas(raw);
+  const parsedDocs = deduplicarReservasPorSyncKey(parsearTextoDocumentoAReservas(raw));
   pluxLastDocReservas = parsedDocs;
 
   if (pluxLastVisionBatches.length > 0) {
-    pluxDetectedReservas = unificarResultadosImportacion(pluxLastVisionBatches, pluxLastDocReservas);
+    pluxDetectedReservas = deduplicarReservasPorSyncKey(unificarResultadosImportacion(pluxLastVisionBatches, pluxLastDocReservas));
   } else {
     pluxDetectedReservas = parsedDocs;
   }
   renderizarTarjetasReservasDetectadas();
 
   if (!silent && typeof window.showToast === 'function') {
+    if (pluxDetectedReservas.length === 0) {
+      window.showToast('No se detectaron reservas válidas en el texto. Verifica que incluya destino, fecha o código de reserva.', 'info');
+      return;
+    }
     const firstMulti = pluxDetectedReservas.find(r => Array.isArray(r.etapas) && r.etapas.length > 0);
     if (firstMulti) {
       window.showToast(`Itinerario detectado con ${firstMulti.etapas.length} paradas (${firstMulti.totalDiasCalendario || firstMulti.etapas.length} días) listo para sincronizar`, 'success');
@@ -5188,7 +5525,7 @@ function renderizarTarjetasReservasDetectadas() {
       <div class="reservas-timeline-preview">
         ${timelineSorted.map(item => {
           const m = tipoBadgeMap[item.tipo] || tipoBadgeMap.actividad;
-          return `<span class="reservas-timeline-chip"><i class="fa-solid ${m.icon}" style="color:var(--verde);"></i> ${escapeHtml(item.fecha ? item.fecha.slice(0,5) : 'Día ' + ((Number(item.diaIndex)||0)+1))} · ${escapeHtml(item.ciudad)}</span>`;
+          return `<span class="reservas-timeline-chip"><i class="fa-solid ${m.icon}" style="color:var(--verde);"></i> ${escapeHtml(item.fecha ? item.fecha.slice(0,5) : 'Día ' + ((Number(item.diaIndex)||0)+1))} · ${escapeHtml(item.ciudad || item.titulo || 'Sin destino')}</span>`;
         }).join('<span style="color:var(--gris); align-self:center; font-size:0.75rem;">→</span>')}
       </div>
     `;
@@ -5260,7 +5597,7 @@ function renderizarTarjetasReservasDetectadas() {
               <div class="voucher-field">
                 <label>Ubicar en Destino del Viaje</label>
                 <select onchange="window.actualizarCampoReservaDetectada(${idx}, 'targetDestMode', this.value)">
-                  <option value="auto" ${r.targetDestMode === 'auto' ? 'selected' : ''}>Automático (${escapeHtml(r.ciudad)})</option>
+                  <option value="auto" ${r.targetDestMode === 'auto' ? 'selected' : ''}>Automático (${escapeHtml(r.ciudad || 'Sin destino')})</option>
                   ${destsActuales.map(d => `<option value="dest_${d.id}" ${r.targetDestMode === 'dest_' + d.id ? 'selected' : ''}>Destino existente: ${escapeHtml(d.nombre)}</option>`).join('')}
                   ${(r.tipo === 'vuelo' || r.tipo === 'tren') ? `<option value="vuelta_casa" ${r.targetDestMode === 'vuelta_casa' ? 'selected' : ''}>Tramo de Regreso a Casa (Vuelta Global)</option>` : ''}
                 </select>
@@ -5324,7 +5661,7 @@ function renderizarTarjetasReservasDetectadas() {
               <label>Total (${r.modoPrecio === 'total' ? 'Grupal' : 'Por persona'})</label>
               <div style="display:flex; gap:5px; align-items:center;">
                 <input type="number" value="${Number(r.costo || 0)}" min="0" step="0.01" style="flex:1; min-width:0;" oninput="window.actualizarFinanzasReservaDetectada(${idx}, 'costo', this.value)">
-                <select style="width:66px; flex-shrink:0;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'moneda', this.value)">
+                <select class="reserva-currency-select" style="min-width:82px; width:82px; padding:6px 8px; flex-shrink:0;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'moneda', this.value)">
                   <option value="USD" ${r.moneda === 'USD' ? 'selected' : ''}>USD</option>
                   <option value="EUR" ${r.moneda === 'EUR' ? 'selected' : ''}>EUR</option>
                   <option value="ARS" ${r.moneda === 'ARS' ? 'selected' : ''}>ARS</option>
@@ -5477,10 +5814,69 @@ function actualizarFechaReservaDetectada(idx, rawVal) {
   }
 }
 
+function abrirVouchersDelViaje() {
+  pluxReservaInputMode = 'wallet';
+  pluxWalletScope = 'trip';
+  pluxWalletScopeUserPicked = true;
+  if (typeof window.abrirDescubrir === 'function') {
+    window.abrirDescubrir('reservas');
+  }
+  setTimeout(() => {
+    const sec = document.querySelector('.wallet-reservas-section');
+    if (sec && typeof sec.scrollIntoView === 'function') {
+      sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 120);
+}
+
+async function subirAdjuntosVoucherCloudinary(resObj) {
+  if (!resObj || typeof window.uploadToCloudinary !== 'function' || !navigator.onLine) return;
+  const candidates = [];
+  if (Array.isArray(pluxPendingImages) && pluxPendingImages.length > 0) {
+    pluxPendingImages.forEach(img => {
+      if (img?.dataUrl && String(img.dataUrl).startsWith('data:')) {
+        candidates.push({ name: img.name || 'comprobante.jpg', dataUrl: img.dataUrl });
+      }
+    });
+  } else if (resObj.imagePreview && String(resObj.imagePreview).startsWith('data:')) {
+    candidates.push({ name: 'voucher.jpg', dataUrl: resObj.imagePreview });
+  }
+  if (candidates.length === 0) return;
+
+  try {
+    const uploaded = [];
+    for (const item of candidates.slice(0, 6)) {
+      const blob = await (await fetch(item.dataUrl)).blob();
+      const file = new File([blob], item.name, { type: blob.type || 'image/jpeg' });
+      const url = await window.uploadToCloudinary(file);
+      if (url && /^https?:\/\//i.test(url)) {
+        uploaded.push({ name: item.name, url });
+      }
+    }
+    if (uploaded.length > 0) {
+      resObj.cloudinaryUrls = uploaded;
+      resObj.imagePreview = uploaded[0].url;
+      guardarReservaEnWallet(resObj);
+      if (resObj.agregadoAlViaje && window.pluxTripApi?.upsertTripVoucher) {
+        window.pluxTripApi.upsertTripVoucher(resObj);
+      }
+    }
+  } catch (e) {
+    console.warn('No se pudo subir adjunto del voucher a Cloudinary:', e);
+  }
+}
+
 function guardarReservaEnWallet(resObj) {
+  if (!resObj || esVoucherCorruptoOCR(resObj)) return;
   const wallet = obtenerWalletReservas();
   const syncKey = resObj._syncKey || computeBookingSyncKey(resObj);
   resObj._syncKey = syncKey;
+  const activeTripId = window.pluxTripApi?.getActiveTripInfo?.()?.tripId || null;
+  if (resObj.agregadoAlViaje && activeTripId) {
+    resObj.tripId = activeTripId;
+  } else if (resObj.tripId === undefined) {
+    resObj.tripId = null;
+  }
   const existsIdx = wallet.findIndex(w =>
     (w._syncKey && w._syncKey === syncKey) ||
     (isRealBookingCode(w.codigo) && isRealBookingCode(resObj.codigo) && w.codigo.toUpperCase() === resObj.codigo.toUpperCase() && w.tipo === resObj.tipo) ||
@@ -5488,6 +5884,9 @@ function guardarReservaEnWallet(resObj) {
   );
   const copy = JSON.parse(JSON.stringify(resObj));
   copy._syncKey = syncKey;
+  if (copy.agregadoAlViaje) {
+    copy.tripId = activeTripId || copy.tripId || null;
+  }
   copy.savedAt = new Date().toISOString();
   if (existsIdx >= 0) {
     wallet[existsIdx] = copy;
@@ -5495,6 +5894,9 @@ function guardarReservaEnWallet(resObj) {
     wallet.unshift(copy);
   }
   guardarWalletReservasStorage(wallet);
+  if (copy.agregadoAlViaje && window.pluxTripApi?.upsertTripVoucher) {
+    window.pluxTripApi.upsertTripVoucher(copy);
+  }
   renderizarWalletReservas();
 }
 
@@ -5680,6 +6082,10 @@ function solicitarDestinoSincronizacion(reservasArray, onConfirm) {
 }
 
 function upsertBookingInTrip(res) {
+  if (!res || esVoucherCorruptoOCR(res) || !esReservaDetectadaValida(res)) {
+    console.warn('⛔ [upsertBookingInTrip] Reserva corrupta o ruido OCR bloqueado:', res);
+    return null;
+  }
   if (typeof destinos === 'undefined' || !Array.isArray(destinos)) {
     window.destinos = [];
   }
@@ -5957,15 +6363,19 @@ function upsertBookingInTrip(res) {
     const did = Number(res.targetDestMode.replace('dest_', ''));
     targetDest = destinos.find(d => Number(d.id) === did);
   }
-  const cityClean = (res.ciudad || 'Destino').trim();
-  if (!targetDest) {
+  const cityClean = (res.ciudad || '').trim();
+  if (!targetDest && cityClean) {
     const cityKey = normCityKeyImporter(cityClean);
     targetDest = destinos.find(d => d && d.nombre && normCityKeyImporter(d.nombre) === cityKey);
+  }
+  // Si no se encuentra y ya hay paradas en el viaje, asociar a la parada abierta o primera parada existente
+  if (!targetDest && destinos.length > 0 && (res.tipo === 'actividad' || !cityClean || res.targetDestMode === 'auto')) {
+    targetDest = destinos[0];
   }
   if (!targetDest) {
     targetDest = {
       id: Date.now() + Math.floor(Math.random() * 1000),
-      nombre: cityClean,
+      nombre: cityClean || 'Destino',
       dias: [{ id: 0, eventos: [], costosAdicionales: [] }],
       tramos: []
     };
@@ -6191,7 +6601,9 @@ function importarReservaAlViaje(idx) {
   solicitarDestinoSincronizacion([res], () => {
     const targetDest = upsertBookingInTrip(res);
     res.agregadoAlViaje = true;
+    res.tripId = window.pluxTripApi?.getActiveTripInfo?.()?.tripId || null;
     guardarReservaEnWallet(res);
+    subirAdjuntosVoucherCloudinary(res);
 
     finalizarSincronizacionImportacion();
     renderizarTarjetasReservasDetectadas();
@@ -6211,10 +6623,13 @@ function importarTodasLasReservas() {
   if (!pluxDetectedReservas || pluxDetectedReservas.length === 0) return;
 
   solicitarDestinoSincronizacion(pluxDetectedReservas, () => {
+    const activeTripId = window.pluxTripApi?.getActiveTripInfo?.()?.tripId || null;
     pluxDetectedReservas.forEach(res => {
       upsertBookingInTrip(res);
       res.agregadoAlViaje = true;
+      res.tripId = activeTripId;
       guardarReservaEnWallet(res);
+      subirAdjuntosVoucherCloudinary(res);
     });
 
     finalizarSincronizacionImportacion();
@@ -6232,8 +6647,16 @@ function sincronizarTodaLaWalletAlViaje() {
   if (wallet.length === 0) return;
 
   solicitarDestinoSincronizacion(wallet, () => {
-    wallet.forEach(w => upsertBookingInTrip(w));
+    const activeTripId = window.pluxTripApi?.getActiveTripInfo?.()?.tripId || null;
+    wallet.forEach(w => {
+      upsertBookingInTrip(w);
+      w.agregadoAlViaje = true;
+      w.tripId = activeTripId;
+      if (window.pluxTripApi?.upsertTripVoucher) window.pluxTripApi.upsertTripVoucher(w);
+    });
+    guardarWalletReservasStorage(wallet);
     finalizarSincronizacionImportacion();
+    renderizarWalletReservas();
     if (typeof window.showToast === 'function') {
       window.showToast(`${wallet.length} vouchers de tu billetera sincronizados sin duplicados`, 'success');
     }
@@ -6245,6 +6668,12 @@ function irAlItinerarioDesdeReservas() {
   if (typeof empezar === 'function') {
     empezar();
   }
+}
+
+function cambiarScopeWalletReservas(scope) {
+  pluxWalletScope = scope === 'all' ? 'all' : 'trip';
+  pluxWalletScopeUserPicked = true;
+  renderizarWalletReservas();
 }
 
 function filtrarWalletReservas(cat, btnEl) {
@@ -6262,16 +6691,62 @@ function buscarEnWalletReservas(val) {
   renderizarWalletReservas();
 }
 
+function obtenerVouchersUnificadosWallet() {
+  purgarVouchersCorruptosDelViajeActivo();
+  const activeTrip = obtenerInfoViajeActivoImportador();
+  const activeTripId = activeTrip.tripId;
+  const walletLocal = obtenerWalletReservas();
+  const tripVouchers = (window.pluxTripApi?.getTripVouchers ? window.pluxTripApi.getTripVouchers() : [])
+    .filter(v => !esVoucherCorruptoOCR(v));
+
+  const mergedMap = new Map();
+  tripVouchers.forEach(v => {
+    const k = v._syncKey || v.id || (v.codigo + '|' + v.titulo);
+    mergedMap.set(k, { ...v, _attachedToTrip: true, _belongsToActiveTrip: true });
+  });
+  walletLocal.forEach(w => {
+    const k = w._syncKey || w.id || (w.codigo + '|' + w.titulo);
+    const matchesActiveTrip = Boolean(activeTripId && w.tripId && String(w.tripId) === String(activeTripId));
+    if (!mergedMap.has(k)) {
+      mergedMap.set(k, { ...w, _attachedToTrip: matchesActiveTrip, _belongsToActiveTrip: matchesActiveTrip });
+    }
+  });
+  const allVouchers = Array.from(mergedMap.values());
+  const tripScopedVouchers = allVouchers.filter(v => v._belongsToActiveTrip);
+  return { activeTrip, allVouchers, tripScopedVouchers };
+}
+
 function renderizarWalletReservas() {
   const cont = document.getElementById('walletReservasContainer');
   const badge = document.getElementById('walletCountBadge');
   if (!cont) return;
 
-  const wallet = obtenerWalletReservas();
-  if (badge) badge.textContent = String(wallet.length);
+  const { activeTrip, allVouchers, tripScopedVouchers } = obtenerVouchersUnificadosWallet();
+
+  // Por defecto: 'trip' si hay viaje activo (o si se abrió vía abrirVouchersDelViaje); 'all' solo si no hay viaje activo y el usuario no eligió manualmente
+  if (!pluxWalletScopeUserPicked) {
+    pluxWalletScope = (activeTrip.hasTrip || tripScopedVouchers.length > 0) ? 'trip' : 'all';
+  }
+
+  const tripCountEl = document.getElementById('walletTripCount');
+  const allCountEl = document.getElementById('walletAllCount');
+  const tabCountEl = document.getElementById('walletTabCountBadge');
+  const btnTrip = document.getElementById('walletScopeBtnTrip');
+  const btnAll = document.getElementById('walletScopeBtnAll');
+  const chipTodas = document.getElementById('walletChipTodas');
+
+  if (tripCountEl) tripCountEl.textContent = String(tripScopedVouchers.length);
+  if (allCountEl) allCountEl.textContent = String(allVouchers.length);
+  if (tabCountEl) tabCountEl.textContent = String(allVouchers.length);
+  if (btnTrip) btnTrip.classList.toggle('active', pluxWalletScope === 'trip');
+  if (btnAll) btnAll.classList.toggle('active', pluxWalletScope === 'all');
+
+  const scopedWallet = pluxWalletScope === 'trip' ? tripScopedVouchers : allVouchers;
+  if (badge) badge.textContent = String(scopedWallet.length);
+  if (chipTodas) chipTodas.textContent = `Todas (${scopedWallet.length})`;
 
   // Ordenar cronológicamente por fechaISO y hora
-  const sorted = [...wallet].sort((a, b) => {
+  const sorted = [...scopedWallet].sort((a, b) => {
     const fA = a.fechaISO || '9999-99-99';
     const fB = b.fechaISO || '9999-99-99';
     if (fA !== fB) return fA.localeCompare(fB);
@@ -6289,9 +6764,12 @@ function renderizarWalletReservas() {
   });
 
   if (filtered.length === 0) {
+    const canShowAllHint = pluxWalletScope === 'trip' && allVouchers.length > 0;
     cont.innerHTML = `
       <div style="grid-column:1 / -1; background:rgba(255,255,255,0.02); border:1px dashed rgba(255,255,255,0.1); border-radius:14px; padding:24px; text-align:center; color:var(--gris); font-size:0.85rem;">
-        No hay vouchers en esta vista. Cuando importes un vuelo, hotel, tren o entrada quedará guardado aquí con su código PNR y vista de pase offline.
+        ${canShowAllHint
+          ? `Este viaje todavía no tiene vouchers sincronizados. Tienes <strong>${allVouchers.length}</strong> ${allVouchers.length === 1 ? 'voucher guardado' : 'vouchers guardados'} en otros viajes. <button type="button" class="btn-card-secondary" style="margin-left:8px; padding:5px 10px; font-size:0.76rem;" onclick="window.cambiarScopeWalletReservas('all')">Ver todos los viajes (${allVouchers.length})</button>`
+          : 'No hay vouchers en esta vista. Cuando importes un vuelo, hotel, tren o entrada quedará guardado aquí con su código PNR y vista de pase offline.'}
       </div>
     `;
     return;
@@ -6323,6 +6801,8 @@ function renderizarWalletReservas() {
           ${w.hora ? `<span><i class="fa-regular fa-clock"></i> ${escapeHtml(w.hora)}${w.horaFin ? ' - ' + escapeHtml(w.horaFin) : ''}</span>` : ''}
           ${w.costo ? `<span style="color:var(--verde); font-weight:700;">$${w.costo} ${escapeHtml(w.moneda || 'USD')}</span>` : ''}
           ${w.pin ? `<span style="color:#fbbf24; font-weight:700;">PIN: ${escapeHtml(w.pin)}</span>` : ''}
+          ${w._attachedToTrip ? `<span style="color:#34d399; font-weight:700;"><i class="fa-solid fa-paperclip"></i> Adjunto al viaje</span>` : ''}
+          ${Array.isArray(w.cloudinaryUrls) && w.cloudinaryUrls.length > 0 ? `<a href="${escapeHtml(w.cloudinaryUrls[0].url)}" target="_blank" rel="noopener" style="color:#38bdf8; font-weight:700; text-decoration:none;"><i class="fa-solid fa-cloud"></i> Nube (${w.cloudinaryUrls.length})</a>` : ''}
         </div>
         <p style="margin:0; font-size:0.78rem; color:rgba(255,255,255,0.68); line-height:1.4;">${escapeHtml(w.notas || '')}</p>
       </div>
@@ -6344,8 +6824,8 @@ function renderizarWalletReservas() {
 }
 
 function verVoucherCompletoModal(id) {
-  const wallet = obtenerWalletReservas();
-  const w = wallet.find(item => String(item.id) === String(id));
+  const { allVouchers } = obtenerVouchersUnificadosWallet();
+  const w = allVouchers.find(item => String(item.id) === String(id));
   if (!w) return;
 
   const existing = document.getElementById('modal-plux-voucher-pass');
@@ -6438,7 +6918,8 @@ function verVoucherCompletoModal(id) {
 }
 
 function copiarResumenVoucher(id) {
-  const w = obtenerWalletReservas().find(item => String(item.id) === String(id));
+  const { allVouchers } = obtenerVouchersUnificadosWallet();
+  const w = allVouchers.find(item => String(item.id) === String(id));
   if (!w) return;
   const lines = [
     `📌 *${w.titulo}* (${w.ciudad || 'Viaje'})`,
@@ -6466,10 +6947,14 @@ function copiarCodigoPNR(codigo) {
 
 function reinsertarReservaWallet(id) {
   const wallet = obtenerWalletReservas();
-  const item = wallet.find(w => String(w.id) === String(id));
+  const tripVouchers = window.pluxTripApi?.getTripVouchers ? window.pluxTripApi.getTripVouchers() : [];
+  const item = wallet.find(w => String(w.id) === String(id)) || tripVouchers.find(w => String(w.id) === String(id));
   if (!item) return;
   solicitarDestinoSincronizacion([item], () => {
     const dest = upsertBookingInTrip(item);
+    item.agregadoAlViaje = true;
+    item.tripId = window.pluxTripApi?.getActiveTripInfo?.()?.tripId || null;
+    guardarReservaEnWallet(item);
     finalizarSincronizacionImportacion();
     if (typeof window.showToast === 'function' && dest) {
       window.showToast(`"${item.titulo}" sincronizado en ${dest.nombre}`, 'success');
@@ -6481,6 +6966,9 @@ function eliminarReservaWallet(id) {
   let wallet = obtenerWalletReservas();
   wallet = wallet.filter(w => String(w.id) !== String(id));
   guardarWalletReservasStorage(wallet);
+  if (window.pluxTripApi?.removeTripVoucher) {
+    window.pluxTripApi.removeTripVoucher(id);
+  }
   renderizarWalletReservas();
 }
 
@@ -7683,11 +8171,14 @@ function guardarHackEnViaje(textoTip, ciudad) {
 
 // Exponer funciones en window
 window.abrirImportadorParaDestino = abrirImportadorParaDestino;
+window.abrirVouchersDelViaje = abrirVouchersDelViaje;
 window.cambiarModoImportadorReserva = cambiarModoImportadorReserva;
 window.cambiarTipoExpressReserva = cambiarTipoExpressReserva;
 window.guardarReservaExpressDirecto = guardarReservaExpressDirecto;
 window.renderizarImportadorReservas = renderizarImportadorReservas;
 window.limpiarImportadorReserva = limpiarImportadorReserva;
+window.resetImportadorEstadoPorCambioViaje = resetImportadorEstadoPorCambioViaje;
+window.cambiarScopeWalletReservas = cambiarScopeWalletReservas;
 window.quitarImagenReservaAdjunta = quitarImagenReservaAdjunta;
 window.quitarImagenReservaIndividual = quitarImagenReservaIndividual;
 window.reintentarImagenesFallidasReserva = reintentarImagenesFallidasReserva;
@@ -7723,7 +8214,10 @@ window.pluxImporterApi = {
   reconstructPageRows,
   intentarParsearCruceroOItinerario,
   computeBookingSyncKey,
-  unificarResultadosImportacion
+  unificarResultadosImportacion,
+  esTextoReservaValido,
+  esReservaDetectadaValida,
+  resetImportadorEstadoPorCambioViaje
 };
 
 window.renderizarComunidadForos = renderizarComunidadForos;

@@ -1380,7 +1380,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
   const CLOUDINARY_API_SECRET = 'praSjnknB5sYb38MIbui8R287E4';
 
   async function uploadToCloudinary(file) {
-    const cloudName = localStorage.getItem('Plux_Cloudinary_CloudName') || 'nibecar-cofeben';
+    const cloudName = localStorage.getItem('Plux_Cloudinary_CloudName') || 'enwsj8r3';
     
     // 1. Subida firmada directa a la API de Cloudinary
     try {

@@ -511,7 +511,9 @@
         dTitle.innerHTML = '<i class="fa-solid fa-compass" style="color:var(--verde); margin-right:8px;"></i>' + (t('descubrir_title') || 'Descubrir');
       }
       el('eventosDiaTitle', 'eventos_dia_title');
-      el('ares-esc-banner', 'ares_esc');
+      if (document.body.classList.contains('theme-ares')) {
+        el('ares-esc-banner', 'ares_esc');
+      }
 
       // Pluxy AI Assistant
       el('pluxyBtnText', 'pluxy_name');
@@ -2430,6 +2432,50 @@
     }
     window.actualizarBadgeCartelitos = actualizarBadgeCartelitos;
 
+    function isJunkOcrVoucher(v) {
+      if (!v || typeof v !== 'object') return true;
+      if (Array.isArray(v.etapas) && v.etapas.length > 0) return false;
+      const codigo = String(v.codigo || '').trim().toUpperCase();
+      const costo = Number(v.costo || 0);
+      const titulo = String(v.titulo || '').trim();
+      const tipo = String(v.tipo || 'actividad').toLowerCase();
+      const hasRealCode = Boolean(codigo && codigo.length >= 4 && !['', 'CONF', 'CONF-OK', 'CONF-IA', 'CRU-OK', 'EXP-OK', 'PLUX-PASS'].includes(codigo));
+
+      // Símbolos u OCR basura
+      if (!titulo || titulo.length < 3) return true;
+      if (/^[|\-•.\s_="'~#*]+$/.test(titulo)) return true;
+      if (/[|]{2,}|[|]\s*[|]/.test(titulo)) return true;
+      const nonSpace = titulo.replace(/\s+/g, '');
+      const symbols = nonSpace.replace(/[a-zA-Z0-9ÁÉÍÓÚáéíóúÜüÑñ]/g, '');
+      if ((symbols.length / nonSpace.length) > 0.25) return true;
+      if (!/[a-zA-ZÁÉÍÓÚáéíóúÜüÑñ]{3,}/.test(titulo)) return true;
+
+      // Si es actividad sin costo y sin código real
+      if (tipo === 'actividad' && !hasRealCode && costo === 0) {
+        if (!/(?:tour|excursi[oó]n|entrada|visita|museo|ticket|pase|ferry)/i.test(titulo)) {
+          return true;
+        }
+      }
+
+      if (!hasRealCode && costo === 0 && !/[a-zA-ZÁÉÍÓÚáéíóúÜüÑñ]{4,}/.test(titulo)) {
+        return true;
+      }
+      return false;
+    }
+
+    function actualizarBadgeVouchersHeader() {
+      const list = Array.isArray(window.vouchersViajeActual)
+        ? window.vouchersViajeActual.filter(v => !isJunkOcrVoucher(v))
+        : [];
+      const count = list.length;
+      const badgeText = count > 0 ? `(${count})` : '';
+      const el = document.getElementById('vouchersHeaderCount');
+      if (el) el.textContent = badgeText;
+      const mobileEl = document.getElementById('vouchersMobileCount');
+      if (mobileEl) mobileEl.textContent = badgeText;
+    }
+    window.actualizarBadgeVouchersHeader = actualizarBadgeVouchersHeader;
+
     function crearNotaCartelito(texto = '', enlace = null, posX = null, posY = null) {
       const notas = getCartelitosNotas();
       const id = 'nota_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -3028,7 +3074,13 @@
       // Banner para salir de Ares
       const aresBanner = document.getElementById('ares-esc-banner');
       if (aresBanner) {
-        aresBanner.style.display = (themeId === 'theme-ares') ? 'block' : 'none';
+        if (themeId === 'theme-ares') {
+          aresBanner.textContent = (typeof t === 'function' && t('ares_esc')) ? t('ares_esc') : 'PRESIONA ESC PARA SALIR DE ARES';
+          aresBanner.style.display = 'block';
+        } else {
+          aresBanner.textContent = '';
+          aresBanner.style.display = 'none';
+        }
       }
 
       // Actualizar dropdown y cerrarlo
@@ -3497,6 +3549,7 @@
         userPreferences: typeof userPreferences !== 'undefined' ? userPreferences : null,
         moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
         cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : [],
+        vouchers: Array.isArray(window.vouchersViajeActual) ? window.vouchersViajeActual : [],
         embajadorSlug: embSlug,
         isTemplateClone: isTplClone,
         templateOrigin: tplOrigin
@@ -3601,6 +3654,8 @@
           const fVueP = document.getElementById('vueltaPrecio'); if (fVueP) fVueP.value = 0;
           if (draft.moneda && typeof setMonedaActiva === 'function') setMonedaActiva(draft.moneda, false, false);
           if (typeof window.renderTravelerChips === 'function') window.renderTravelerChips();
+          window.vouchersViajeActual = [];
+          actualizarBadgeVouchersHeader();
           renderDestinos();
           return;
         }
@@ -3799,6 +3854,13 @@
 
           if (Array.isArray(data.cartelitos)) {
             cartelitosNotasViaje = [...data.cartelitos];
+          }
+          window.vouchersViajeActual = Array.isArray(data.vouchers)
+            ? data.vouchers.filter(v => !isJunkOcrVoucher(v))
+            : [];
+          actualizarBadgeVouchersHeader();
+          if (typeof window.resetImportadorEstadoPorCambioViaje === 'function') {
+            window.resetImportadorEstadoPorCambioViaje();
           }
           
           renderDestinos();
@@ -5637,6 +5699,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const savedMoneda = localStorage.getItem('plux_moneda') || 'EUR';
       if (typeof setMonedaActiva === 'function') setMonedaActiva(savedMoneda, false);
       if (typeof actualizarBadgeNotas === 'function') actualizarBadgeNotas();
+      if (typeof actualizarBadgeVouchersHeader === 'function') actualizarBadgeVouchersHeader();
 
       // Actualizar display del usuario
       updateUserButtonDisplay();
@@ -8126,44 +8189,58 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       const transitVal = destIdx > 0 ? Math.max(0, Math.floor(Number(dest.diasTransitoPrevio) || 0)) : 0;
       const tipoVal = dest.tipoParada || 'estadia';
+      const hasCustomLogistics = Boolean(transitVal > 0 || dest.horaLlegada || dest.horaSalida || dest.notaParada || (tipoVal && tipoVal !== 'estadia'));
+      const summaryParts = [];
+      if (tipoVal !== 'estadia') summaryParts.push(tipoVal.charAt(0).toUpperCase() + tipoVal.slice(1));
+      if (transitVal > 0) summaryParts.push(`${transitVal} ${transitVal === 1 ? 'día' : 'días'} previo${transitVal === 1 ? '' : 's'} en tránsito`);
+      if (dest.horaLlegada || dest.horaSalida) summaryParts.push([dest.horaLlegada ? `Lleg. ${dest.horaLlegada}` : '', dest.horaSalida ? `Sal. ${dest.horaSalida}` : ''].filter(Boolean).join(' · '));
+      const summaryLabel = summaryParts.length > 0
+        ? summaryParts.join(' · ')
+        : 'Horarios de llegada/salida, escala o días previos en ruta (opcional)';
 
       box.innerHTML = `
-        <div class="plux-stop-logistics-row">
-          ${destIdx > 0 ? `
-          <div class="plux-stop-logistics-field">
-            <label>Días de tránsito previos</label>
-            <div class="plux-transit-stepper">
-              <button type="button" onclick="window.stepTransitoPrevio(${destId}, -1)" title="Restar día de tránsito">−</button>
-              <span>${transitVal}</span>
-              <button type="button" onclick="window.stepTransitoPrevio(${destId}, 1)" title="Sumar día de tránsito">+</button>
+        <details class="plux-stop-logistics-details" ${hasCustomLogistics ? 'open' : ''}>
+          <summary class="plux-stop-logistics-summary">
+            <span><i class="fa-regular fa-clock" style="margin-right:6px; color:#38bdf8;"></i> ${escapeHtml(summaryLabel)}</span>
+            <span style="font-size:0.72rem; color:var(--gris);">Configurar</span>
+          </summary>
+          <div class="plux-stop-logistics-row">
+            <div class="plux-stop-logistics-field">
+              <label>Tipo de parada</label>
+              <select onchange="window.actualizarCampoParada(${destId}, 'tipoParada', this.value)">
+                <option value="estadia" ${tipoVal === 'estadia' ? 'selected' : ''}>Estadía normal</option>
+                <option value="embarque" ${tipoVal === 'embarque' ? 'selected' : ''}>Embarque / Inicio</option>
+                <option value="escala" ${tipoVal === 'escala' ? 'selected' : ''}>Escala de paso</option>
+                <option value="desembarque" ${tipoVal === 'desembarque' ? 'selected' : ''}>Desembarque / Fin</option>
+              </select>
+            </div>
+            ${destIdx > 0 ? `
+            <div class="plux-stop-logistics-field">
+              <label>Días previos en ruta / mar</label>
+              <div class="plux-transit-stepper">
+                <button type="button" onclick="window.stepTransitoPrevio(${destId}, -1)" title="Restar día de tránsito">−</button>
+                <span>${transitVal}</span>
+                <button type="button" onclick="window.stepTransitoPrevio(${destId}, 1)" title="Sumar día de tránsito">+</button>
+              </div>
+            </div>
+            <div class="plux-stop-logistics-field">
+              <label>Nombre del tránsito</label>
+              <input type="text" value="${escapeHtml(dest.transitoEtiqueta || '')}" placeholder="Ej: En navegación, Tren..." onchange="window.actualizarCampoParada(${destId}, 'transitoEtiqueta', this.value)">
+            </div>` : ''}
+            <div class="plux-stop-logistics-field">
+              <label>Hora llegada</label>
+              <input type="time" value="${escapeHtml(dest.horaLlegada || '')}" onchange="window.actualizarCampoParada(${destId}, 'horaLlegada', this.value)">
+            </div>
+            <div class="plux-stop-logistics-field">
+              <label>Hora salida</label>
+              <input type="time" value="${escapeHtml(dest.horaSalida || '')}" onchange="window.actualizarCampoParada(${destId}, 'horaSalida', this.value)">
+            </div>
+            <div class="plux-stop-logistics-field plux-stop-logistics-field--wide">
+              <label>Terminal / Muelle / Aviso</label>
+              <input type="text" value="${escapeHtml(dest.notaParada || '')}" placeholder="Ej. Terminal, muelle o desembarque con lancha" onchange="window.actualizarCampoParada(${destId}, 'notaParada', this.value)">
             </div>
           </div>
-          <div class="plux-stop-logistics-field">
-            <label>Etiqueta tránsito</label>
-            <input type="text" value="${escapeHtml(dest.transitoEtiqueta || '')}" placeholder="En navegación / En tránsito" onchange="window.actualizarCampoParada(${destId}, 'transitoEtiqueta', this.value)">
-          </div>` : ''}
-          <div class="plux-stop-logistics-field">
-            <label>Tipo de parada</label>
-            <select onchange="window.actualizarCampoParada(${destId}, 'tipoParada', this.value)">
-              <option value="estadia" ${tipoVal === 'estadia' ? 'selected' : ''}>Estadía</option>
-              <option value="embarque" ${tipoVal === 'embarque' ? 'selected' : ''}>Embarque</option>
-              <option value="escala" ${tipoVal === 'escala' ? 'selected' : ''}>Escala</option>
-              <option value="desembarque" ${tipoVal === 'desembarque' ? 'selected' : ''}>Desembarque</option>
-            </select>
-          </div>
-          <div class="plux-stop-logistics-field">
-            <label>Llegada (HH:MM)</label>
-            <input type="time" value="${escapeHtml(dest.horaLlegada || '')}" onchange="window.actualizarCampoParada(${destId}, 'horaLlegada', this.value)">
-          </div>
-          <div class="plux-stop-logistics-field">
-            <label>Salida (HH:MM)</label>
-            <input type="time" value="${escapeHtml(dest.horaSalida || '')}" onchange="window.actualizarCampoParada(${destId}, 'horaSalida', this.value)">
-          </div>
-          <div class="plux-stop-logistics-field plux-stop-logistics-field--wide">
-            <label>Nota logística</label>
-            <input type="text" value="${escapeHtml(dest.notaParada || '')}" placeholder="Ej. Bote auxiliar (tenders), terminal, muelle..." onchange="window.actualizarCampoParada(${destId}, 'notaParada', this.value)">
-          </div>
-        </div>
+        </details>
       `;
     }
 
@@ -8232,12 +8309,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             </div>
             <div class="field-boa">
               <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('transport_price') || 'PRECIO TRANSPORTE'} (${getSimboloMoneda(tramoMoneda)})</label>
-              <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                <input type="number" id="tramo-precio-${destId}-${ida}" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="flex:1; min-width:90px; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap;">
+                <input type="number" id="tramo-precio-${destId}-${ida}" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="flex:1; min-width:72px; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
                 <select class="plux-moneda-select" onchange="actualizarTramo(${destId}, ${ida}, 'moneda', this.value)" style="width:78px; min-width:70px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.8rem; font-weight:600;" title="Moneda transporte">
                   ${renderCurrencyOptions(tramoMoneda)}
                 </select>
-                <select onchange="actualizarTramo(${destId}, ${ida}, 'modoPrecio', this.value)" style="width:108px; min-width:96px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.76rem; font-weight:600;" title="Tipo de importe">
+                <select onchange="actualizarTramo(${destId}, ${ida}, 'modoPrecio', this.value)" style="width:110px; min-width:96px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.76rem; font-weight:600;" title="Tipo de importe">
                   <option value="persona" ${modoPrecio === 'persona' ? 'selected' : ''}>Por persona</option>
                   <option value="total" ${modoPrecio === 'total' ? 'selected' : ''}>Total grupo</option>
                 </select>
@@ -8265,8 +8342,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             </div>
           </div>
           <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:0.8rem; color:var(--gris); cursor:pointer;">
-            <input type="checkbox" ${tramo.cubreParadas ? 'checked' : ''} onchange="actualizarTramo(${destId}, ${ida}, 'cubreParadas', this.checked)" style="width:auto; min-width:0; height:auto; margin:0;">
-            <span>Cubre transporte y alojamiento en paradas siguientes (crucero, tren nocturno, motorhome)</span>
+            <input type="checkbox" ${tramo.cubreParadas ? 'checked' : ''} onchange="actualizarTramo(${destId}, ${ida}, 'cubreParadas', this.checked)" style="width:16px !important; min-width:16px !important; height:16px !important; min-height:16px !important; padding:0 !important; margin:0 !important; flex-shrink:0; accent-color:#10b981;">
+            <span>Este mismo transporte y alojamiento cubre las paradas siguientes (crucero, tren nocturno, motorhome)</span>
           </label>
           <div class="escalas-container" id="escalas-${destId}-${ida}" style="margin-top:12px;"></div>
           <button class="add-escala-btn" onclick="agregarEscala(${destId}, ${ida})" style="margin-top:10px; background:transparent; border:1px dashed var(--border); color:var(--gris); width:100%; padding:8px; border-radius:8px; cursor:pointer;">${t('agregar_escala_btn')}</button>
@@ -11904,16 +11981,22 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           item.style.cursor = 'pointer';
           const dests = (trip.destinos || []).map(d => d.nombre).join(', ') || 'Sin destinos';
           const embSealHtml = (trip.embajadorSlug && typeof window.getEmbajadorBadgeHtml === 'function') ? window.getEmbajadorBadgeHtml(trip) : '';
+          const vCount = Array.isArray(trip.vouchers) ? trip.vouchers.length : 0;
+          const vBadgeHtml = vCount > 0
+            ? `<button onclick="event.stopPropagation(); window.abrirVouchersDeViaje(${index})" style="background:rgba(16,185,129,0.14); border:1px solid rgba(16,185,129,0.38); color:#34d399; border-radius:999px; padding:2px 8px; font-size:0.72rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Ver vouchers adjuntos a este viaje"><i class="fa-solid fa-ticket"></i> ${vCount} ${vCount === 1 ? 'voucher' : 'vouchers'}</button>`
+            : '';
           item.innerHTML = `
             <div class="trip-info" onclick="cargarViaje(${index})" style="cursor:pointer;flex:1;">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 <h4 style="margin:0;">${escapeHtml(trip.nombre)}</h4>
                 ${embSealHtml}
+                ${vBadgeHtml}
                 <button onclick="event.stopPropagation(); window.renombrarViajeGuardado(${index})" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:0.85rem; padding:2px 4px;" title="Renombrar viaje">✏️</button>
               </div>
               <small style="color:var(--gris);">${new Date(trip.fecha).toLocaleDateString()} · ${escapeHtml(dests)}</small>
             </div>
             <div class="trip-actions">
+              <button onclick="event.stopPropagation(); window.abrirVouchersDeViaje(${index})" style="background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.4); color:#34d399;" title="Vouchers adjuntos del viaje"><i class="fa-solid fa-ticket"></i></button>
               <button onclick="event.stopPropagation();abrirCompartirModal(${index})" style="background:var(--azul);" title="Compartir">🔗</button>
               <button onclick="event.stopPropagation();eliminarViaje(${index})" style="background:#dc2626;" title="Eliminar">×</button>
             </div>
@@ -11966,6 +12049,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         vueltaCostosAdicionales,
         moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
         cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : [],
+        vouchers: Array.isArray(window.vouchersViajeActual) ? window.vouchersViajeActual : [],
         embajadorSlug: window.currentTripEmbajadorSlug || null,
         isTemplateClone: Boolean(window.currentTripEmbajadorSlug || window.currentTripTemplateOrigin),
         templateOrigin: window.currentTripTemplateOrigin || null
@@ -12035,6 +12119,33 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         document.getElementById('fechaInicio').value = normalizeDateTimeLocal(viaje.fechaInicio || '');
       }
       destinos = normalizarDestinosLegacy(viaje.destinos || []);
+      // Purgar eventos corruptos y destinos fantasma creados por OCR
+      destinos.forEach(d => {
+        if (Array.isArray(d?.dias)) {
+          d.dias.forEach(dia => {
+            if (Array.isArray(dia?.eventos)) {
+              dia.eventos = dia.eventos.filter(ev => !isJunkOcrVoucher(ev));
+            }
+          });
+        }
+      });
+      const hasCruiseParadas = destinos.some(d => d.tipoParada === 'embarque' || d.tipoParada === 'escala' || d.cubreParadas || (Number(d.diasTransitoPrevio) > 0));
+      if (hasCruiseParadas) {
+        destinos = destinos.filter(d => {
+          if (/roma/i.test(d?.nombre || '') && (!d.tipoParada || d.tipoParada === 'estadia')) {
+            const hasRealEvents = Array.isArray(d.dias) && d.dias.some(dia => Array.isArray(dia?.eventos) && dia.eventos.some(ev => !isJunkOcrVoucher(ev)));
+            const daysCount = Array.isArray(d.dias) ? d.dias.length : 0;
+            if (daysCount === 0 || !hasRealEvents) {
+              console.log('🧹 [cargarViaje] Destino fantasma purgado:', d.nombre);
+              return false;
+            }
+          }
+          return true;
+        });
+      }
+      window.vouchersViajeActual = Array.isArray(viaje.vouchers)
+        ? JSON.parse(JSON.stringify(viaje.vouchers)).filter(v => !isJunkOcrVoucher(v))
+        : [];
       vueltaGlobal = viaje.vueltaGlobal || '';
       vueltaPrecioGlobal = viaje.vueltaPrecioGlobal || 0;
       vueltaCostosAdicionales = viaje.vueltaCostosAdicionales || [];
@@ -12077,6 +12188,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       renderDestinos();
       renderVueltaCostos();
+      actualizarBadgeVouchersHeader();
+      if (typeof window.resetImportadorEstadoPorCambioViaje === 'function') {
+        window.resetImportadorEstadoPorCambioViaje();
+      }
       if (autoStart) {
         cerrarModalViajes();
         empezar();
@@ -12152,6 +12267,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         vueltaCostosAdicionales,
         moneda: typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR',
         cartelitos: typeof getCartelitosNotas === 'function' ? [...getCartelitosNotas()] : [],
+        vouchers: Array.isArray(window.vouchersViajeActual) ? window.vouchersViajeActual : [],
         embajadorSlug: window.currentTripEmbajadorSlug || null,
         isTemplateClone: Boolean(window.currentTripEmbajadorSlug || window.currentTripTemplateOrigin),
         templateOrigin: window.currentTripTemplateOrigin || null
@@ -13665,6 +13781,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (destContainer) destContainer.innerHTML = '';
       
       cartelitosNotasViaje = [];
+      window.vouchersViajeActual = [];
+      actualizarBadgeVouchersHeader();
+      if (typeof window.resetImportadorEstadoPorCambioViaje === 'function') {
+        window.resetImportadorEstadoPorCambioViaje();
+      }
       if (typeof renderCartelitos === 'function') renderCartelitos();
 
       setActiveSession({
@@ -14026,7 +14147,51 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         collapsedEditorDestinos.add(destId);
       }
     },
-    scoreTouristPlace: (page, destNombre = '') => scoreTouristPlace(page, destNombre)
+    scoreTouristPlace: (page, destNombre = '') => scoreTouristPlace(page, destNombre),
+    getTripVouchers: () => Array.isArray(window.vouchersViajeActual) ? window.vouchersViajeActual : [],
+    upsertTripVoucher: (voucher) => {
+      if (!voucher || isJunkOcrVoucher(voucher)) return;
+      if (!Array.isArray(window.vouchersViajeActual)) window.vouchersViajeActual = [];
+      const compact = JSON.parse(JSON.stringify(voucher));
+      compact.tripId = getCurrentTripId();
+      // Evitar guardar DataURLs pesados en el JSON del viaje si ya hay URL de Cloudinary o si exceden 90KB
+      if (Array.isArray(compact.cloudinaryUrls) && compact.cloudinaryUrls.length > 0) {
+        compact.imagePreview = compact.cloudinaryUrls[0]?.url || compact.imagePreview;
+      }
+      if (compact.imagePreview && String(compact.imagePreview).startsWith('data:') && compact.imagePreview.length > 90000) {
+        compact.imagePreview = null;
+      }
+      const key = compact.syncKey || compact.codigo;
+      const existingIdx = window.vouchersViajeActual.findIndex(v =>
+        (v.id && v.id === compact.id) ||
+        (key && key !== 'CONF-OK' && (v.syncKey === key || v.codigo === key) && v.titulo === compact.titulo)
+      );
+      if (existingIdx >= 0) {
+        window.vouchersViajeActual[existingIdx] = { ...window.vouchersViajeActual[existingIdx], ...compact };
+      } else {
+        window.vouchersViajeActual.unshift(compact);
+      }
+      actualizarBadgeVouchersHeader();
+      if (typeof autoSave === 'function') autoSave();
+    },
+    removeTripVoucher: (voucherId) => {
+      if (!Array.isArray(window.vouchersViajeActual)) return;
+      window.vouchersViajeActual = window.vouchersViajeActual.filter(v => v.id !== voucherId);
+      actualizarBadgeVouchersHeader();
+      if (typeof autoSave === 'function') autoSave();
+    }
+  };
+
+  window.abrirVouchersDeViaje = function(index) {
+    if (typeof index === 'number') {
+      cargarViaje(index, true);
+    }
+    if (typeof cerrarModalViajes === 'function') cerrarModalViajes();
+    if (typeof window.abrirVouchersDelViaje === 'function') {
+      window.abrirVouchersDelViaje();
+    } else if (typeof window.abrirDescubrir === 'function') {
+      window.abrirDescubrir('reservas');
+    }
   };
   function explorarInspo(ciudad) {
     if (!ciudad) return;

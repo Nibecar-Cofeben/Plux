@@ -8569,6 +8569,88 @@ body.minecraft-mode .embajador-modal-card {
   border-radius: 12px;
 }
 
+#descubrir-reservas-content .reserva-finance-bar select.reserva-currency-select,
+.reserva-finance-bar select.reserva-currency-select,
+#descubrir-reservas-content select#expInputMoneda {
+  min-width: 82px;
+  width: 82px;
+  padding: 6px 8px;
+  flex: 0 0 82px;
+}
+
+.importador-active-trip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: #e2e8f0;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.36);
+  max-width: 100%;
+}
+
+.importador-active-trip-pill.new-trip {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.32);
+  color: #bae6fd;
+}
+
+.importador-active-trip-pill i {
+  color: var(--verde, #10b981);
+}
+
+.importador-active-trip-pill.new-trip i {
+  color: #38bdf8;
+}
+
+.importador-active-trip-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--gris);
+  background: rgba(15, 23, 42, 0.7);
+  padding: 7px 13px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wallet-scope-switch {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+#descubrir-reservas-content .wallet-scope-btn,
+.wallet-scope-btn {
+  border: none;
+  background: transparent;
+  color: var(--gris, #94a3b8);
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+#descubrir-reservas-content .wallet-scope-btn.active,
+.wallet-scope-btn.active {
+  background: rgba(16, 185, 129, 0.22);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
 .reserva-finance-pill,
 .reserva-finance-metric {
   display: inline-flex;
@@ -8878,15 +8960,60 @@ body.minecraft-mode .embajador-modal-card {
 }
 
 .plux-stop-logistics-box {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  margin-bottom: 10px;
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.52);
+  background: rgba(15, 23, 42, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.09);
   font-size: 0.82rem;
+}
+
+.plux-stop-logistics-details {
+  width: 100%;
+}
+
+.plux-stop-logistics-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  user-select: none;
+}
+
+.plux-stop-logistics-summary::-webkit-details-marker {
+  display: none;
+}
+
+.plux-stop-logistics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 10px;
+  padding: 0 12px 12px 12px;
+  align-items: end;
+}
+
+.plux-stop-logistics-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.plux-stop-logistics-field label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.plux-stop-logistics-field--wide {
+  grid-column: 1 / -1;
 }
 
 .plux-transit-stepper {
@@ -9066,6 +9193,45 @@ body.minecraft-mode .embajador-modal-card {
 .theme-claro .reserva-finance-bar {
   background: #f8fafc !important;
   border-color: #cbd5e1 !important;
+}
+
+.theme-claro .importador-active-trip-pill {
+  background: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+  color: #065f46 !important;
+}
+
+.theme-claro .importador-active-trip-pill.new-trip {
+  background: #e0f2fe !important;
+  border-color: #7dd3fc !important;
+  color: #0369a1 !important;
+}
+
+.theme-claro .importador-active-trip-bar {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+.theme-claro .importador-active-trip-bar strong {
+  color: #0f172a !important;
+}
+
+.theme-claro .wallet-scope-switch {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.theme-claro #descubrir-reservas-content .wallet-scope-btn,
+.theme-claro .wallet-scope-btn {
+  color: #475569 !important;
+}
+
+.theme-claro #descubrir-reservas-content .wallet-scope-btn.active,
+.theme-claro .wallet-scope-btn.active {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #6ee7b7 !important;
 }
 
 .theme-claro .reserva-finance-pill,

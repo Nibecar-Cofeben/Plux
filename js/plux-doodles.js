@@ -874,11 +874,63 @@
 
     function abrirTerminalLaika() {
       const hud = document.getElementById('laikaTerminal');
-      const content = document.getElementById('laikaTerminalContent');
-      if (!hud || !content) return;
+      if (!hud) return;
+
+      if (!hud.innerHTML.trim()) {
+        hud.innerHTML = `
+      <div class="laika-viewport-modal">
+        <div class="laika-modal-header">
+          <div class="laika-modal-title">
+            <span style="color:#ef4444; font-size:1.15rem;">★</span> 
+            <span>СССР 1957 · ESCOTILLA ORBITAL SPUTNIK-2</span>
+          </div>
+          <button class="laika-modal-close" onclick="window.cerrarTerminalLaika()">✕ Salir de Órbita</button>
+        </div>
+        <div class="laika-viewport-body">
+          <div class="laika-side-gauge">
+            <div class="gauge-title">📻 BALIZA RADIAL</div>
+            <div class="gauge-display">20.005 MHz</div>
+            <div class="gauge-status">ONDA CORTA: ACTIVA</div>
+            <button class="gauge-btn" onclick="window.sintonizarRadioSputnik()">
+              <span>Sintonizar Señal</span>
+            </button>
+          </div>
+          <div class="laika-capsule-porthole">
+            <div class="porthole-outer-rim">
+              <div class="porthole-glass-view">
+                <div class="space-stars-bg"></div>
+                <div class="earth-horizon-curve"></div>
+                <div class="satellite-orbit-dot">🛰️</div>
+                <div class="laika-hero-silhouette">🐾</div>
+              </div>
+            </div>
+            <div class="porthole-caption">ORBITANDO A 28.968 KM/H · ALTITUD 1.660 KM</div>
+          </div>
+          <div class="laika-side-gauge">
+            <div class="gauge-title">💓 BIOMÉTRICA</div>
+            <div class="gauge-display" id="laikaBpmDisplay">102 BPM</div>
+            <div class="gauge-status">RITMO CARDÍACO ESTABLE</div>
+            <button class="gauge-btn" onclick="window.latidoCardiacoLaika()">
+              <span>Escuchar Latidos</span>
+            </button>
+          </div>
+        </div>
+        <div class="laika-viewport-footer">
+          <div class="laika-memorial-txt">
+            «El 3 de noviembre de 1957, Laika fue la primera tripulante de la Tierra en mirar nuestro planeta desde el cosmos.»
+          </div>
+          <div class="laika-footer-actions">
+            <button class="laika-action-star" onclick="window.enviarEstrellasLaika()">
+              ✨ Enviar una Caricia al Cosmos
+            </button>
+          </div>
+        </div>
+      </div>`;
+      }
 
       hud.classList.add('active');
-      content.textContent = '';
+      const content = document.getElementById('laikaTerminalContent');
+      if (content) content.textContent = '';
       playSound('sputnik-beep');
 
       const shock = document.getElementById('chronoShockwave');
@@ -1047,9 +1099,18 @@
     window.mensajeHistoricoLaika = mensajeHistoricoLaika;
 function abrirTerminalARPANET() {
       const hud = document.getElementById('chronoTerminal');
+      if (!hud) return;
+      if (!hud.innerHTML.trim()) {
+        hud.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #22c55e; padding-bottom:6px; margin-bottom:10px; font-weight:bold;">
+      <span>ARPANET IMP-UCLA [TTY-33]</span>
+      <span style="cursor:pointer; color:#ef4444;" onclick="window.cerrarTerminalARPANET()">✕ CERRAR</span>
+    </div>
+    <div id="chronoTerminalContent" style="min-height:90px; white-space:pre-wrap;"></div>`;
+      }
       const content = document.getElementById('chronoTerminalContent');
       hud.classList.add('active');
-      content.textContent = '';
+      if (content) content.textContent = '';
       playSound('modem-beep');
 
       const lines = [
@@ -1087,12 +1148,39 @@ function abrirTerminalARPANET() {
     function abrirWin95() {
       playSound('win95');
       document.body.classList.add('gates-party-active');
-      document.getElementById('win95Window').classList.add('active');
+      const win = document.getElementById('win95Window');
+      if (win && !win.innerHTML.trim()) {
+        win.innerHTML = `
+    <div class="win95-titlebar">
+      <div class="win95-title-text">
+        <span>💾</span>
+        <span>Microsoft Windows 95 - Asistente de Cumpleaños</span>
+      </div>
+      <div class="win95-btn-close" onclick="window.cerrarWin95()">✕</div>
+    </div>
+    <div class="win95-body">
+      <div class="win95-clippy-row">
+        <div style="font-size:2.4rem; line-height:1;">📎</div>
+        <div class="win95-clippy-bubble">
+          <strong>¡Hola! Soy Clippy.</strong><br>
+          Parece que estás celebrando el 69º cumpleaños de <strong>Bill Gates</strong>. ¿Qué deseas hacer hoy?
+        </div>
+      </div>
+      <div class="win95-actions">
+        <button class="win95-btn" onclick="window.cantarCumpleBill()">🎂 Cantar Cumpleaños Feliz (Chiptune 8-Bit)</button>
+        <button class="win95-btn" onclick="window.instalarWin95()">💾 Instalar Windows 95 en Plux (Simulación)</button>
+        <button class="win95-btn" onclick="window.pantallaAzulMuerte()">💀 Provocar Pantalla Azul de la Muerte (BSOD)</button>
+        <button class="win95-btn" onclick="window.cerrarWin95()">✕ Cerrar y Seguir Festejando</button>
+      </div>
+    </div>`;
+      }
+      if (win) win.classList.add('active');
       showPluxeeToast('🎂 <strong>Asistente de Windows 95 abierto:</strong> ¡Celebrando a Bill Gates!');
     }
 
     function cerrarWin95() {
-      document.getElementById('win95Window').classList.remove('active');
+      const win = document.getElementById('win95Window');
+      if (win) win.classList.remove('active');
     }
 
     function cantarCumpleBill() {
@@ -1129,14 +1217,25 @@ function abrirTerminalARPANET() {
 
     function pantallaAzulMuerte() {
       playSound('sonic-boom');
-      document.getElementById('win95Bsod').classList.add('active');
+      const bsod = document.getElementById('win95Bsod');
+      if (bsod && !bsod.innerHTML.trim()) {
+        bsod.innerHTML = `
+    <p>*** STOP: 0x000000BD (FELIZ_CUMPLE_BILL_GATES) ***</p>
+    <p>Se ha producido una excepción fatal en 0028:C0011E36 en PLUX.EXE.</p>
+    <br>
+    <p>* Motivo: Festejo desmedido por el nacimiento de William Henry Gates III (1955).</p>
+    <p>* Estado: Memoria RAM llena de torta, confeti y globos retro.</p>
+    <p>* Presione cualquier tecla o haga clic aquí para reiniciar Windows y volver a Plux...</p>`;
+      }
+      if (bsod) bsod.classList.add('active');
       setTimeout(() => {
         cerrarBsod();
       }, 4500);
     }
 
     function cerrarBsod() {
-      document.getElementById('win95Bsod').classList.remove('active');
+      const bsod = document.getElementById('win95Bsod');
+      if (bsod) bsod.classList.remove('active');
       playSound('win95');
       showPluxeeToast('🖥️ <strong>Sistema reiniciado:</strong> Bienvenido nuevamente a Plux.');
     }
@@ -1146,11 +1245,43 @@ function abrirTerminalARPANET() {
     let mcXpCurrentLevel = 64;
     let prevThemeBeforeMinecraft = null;
 
+    function ensureMcHudDOM() {
+      const hud = document.getElementById('mcHudContainer');
+      if (hud && !hud.innerHTML.trim()) {
+        hud.innerHTML = `
+    <div class="mc-status-bars">
+      <div class="mc-hearts" title="Vida: 20/20" onclick="window.pulseMcStatus && window.pulseMcStatus(this)">
+        <span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span>
+      </div>
+      <div class="mc-hunger" title="Comida: 20/20" onclick="window.pulseMcStatus && window.pulseMcStatus(this)">
+        <span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span>
+      </div>
+      <button type="button" class="mc-hud-toggle" id="mcHudToggle" onclick="window.toggleMcHud && window.toggleMcHud()" title="Ocultar / Mostrar Hotbar">▾</button>
+    </div>
+    <div class="mc-xp-bar-wrap">
+      <div class="mc-xp-fill" id="mcXpFill"></div>
+      <div class="mc-xp-level" id="mcXpLevel">64</div>
+    </div>
+    <div class="mc-hotbar" id="mcHotbar">
+      <div class="mc-slot active" data-slot="1" onclick="window.selectHotbarSlot(1)" title="[1] Pico de Diamante">⛏️<span class="mc-slot-num">1</span></div>
+      <div class="mc-slot" data-slot="2" onclick="window.selectHotbarSlot(2)" title="[2] Manzana Dorada (Clic para comer)">🍎<span class="mc-slot-num">2</span></div>
+      <div class="mc-slot" data-slot="3" onclick="window.selectHotbarSlot(3)" title="[3] Espada de Netherite">⚔️<span class="mc-slot-num">3</span></div>
+      <div class="mc-slot" data-slot="4" onclick="window.selectHotbarSlot(4)" title="[4] Bloque de Césped">🧱<span class="mc-slot-num">4</span></div>
+      <div class="mc-slot" data-slot="5" onclick="window.selectHotbarSlot(5)" title="[5] TNT (¡Creeper Explosion!)">🧨<span class="mc-slot-num">5</span></div>
+      <div class="mc-slot" data-slot="6" onclick="window.selectHotbarSlot(6)" title="[6] Ender Pearl (Teletransporte)">🔮<span class="mc-slot-num">6</span></div>
+      <div class="mc-slot" data-slot="7" onclick="window.selectHotbarSlot(7)" title="[7] Pan Horneado (Comer)">🍞<span class="mc-slot-num">7</span></div>
+      <div class="mc-slot" data-slot="8" onclick="window.selectHotbarSlot(8)" title="[8] Antorcha">🕯️<span class="mc-slot-num">8</span></div>
+      <div class="mc-slot" data-slot="9" onclick="window.selectHotbarSlot(9)" title="[9] Mapa de Plux">🗺️<span class="mc-slot-num">9</span></div>
+    </div>`;
+      }
+    }
+
     function isMinecraftVisualActive() {
       return document.body.classList.contains('minecraft-mode') || document.body.classList.contains('theme-minecraft');
     }
 
     function addMinecraftXp(amount = 14) {
+      ensureMcHudDOM();
       mcXpProgress += amount;
       const fill = document.getElementById('mcXpFill');
       const lvlEl = document.getElementById('mcXpLevel');
@@ -1159,12 +1290,13 @@ function abrirTerminalARPANET() {
         mcXpCurrentLevel += 1;
         playSound('minecraft-xp');
         if (lvlEl) lvlEl.textContent = String(mcXpCurrentLevel);
-        showPluxeeToast(`✨ <strong>¡Nivel ${mcXpCurrentLevel} alcanzado!</strong> XP de explorador subida.`);
+        showPluxeeToast(\`✨ <strong>¡Nivel \${mcXpCurrentLevel} alcanzado!</strong> XP de explorador subida.\`);
       }
-      if (fill) fill.style.width = `${mcXpProgress}%`;
+      if (fill) fill.style.width = \`\${mcXpProgress}%\`;
     }
 
     function toggleMcHud(forceState) {
+      ensureMcHudDOM();
       const hud = document.getElementById('mcHudContainer');
       const btn = document.getElementById('mcHudToggle');
       if (!hud) return;

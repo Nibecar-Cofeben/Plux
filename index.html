@@ -119,7 +119,7 @@
   <base href="/" />
   <link rel="stylesheet" href="/css/plux-herramientas.css">
   <link rel="stylesheet" href="/css/plux-wrapped.css">
-  <link rel="stylesheet" href="/styles.css?v=1790010000038">
+  <link rel="stylesheet" href="/styles.css?v=1790010000045">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -131,7 +131,7 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000029">
+  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000045">
   
   <!-- Firebase (compat) Local Offline SDK -->
   <script defer src="/firebase/firebase-app-compat.js"></script>
@@ -139,90 +139,30 @@
   <script defer src="/firebase/firebase-database-compat.js"></script>
   <script defer src="/firebase/firebase-firestore-compat.js"></script>
   <!-- Plux Modular Architecture -->
-  <script defer src="/js/plux-i18n.js?v=1790010000031"></script>
-  <script defer src="/script.js?v=1790010000038"></script>
-  <script defer src="/js/plux-export-cards.js?v=1790010000038"></script>
-  <script defer src="/js/plux-templates.js?v=1790010000038"></script>
-  <script defer src="/js/plux-discover.js?v=1790010000038"></script>
-  <script defer src="/js/plux-social-chat.js?v=1790010000027"></script>
-  <script defer src="/js/plux-collab.js?v=1790010000038"></script>
-  <script defer src="/js/plux-doodles.js?v=1790010000031"></script>
-    <script defer src="/js/plux-herramientas.js?v=1790010000025"></script>
-  <script defer src="/js/plux-wrapped.js?v=1790010000038"></script>
-<script defer src="/plux-pro.js?v=1790010000031"></script>
-  <script defer src="/js/plux-offline.js?v=1790010000038"></script>
+  <script defer src="/js/plux-i18n.js?v=1790010000046"></script>
+  <script defer src="/script.js?v=1790010000046"></script>
+  <script defer src="/js/plux-export-cards.js?v=1790010000046"></script>
+  <script defer src="/js/plux-templates.js?v=1790010000046"></script>
+  <script defer src="/js/plux-discover.js?v=1790010000046"></script>
+  <script defer src="/js/plux-social-chat.js?v=1790010000046"></script>
+  <script defer src="/js/plux-collab.js?v=1790010000046"></script>
+  <script defer src="/js/plux-doodles.js?v=1790010000046"></script>
+    <script defer src="/js/plux-herramientas.js?v=1790010000046"></script>
+  <script defer src="/js/plux-wrapped.js?v=1790010000046"></script>
+<script defer src="/plux-pro.js?v=1790010000046"></script>
+  <script defer src="/js/plux-offline.js?v=1790010000046"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
-  <div id="ares-esc-banner">PRESIONA ESC PARA SALIR DE ARES</div>
+  <div id="ares-esc-banner"></div>
   <div id="bg-parallax"></div>
   <!-- Canvas global de particulas de Pluxees (Doodles) -->
   <canvas id="doodle-canvas"></canvas>
 
-  <!-- OVERLAYS INTERACTIVOS INMERSIVOS -->
+  <!-- OVERLAYS INTERACTIVOS INMERSIVOS (Inyectados dinámicamente) -->
   <div class="chrono-toast-banner" id="chronoToast"></div>
-  
-  <div class="chrono-terminal-hud" id="chronoTerminal">
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #22c55e; padding-bottom:6px; margin-bottom:10px; font-weight:bold;">
-      <span>ARPANET IMP-UCLA [TTY-33]</span>
-      <span style="cursor:pointer; color:#ef4444;" onclick="window.cerrarTerminalARPANET()">✕ CERRAR</span>
-    </div>
-    <div id="chronoTerminalContent" style="min-height:90px; white-space:pre-wrap;"></div>
-
-  <!-- TERMINAL DE TELEMETRÍA SPUTNIK 2 (LAIKA 1957) -->
-  <!-- ESCOTILLA ESPACIAL SPUTNIK 2 (LAIKA 1957) -->
-  <div class="laika-viewport-overlay" id="laikaTerminal">
-    <div class="laika-viewport-modal">
-      <div class="laika-modal-header">
-        <div class="laika-modal-title">
-          <span style="color:#ef4444; font-size:1.15rem;">★</span> 
-          <span>СССР 1957 · ESCOTILLA ORBITAL SPUTNIK-2</span>
-        </div>
-        <button class="laika-modal-close" onclick="window.cerrarTerminalLaika()">✕ Salir de Órbita</button>
-      </div>
-      <div class="laika-viewport-body">
-        <div class="laika-side-gauge">
-          <div class="gauge-title">📻 BALIZA RADIAL</div>
-          <div class="gauge-display">20.005 MHz</div>
-          <div class="gauge-status">ONDA CORTA: ACTIVA</div>
-          <button class="gauge-btn" onclick="window.sintonizarRadioSputnik()">
-            <span>Sintonizar Señal</span>
-          </button>
-        </div>
-        <div class="laika-capsule-porthole">
-          <div class="porthole-outer-rim">
-            <div class="porthole-glass-view">
-              <div class="space-stars-bg"></div>
-              <div class="earth-horizon-curve"></div>
-              <div class="satellite-orbit-dot">🛰️</div>
-              <div class="laika-hero-silhouette">🐾</div>
-            </div>
-          </div>
-          <div class="porthole-caption">ORBITANDO A 28.968 KM/H · ALTITUD 1.660 KM</div>
-        </div>
-        <div class="laika-side-gauge">
-          <div class="gauge-title">💓 BIOMÉTRICA</div>
-          <div class="gauge-display" id="laikaBpmDisplay">102 BPM</div>
-          <div class="gauge-status">RITMO CARDÍACO ESTABLE</div>
-          <button class="gauge-btn" onclick="window.latidoCardiacoLaika()">
-            <span>Escuchar Latidos</span>
-          </button>
-        </div>
-      </div>
-      <div class="laika-viewport-footer">
-        <div class="laika-memorial-txt">
-          «El 3 de noviembre de 1957, Laika fue la primera tripulante de la Tierra en mirar nuestro planeta desde el cosmos.»
-        </div>
-        <div class="laika-footer-actions">
-          <button class="laika-action-star" onclick="window.enviarEstrellasLaika()">
-            ✨ Enviar una Caricia al Cosmos
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>>
-  </div>
-
+  <div class="chrono-terminal-hud" id="chronoTerminal"></div>
+  <div class="laika-viewport-overlay" id="laikaTerminal"></div>
   <div class="chrono-shockwave" id="chronoShockwave"></div>
 
   <div class="chrono-fire-tracks" id="chronoFireTracks">
@@ -230,73 +170,14 @@
     <div class="chrono-fire-line"></div>
   </div>
 
-  <!-- BARRA HUD DE MINECRAFT ULTRA PROFUNDA -->
-  <div class="mc-hud-container" id="mcHudContainer">
-    <div class="mc-status-bars">
-      <div class="mc-hearts" title="Vida: 20/20" onclick="window.pulseMcStatus && window.pulseMcStatus(this)">
-        <span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span>
-      </div>
-      <div class="mc-hunger" title="Comida: 20/20" onclick="window.pulseMcStatus && window.pulseMcStatus(this)">
-        <span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span><span>🍗</span>
-      </div>
-      <button type="button" class="mc-hud-toggle" id="mcHudToggle" onclick="window.toggleMcHud && window.toggleMcHud()" title="Ocultar / Mostrar Hotbar">▾</button>
-    </div>
-    <div class="mc-xp-bar-wrap">
-      <div class="mc-xp-fill" id="mcXpFill"></div>
-      <div class="mc-xp-level" id="mcXpLevel">64</div>
-    </div>
-    <div class="mc-hotbar" id="mcHotbar">
-      <div class="mc-slot active" data-slot="1" onclick="window.selectHotbarSlot(1)" title="[1] Pico de Diamante">⛏️<span class="mc-slot-num">1</span></div>
-      <div class="mc-slot" data-slot="2" onclick="window.selectHotbarSlot(2)" title="[2] Manzana Dorada (Clic para comer)">🍎<span class="mc-slot-num">2</span></div>
-      <div class="mc-slot" data-slot="3" onclick="window.selectHotbarSlot(3)" title="[3] Espada de Netherite">⚔️<span class="mc-slot-num">3</span></div>
-      <div class="mc-slot" data-slot="4" onclick="window.selectHotbarSlot(4)" title="[4] Bloque de Césped">🧱<span class="mc-slot-num">4</span></div>
-      <div class="mc-slot" data-slot="5" onclick="window.selectHotbarSlot(5)" title="[5] TNT (¡Creeper Explosion!)">🧨<span class="mc-slot-num">5</span></div>
-      <div class="mc-slot" data-slot="6" onclick="window.selectHotbarSlot(6)" title="[6] Ender Pearl (Teletransporte)">🔮<span class="mc-slot-num">6</span></div>
-      <div class="mc-slot" data-slot="7" onclick="window.selectHotbarSlot(7)" title="[7] Pan Horneado (Comer)">🍞<span class="mc-slot-num">7</span></div>
-      <div class="mc-slot" data-slot="8" onclick="window.selectHotbarSlot(8)" title="[8] Antorcha">🕯️<span class="mc-slot-num">8</span></div>
-      <div class="mc-slot" data-slot="9" onclick="window.selectHotbarSlot(9)" title="[9] Mapa de Plux">🗺️<span class="mc-slot-num">9</span></div>
-    </div>
-  </div>
-
-    
+  <!-- BARRA HUD DE MINECRAFT (Inyectada dinámicamente) -->
+  <div class="mc-hud-container" id="mcHudContainer"></div>
 
   <div class="tradicion-action-banner" id="tradicionActionBanner"></div>
 
-  <!-- VENTANA RETRO WINDOWS 95 DE BILL GATES -->
-  <div class="win95-window-overlay" id="win95Window">
-    <div class="win95-titlebar">
-      <div class="win95-title-text">
-        <span>💾</span>
-        <span>Microsoft Windows 95 - Asistente de Cumpleaños</span>
-      </div>
-      <div class="win95-btn-close" onclick="window.cerrarWin95()">✕</div>
-    </div>
-    <div class="win95-body">
-      <div class="win95-clippy-row">
-        <div style="font-size:2.4rem; line-height:1;">📎</div>
-        <div class="win95-clippy-bubble">
-          <strong>¡Hola! Soy Clippy.</strong><br>
-          Parece que estás celebrando el 69º cumpleaños de <strong>Bill Gates</strong>. ¿Qué deseas hacer hoy?
-        </div>
-      </div>
-      <div class="win95-actions">
-        <button class="win95-btn" onclick="window.cantarCumpleBill()">🎂 Cantar Cumpleaños Feliz (Chiptune 8-Bit)</button>
-        <button class="win95-btn" onclick="window.instalarWin95()">💾 Instalar Windows 95 en Plux (Simulación)</button>
-        <button class="win95-btn" onclick="window.pantallaAzulMuerte()">💀 Provocar Pantalla Azul de la Muerte (BSOD)</button>
-        <button class="win95-btn" onclick="window.cerrarWin95()">✕ Cerrar y Seguir Festejando</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- PANTALLA AZUL DE LA MUERTE (BSOD) DIVERTIDA -->
-  <div class="win95-bsod" id="win95Bsod" onclick="window.cerrarBsod()">
-    <p>*** STOP: 0x000000BD (FELIZ_CUMPLE_BILL_GATES) ***</p>
-    <p>Se ha producido una excepción fatal en 0028:C0011E36 en PLUX.EXE.</p>
-    <br>
-    <p>* Motivo: Festejo desmedido por el nacimiento de William Henry Gates III (1955).</p>
-    <p>* Estado: Memoria RAM llena de torta, confeti y globos retro.</p>
-    <p>* Presione cualquier tecla o haga clic aquí para reiniciar Windows y volver a Plux...</p>
-  </div>
+  <!-- VENTANAS RETRO Y BSOD (Inyectadas dinámicamente) -->
+  <div class="win95-window-overlay" id="win95Window"></div>
+  <div class="win95-bsod" id="win95Bsod" onclick="window.cerrarBsod()"></div>
 
   <div class="welcome" id="welcome">
     <div class="top-selectors">
@@ -418,15 +299,9 @@
       <div class="doodle-wing-right">
         <div class="doodle-info-card">
           <button class="btn-card-dismiss" onclick="window.desactivarDoodle()" title="Ocultar Pluxee">✕</button>
-          <div class="doodle-card-date" id="doodleCardDate">
-            <span>✈️ 24 DE OCTUBRE</span>
-          </div>
-          <div class="doodle-card-title" id="doodleCardTitle">
-            Último Vuelo del Concorde
-          </div>
-          <div class="doodle-card-desc" id="doodleCardDesc">
-            En 2003 concluyó la era comercial supersónica: Londres a Nueva York en solo 3 horas y media.
-          </div>
+          <div class="doodle-card-date" id="doodleCardDate"></div>
+          <div class="doodle-card-title" id="doodleCardTitle"></div>
+          <div class="doodle-card-desc" id="doodleCardDesc"></div>
           <div class="doodle-card-actions">
             <button class="btn-card-info" onclick="window.abrirModalInfo()">
               <span>ℹ️ Historia</span>
@@ -514,6 +389,7 @@
         <button class="herramienta-btn" onclick="window.abrirModalRuleta()" id="btnRuleta"><i class="fa-solid fa-dharmachakra" style="margin-right:8px; opacity:0.8;"></i> Ruleta</button>
         <button class="herramienta-btn" onclick="window.abrirModalLogros()" id="btnHerramientaLogros"><i class="fa-solid fa-trophy" style="margin-right:8px; opacity:0.8; color:#f59e0b;"></i> Logros (50)</button>
         <button class="herramienta-btn" onclick="window.cerrarPanelHerramientas(); window.abrirDescubrir('reservas');" id="btnHerramientaReservas"><i class="fa-solid fa-file-import" style="margin-right:8px; opacity:0.8; color:#38bdf8;"></i> Importar Reservas</button>
+        <button class="herramienta-btn" onclick="window.cerrarPanelHerramientas(); window.abrirVouchersDelViaje ? window.abrirVouchersDelViaje() : window.abrirDescubrir('reservas');" id="btnHerramientaVouchers"><i class="fa-solid fa-ticket" style="margin-right:8px; opacity:0.8; color:#10b981;"></i> Vouchers del Viaje</button>
         <button class="herramienta-btn" id="btnPreferencias" onclick="abrirPreferencias()"><i class="fa-solid fa-sliders" style="margin-right:8px; opacity:0.8;"></i> Preferencias</button>
         <button class="herramienta-btn" id="btnViajeActivo" style="background:var(--rosa); border-color:var(--rosa); font-weight:bold; color:white;" onclick="window.toggleViajeActivo()">Modo Viaje Activo</button>
       </div>
@@ -1116,6 +992,7 @@
           </div>
           <button id="btnClonarHeader" class="btn-clonar-action" onclick="window.clonarViajeActual()" style="display:none; background:linear-gradient(135deg, #10b981, #0ea5e9); color:#030712; padding:8px 16px; border-radius:20px; font-weight:800; cursor:pointer; border:none; align-items:center; gap:6px; box-shadow:0 0 14px rgba(16,185,129,0.4); font-size:0.88rem;"><span id="btnClonarHeaderTxt">📋 Clonar Viaje</span></button>
           <button id="chatGrupalHeaderBtn" onclick="window.abrirChatSocial()" style="background:linear-gradient(135deg, #10b981, #38bdf8); color:white; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:6px; box-shadow:0 0 12px rgba(16,185,129,0.35);">💬 Chat Grupal</button>
+          <button id="vouchersHeaderBtn" onclick="window.abrirVouchersDelViaje ? window.abrirVouchersDelViaje() : window.abrirDescubrir('reservas')" style="background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--texto); padding:8px 14px; border-radius:20px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;"><i class="fa-solid fa-ticket"></i> Vouchers <span id="vouchersHeaderCount"></span></button>
           <button id="scratchBtnEditor" onclick="window.empezarDeCero()" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none;">Viaje desde cero 🆕</button>
           <button id="invitarHeaderBtn" onclick="window.abrirColaboradores()" style="background:var(--verde); color:black; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; border:none; display:flex; align-items:center; gap:8px;">Invitar</button>
         </div>
@@ -2094,6 +1971,10 @@
         <button class="mobile-drawer-item" onclick="window.crearNotaCartelito(); window.toggleMobileTripMenu();">
           <span class="icon">📝</span>
           <span>Crear Nota Flotante</span>
+        </button>
+        <button class="mobile-drawer-item" onclick="window.toggleMobileTripMenu(); window.abrirVouchersDelViaje ? window.abrirVouchersDelViaje() : window.abrirDescubrir('reservas');">
+          <span class="icon"><i class="fa-solid fa-ticket"></i></span>
+          <span>Vouchers del Viaje <span id="vouchersMobileCount"></span></span>
         </button>
         <button class="mobile-drawer-item" onclick="window.mobileActionInvitar()">
           <span class="icon">👥</span>

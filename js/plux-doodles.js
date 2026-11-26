@@ -2094,6 +2094,155 @@ function abrirTerminalARPANET() {
     window.mostrarBannerTradicion = mostrarBannerTradicion;
 
     // =========================================================
+    // LOCALIZACIÓN MANUAL DE TARJETAS PLUXEE (ES / EN / FR / DE / IT)
+    // =========================================================
+    const DOODLE_I18N = {
+      concorde: {
+        en: { dateText: '✈️ OCTOBER 24', title: 'Concorde’s Final Flight', desc: 'In 2003, the supersonic passenger era ended: London to New York in just 3.5 hours.', btnText: '✈️ Mach 2 Barrier' },
+        fr: { dateText: '✈️ 24 OCTOBRE', title: 'Dernier Vol du Concorde', desc: 'En 2003 s’achevait l’ère commerciale supersonique : Londres à New York en 3 h 30.', btnText: '✈️ Mur du Mach 2' },
+        de: { dateText: '✈️ 24. OKTOBER', title: 'Letzter Flug der Concorde', desc: '2003 endete die Ära des Überschall-Linienflugs: London–New York in nur 3,5 Stunden.', btnText: '✈️ Mach-2-Grenze' },
+        it: { dateText: '✈️ 24 OTTOBRE', title: 'Ultimo Volo del Concorde', desc: 'Nel 2003 si concluse l’era supersonica commerciale: Londra–New York in sole 3 ore e mezza.', btnText: '✈️ Barriera Mach 2' }
+      },
+      bttf: {
+        en: { dateText: '⚡ OCTOBER 21', title: 'Back to the Future Day', desc: 'Marty and Doc travel through time in the DeLorean. Cinema’s most iconic time-travel trip.', btnText: '⚡ 88 MPH' },
+        fr: { dateText: '⚡ 21 OCTOBRE', title: 'Back to the Future Day', desc: 'Marty et Doc voyagent dans le temps à bord de la DeLorean. Le voyage temporel culte du cinéma.', btnText: '⚡ 88 MPH' },
+        de: { dateText: '⚡ 21. OKTOBER', title: 'Zurück-in-die-Zukunft-Tag', desc: 'Marty und Doc reisen im DeLorean durch die Zeit – die legendärste Zeitreise der Filmgeschichte.', btnText: '⚡ 88 MPH' },
+        it: { dateText: '⚡ 21 OTTOBRE', title: 'Back to the Future Day', desc: 'Marty e Doc viaggiano nel tempo sulla DeLorean: il viaggio temporale più iconico del cinema.', btnText: '⚡ 88 MPH' }
+      },
+      madre: {
+        en: { dateText: '🌸 OCTOBER 18', title: 'Mother’s Day (Argentina)', desc: 'A family celebration of boundless love and reunion that brings travelers together nationwide.', btnText: '🌸 Send Love' },
+        fr: { dateText: '🌸 18 OCTOBRE', title: 'Fête des Mères (Argentine)', desc: 'Une célébration familiale d’amour infini et de retrouvailles à travers tout le pays.', btnText: '🌸 Dédier' },
+        de: { dateText: '🌸 18. OKTOBER', title: 'Muttertag (Argentinien)', desc: 'Ein Familienfest voller Liebe und Wiedersehen, das Reisende im ganzen Land verbindet.', btnText: '🌸 Liebe senden' },
+        it: { dateText: '🌸 18 OTTOBRE', title: 'Festa della Mamma (Argentina)', desc: 'Una festa di famiglia fatta d’amore infinito e ricongiungimenti per i viaggiatori di tutto il Paese.', btnText: '🌸 Dedica amore' }
+      },
+      arpanet: {
+        en: { dateText: '🌐 OCTOBER 29', title: 'Birth of the Internet', desc: 'The first message sent over ARPANET between UCLA and Stanford: the historic word "LO".', btnText: '📟 Open Terminal' },
+        fr: { dateText: '🌐 29 OCTOBRE', title: 'Naissance d’Internet', desc: 'Le premier message envoyé sur ARPANET entre UCLA et Stanford : le mot historique « LO ».', btnText: '📟 Ouvrir le terminal' },
+        de: { dateText: '🌐 29. OKTOBER', title: 'Geburt des Internets', desc: 'Die erste über ARPANET zwischen UCLA und Stanford gesendete Nachricht: das historische „LO“.', btnText: '📟 Terminal öffnen' },
+        it: { dateText: '🌐 29 OTTOBRE', title: 'Nascita di Internet', desc: 'Il primo messaggio inviato su ARPANET tra UCLA e Stanford: la storica parola "LO".', btnText: '📟 Apri Terminale' }
+      },
+      halloween: {
+        en: { dateText: '🎃 OCTOBER 31', title: 'Halloween & All Hallows’ Eve', desc: 'Ancient night of Samhain: folklore, glowing jack-o’-lanterns, and mysteries lighting up the journey.', btnText: '🎃 Spell & Bats' },
+        fr: { dateText: '🎃 31 OCTOBRE', title: 'Halloween & Nuit des Sorcières', desc: 'Ancienne nuit de Samhain : mythes, lanternes citrouilles et mystères illuminant le voyage.', btnText: '🎃 Sort & Chauves-souris' },
+        de: { dateText: '🎃 31. OKTOBER', title: 'Halloween & Samhain-Nacht', desc: 'Alte Samhain-Nacht: Mythen, Kürbislaternen und Geheimnisse, die jede Reise erhellen.', btnText: '🎃 Zauber & Fledermäuse' },
+        it: { dateText: '🎃 31 OTTOBRE', title: 'Halloween & Notte delle Streghe', desc: 'Antica notte di Samhain: miti, lanterne di zucca e misteri che illuminano il viaggio.', btnText: '🎃 Incantesimo & Pipistrelli' }
+      },
+      bitcoin: {
+        en: { dateText: '₿ OCTOBER 31', title: 'Bitcoin Whitepaper', desc: 'Satoshi Nakamoto publishes the paper that sparked digital money and blockchain technology.', btnText: '⛓️ Mine Block #0' },
+        fr: { dateText: '₿ 31 OCTOBRE', title: 'Livre blanc du Bitcoin', desc: 'Satoshi Nakamoto publie l’article fondateur de la monnaie numérique et de la blockchain.', btnText: '⛓️ Miner Bloc #0' },
+        de: { dateText: '₿ 31. OKTOBER', title: 'Bitcoin-Whitepaper', desc: 'Satoshi Nakamoto veröffentlicht das Papier, das digitales Geld und die Blockchain begründete.', btnText: '⛓️ Block #0 minen' },
+        it: { dateText: '₿ 31 OTTOBRE', title: 'Whitepaper di Bitcoin', desc: 'Satoshi Nakamoto pubblica il documento che ha dato origine alla moneta digitale e alla blockchain.', btnText: '⛓️ Mina Blocco #0' }
+      },
+      minecraft: {
+        en: { dateText: '⛏️ NOVEMBER 18', title: 'Minecraft 1.0 Launch', desc: 'The best-selling video game in history officially leaves Beta at the first MineCon.', btnText: '⛏️ Enable Voxel Mode' },
+        fr: { dateText: '⛏️ 18 NOVEMBRE', title: 'Sortie de Minecraft 1.0', desc: 'Le jeu vidéo le plus vendu de l’histoire quitte officiellement la Bêta lors de la première MineCon.', btnText: '⛏️ Mode Voxel' },
+        de: { dateText: '⛏️ 18. NOVEMBER', title: 'Release von Minecraft 1.0', desc: 'Das meistverkaufte Videospiel der Geschichte verlässt auf der ersten MineCon die Beta.', btnText: '⛏️ Voxel-Modus an' },
+        it: { dateText: '⛏️ 18 NOVEMBRE', title: 'Lancio di Minecraft 1.0', desc: 'Il videogioco più venduto della storia esce ufficialmente dalla Beta alla prima MineCon.', btnText: '⛏️ Attiva Modo Voxel' }
+      },
+      gates: {
+        en: { dateText: '🎂 OCTOBER 28', title: 'Bill Gates’ Birthday', desc: 'Celebrating the personal computing revolution and the vision of a PC in every home.', btnText: '🎉 Happy Birthday' },
+        fr: { dateText: '🎂 28 OCTOBRE', title: 'Anniversaire de Bill Gates', desc: 'Célébration de la révolution informatique personnelle et de la vision d’un PC dans chaque foyer.', btnText: '🎉 Joyeux Anniversaire' },
+        de: { dateText: '🎂 28. OKTOBER', title: 'Geburtstag von Bill Gates', desc: 'Zur Feier der Personal-Computer-Revolution und der Vision eines PCs in jedem Haushalt.', btnText: '🎉 Alles Gute' },
+        it: { dateText: '🎂 28 OTTOBRE', title: 'Compleanno di Bill Gates', desc: 'Celebrando la rivoluzione dell’informatica personale e la visione di un PC in ogni casa.', btnText: '🎉 Buon Compleanno' }
+      },
+      muertos: {
+        en: { dateText: '🕯️ NOVEMBER 1', title: 'Día de Muertos & All Saints', desc: 'Golden marigold petals, candles, and La Catrina honoring those who traveled ahead of us.', btnText: '🕯️ Light Candles' },
+        fr: { dateText: '🕯️ 1er NOVEMBRE', title: 'Jour des Morts & Toussaint', desc: 'Pétales dorés de cempasúchil, bougies et Catrina en hommage à ceux qui ont voyagé avant nous.', btnText: '🕯️ Allumer des bougies' },
+        de: { dateText: '🕯️ 1. NOVEMBER', title: 'Día de Muertos & Allerheiligen', desc: 'Goldene Tagetesblüten, Kerzen und La Catrina zu Ehren jener, die vor uns gereist sind.', btnText: '🕯️ Kerzen anzünden' },
+        it: { dateText: '🕯️ 1° NOVEMBRE', title: 'Día de Muertos e Ognissanti', desc: 'Petali dorati di cempasúchil, candele e La Catrina per ricordare chi ha viaggiato prima di noi.', btnText: '🕯️ Accendi Candele' }
+      },
+      laika: {
+        en: { dateText: '🚀 NOVEMBER 3', title: 'Laika’s Mission (Sputnik 2)', desc: 'The spacefaring dog becomes the first Earthling to orbit outer space.', btnText: '🛰️ Look Out the Hatch' },
+        fr: { dateText: '🚀 3 NOVEMBRE', title: 'Mission de Laïka (Spoutnik 2)', desc: 'La chienne cosmonaute devient le premier être vivant terrestre à orbiter dans l’espace.', btnText: '🛰️ Hublot orbital' },
+        de: { dateText: '🚀 3. NOVEMBER', title: 'Laikas Mission (Sputnik 2)', desc: 'Die Raumfahrthündin umkreist als erstes Lebewesen von der Erde den Weltraum.', btnText: '🛰️ Durch die Luke schauen' },
+        it: { dateText: '🚀 3 NOVEMBRE', title: 'Missione di Laika (Sputnik 2)', desc: 'La cagnolina cosmonauta diventa il primo essere terrestre a orbitare nello spazio.', btnText: '🛰️ Guarda dall’oblò' }
+      },
+      tradicion: {
+        en: { dateText: '☀️ NOVEMBER 10 • 🇦🇷 ARGENTINA', title: 'Argentine Tradition Day 🇦🇷', desc: 'Tribute to José Hernández and Martín Fierro: hot mate, acoustic guitar, asado, and gaucho roots.', btnText: '🇦🇷 Celebrate Tradition' },
+        fr: { dateText: '☀️ 10 NOVEMBRE • 🇦🇷 ARGENTINE', title: 'Journée de la Tradition 🇦🇷', desc: 'Hommage à José Hernández et au Martín Fierro : maté chaud, guitare, asado et racines gauchas.', btnText: '🇦🇷 Célébrer' },
+        de: { dateText: '☀️ 10. NOVEMBER • 🇦🇷 ARGENTINIEN', title: 'Tag der Tradition 🇦🇷', desc: 'Hommage an José Hernández und Martín Fierro: heißer Mate, Gitarre, Asado und Gaucho-Wurzeln.', btnText: '🇦🇷 Tradition feiern' },
+        it: { dateText: '☀️ 10 NOVEMBRE • 🇦🇷 ARGENTINA', title: 'Giorno della Tradizione 🇦🇷', desc: 'Omaggio a José Hernández e al Martín Fierro: mate caldo, chitarra, asado e radici gauchas.', btnText: '🇦🇷 Celebra Tradizione' }
+      },
+      philae: {
+        en: { dateText: '☄️ NOVEMBER 12', title: 'Comet 67P Landing', desc: 'ESA’s Rosetta lander Philae achieves humanity’s first touchdown on the surface of a comet.', btnText: '⚓ Fire Harpoons' },
+        fr: { dateText: '☄️ 12 NOVEMBRE', title: 'Atterrissage sur la comète 67P', desc: 'L’atterrisseur Philae de la mission Rosetta (ESA) réussit le premier posé humain sur une comète.', btnText: '⚓ Ancrer les harpons' },
+        de: { dateText: '☄️ 12. NOVEMBER', title: 'Landung auf Komet 67P', desc: 'Die ESA-Sonde Philae der Rosetta-Mission meistert die erste Landung auf einem Kometen.', btnText: '⚓ Harpunen setzen' },
+        it: { dateText: '☄️ 12 NOVEMBRE', title: 'Atterraggio sulla cometa 67P', desc: 'Il lander Philae della missione Rosetta (ESA) compie il primo atterraggio umano su una cometa.', btnText: '⚓ Aggancia Arpioni' }
+      },
+      nellie_bly: {
+        en: { dateText: '🚂 NOVEMBER 14', title: 'Nellie Bly Around the World', desc: 'The trailblazing journalist sets off solo to beat Jules Verne’s record: circling Earth in 72 days.', btnText: '🌍 Blow Whistle' },
+        fr: { dateText: '🚂 14 NOVEMBRE', title: 'Le Tour du Monde de Nellie Bly', desc: 'La journaliste intrépide défie le record de Jules Verne et boucle le tour du globe en 72 jours.', btnText: '🌍 Siffler le départ' },
+        de: { dateText: '🚂 14. NOVEMBER', title: 'Nellie Blys Weltreise', desc: 'Die unerschrockene Journalistin unterbietet Jules Vernes Rekord und umrundet die Welt in 72 Tagen.', btnText: '🌍 Pfeife ertönen' },
+        it: { dateText: '🚂 14 NOVEMBRE', title: 'Il Giro del Mondo di Nellie Bly', desc: 'L’audace giornalista sfida il record di Jules Verne compiendo il giro del pianeta in 72 giorni.', btnText: '🌍 Suona il fischietto' }
+      },
+      patrimonio: {
+        en: { dateText: '🏛️ NOVEMBER 16', title: 'UNESCO World Heritage Day', desc: 'Signing of the convention to safeguard Earth’s greatest cultural monuments and natural wonders.', btnText: '🕊️ Protect Treasure' },
+        fr: { dateText: '🏛️ 16 NOVEMBRE', title: 'Patrimoine Mondial UNESCO', desc: 'Signature de la convention protégeant les plus grands monuments culturels et sanctuaires naturels.', btnText: '🕊️ Protéger le trésor' },
+        de: { dateText: '🏛️ 16. NOVEMBER', title: 'UNESCO-Welterbetag', desc: 'Unterzeichnung der Konvention zum Schutz der größten Kultur- und Naturdenkmäler der Erde.', btnText: '🕊️ Erbe schützen' },
+        it: { dateText: '🏛️ 16 NOVEMBRE', title: 'Giornata Patrimonio UNESCO', desc: 'Firma della convenzione per tutelare i più grandi monumenti culturali e santuari naturali della Terra.', btnText: '🕊️ Proteggi Tesoro' }
+      },
+      iss: {
+        en: { dateText: '🛰️ NOVEMBER 20', title: 'Launch of the ISS', desc: 'The Zarya module lifts off in 1998, founding the International Space Station: humanity’s orbital home.', btnText: '🛰️ View Orbit' },
+        fr: { dateText: '🛰️ 20 NOVEMBRE', title: 'Lancement de l’ISS', desc: 'Le module Zarya décolle en 1998, donnant naissance à la Station Spatiale Internationale.', btnText: '🛰️ Voir l’orbite' },
+        de: { dateText: '🛰️ 20. NOVEMBER', title: 'Start der Raumstation ISS', desc: '1998 startet das Sarja-Modul und begründet die Internationale Raumstation als Außenposten im All.', btnText: '🛰️ Orbit ansehen' },
+        it: { dateText: '🛰️ 20 NOVEMBRE', title: 'Lancio della Stazione ISS', desc: 'Nel 1998 decolla il modulo Zarya, dando vita alla Stazione Spaziale Internazionale in orbita.', btnText: '🛰️ Vedi Orbita' }
+      },
+      montgolfier: {
+        en: { dateText: '🎈 NOVEMBER 21', title: 'First Hot-Air Balloon Flight', desc: 'In 1783, the Montgolfier brothers lift humanity into the skies over Paris for the first time.', btnText: '🔥 Fire Burner' },
+        fr: { dateText: '🎈 21 NOVEMBRE', title: 'Premier Vol en Montgolfière', desc: 'En 1783, les frères Montgolfier élèvent pour la première fois l’être humain dans le ciel de Paris.', btnText: '🔥 Allumer le brûleur' },
+        de: { dateText: '🎈 21. NOVEMBER', title: 'Erster Heißluftballonflug', desc: '1783 erheben die Brüder Montgolfier den Menschen erstmals in den Himmel über Paris.', btnText: '🔥 Brenner zünden' },
+        it: { dateText: '🎈 21 NOVEMBRE', title: 'Primo Volo in Mongolfiera', desc: 'Nel 1783 i fratelli Montgolfier portano l’uomo per la prima volta nei cieli di Parigi.', btnText: '🔥 Accendi Bruciatore' }
+      },
+      curiosity: {
+        en: { dateText: '🔴 NOVEMBER 26', title: 'Curiosity Rover Launch to Mars', desc: 'NASA’s boldest rover blasts off in search of signs of past water and habitability on Mars.', btnText: '📡 Fire ChemCam' },
+        fr: { dateText: '🔴 26 NOVEMBRE', title: 'Lancement du Rover Curiosity', desc: 'La mission la plus audacieuse de la NASA décolle pour chercher des traces d’eau sur la Planète Rouge.', btnText: '📡 Tirer ChemCam' },
+        de: { dateText: '🔴 26. NOVEMBER', title: 'Start des Mars-Rovers Curiosity', desc: 'Die kühnste NASA-Mission startet auf der Suche nach Wasserspuren und Lebensfreundlichkeit auf dem Mars.', btnText: '📡 ChemCam abfeuern' },
+        it: { dateText: '🔴 26 NOVEMBRE', title: 'Lancio del Rover Curiosity', desc: 'Decolla la missione NASA più ambiziosa alla ricerca di tracce d’acqua e abitabilità su Marte.', btnText: '📡 Spara ChemCam' }
+      },
+      magallanes: {
+        en: { dateText: '🧭 NOVEMBER 27', title: 'Entry into the Pacific Ocean (1520)', desc: 'Ferdinand Magellan completes the stormy Patagonian strait crossing and reaches the vast Pacific.', btnText: '🌊 Sail the Pacific' },
+        fr: { dateText: '🧭 27 NOVEMBRE', title: 'Entrée dans l’Océan Pacifique (1520)', desc: 'Fernand de Magellan franchit le détroit patagonien et découvre l’immensité de l’océan Pacifique.', btnText: '🌊 Naviguer' },
+        de: { dateText: '🧭 27. NOVEMBER', title: 'Einfahrt in den Pazifik (1520)', desc: 'Ferdinand Magellan bezwingt die stürmische Magellanstraße und erreicht die Weiten des Pazifiks.', btnText: '🌊 Pazifik befahren' },
+        it: { dateText: '🧭 27 NOVEMBRE', title: 'Ingresso nell’Oceano Pacifico (1520)', desc: 'Ferdinando Magellano supera il tempestoso stretto patagonico e raggiunge l’immenso Pacifico.', btnText: '🌊 Naviga il Pacifico' }
+      },
+      twain: {
+        en: { dateText: '✒️ NOVEMBER 30', title: 'Birth of Mark Twain (1835)', desc: 'Tribute to the renowned author & traveler. "Travel is fatal to prejudice, bigotry, and narrow-mindedness."', btnText: '📜 Travel Quote' },
+        fr: { dateText: '✒️ 30 NOVEMBRE', title: 'Naissance de Mark Twain (1835)', desc: 'Hommage au célèbre écrivain-voyageur. « Les voyages sont fatals aux préjugés et à l’étroitesse d’esprit. »', btnText: '📜 Citation' },
+        de: { dateText: '✒️ 30. NOVEMBER', title: 'Geburtstag von Mark Twain (1835)', desc: 'Hommage an den berühmten Autor: „Reisen ist tödlich für Vorurteile, Bigotterie und Engstirnigkeit.“', btnText: '📜 Reisezitat' },
+        it: { dateText: '✒️ 30 NOVEMBRE', title: 'Nascita di Mark Twain (1835)', desc: 'Omaggio al celebre scrittore: "Viaggiare è fatale ai pregiudizi, al bigottismo e alla ristrettezza mentale."', btnText: '📜 Citazione' }
+      }
+    };
+
+    const VOXEL_ON_LABELS = {
+      es: '⛏️ Modo Voxel: ON',
+      en: '⛏️ Voxel Mode: ON',
+      fr: '⛏️ Mode Voxel : ON',
+      de: '⛏️ Voxel-Modus: AN',
+      it: '⛏️ Modo Voxel: ON'
+    };
+
+    function getDoodleLocale() {
+      let lang = (typeof window.getCurrentLang === 'function' ? window.getCurrentLang() : null)
+        || window.currentLang
+        || localStorage.getItem('Plux_Lang')
+        || localStorage.getItem('plux_lang')
+        || 'es';
+      lang = String(lang).toLowerCase().slice(0, 2);
+      return ['es', 'en', 'fr', 'de', 'it'].includes(lang) ? lang : 'es';
+    }
+
+    function getLocalizedPluxee(key, data) {
+      const lang = getDoodleLocale();
+      const loc = lang !== 'es' && DOODLE_I18N[key] && DOODLE_I18N[key][lang];
+      return {
+        dateText: (loc && loc.dateText) || data.dateText,
+        title: (loc && loc.title) || data.title,
+        desc: (loc && loc.desc) || data.desc,
+        btnText: (loc && loc.btnText) || data.btnText
+      };
+    }
+
+    // =========================================================
     // CATÁLOGO DE PLUXEES (EFEMÉRIDES EXCLUSIVAS)
     // =========================================================
     const PLUXEES = {
@@ -2700,19 +2849,28 @@ function abrirTerminalARPANET() {
       if (imgEl) imgEl.src = data.img;
 
       // Actualizar ala derecha (tarjeta contextual)
+      const loc = getLocalizedPluxee(key, data);
       const dateEl = document.getElementById('doodleCardDate');
-      if (dateEl) dateEl.innerHTML = `<span>${data.dateText}</span>`;
+      if (dateEl) dateEl.textContent = loc.dateText;
       const titleEl = document.getElementById('doodleCardTitle');
-      if (titleEl) titleEl.textContent = data.title;
+      if (titleEl) titleEl.textContent = loc.title;
       const descEl = document.getElementById('doodleCardDesc');
-      if (descEl) descEl.textContent = data.desc;
+      if (descEl) descEl.textContent = loc.desc;
       const btnText = document.getElementById('btnCardActionText');
       if (btnText) {
-        btnText.textContent = (key === 'minecraft' && isMinecraftVisualActive())
-          ? '⛏️ Modo Voxel: ON'
-          : (data.btnText || '✨ Probar');
+        if (key === 'minecraft' && isMinecraftVisualActive()) {
+          btnText.textContent = VOXEL_ON_LABELS[getDoodleLocale()] || '⛏️ Modo Voxel: ON';
+        } else {
+          btnText.textContent = loc.btnText || (typeof window.t === 'function' ? window.t('welcome.doodle_try') : '✨ Probar');
+        }
       }
     }
+
+    window.refreshPluxeeLanguage = function() {
+      if (currentKey && !document.body.classList.contains('capsula-dismissed')) {
+        seleccionarDoodle(currentKey, false);
+      }
+    };
 
     function dispararAccionActual() {
       const data = PLUXEES[currentKey];

@@ -1,15 +1,19 @@
 {
+  "id": "/",
   "name": "Plux · Planificador Inteligente de Viajes e Itinerarios",
   "short_name": "Plux",
   "description": "Organiza tus viajes día por día, calcula presupuestos multidivisa, guarda vouchers y consulta mapas 100% offline.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "any",
   "background_color": "#090d16",
   "theme_color": "#34d399",
   "lang": "es",
+  "dir": "ltr",
   "categories": ["travel", "navigation", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/plux-logo.png",
@@ -21,7 +25,23 @@
       "src": "/plux-logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-banner.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Plux en Escritorio · Planificador de Viajes"
+    },
+    {
+      "src": "/og-banner.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Plux en Móvil · Planificador de Viajes"
     }
   ],
   "shortcuts": [

@@ -117,11 +117,19 @@
   </script>
 
   <base href="/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
   <link rel="stylesheet" href="/css/plux-herramientas.css">
   <link rel="stylesheet" href="/css/plux-wrapped.css">
-  <link rel="stylesheet" href="/styles.css?v=1790010000045">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/styles.css?v=1790010000050">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+  <link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></noscript>
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
   <script defer src="/js/jspdf.umd.min.js"></script>
@@ -131,7 +139,7 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000045">
+  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000050">
   
   <!-- Firebase (compat) Local Offline SDK -->
   <script defer src="/firebase/firebase-app-compat.js"></script>
@@ -139,19 +147,19 @@
   <script defer src="/firebase/firebase-database-compat.js"></script>
   <script defer src="/firebase/firebase-firestore-compat.js"></script>
   <!-- Plux Modular Architecture -->
-  <script defer src="/js/plux-i18n.js?v=1790010000047"></script>
-  <script defer src="/js/plux-i18n-catalog.js?v=1790010000047"></script>
-  <script defer src="/script.js?v=1790010000047"></script>
-  <script defer src="/js/plux-export-cards.js?v=1790010000047"></script>
-  <script defer src="/js/plux-templates.js?v=1790010000047"></script>
-  <script defer src="/js/plux-discover.js?v=1790010000047"></script>
-  <script defer src="/js/plux-social-chat.js?v=1790010000047"></script>
-  <script defer src="/js/plux-collab.js?v=1790010000047"></script>
-  <script defer src="/js/plux-doodles.js?v=1790010000047"></script>
-    <script defer src="/js/plux-herramientas.js?v=1790010000047"></script>
-  <script defer src="/js/plux-wrapped.js?v=1790010000047"></script>
-<script defer src="/plux-pro.js?v=1790010000047"></script>
-  <script defer src="/js/plux-offline.js?v=1790010000047"></script>
+  <script defer src="/js/plux-i18n.js?v=1790010000050"></script>
+  <script defer src="/js/plux-i18n-catalog.js?v=1790010000050"></script>
+  <script defer src="/script.js?v=1790010000050"></script>
+  <script defer src="/js/plux-export-cards.js?v=1790010000050"></script>
+  <script defer src="/js/plux-templates.js?v=1790010000050"></script>
+  <script defer src="/js/plux-discover.js?v=1790010000050"></script>
+  <script defer src="/js/plux-social-chat.js?v=1790010000050"></script>
+  <script defer src="/js/plux-collab.js?v=1790010000050"></script>
+  <script defer src="/js/plux-doodles.js?v=1790010000050"></script>
+    <script defer src="/js/plux-herramientas.js?v=1790010000050"></script>
+  <script defer src="/js/plux-wrapped.js?v=1790010000050"></script>
+<script defer src="/plux-pro.js?v=1790010000050"></script>
+  <script defer src="/js/plux-offline.js?v=1790010000050"></script>
 </head>
 <body class="theme-oscuro lang-es">
   <div id="toast-container"></div>
@@ -272,13 +280,13 @@
               </div>
             </div>
           </div>
-          <img id="doodleImgAsset" src="static/doodles/concorde.jpg" alt="Pluxee Art" />
+          <img id="doodleImgAsset" src="static/doodles/concorde.jpg" alt="Pluxee Art" width="320" height="200" fetchpriority="high" />
         </div>
       </div>
 
       <!-- CENTRO: LOGO PLUX ORIGINAL LIMPIO CON AIRE -->
       <div class="doodle-center-logo">
-        <div class="logo-bubble" id="mainLogoBubble">
+        <h1 class="logo-bubble" id="mainLogoBubble">
           PLUX
           <!-- CALABAZA INTERACTIVA DE HALLOWEEN -->
           <div class="halloween-pumpkin-badge" id="halloweenPumpkinBadge" title="🎃 Feliz Halloween en Plux (Haz clic para despertar el hechizo)" onclick="event.stopPropagation(); window.dispararHalloween();">
@@ -293,7 +301,7 @@
             <div class="escarapela-ribbon ribbon-left"></div>
             <div class="escarapela-ribbon ribbon-right"></div>
           </div>
-        </div>
+        </h1>
       </div>
 
       <!-- COSTADO DERECHO: FICHA CONTEXTUAL DELICADA -->
@@ -322,7 +330,7 @@
       <button class="main-btn" id="tripsBtn" data-i18n="trips_btn" onclick="window.abrirModalViajes()" style="flex: 1 1 45%;">Tus viajes</button>
       <button class="main-btn discover-btn" id="discoverBtn" data-i18n="discover_btn" onclick="window.abrirDescubrir()" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
       <button class="main-btn tools-btn" id="toolsBtn" data-i18n="tools_btn" onclick="window.abrirPanelHerramientas()" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
-      <button class="main-btn" onclick="window.abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/pet.png" alt="Pluxy" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
+      <button class="main-btn" onclick="window.abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/pet.png" alt="Pluxy" width="24" height="24" loading="lazy" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
     </div>
 
     <!-- Inspiration Cards -->

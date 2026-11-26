@@ -3,7 +3,7 @@
  * App Shell + Librerías CDN + Caché de Tiles de Mapas + Caché de APIs de Viaje
  */
 
-const SW_VERSION = 'v8.0.22';
+const SW_VERSION = 'v8.0.25';
 const STATIC_CACHE = `plux-static-${SW_VERSION}`;
 const CDN_CACHE = `plux-cdn-${SW_VERSION}`;
 const TILES_CACHE = `plux-tiles-${SW_VERSION}`;
@@ -67,6 +67,18 @@ const BYPASS_HOSTS = [
   'www.googletagmanager.com',
   'www.google-analytics.com',
   'analytics.google.com',
+  'google.com',
+  'www.google.com',
+  'google.com.ar',
+  'www.google.com.ar',
+  'googleadservices.com',
+  'www.googleadservices.com',
+  'googleusercontent.com',
+  'lh3.googleusercontent.com',
+  'static.cloudflareinsights.com',
+  'cloudflareinsights.com',
+  'res.cloudinary.com',
+  'api.cloudinary.com',
   'pluxy.nibecar-cofeben.workers.dev',
   'text.pollinations.ai'
 ];
@@ -234,7 +246,10 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         const tileCache = await caches.open(TILES_CACHE);
         const cached = await tileCache.match(request);
-        if (cached) return cached;
+        if (cached && (cached.ok || cached.type === 'opaque')) return cached;
+        if (cached && !cached.ok && cached.type !== 'opaque') {
+          tileCache.delete(request);
+        }
 
         try {
           const netRes = await fetch(request);
@@ -252,6 +267,16 @@ self.addEventListener('fetch', (event) => {
               <text x="128" y="132" fill="#475569" font-family="sans-serif" font-size="11" text-anchor="middle">Mapa Offline Plux</text>
             </svg>`;
             return new Response(svgTile, {
+              status: 200,
+              headers: { 'Content-Type': 'image/svg+xml' }
+            });
+          }
+          if (url.hostname.includes('unsplash.com') || url.hostname.includes('wikimedia.org')) {
+            const svgPlaceholder = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250">
+              <rect width="400" height="250" fill="#1e293b"/>
+              <text x="200" y="130" fill="#64748b" font-family="system-ui,sans-serif" font-size="14" text-anchor="middle">Plux</text>
+            </svg>`;
+            return new Response(svgPlaceholder, {
               status: 200,
               headers: { 'Content-Type': 'image/svg+xml' }
             });

@@ -608,8 +608,8 @@
         btn.title = activeEmb
           ? `${activeEmb.nombre} · Embajador Fundador #${String(activeEmb.numero).padStart(2, '0')}`
           : (currentNickname ? `@${currentNickname}` : (firebaseUser ? (firebaseUser.displayName || firebaseUser.email) : 'Tu perfil'));
-        if (photo) {
-          btn.innerHTML = `<img src="${photo}" alt="Perfil" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+        if (photo && safeMediaUrl(photo)) {
+          btn.innerHTML = `<img src="${escapeHtml(safeMediaUrl(photo))}" alt="" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;" onerror="this.onerror=null; this.parentElement.innerHTML='<svg width=\\'22\\' height=\\'22\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2.2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><path d=\\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\\'></path><circle cx=\\'12\\' cy=\\'7\\' r=\\'4\\'></circle></svg>';">`;
           btn.style.padding = '0';
           btn.style.overflow = 'hidden';
           btn.style.border = activeEmb ? '2px solid #10b981' : '';
@@ -638,6 +638,16 @@
         .replace(/'/g, "&#039;");
     }
     window.escapeHtml = escapeHtml;
+
+    function safeMediaUrl(url) {
+      if (typeof url !== 'string') return '';
+      const trimmed = url.trim();
+      if (/^(https?:\/\/|data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,|\/|\.\/|static\/)/i.test(trimmed)) {
+        return trimmed;
+      }
+      return '';
+    }
+    window.safeMediaUrl = safeMediaUrl;
 
     async function hashPassword(password, salt = 'plux_salt_v1') {
       if (!password) return null;
@@ -712,8 +722,9 @@
         }
         const avatarEl = document.getElementById('profileAvatarInner');
         if (avatarEl) {
-          if (photo) {
-            avatarEl.innerHTML = `<img src="${photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+          const safePhoto = safeMediaUrl(photo);
+          if (safePhoto) {
+            avatarEl.innerHTML = `<img src="${escapeHtml(safePhoto)}" alt="" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;" onerror="this.onerror=null; this.parentElement.innerHTML='<svg width=\\'40\\' height=\\'40\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><path d=\\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\\'></path><circle cx=\\'12\\' cy=\\'7\\' r=\\'4\\'></circle></svg>';">`;
           } else {
             avatarEl.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
           }
@@ -920,7 +931,6 @@
 
         try {
           await firebase.auth().signInAnonymously();
-          console.log("🔥 Sesión anónima restablecida tras logout");
         } catch (e) {
           console.error("Error en signInAnonymously tras logout:", e);
         }
@@ -1132,21 +1142,16 @@
     }
 
     async function loginNickname() {
-      console.log('=== loginNickname START ===');
       const loginNickEl = document.getElementById('login-nickname');
-      console.log('loginNickEl:', loginNickEl);
       const nick = loginNickEl ? loginNickEl.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-      console.log('Nickname entered:', nick);
       
       if (!nick) {
         showToast('Ingresá un nickname', 'error');
-        console.log('No nickname provided');
         return;
       }
       
       if (nick.length < 3) {
         showToast('El nickname debe tener al menos 3 caracteres', 'error');
-        console.log('Nickname too short');
         return;
       }
       
@@ -1171,14 +1176,12 @@
             return;
           }
           showToast('El nickname @' + nick + ' no está registrado', 'error');
-          console.log('Nickname not found in Firestore');
           return;
         }
 
         const userData = userDoc.data();
         if (userData.email) {
           showToast('Ese nickname pertenece a una cuenta. Entrá desde /login/.', 'error');
-          console.log('Nickname belongs to email account');
           return;
         }
 
@@ -1263,10 +1266,8 @@
     }
 
     async function crearCuentaNickname() {
-      console.log('=== crearCuentaNickname START ===');
       const loginNickEl = document.getElementById('login-nickname');
       const nick = loginNickEl ? loginNickEl.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-      console.log('Nickname for account creation:', nick);
       
       if (!nick) {
         showToast('Ingresá un nickname', 'error');
@@ -1303,7 +1304,6 @@
         const userDoc = await db.collection('plux_usuarios').doc(nick).get();
         if (userDoc.exists) {
           showToast('El nickname @' + nick + ' ya está en uso', 'error');
-          console.log('Nickname already exists, blocking creation');
           return;
         }
 
@@ -1345,7 +1345,6 @@
         };
         
         await db.collection('plux_usuarios').doc(nick).set(userData);
-        console.log('Account created successfully in Firestore');
 
         currentNickname = nick;
         currentUserUid = nick;
@@ -1740,7 +1739,6 @@
         }
       } catch (e) {
         if (e.code === 'permission-denied') {
-          console.log("Permission denied - user not authenticated or no profile access");
           return;
         }
         console.error("Error cargando perfil:", e);
@@ -1823,7 +1821,6 @@
           }
 
           if (targetLang && targetLang !== currentLang && !localStorage.getItem('Plux_Lang_Manual')) {
-            console.log(`[Plux GeoIP] País detectado: ${c} -> configurando idioma a: ${targetLang}`);
             setLanguage(targetLang, false, false);
           }
         })
@@ -3072,6 +3069,9 @@
       if (typeof window.renderEmbajadoresHome === 'function') {
         window.renderEmbajadoresHome();
       }
+      if (typeof window.refreshPluxeeLanguage === 'function') {
+        window.refreshPluxeeLanguage();
+      }
 
       // Sincronizar en Firestore si el usuario está autenticado
       if (sync && typeof sincronizarPerfil === 'function' && (currentNickname || currentUserUid)) {
@@ -3407,7 +3407,6 @@
           }
           if (typeof firebase.database === 'function') {
             rtdb = firebase.database();
-            console.log("⚡ Firebase Realtime Database conectado y disponible.");
           }
         }
       } catch (e) {
@@ -3439,11 +3438,9 @@
             try {
               db.enablePersistence({synchronizeTabs:true}).catch(() => {});
             } catch(e) {}
-            console.log("🔥 Cloud Firestore conectado y disponible.");
           }
           if (typeof firebase.database === 'function') {
             rtdb = firebase.database();
-            console.log("⚡ Firebase Realtime Database conectado.");
           }
         }
       } catch (e) {
@@ -3465,7 +3462,6 @@
             firebase.analytics().logEvent(eventName, params);
           } catch (fe) {}
         }
-        console.log(`📊 [GA4 Event] ${eventName}`, params);
       } catch (err) {
         console.warn('Error enviando evento a Analytics:', err);
       }
@@ -3481,7 +3477,6 @@
 
     async function loadKeys() {
       // Las llamadas de IA se canalizan exclusivamente y de forma segura a través del Cloudflare Worker Gateway
-      console.log('🛡️ Plux AI Gateway: Operando en https://pluxy.nibecar-cofeben.workers.dev/ (100% seguro en Cloudflare, sin claves en el cliente)');
     }
 
 
@@ -3489,7 +3484,6 @@
     function pluxCoreAutoSave(opts = {}) {
       if (isSyncing) return null;
       if (typeof isReadOnlyMode === 'function' && isReadOnlyMode()) {
-        console.log("AutoSave blocked: Read-only mode active");
         return null;
       }
 
@@ -3766,7 +3760,6 @@
       if (typeof firebase.analytics === 'function') {
         try {
           firebase.analytics();
-          console.log("📊 Firebase Analytics inicializado (Plux web app)");
         } catch (e) {
           console.warn("Analytics no disponible:", e);
         }
@@ -3790,7 +3783,6 @@
               try {
                 if (!firebase.auth().currentUser) {
                   await firebase.auth().signInAnonymously();
-                  console.log("🔥 Sesión anónima (sincronización nube).");
                 }
               } catch (error) {
                 console.error("🔥 Error en autenticación anónima:", error);
@@ -3806,7 +3798,6 @@
       if (db && syncCode) {
         if (unsubSnapshot) {
           unsubSnapshot(); // Desuscribirse del viaje anterior para no mezclar ediciones
-          console.log("Desuscrito del viaje anterior.");
         }
         unsubSnapshot = db.collection("plux_viajes_compartidos").doc(syncCode).onSnapshot(doc => {
           if (doc.exists && !isSyncing) {
@@ -3930,12 +3921,6 @@
       showToast(`Código generado: ${code}`, 'success');
     }
 
-
-    function abrirResumen() {
-      autoSave();
-      document.getElementById('modal-resumen').style.display = 'flex';
-      renderResumen();
-    }
 
     // Tasas de cambio aproximadas (base EUR)
     const exchangeRates = { EUR: 1, USD: 1.09, GBP: 0.86, JPY: 158, ARS: 920, MXN: 18.5, CAD: 1.47, AUD: 1.62, CHF: 0.95, CNY: 7.85 };
@@ -4262,7 +4247,6 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           };
           await firestoreInstance.collection('soporte').add(ticketData);
           firestoreSaved = true;
-          console.log("🔥 Ticket de soporte guardado exitosamente en Cloud Firestore ('soporte')");
         }
       } catch (firestoreErr) {
         console.warn("⚠️ No se pudo guardar en Firestore soporte directamente:", firestoreErr);
@@ -5288,26 +5272,6 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       });
     }
 
-    function programarTodasLasNotificaciones() {
-      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
-      const fechaBase = document.getElementById('fechaInicio').value;
-      if (!fechaBase) return;
-      destinos.forEach(dest => {
-        dest.dias.forEach((dia, ida) => {
-          const fecha = new Date(fechaBase);
-          fecha.setDate(fecha.getDate() + ida);
-          dia.eventos.forEach(ev => {
-            if (ev.hora) {
-              const [h,m] = ev.hora.split(':').map(Number);
-              const fechaHora = new Date(fecha);
-              fechaHora.setHours(h,m,0);
-              programarNotificacion(ev, fechaHora);
-            }
-          });
-        });
-      });
-    }
-
     // ================== FUNCIONES DE PERFIL DE USUARIO ==================
     // (updateUserButtonDisplay está definida al inicio con soporte para foto de perfil e icono)
 
@@ -5808,7 +5772,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const checklistItems = ["¿Cargaste los auriculares?", "¿Cerraste el gas?", "¿Tenés el PDF de PLUX descargado?", "¿Regaste las plantas?"];
       const clContainer = document.getElementById('checklist-display');
       if(clContainer) {
-          clContainer.innerHTML = checklistItems.map(item => `<label style="display:block;margin:5px 0"><input type="checkbox"> ${item}</label>`).join('');
+          clContainer.innerHTML = checklistItems.map(item => `<label style="display:block;margin:5px 0"><input type="checkbox"> ${escapeHtml(item)}</label>`).join('');
       }
 
       // Zero Gravity / Parallaxhandlers
@@ -6145,7 +6109,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if(!container) return;
       const stamp = document.createElement('div');
       stamp.className = 'stamp-passport';
-      stamp.innerHTML = `PLUX<br>${ciudad.substring(0,8).toUpperCase()}<br>${new Date().toLocaleDateString()}`;
+      stamp.innerHTML = `PLUX<br>${escapeHtml(String(ciudad || '').substring(0, 8).toUpperCase())}<br>${escapeHtml(new Date().toLocaleDateString())}`;
       container.appendChild(stamp);
     }
 
@@ -7369,7 +7333,6 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     const AI_SYSTEM_PROMPT = 'You are a travel planning AI. CRITICAL: You MUST respond with ONLY valid JSON. NO greetings, NO explanations, NO markdown code blocks, NO conversational text. Just the raw JSON object.';
 
     async function callAI(prompt, useJson = true) {
-      console.log('🤖 AI_CORE: Iniciando petición multi-proveedor...', { useJson });
       const langName = typeof window.getLangName === 'function' ? window.getLangName() : 'Español';
       const langSystem = `${AI_SYSTEM_PROMPT} CRITICAL LANGUAGE RULE: All human-readable JSON string values (titles, notes, descriptions, categories, item names) MUST be written in ${langName}.`;
 
@@ -7406,7 +7369,6 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               const jsonMatch = content.match(/\{[\s\S]*\}/);
               if (jsonMatch) content = jsonMatch[0];
             }
-            console.log(`✅ AI_CORE: Éxito con Cloudflare Worker Gateway [${workerData.provider || 'auto'}].`);
             return content;
           }
         }
@@ -11397,48 +11359,24 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         </div>`;
     }
 
-    function buildWeatherWidgetHTML(widgetId, w, expanded) {
-      const row = `
-        <div class="weather-chip-row">
-          <span class="weather-chip-icon">${w.emoji}</span>
-          <span class="weather-chip-temp">${w.temp}°</span>
-          <span class="weather-chip-desc">${w.desc}</span>
-        </div>`;
-      if (!expanded) return row;
-      const forecastHtml = w.daily.length
-        ? `<div class="weather-forecast-mini">${w.daily.map(d => `
-            <div class="wf-day">
-              <span class="wf-icon">${d.emoji}</span>
-              <span>${d.label}</span>
-              <span>${d.tempMax}°/${d.tempMin}°</span>
-            </div>`).join('')}</div>`
-        : '';
-      return row + `
-        <div class="weather-expanded">
-          <p><strong>${w.city}${w.country ? ', ' + w.country : ''}</strong></p>
-          <p>Sensación ${w.feelsLike}° · Humedad ${w.humidity}% · Viento ${w.wind} km/h</p>
-          ${forecastHtml}
-        </div>`;
-    }
-
     function renderClimaCardHTML(w) {
       const forecastHtml = w.daily.length
         ? `<div class="clima-forecast-grid">${w.daily.map(d => `
             <div class="clima-forecast-day">
-              <span class="day-label">${d.label}</span>
-              <span class="day-icon">${d.emoji}</span>
-              <span class="day-temps">${d.tempMax}° / ${d.tempMin}°</span>
-              <span style="font-size:0.7rem;color:var(--gris);text-transform:capitalize;">${d.desc}</span>
+              <span class="day-label">${escapeHtml(d.label)}</span>
+              <span class="day-icon">${escapeHtml(d.emoji)}</span>
+              <span class="day-temps">${escapeHtml(d.tempMax)}° / ${escapeHtml(d.tempMin)}°</span>
+              <span style="font-size:0.7rem;color:var(--gris);text-transform:capitalize;">${escapeHtml(d.desc)}</span>
             </div>`).join('')}</div>`
         : '';
       return `
         <div class="clima-card-full">
           <div class="clima-current-row">
-            <span class="clima-current-icon">${w.emoji}</span>
+            <span class="clima-current-icon">${escapeHtml(w.emoji)}</span>
             <div>
-              <div class="clima-current-temp">${w.temp}°C</div>
-              <div style="text-transform:capitalize;color:var(--texto);font-size:1.1rem;">${w.desc}</div>
-              <div class="clima-current-meta">${w.city}${w.country ? ', ' + w.country : ''} · Sensación ${w.feelsLike}° · Humedad ${w.humidity}% · Viento ${w.wind} km/h</div>
+              <div class="clima-current-temp">${escapeHtml(w.temp)}°C</div>
+              <div style="text-transform:capitalize;color:var(--texto);font-size:1.1rem;">${escapeHtml(w.desc)}</div>
+              <div class="clima-current-meta">${escapeHtml(w.city)}${w.country ? ', ' + escapeHtml(w.country) : ''} · Sensación ${escapeHtml(w.feelsLike)}° · Humedad ${escapeHtml(w.humidity)}% · Viento ${escapeHtml(w.wind)} km/h</div>
             </div>
           </div>
           ${forecastHtml ? `<h4 style="color:var(--gris);font-size:0.85rem;margin-bottom:10px;">Próximos días</h4>${forecastHtml}` : ''}
@@ -11515,26 +11453,40 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (!schedule.length && !destinos.length) return '';
       const parts = [];
       const seen = new Set();
+      const entries = [];
       for (const s of schedule.slice(0, 12)) {
         if (esDestinoNavegacion(s.destName)) continue;
         const key = `${s.destName}|${s.dateStr || s.forecastIndex}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        try {
-          const w = await fetchWeatherData(s.destName);
+        entries.push(s);
+      }
+      if (entries.length) {
+        const uniqueCities = [...new Set(entries.map(s => s.destName))];
+        const results = await Promise.allSettled(uniqueCities.map(city => fetchWeatherData(city)));
+        const weatherByCity = new Map();
+        uniqueCities.forEach((city, idx) => {
+          if (results[idx] && results[idx].status === 'fulfilled' && results[idx].value) {
+            weatherByCity.set(city, results[idx].value);
+          }
+        });
+        for (const s of entries) {
+          const w = weatherByCity.get(s.destName);
+          if (!w) continue;
           const d = getWeatherForTripDay(w, s.dateStr, s.forecastIndex);
           if (d) {
             parts.push(`${s.destName} ${t('day_prefix')} ${s.diaNum}${s.dateLabel ? ' (' + s.dateLabel + ')' : ''}: ${d.emoji} ${d.tempMax}°/${d.tempMin}° ${d.desc}`);
           }
-        } catch (e) { /* skip */ }
+        }
       }
       if (!parts.length && destinos.length) {
-        for (const d of destinos.filter(x => x && !esDestinoNavegacion(x.nombre)).slice(0, 3)) {
-          try {
-            const w = await fetchWeatherData(d.nombre);
-            parts.push(`${w.city}: ${w.temp}°C ${w.desc}`);
-          } catch (e) { /* skip */ }
-        }
+        const fallbackDests = destinos.filter(x => x && !esDestinoNavegacion(x.nombre)).slice(0, 3);
+        const fallbackResults = await Promise.allSettled(fallbackDests.map(d => fetchWeatherData(d.nombre)));
+        fallbackResults.forEach(res => {
+          if (res.status === 'fulfilled' && res.value) {
+            parts.push(`${res.value.city}: ${res.value.temp}°C ${res.value.desc}`);
+          }
+        });
       }
       return parts.length ? ` Clima del viaje por día: ${parts.join(' | ')}.` : '';
     }
@@ -11666,18 +11618,21 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const salidaNombre = (document.getElementById('lugarSalida')?.value || (typeof lugarSalida !== 'undefined' ? lugarSalida : '') || '').trim();
       const realDests = (Array.isArray(destinos) ? destinos : []).filter(d => d && d.nombre && !esDestinoNavegacion(d.nombre));
       const firstDestName = realDests[0]?.nombre?.trim() || '';
+      const needsOrigin = Boolean(salidaNombre && (!firstDestName || normCityName(salidaNombre) !== normCityName(firstDestName)));
 
-      if (salidaNombre && (!firstDestName || normCityName(salidaNombre) !== normCityName(firstDestName))) {
-        const salidaCoord = await geocode(salidaNombre);
-        if (salidaCoord) {
-          puntos.push({ ...salidaCoord, nombre: salidaNombre, dias: 0, eventos: 0, isOrigin: true, label: '0' });
-        }
+      const [salidaCoord, ...destCoords] = await Promise.all([
+        needsOrigin ? geocode(salidaNombre) : Promise.resolve(null),
+        ...realDests.map(dest => geocode(dest.nombre))
+      ]);
+
+      if (salidaCoord) {
+        puntos.push({ ...salidaCoord, nombre: salidaNombre, dias: 0, eventos: 0, isOrigin: true, label: '0' });
       }
 
       let stepNum = 0;
       for (let i = 0; i < realDests.length; i++) {
         const dest = realDests[i];
-        const coord = await geocode(dest.nombre);
+        const coord = destCoords[i];
         if (coord) {
           stepNum++;
           const diasDest = (dest.dias || []).length;
@@ -12234,7 +12189,6 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             const hasRealEvents = Array.isArray(d.dias) && d.dias.some(dia => Array.isArray(dia?.eventos) && dia.eventos.some(ev => !isJunkOcrVoucher(ev)));
             const daysCount = Array.isArray(d.dias) ? d.dias.length : 0;
             if (daysCount === 0 || !hasRealEvents) {
-              console.log('🧹 [cargarViaje] Destino fantasma purgado:', d.nombre);
               return false;
             }
           }
@@ -12693,17 +12647,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             const clean = (typeof friend === 'string' ? friend : '').replace(/^@/, '').trim();
             if (!clean) return;
             const friendData = cache[clean.toLowerCase()] || {};
-            const photoUrl = friendData.photoUrl || null;
+            const photoUrl = safeMediaUrl(friendData.photoUrl);
             if (!cache[clean.toLowerCase()]) toFetch.push(clean);
 
             const avatarInner = photoUrl
-              ? `<img src="${photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`
-              : clean.substring(0, 2).toUpperCase();
+              ? `<img src="${escapeHtml(photoUrl)}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`
+              : escapeHtml(clean.substring(0, 2).toUpperCase());
 
             html += `
                 <div class="friend-item" style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:16px; padding:12px 16px; gap:12px;">
                     <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="abrirDetalleAmigo('${escapeHtml(clean)}')">
-                        <div class="friend-avatar-circle" data-nick="${clean.toLowerCase()}" style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:0.95rem; overflow:hidden; flex-shrink:0;">
+                        <div class="friend-avatar-circle" data-nick="${escapeHtml(clean.toLowerCase())}" style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, var(--verde), var(--azul)); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:0.95rem; overflow:hidden; flex-shrink:0;">
                             ${avatarInner}
                         </div>
                         <div style="display:flex; flex-direction:column; min-width:0;">
@@ -12727,15 +12681,25 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         });
         container.innerHTML = html;
 
-        // Asynchronously fetch uncached profiles
+        // Asynchronously fetch uncached profiles in parallel
         if (toFetch.length > 0 && typeof db !== 'undefined' && db) {
-            toFetch.forEach(async (fNick) => {
-                const p = await fetchFriendProfile(fNick);
-                if (p && p.photoUrl) {
-                    const el = container.querySelector(`.friend-avatar-circle[data-nick="${fNick.toLowerCase()}"]`);
-                    if (el) el.innerHTML = `<img src="${p.photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
-                }
-            });
+            Promise.allSettled(toFetch.map(fNick => fetchFriendProfile(fNick).then(p => ({ fNick, p }))))
+                .then(results => {
+                    results.forEach(res => {
+                        if (res.status !== 'fulfilled' || !res.value?.p?.photoUrl) return;
+                        const safePhoto = safeMediaUrl(res.value.p.photoUrl);
+                        if (!safePhoto) return;
+                        const nickAttr = res.value.fNick.toLowerCase();
+                        const el = Array.from(container.querySelectorAll('.friend-avatar-circle'))
+                            .find(node => node.getAttribute('data-nick') === nickAttr);
+                        if (el) {
+                            const img = document.createElement('img');
+                            img.src = safePhoto;
+                            img.style.cssText = 'width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;';
+                            el.replaceChildren(img);
+                        }
+                    });
+                });
         }
     }
 
@@ -13019,10 +12983,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             // Set friend avatar if custom photo exists
             const friendAvatarEl = document.getElementById('friendDetailAvatar');
             if (friendAvatarEl) {
-              if (data.photoUrl) {
-                friendAvatarEl.innerHTML = `<img src="${data.photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+              const safeFriendPhoto = safeMediaUrl(data.photoUrl);
+              if (safeFriendPhoto) {
+                friendAvatarEl.innerHTML = `<img src="${escapeHtml(safeFriendPhoto)}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
               } else {
-                friendAvatarEl.innerHTML = `<div style="font-weight:bold; font-size:1.4rem;">${cleanNick.substring(0, 2).toUpperCase()}</div>`;
+                friendAvatarEl.innerHTML = `<div style="font-weight:bold; font-size:1.4rem;">${escapeHtml(cleanNick.substring(0, 2).toUpperCase())}</div>`;
               }
             }
 

@@ -71,22 +71,22 @@
         {
           nombre: 'Tokio',
           dias: [
-            { eventos: [{ titulo: 'Cena en Omoide Yokocho', costo: 35, notas: 'Ramen y brochetas' }, { titulo: 'Templo Senso-ji', costo: 0, notas: 'Historia y arquitectura' }] },
-            { eventos: [{ titulo: 'Mirador Shibuya Sky', costo: 24, notas: 'Vistas panorámicas' }, { titulo: 'Sushi en Tsukiji', costo: 50, notas: 'Degustación fresca' }] }
+            { eventos: [{ titulo: t('wrapped.def_ev1_t'), costo: 35, notas: t('wrapped.def_ev1_n') }, { titulo: t('wrapped.def_ev2_t'), costo: 0, notas: t('wrapped.def_ev2_n') }] },
+            { eventos: [{ titulo: t('wrapped.def_ev3_t'), costo: 24, notas: t('wrapped.def_ev3_n') }, { titulo: t('wrapped.def_ev4_t'), costo: 50, notas: t('wrapped.def_ev4_n') }] }
           ]
         },
         {
           nombre: 'Kioto',
           dias: [
-            { eventos: [{ titulo: 'Santuario Fushimi Inari', costo: 0, notas: 'Senderismo entre toriis' }, { titulo: 'Ceremonia del Té tradicional', costo: 65, notas: 'Experiencia cultural' }] }
+            { eventos: [{ titulo: t('wrapped.def_ev5_t'), costo: 0, notas: t('wrapped.def_ev5_n') }, { titulo: t('wrapped.def_ev6_t'), costo: 65, notas: t('wrapped.def_ev6_n') }] }
           ]
         }
       ];
     }
     const salida = (typeof lugarSalida !== 'undefined' && lugarSalida) ? lugarSalida : 'Madrid';
     const personas = (typeof numPersonas !== 'undefined' && numPersonas > 0) ? numPersonas : 2;
-    const viajerosNombres = (typeof nombresPersonasGlobal !== 'undefined' && nombresPersonasGlobal) ? nombresPersonasGlobal : 'Nico y Sofi';
-    const tituloViaje = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || 'Expedición por Japón');
+    const viajerosNombres = (typeof nombresPersonasGlobal !== 'undefined' && nombresPersonasGlobal) ? nombresPersonasGlobal : t('wrapped.def_travelers');
+    const tituloViaje = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || t('wrapped.def_trip_title'));
     const moneda = (typeof getMonedaActiva === 'function') ? getMonedaActiva() : 'EUR';
 
     let totalDias = 0;
@@ -106,11 +106,11 @@
       nocturno: 0
     };
 
-    const reGourmet = /comida|cena|almuerzo|restaurante|bar|café|cafe|tapas|vino|cerveza|pizza|degustacion|brunch|sushi|ramen|pasta|mercado|bodega|asado/i;
-    const reCultural = /museo|templo|catedral|historia|castillo|monumento|teatro|galeria|arte|tour|ruinas|palacio|arquitectura|iglesia|basilica/i;
-    const reAventurero = /playa|parque|montaña|senderismo|trekking|rio|lago|volcan|snorkel|cascada|bosque|naturaleza|mirador|caminata|kayak|bici/i;
-    const reRelax = /spa|termas|relax|paseo|hotel|pileta|piscina|descanso|sauna|masaje|sol/i;
-    const reNocturno = /fiesta|boliche|club|pub|noche|cocktail|tragos|karaoke|show|recital|concierto/i;
+    const reGourmet = /comida|cena|almuerzo|restaurante|bar|café|cafe|tapas|vino|cerveza|pizza|degustacion|brunch|sushi|ramen|pasta|mercado|bodega|asado|dinner|lunch|food|tasting|restaurant|winery|dîner|déjeuner|essen|abendessen|mittagessen|cena|pranzo|osteria|trattoria/i;
+    const reCultural = /museo|templo|catedral|historia|castillo|monumento|teatro|galeria|arte|tour|ruinas|palacio|arquitectura|iglesia|basilica|museum|temple|cathedral|history|castle|gallery|palace|musée|château|histoire|kirche|schloss|geschichte|tempio|storia|castello|galleria/i;
+    const reAventurero = /playa|parque|montaña|senderismo|trekking|rio|lago|volcan|snorkel|cascada|bosque|naturaleza|mirador|caminata|kayak|bici|beach|mountain|hike|hiking|waterfall|forest|nature|viewpoint|plage|montagne|randonnée|strand|berg|wandern|spiaggia|montagna|escursione/i;
+    const reRelax = /spa|termas|relax|paseo|hotel|pileta|piscina|descanso|sauna|masaje|sol|pool|massage|wellness|chill|plage|piscine|détente|entspannung|therme|riposo|piscina/i;
+    const reNocturno = /fiesta|boliche|club|pub|noche|cocktail|tragos|karaoke|show|recital|concierto|party|night|drinks|concert|soirée|spectacle|nacht|konzert|festa|notte|spettacolo|concerto/i;
 
     listDest.forEach((dest, destIdx) => {
       const dDias = (dest.dias && Array.isArray(dest.dias)) ? dest.dias.length : (parseInt(dest.dias, 10) || 1);
@@ -140,7 +140,7 @@
             if (convCost > maxCosto) {
               maxCosto = convCost;
               joyaActividad = {
-                titulo: ev.titulo || 'Experiencia exclusiva',
+                titulo: ev.titulo || t('wrapped.def_gem_fallback'),
                 costo: convCost,
                 ciudad: dest.nombre,
                 dia: diaIdx + 1
@@ -150,7 +150,7 @@
             if (convCost < minCosto) {
               minCosto = convCost;
               rinconEconomico = {
-                titulo: ev.titulo || 'Visita libre',
+                titulo: ev.titulo || t('wrapped.def_budget_fallback'),
                 costo: convCost,
                 ciudad: dest.nombre,
                 dia: diaIdx + 1
@@ -187,40 +187,40 @@
 
     const arquetiposMap = {
       gourmet: {
-        titulo: 'El Gourmet & Foodie Insaciable',
+        titulo: t('wrapped.arch_gourmet_title'),
         emoji: '🍷',
         badgeColor: '#ec4899',
-        descripcion: 'Viajás con el paladar: tu ruta está trazada de bistrós, cafeterías de autor, bodegas y mercados culinarios imperdibles.'
+        descripcion: t('wrapped.arch_gourmet_desc')
       },
       cultural: {
-        titulo: 'El Explorador Cultural & Histórico',
+        titulo: t('wrapped.arch_cultural_title'),
         emoji: '🏛️',
         badgeColor: '#38bdf8',
-        descripcion: 'Un auténtico erudito: no hay museo, ruina antigua, catedral o galería de arte que escape a tu curiosidad.'
+        descripcion: t('wrapped.arch_cultural_desc')
       },
       aventurero: {
-        titulo: 'El Trotamundos Aventurero',
+        titulo: t('wrapped.arch_aventurero_title'),
         emoji: '🏔️',
         badgeColor: '#10b981',
-        descripcion: 'La adrenalina y el paisaje son tu motor: senderos, miradores, naturaleza salvaje y kilómetros de caminata sin parar.'
+        descripcion: t('wrapped.arch_aventurero_desc')
       },
       relax: {
-        titulo: 'El Maestro del Buen Vivir & Relax',
+        titulo: t('wrapped.arch_relax_title'),
         emoji: '🌴',
         badgeColor: '#f59e0b',
-        descripcion: 'Sabés viajar sin apuros: terrazas tranquilas, hospedajes con encanto y momentos para contemplar y desconectar de verdad.'
+        descripcion: t('wrapped.arch_relax_desc')
       },
       nocturno: {
-        titulo: 'El Alma de la Noche & Espectáculos',
+        titulo: t('wrapped.arch_nocturno_title'),
         emoji: '✨',
         badgeColor: '#8b5cf6',
-        descripcion: 'Tu viaje cobra vida cuando cae el sol: bares secretos, recitales, vida nocturna y anécdotas bajo las estrellas.'
+        descripcion: t('wrapped.arch_nocturno_desc')
       },
       equilibrado: {
-        titulo: 'El Viajero Épico Multiterreno',
+        titulo: t('wrapped.arch_equilibrado_title'),
         emoji: '🌟',
         badgeColor: '#10b981',
-        descripcion: 'Un viajero todoterreno: equilibrás a la perfección cultura, gastronomía, descanso y exploración callejera.'
+        descripcion: t('wrapped.arch_equilibrado_desc')
       }
     };
 
@@ -275,13 +275,13 @@
     } catch(e){}
 
     // Banda sonora estimada según primer destino
-    let soundtrackVibe = 'Acoustic Indie & Sunset Chill';
+    let soundtrackVibe = t('wrapped.vibe_default');
     const primerDest = listDest[0]?.nombre?.toLowerCase() || '';
-    if (primerDest.includes('buenos aires') || primerDest.includes('argentina')) soundtrackVibe = 'Tango Fusión & Guitarras Rioplatenses';
-    else if (primerDest.includes('tokio') || primerDest.includes('japon')) soundtrackVibe = 'City Pop & Lo-Fi Neon Horizons';
-    else if (primerDest.includes('paris') || primerDest.includes('roma') || primerDest.includes('madrid')) soundtrackVibe = 'Café Bohemio & Jazz Mediterráneo';
-    else if (primerDest.includes('nueva york') || primerDest.includes('londres')) soundtrackVibe = 'Indie Rock & Midnight Synthwave';
-    else if (primerDest.includes('rio') || primerDest.includes('caribe') || primerDest.includes('playa')) soundtrackVibe = 'Bossa Nova & Tropical Deep House';
+    if (primerDest.includes('buenos aires') || primerDest.includes('argentina')) soundtrackVibe = t('wrapped.vibe_rioplatense');
+    else if (primerDest.includes('tokio') || primerDest.includes('tokyo') || primerDest.includes('japon') || primerDest.includes('japan')) soundtrackVibe = t('wrapped.vibe_tokyo');
+    else if (primerDest.includes('paris') || primerDest.includes('roma') || primerDest.includes('rome') || primerDest.includes('madrid')) soundtrackVibe = t('wrapped.vibe_euro');
+    else if (primerDest.includes('nueva york') || primerDest.includes('new york') || primerDest.includes('londres') || primerDest.includes('london')) soundtrackVibe = t('wrapped.vibe_ny_london');
+    else if (primerDest.includes('rio') || primerDest.includes('caribe') || primerDest.includes('playa')) soundtrackVibe = t('wrapped.vibe_tropical');
 
     return {
       tituloViaje,
@@ -296,8 +296,8 @@
       viajerosNombres,
       distanciaTotalKm,
       arquetipo,
-      joyaActividad: joyaActividad || { titulo: 'Paseo panorámico', costo: 0, ciudad: listDest[0]?.nombre || 'Destino' },
-      rinconEconomico: rinconEconomico || { titulo: 'Caminata libre', costo: 0, ciudad: listDest[0]?.nombre || 'Destino' },
+      joyaActividad: joyaActividad || { titulo: t('wrapped.fallback_walk'), costo: 0, ciudad: listDest[0]?.nombre || t('wrapped.fallback_dest') },
+      rinconEconomico: rinconEconomico || { titulo: t('wrapped.fallback_free_walk'), costo: 0, ciudad: listDest[0]?.nombre || t('wrapped.fallback_dest') },
       logrosCount,
       bitacoraCount,
       fotosCount,
@@ -313,34 +313,39 @@
     container.innerHTML = `
       <div style="text-align:center; padding:40px 20px; color:#94a3b8;">
         <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem; color:#ec4899; margin-bottom:12px;"></i>
-        <p style="font-size:1rem; font-weight:700; color:#fff;">Compilando las historias y estadísticas de tu viaje...</p>
+        <p style="font-size:1rem; font-weight:700; color:#fff;">${t('wrapped.loading_msg')}</p>
       </div>
     `;
 
     const data = await window.calcularEstadisticasWrapped();
     window._lastWrappedData = data;
+    const loc = typeof getLangLocale === 'function' ? getLangLocale() : undefined;
 
     const formatGasto = (monto) => {
       if (typeof window.formatMoneda === 'function') return window.formatMoneda(monto);
-      return `${Math.round(monto).toLocaleString()} ${data.moneda}`;
+      return `${Math.round(monto).toLocaleString(loc)} ${data.moneda}`;
     };
+
+    const originPrefix = data.salida ? t('wrapped.origin_prefix', { origin: data.salida }) : '';
+    const destWord = data.destinosCount === 1 ? t('wrapped.dest_singular') : t('wrapped.dest_plural');
+    const entryWord = data.bitacoraCount === 1 ? t('wrapped.entry_singular') : t('wrapped.entry_plural');
 
     container.innerHTML = `
       <!-- HERO BANNER WRAPPED -->
       <div class="wrapped-hero-banner">
         <div class="wrapped-hero-info">
-          <div class="wrapped-tag">✨ Plux Wrapped Oficial</div>
+          <div class="wrapped-tag">${t('wrapped.hero_tag')}</div>
           <h2 class="wrapped-hero-title">${data.tituloViaje}</h2>
           <p class="wrapped-hero-desc">
-            Tu travesía convertida en una experiencia visual: distancias épicas, momentos memorables, tu arquetipo viajero y logros alcanzados.
+            ${t('wrapped.hero_desc')}
           </p>
         </div>
         <div class="wrapped-hero-actions">
           <button type="button" class="btn-launch-stories" onclick="window.abrirWrappedStories()">
-            <i class="fa-solid fa-play"></i> Reproducir Stories
+            <i class="fa-solid fa-play"></i> ${t('wrapped.play_stories')}
           </button>
           <button type="button" class="btn-download-wrapped-card" onclick="window.descargarTarjetaWrappedPNG()">
-            <i class="fa-solid fa-download"></i> Descargar Tarjeta (PNG)
+            <i class="fa-solid fa-download"></i> ${t('wrapped.download_card_png')}
           </button>
         </div>
       </div>
@@ -351,7 +356,7 @@
         <!-- CARD 1: ARQUETIPO -->
         <div class="wrapped-card card-archetype">
           <div class="wrapped-card-icon">${data.arquetipo.emoji}</div>
-          <div class="wrapped-card-label">Tu Arquetipo de Viajero</div>
+          <div class="wrapped-card-label">${t('wrapped.card_arch_lbl')}</div>
           <div class="wrapped-card-val" style="color:${data.arquetipo.badgeColor};">${data.arquetipo.titulo}</div>
           <div class="wrapped-card-sub">${data.arquetipo.descripcion}</div>
         </div>
@@ -359,50 +364,50 @@
         <!-- CARD 2: DISTANCIA TOTAL -->
         <div class="wrapped-card card-distance">
           <div class="wrapped-card-icon">🌍</div>
-          <div class="wrapped-card-label">Odisea en la Ruta</div>
-          <div class="wrapped-card-val">~${data.distanciaTotalKm.toLocaleString()} km</div>
+          <div class="wrapped-card-label">${t('wrapped.card_dist_lbl')}</div>
+          <div class="wrapped-card-val">~${data.distanciaTotalKm.toLocaleString(loc)} km</div>
           <div class="wrapped-card-sub">
-            Recorridos entre ${data.salida ? `<b>${data.salida}</b> y ` : ''}${data.destinosCount} ${data.destinosCount === 1 ? 'destino' : 'destinos'} a lo largo de ${data.totalDias} días.
+            ${t('wrapped.card_dist_sub', { originPrefix, count: data.destinosCount, destWord, days: data.totalDias })}
           </div>
         </div>
 
         <!-- CARD 3: LA JOYA DEL VIAJE -->
         <div class="wrapped-card card-gem">
           <div class="wrapped-card-icon">💎</div>
-          <div class="wrapped-card-label">La Joya del Viaje</div>
+          <div class="wrapped-card-label">${t('wrapped.card_gem_lbl')}</div>
           <div class="wrapped-card-val" style="font-size:1.35rem; color:#fbbf24;">${data.joyaActividad.titulo}</div>
           <div class="wrapped-card-sub">
-            Tu experiencia de mayor inversión (${formatGasto(data.joyaActividad.costo)}) en <b>${data.joyaActividad.ciudad}</b>.
+            ${t('wrapped.card_gem_sub', { cost: formatGasto(data.joyaActividad.costo), city: data.joyaActividad.ciudad })}
           </div>
         </div>
 
         <!-- CARD 4: HITOS Y LOGROS -->
         <div class="wrapped-card card-logros">
           <div class="wrapped-card-icon">🏆</div>
-          <div class="wrapped-card-label">Hitos Desbloqueados</div>
-          <div class="wrapped-card-val">${data.logrosCount} <span style="font-size:1.05rem; color:#94a3b8; font-weight:600;">/ 50 logros</span></div>
+          <div class="wrapped-card-label">${t('wrapped.card_ach_lbl')}</div>
+          <div class="wrapped-card-val">${data.logrosCount} <span style="font-size:1.05rem; color:#94a3b8; font-weight:600;">${t('wrapped.card_ach_total')}</span></div>
           <div class="wrapped-card-sub">
-            Insignias conseguidas completando rutas, explorando rincones y compartiendo en grupo.
+            ${t('wrapped.card_ach_sub')}
           </div>
         </div>
 
         <!-- CARD 5: RECUERDOS Y BITÁCORA -->
         <div class="wrapped-card">
           <div class="wrapped-card-icon">📸</div>
-          <div class="wrapped-card-label">Memoria & Bitácora</div>
-          <div class="wrapped-card-val">${data.bitacoraCount} ${data.bitacoraCount === 1 ? 'entrada' : 'entradas'}</div>
+          <div class="wrapped-card-label">${t('wrapped.card_mem_lbl')}</div>
+          <div class="wrapped-card-val">${data.bitacoraCount} ${entryWord}</div>
           <div class="wrapped-card-sub">
-            ${data.fotosCount > 0 ? `Con ${data.fotosCount} fotos y videos capturados en la nube.` : 'Momentos e impresiones anotados durante el camino.'}
+            ${data.fotosCount > 0 ? t('wrapped.card_mem_photos', { count: data.fotosCount }) : t('wrapped.card_mem_empty')}
           </div>
         </div>
 
         <!-- CARD 6: VIBE SONORO -->
         <div class="wrapped-card card-vibe">
           <div class="wrapped-card-icon">🎵</div>
-          <div class="wrapped-card-label">Banda Sonora del Viaje</div>
+          <div class="wrapped-card-label">${t('wrapped.card_vibe_lbl')}</div>
           <div class="wrapped-card-val" style="font-size:1.25rem; color:#f472b6;">${data.soundtrackVibe}</div>
           <div class="wrapped-card-sub">
-            El estilo musical sugerido que marca el pulso y la atmósfera de tu expedición.
+            ${t('wrapped.card_vibe_sub')}
           </div>
         </div>
 
@@ -457,75 +462,77 @@
     const container = document.getElementById('storiesSlidesWrapper');
     if (!container) return;
 
+    const loc = typeof getLangLocale === 'function' ? getLangLocale() : undefined;
     const formatGasto = (monto) => {
       if (typeof window.formatMoneda === 'function') return window.formatMoneda(monto);
-      return `${Math.round(monto).toLocaleString()} ${data.moneda}`;
+      return `${Math.round(monto).toLocaleString(loc)} ${data.moneda}`;
     };
+    const cityWord = data.destinosCount === 1 ? t('wrapped.city_singular') : t('wrapped.city_plural');
 
     container.innerHTML = `
       <!-- SLIDE 1: PORTADA -->
       <div class="story-slide" data-slide="0">
-        <div class="story-badge-pill">✨ Plux Wrapped 2026</div>
+        <div class="story-badge-pill">${t('wrapped.story_s1_badge')}</div>
         <div class="story-giant-emoji">🧭</div>
         <h1 class="story-title">${data.tituloViaje}</h1>
         <div class="story-metric-box">
-          <div class="story-metric-val">${data.totalDias} DÍAS</div>
-          <div class="story-metric-lbl">${data.destinosCount} ${data.destinosCount === 1 ? 'Ciudad' : 'Ciudades'} · ${data.totalActividades} Experiencias</div>
+          <div class="story-metric-val">${t('wrapped.story_s1_days', { days: data.totalDias })}</div>
+          <div class="story-metric-lbl">${t('wrapped.story_s1_sub', { count: data.destinosCount, cityWord, acts: data.totalActividades })}</div>
         </div>
-        <p class="story-desc">Con la compañía de <b>${data.viajerosNombres}</b>. ¡Es hora de revivir tu gran viaje!</p>
+        <p class="story-desc">${t('wrapped.story_s1_desc', { travelers: data.viajerosNombres })}</p>
       </div>
 
       <!-- SLIDE 2: ODISEA Y DISTANCIA -->
       <div class="story-slide" data-slide="1">
-        <div class="story-badge-pill">🌍 La Gran Travesía</div>
+        <div class="story-badge-pill">${t('wrapped.story_s2_badge')}</div>
         <div class="story-giant-emoji">✈️</div>
-        <h1 class="story-title">~${data.distanciaTotalKm.toLocaleString()} km</h1>
+        <h1 class="story-title">~${data.distanciaTotalKm.toLocaleString(loc)} km</h1>
         <div class="story-metric-box">
           <div class="story-metric-val" style="color:#10b981;">${data.destinosCount}</div>
-          <div class="story-metric-lbl">Paradas y Escalas Exploradas</div>
+          <div class="story-metric-lbl">${t('wrapped.story_s2_sub')}</div>
         </div>
         <p class="story-desc">
-          ${data.salida ? `Partiendo desde <b>${data.salida}</b> para conquistar ` : 'Explorando '}
-          ${data.destinosNombres.slice(0, 4).join(', ')}${data.destinosNombres.length > 4 ? ' y más...' : ''}.
+          ${data.salida ? t('wrapped.story_s2_from', { origin: data.salida }) : t('wrapped.story_s2_exploring')}
+          ${data.destinosNombres.slice(0, 4).join(', ')}${data.destinosNombres.length > 4 ? t('wrapped.story_s2_and_more') : ''}.
         </p>
       </div>
 
       <!-- SLIDE 3: TU ARQUETIPO -->
       <div class="story-slide" data-slide="2">
-        <div class="story-badge-pill">🎭 Tu Identidad Viajera</div>
+        <div class="story-badge-pill">${t('wrapped.story_s3_badge')}</div>
         <div class="story-giant-emoji">${data.arquetipo.emoji}</div>
         <h1 class="story-title" style="color:${data.arquetipo.badgeColor};">${data.arquetipo.titulo}</h1>
         <div class="story-metric-box" style="border-color:${data.arquetipo.badgeColor}40;">
           <p style="margin:0; font-size:1.05rem; color:#ffffff; line-height:1.45;">${data.arquetipo.descripcion}</p>
         </div>
-        <p class="story-desc">Un estilo único que definió el ritmo y el carácter de tus días.</p>
+        <p class="story-desc">${t('wrapped.story_s3_desc')}</p>
       </div>
 
       <!-- SLIDE 4: JOYAS Y RECUERDOS -->
       <div class="story-slide" data-slide="3">
-        <div class="story-badge-pill">💎 Momentos Clave</div>
+        <div class="story-badge-pill">${t('wrapped.story_s4_badge')}</div>
         <div class="story-giant-emoji">🏆</div>
-        <h1 class="story-title">La Joya del Viaje</h1>
+        <h1 class="story-title">${t('wrapped.story_s4_title')}</h1>
         <div class="story-metric-box">
           <div style="font-size:1.4rem; font-weight:800; color:#fbbf24; margin-bottom:4px;">${data.joyaActividad.titulo}</div>
           <div class="story-metric-lbl">${data.joyaActividad.ciudad} · ${formatGasto(data.joyaActividad.costo)}</div>
         </div>
         <p class="story-desc">
-          Desbloqueaste <b>${data.logrosCount} logros</b> y sumaste <b>${data.bitacoraCount} notas</b> en tu bitácora.
+          ${t('wrapped.story_s4_desc', { ach: data.logrosCount, notes: data.bitacoraCount })}
         </p>
       </div>
 
       <!-- SLIDE 5: PÓSTER FINAL -->
       <div class="story-slide" data-slide="4">
-        <div class="story-badge-pill">🎉 Tu Resumen Listo</div>
+        <div class="story-badge-pill">${t('wrapped.story_s5_badge')}</div>
         <div class="story-giant-emoji">📸</div>
-        <h1 class="story-title">¡Misión Cumplida!</h1>
+        <h1 class="story-title">${t('wrapped.story_s5_title')}</h1>
         <p class="story-desc" style="margin-bottom:20px;">
-          Tu viaje quedó grabado para siempre en Plux. Descargá tu historia oficial para compartirla.
+          ${t('wrapped.story_s5_desc')}
         </p>
         <div class="story-footer-action">
           <button type="button" class="story-btn-primary" onclick="window.descargarTarjetaWrappedPNG()">
-            <i class="fa-solid fa-cloud-arrow-down"></i> Descargar Tarjeta
+            <i class="fa-solid fa-cloud-arrow-down"></i> ${t('wrapped.story_s5_btn')}
           </button>
         </div>
       </div>
@@ -610,8 +617,9 @@
     }
 
     if (typeof window.showToast === 'function') {
-      window.showToast('Generando tarjeta gráfica Wrapped en alta resolución...', 'info');
+      window.showToast(t('wrapped.png_generating_toast'), 'info');
     }
+    const loc = typeof getLangLocale === 'function' ? getLangLocale() : undefined;
 
     const W = 1080;
     const H = 1920;
@@ -675,13 +683,13 @@
     ctx.font = '900 68px Outfit, Inter, sans-serif';
     
     // Limitar y cortar título largo
-    let titleText = (data.tituloViaje || 'Mi Gran Viaje').toUpperCase();
+    let titleText = (data.tituloViaje || t('wrapped.png_default_title')).toUpperCase();
     if (titleText.length > 28) titleText = titleText.substring(0, 26) + '...';
     ctx.fillText(titleText, 80, 310);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '500 34px Outfit, Inter, sans-serif';
-    ctx.fillText(`Con ${data.viajerosNombres} · ${data.totalDias} días en ruta`, 80, 375);
+    ctx.fillText(t('wrapped.png_with_days', { travelers: data.viajerosNombres, days: data.totalDias }), 80, 375);
 
     // 4. Caja Destacada: Arquetipo de Viajero
     const boxY = 440;
@@ -698,7 +706,7 @@
 
     ctx.fillStyle = '#f472b6';
     ctx.font = '800 28px Outfit, Inter, sans-serif';
-    ctx.fillText('TU ARQUETIPO DE VIAJERO', 120, boxY + 60);
+    ctx.fillText(t('wrapped.png_arch_hdr'), 120, boxY + 60);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '900 52px Outfit, Inter, sans-serif';
@@ -730,10 +738,10 @@
     const cardH = 220;
 
     const cards = [
-      { label: 'DISTANCIA RECORRIDA', val: `~${data.distanciaTotalKm.toLocaleString()} km`, sub: `${data.destinosCount} destinos visitados`, color: '#38bdf8' },
-      { label: 'EXPERIENCIAS VIVIDAS', val: `${data.totalActividades}`, sub: `En ${data.totalDias} días de itinerario`, color: '#34d399' },
-      { label: 'LA JOYA DEL VIAJE', val: data.joyaActividad.titulo.substring(0, 16), sub: `${data.joyaActividad.ciudad}`, color: '#fbbf24' },
-      { label: 'HITOS DESBLOQUEADOS', val: `${data.logrosCount} / 50`, sub: 'Logros alcanzados', color: '#a78bfa' }
+      { label: t('wrapped.png_m1_lbl'), val: `~${data.distanciaTotalKm.toLocaleString(loc)} km`, sub: t('wrapped.png_m1_sub', { count: data.destinosCount }), color: '#38bdf8' },
+      { label: t('wrapped.png_m2_lbl'), val: `${data.totalActividades}`, sub: t('wrapped.png_m2_sub', { days: data.totalDias }), color: '#34d399' },
+      { label: t('wrapped.png_m3_lbl'), val: data.joyaActividad.titulo.substring(0, 16), sub: `${data.joyaActividad.ciudad}`, color: '#fbbf24' },
+      { label: t('wrapped.png_m4_lbl'), val: `${data.logrosCount} / 50`, sub: t('wrapped.png_m4_sub'), color: '#a78bfa' }
     ];
 
     cards.forEach((c, i) => {
@@ -775,7 +783,7 @@
 
     ctx.fillStyle = '#f472b6';
     ctx.font = '800 24px Outfit, Inter, sans-serif';
-    ctx.fillText('🎵 BANDA SONORA DEL VIAJE', 120, vibeY + 55);
+    ctx.fillText(t('wrapped.png_vibe_hdr'), 120, vibeY + 55);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '900 40px Outfit, Inter, sans-serif';
@@ -786,7 +794,7 @@
     ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.font = '600 26px Outfit, Inter, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Planificado y vivido en plux.nibecarcofeben.com', W / 2, footerY);
+    ctx.fillText(t('wrapped.png_footer'), W / 2, footerY);
 
     // Descarga directa del PNG
     const safeName = (data.tituloViaje || 'viaje').toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -799,7 +807,7 @@
     downloadLink.remove();
 
     if (typeof window.showToast === 'function') {
-      window.showToast('¡Tarjeta Plux Wrapped descargada con éxito!', 'success');
+      window.showToast(t('wrapped.png_done_toast'), 'success');
     }
   };
 

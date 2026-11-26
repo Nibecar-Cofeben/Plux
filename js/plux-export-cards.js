@@ -7,9 +7,9 @@
       if (customName) return `${customName.toUpperCase()} · PLUX`;
       if (destinos && destinos.length > 0) {
         const destNames = destinos.map(d => (d.nombre || '').toUpperCase()).filter(Boolean).join(' -> ');
-        if (destNames) return `VIAJE A ${destNames} · PLUX`;
+        if (destNames) return t('cards.trip_to_upper', { dests: destNames });
       }
-      return 'MI AVENTURA · PLUX';
+      return t('cards.my_adventure_upper');
     }
 
     function getCompanionsFormatted() {
@@ -18,7 +18,7 @@
       const list = companionsInput.split(',').map(s => s.trim()).filter(Boolean);
       if (list.length === 0) return '';
       const formatted = list.map(n => n.startsWith('@') ? n : `@${n}`).join(', ');
-      return `with ${formatted}`;
+      return t('cards.with_travelers', { names: formatted });
     }
 
     function safeFormatDateStr(dateVal) {
@@ -32,7 +32,8 @@
           }
         }
         const d = new Date(dateVal);
-        if (!isNaN(d.getTime())) return d.toLocaleDateString();
+        const loc = typeof getLangLocale === 'function' ? getLangLocale() : undefined;
+        if (!isNaN(d.getTime())) return d.toLocaleDateString(loc);
       } catch (e) {
         console.warn('safeFormatDateStr error:', e);
       }
@@ -115,7 +116,7 @@ async function asegurarViajeEnNubeParaCompartir() {
 
   if (typeof db !== 'undefined' && db) {
     try {
-      const ownerName = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Viajero';
+      const ownerName = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : t('social.collab_traveler_default');
       await db.collection("plux_viajes_compartidos").doc(syncCode).set({
         data: JSON.stringify(tripData),
         propietario: ownerName,
@@ -231,9 +232,9 @@ window.ocultarAdvertenciaSoloLectura = ocultarAdvertenciaSoloLectura;
 // ================== CLONAR VIAJE (CREAR COPIA EDITABLE) ==================
 function clonarViajeActual() {
   const trips = (typeof getStoredTrips === 'function') ? getStoredTrips() : [];
-  const currentTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle().replace(/\s*·\s*PLUX$/i, '') : (document.getElementById('display-trip-title')?.innerText || 'Mi Viaje');
-  const cleanBaseTitle = currentTitle.replace(/^VIAJE A /i, '').replace(/^EXPEDICIÓN A /i, '').trim();
-  const nuevoNombre = `${cleanBaseTitle || 'Viaje'} (Copia)`;
+  const currentTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle().replace(/\s*·\s*PLUX$/i, '') : (document.getElementById('display-trip-title')?.innerText || t('social.my_trip_fallback'));
+  const cleanBaseTitle = currentTitle.replace(/^(VIAJE A |EXPEDICIÓN A |TRIP TO |VOYAGE À |REISE NACH |VIAGGIO A )/i, '').trim();
+  const nuevoNombre = `${cleanBaseTitle || t('cards.trip_fallback')} (${t('cards.copy_suffix')})`;
   const newTripId = 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
 
   const clon = {
@@ -390,7 +391,9 @@ const i18nCardDictionary = {
     estBudget: 'PRESUPUESTO EST.',
     scanCta: 'ESCANEA CON TU CÁMARA',
     modeReaderLabel: 'MODO LECTOR (SÓLO LECTURA)',
-    scanSub: 'Abre el itinerario interactivo en Plux'
+    scanSub: 'Abre el itinerario interactivo en Plux',
+    flexible: 'Flexible',
+    scheduled: 'programadas'
   },
   en: {
     tag: 'OFFICIAL ITINERARY',
@@ -405,7 +408,9 @@ const i18nCardDictionary = {
     estBudget: 'EST. BUDGET',
     scanCta: 'SCAN WITH YOUR CAMERA',
     modeReaderLabel: 'READER MODE (VIEW ONLY)',
-    scanSub: 'Open the interactive itinerary in Plux'
+    scanSub: 'Open the interactive itinerary in Plux',
+    flexible: 'Flexible',
+    scheduled: 'scheduled'
   },
   fr: {
     tag: 'ITINÉRAIRE OFFICIEL',
@@ -420,7 +425,9 @@ const i18nCardDictionary = {
     estBudget: 'BUDGET EST.',
     scanCta: 'SCANNEZ AVEC VOTRE APPAREIL',
     modeReaderLabel: 'MODE LECTEUR (LECTURE SEULE)',
-    scanSub: 'Ouvrez l\'itinéraire complet sur Plux'
+    scanSub: 'Ouvrez l\'itinéraire complet sur Plux',
+    flexible: 'Flexible',
+    scheduled: 'prévues'
   },
   de: {
     tag: 'OFFIZIELLER REISEPLAN',
@@ -435,7 +442,9 @@ const i18nCardDictionary = {
     estBudget: 'GESCH. BUDGET',
     scanCta: 'MIT DER KAMERA SCANNEN',
     modeReaderLabel: 'LESER-MODUS (NUR LESEN)',
-    scanSub: 'Interaktive Reiseroute in Plux öffnen'
+    scanSub: 'Interaktive Reiseroute in Plux öffnen',
+    flexible: 'Flexibel',
+    scheduled: 'geplant'
   },
   it: {
     tag: 'ITINERARIO UFFICIALE',
@@ -450,16 +459,18 @@ const i18nCardDictionary = {
     estBudget: 'BUDGET STIMATO',
     scanCta: 'SCANSIONA CON LA FOTOCAMERA',
     modeReaderLabel: 'MODALITÀ LETTORE (SOLO LETTURA)',
-    scanSub: 'Apri l\'itinerario completo su Plux'
+    scanSub: 'Apri l\'itinerario completo su Plux',
+    flexible: 'Flessibile',
+    scheduled: 'programmate'
   }
 };
 
 async function recopilarDatosTravelCard() {
   const shareUrl = await asegurarViajeEnNubeParaCompartir();
-  const tripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || 'Viaje en Plux');
-  const departureCity = (typeof lugarSalida !== 'undefined' && lugarSalida) ? lugarSalida : 'Sin origen';
+  const tripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || t('social.collab_trip_default'));
+  const departureCity = (typeof lugarSalida !== 'undefined' && lugarSalida) ? lugarSalida : t('cards.no_origin');
   const startDay = document.getElementById('fechaInicio')?.value || '';
-  const companionsFormatted = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : (nombresPersonasGlobal || '@Viajero');
+  const companionsFormatted = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : (nombresPersonasGlobal || ('@' + t('social.collab_traveler_default')));
   const currencySymbol = (typeof getSimboloMoneda === 'function') ? getSimboloMoneda() : '€';
 
   let totalDays = 0;
@@ -528,7 +539,7 @@ async function recopilarDatosTravelCard() {
 
       stopsList.push({
         num: idx + 1,
-        name: d.nombre || d.ciudad || `Destino ${idx + 1}`,
+        name: d.nombre || d.ciudad || t('cards.dest_n', { n: idx + 1 }),
         days: dDays > 0 ? dDays : 1,
         activitiesCount: dActsCount
       });
@@ -537,7 +548,7 @@ async function recopilarDatosTravelCard() {
     totalDays = 1;
     totalActivities = 1;
     totalBudget = 0;
-    stopsList.push({ num: 1, name: 'Destino Sorpresa', days: 1, activitiesCount: 1 });
+    stopsList.push({ num: 1, name: t('cards.surprise_dest'), days: 1, activitiesCount: 1 });
   }
 
   if (typeof vueltaPrecioGlobal !== 'undefined') {
@@ -549,7 +560,7 @@ async function recopilarDatosTravelCard() {
     });
   }
 
-  const mainDestinationName = stopsList[0]?.name || 'Exploración';
+  const mainDestinationName = stopsList[0]?.name || t('cards.exploration_default');
 
   return {
     shareUrl,
@@ -820,7 +831,7 @@ async function renderTravelCardCanvas(ratio = '9:16') {
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 22px Outfit, Inter, Arial, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('🗓️ ' + (data.startDay || 'Flexible') + ` • ${data.totalDays} ${txt.days}`, 560, metaY + 35);
+    ctx.fillText('🗓️ ' + (data.startDay || txt.flexible) + ` • ${data.totalDays} ${txt.days}`, 560, metaY + 35);
     ctx.restore();
 
     // 3. Ruta & Paradas
@@ -1044,7 +1055,7 @@ async function renderTravelCardCanvas(ratio = '9:16') {
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 18px Outfit, Inter, Arial, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('🗓️ ' + (data.startDay || 'Flexible') + ` • ${data.totalDays} ${txt.days}`, 480, metaY + 31);
+    ctx.fillText('🗓️ ' + (data.startDay || txt.flexible) + ` • ${data.totalDays} ${txt.days}`, 480, metaY + 31);
     ctx.restore();
 
     // Bottom Left: Stops & Metrics Summary (w: 480, h: 520)
@@ -1253,7 +1264,7 @@ async function renderTravelCardCanvas(ratio = '9:16') {
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 19px Outfit, Inter, Arial, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('🗓️ ' + (data.startDay || 'Flexible') + ` • ${data.totalDays} ${txt.days}`, 480, metaY + 30);
+    ctx.fillText('🗓️ ' + (data.startDay || txt.flexible) + ` • ${data.totalDays} ${txt.days}`, 480, metaY + 30);
     ctx.restore();
 
     // 3. Ruta & Paradas Card
@@ -1462,7 +1473,7 @@ async function renderTravelCardCanvas(ratio = '9:16') {
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 21px Outfit, Inter, Arial, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('🗓️ ' + (data.startDay || 'Flexible') + ` • ${data.totalDays} ${txt.days}`, leftX + 445, metaY + 34);
+    ctx.fillText('🗓️ ' + (data.startDay || txt.flexible) + ` • ${data.totalDays} ${txt.days}`, leftX + 445, metaY + 34);
     ctx.restore();
 
     // Metrics 2x2 Grid under Hero
@@ -1537,7 +1548,7 @@ async function renderTravelCardCanvas(ratio = '9:16') {
 
       ctx.fillStyle = '#94a3b8';
       ctx.font = '500 22px Outfit, Inter, Arial, sans-serif';
-      ctx.fillText(`${stop.days} ${txt.days.toLowerCase()} • ${stop.activitiesCount} ${txt.activities.toLowerCase()} programadas`, rightX + 110, sY + 50);
+      ctx.fillText(`${stop.days} ${txt.days.toLowerCase()} • ${stop.activitiesCount} ${txt.activities.toLowerCase()} ${txt.scheduled}`, rightX + 110, sY + 50);
 
       if (i < stops169.length - 1) {
         ctx.save();
@@ -1638,7 +1649,7 @@ window.cambiarRatioTravelCard = async function(ratio) {
         link.download = filename;
         link.href = dataUrl;
         link.click();
-        if (typeof showToast === 'function') showToast('Tarjeta descargada', 'success');
+        if (typeof showToast === 'function') showToast(t('cards.card_downloaded'), 'success');
       };
     }
 
@@ -1649,14 +1660,14 @@ window.cambiarRatioTravelCard = async function(ratio) {
           canvas.toBlob(async (blob) => {
             if (blob && navigator.clipboard && window.ClipboardItem) {
               await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-              if (typeof showToast === 'function') showToast('¡Tarjeta copiada al portapapeles!', 'success');
+              if (typeof showToast === 'function') showToast(t('cards.card_copied'), 'success');
             } else {
-              if (typeof showToast === 'function') showToast('Copia automática no soportada, usa Descargar', 'info');
+              if (typeof showToast === 'function') showToast(t('cards.copy_unsupported_toast'), 'info');
             }
           });
         } catch(e) {
           console.warn('Clipboard write error:', e);
-          if (typeof showToast === 'function') showToast('Usa el botón Descargar', 'info');
+          if (typeof showToast === 'function') showToast(t('cards.use_download_btn_toast'), 'info');
         }
       };
     }
@@ -1671,8 +1682,8 @@ window.cambiarRatioTravelCard = async function(ratio) {
                 const file = new File([blob], filename, { type: 'image/png' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                   await navigator.share({
-                    title: data.tripTitle || 'Mi Itinerario en Plux',
-                    text: `¡Mirá mi viaje a ${data.mainDestinationName} en Plux! ${data.shareUrl}`,
+                    title: data.tripTitle || t('cards.share_title_default'),
+                    text: t('cards.share_text', { dest: data.mainDestinationName, url: data.shareUrl }),
                     url: data.shareUrl,
                     files: [file]
                   });
@@ -1682,15 +1693,15 @@ window.cambiarRatioTravelCard = async function(ratio) {
                 console.warn('File share not supported, fallback to URL share:', fileErr);
               }
               await navigator.share({
-                title: data.tripTitle || 'Mi Itinerario en Plux',
-                text: `¡Mirá mi viaje a ${data.mainDestinationName} en Plux! ${data.shareUrl}`,
+                title: data.tripTitle || t('cards.share_title_default'),
+                text: t('cards.share_text', { dest: data.mainDestinationName, url: data.shareUrl }),
                 url: data.shareUrl
               });
             } else if (navigator.clipboard) {
               await navigator.clipboard.writeText(data.shareUrl);
-              if (typeof showToast === 'function') showToast('Enlace de viaje copiado al portapapeles', 'success');
+              if (typeof showToast === 'function') showToast(t('cards.share_link_copied_toast'), 'success');
             } else {
-              if (typeof showToast === 'function') showToast('Función de compartir no disponible, usa Descargar', 'info');
+              if (typeof showToast === 'function') showToast(t('cards.share_unsupported_toast'), 'info');
             }
           });
         } catch(e) {
@@ -1705,8 +1716,7 @@ window.cambiarRatioTravelCard = async function(ratio) {
 
 async function compartirTravelCard() {
   if (typeof showToast === 'function') {
-    const langKey = (typeof currentLang !== 'undefined' && (currentLang === 'en' || currentLang === 'es')) ? currentLang : 'es';
-    showToast(langKey === 'es' ? 'Generando tarjeta oficial de Plux...' : 'Generating official Plux travel card...', 'info');
+    showToast(t('cards.generating_card'), 'info');
   }
 
   try {
@@ -1718,7 +1728,7 @@ async function compartirTravelCard() {
     }
   } catch (err) {
     console.error('Error en compartirTravelCard:', err);
-    if (typeof showToast === 'function') showToast('Error al generar la tarjeta de viaje: ' + (err.message || err), 'error');
+    if (typeof showToast === 'function') showToast(t('cards.card_gen_err', { err: err.message || err }), 'error');
   }
 }
 window.compartirTravelCard = compartirTravelCard;
@@ -1831,7 +1841,7 @@ async function exportarPDF() {
   try {
   const jsPDF = await asegurarJsPDF();
   if (!jsPDF) {
-    if (typeof showToast === 'function') showToast('Librería PDF no disponible. Por favor recarga la página.', 'error');
+    if (typeof showToast === 'function') showToast(t('cards.pdf_lib_missing'), 'error');
     return;
   }
 
@@ -1841,10 +1851,8 @@ async function exportarPDF() {
     format: 'a4'
   });
 
-  const langKey = (typeof currentLang !== 'undefined' && (currentLang === 'en' || currentLang === 'es')) ? currentLang : 'es';
-
   if (typeof showToast === 'function') {
-    showToast(langKey === 'es' ? 'Compilando Dossier Oficial de Plux...' : 'Compiling official Plux Dossier...', 'info');
+    showToast(t('cards.pdf_generating'), 'info');
   }
 
   // 1. Ensure trip exists in Firestore and get Reader URL
@@ -1852,10 +1860,10 @@ async function exportarPDF() {
   const shareUrl = (typeof rawShareUrl === 'string' && /^https?:\/\//i.test(rawShareUrl)) ? rawShareUrl : window.location.href;
 
   // 2. Trip metrics
-  const tripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || 'Viaje en Plux');
-  const departureCity = (typeof lugarSalida !== 'undefined' && lugarSalida) ? lugarSalida : 'Sin origen registrado';
-  const startDay = document.getElementById('fechaInicio')?.value || 'Fecha a convenir';
-  const companionsFormatted = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : (nombresPersonasGlobal || '@Viajero');
+  const tripTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle() : (document.getElementById('display-trip-title')?.innerText || t('social.collab_trip_default'));
+  const departureCity = (typeof lugarSalida !== 'undefined' && lugarSalida) ? lugarSalida : t('cards.pdf_no_origin');
+  const startDay = document.getElementById('fechaInicio')?.value || t('cards.pdf_date_tbd');
+  const companionsFormatted = (typeof getCompanionsFormatted === 'function') ? getCompanionsFormatted() : (nombresPersonasGlobal || ('@' + t('social.collab_traveler_default')));
   const currencySymbol = (typeof getMonedaActiva === 'function') ? getMonedaActiva() : 'EUR';
 
   let totalDays = 0;
@@ -1885,7 +1893,7 @@ async function exportarPDF() {
               dCost += evCost * (numPersonas || 1);
               dActivitiesList.push({
                 dia: diaNum,
-                nombre: ev.titulo || ev.title || 'Actividad',
+                nombre: ev.titulo || ev.title || t('social.card_act_default'),
                 hora: ev.hora || '',
                 precio: evCost,
                 completada: ev.completada || false,
@@ -1911,7 +1919,7 @@ async function exportarPDF() {
           dCost += aCost * (numPersonas || 1);
           dActivitiesList.push({
             dia: a.dia || 1,
-            nombre: a.nombre || a.titulo || 'Actividad',
+            nombre: a.nombre || a.titulo || t('social.card_act_default'),
             hora: a.hora || '',
             precio: aCost,
             completada: a.completada || false
@@ -1919,8 +1927,8 @@ async function exportarPDF() {
         });
       }
 
-      let transportSummary = 'Sin asignar';
-      let lodgingSummary = 'Sin asignar';
+      let transportSummary = t('cards.pdf_unassigned');
+      let lodgingSummary = t('cards.pdf_unassigned');
       const sharedPdf = (typeof window.resolveSharedBookingForDest === 'function') ? window.resolveSharedBookingForDest(idx) : null;
 
       if (d.tramos && Array.isArray(d.tramos) && d.tramos.length > 0) {
@@ -1931,11 +1939,11 @@ async function exportarPDF() {
           dCost += (tTransp + tAloj) * mult;
           if (tramo.medio || tramo.transporte) transportSummary = tramo.medio || tramo.transporte;
           if (tramo.alojamiento) lodgingSummary = tramo.alojamiento;
-          else if (tramo.precioAlojamiento && parseFloat(tramo.precioAlojamiento) > 0) lodgingSummary = 'Hospedaje';
+          else if (tramo.precioAlojamiento && parseFloat(tramo.precioAlojamiento) > 0) lodgingSummary = t('cards.pdf_lodging');
         });
       } else if (sharedPdf && sharedPdf.tramo) {
-        transportSummary = sharedPdf.tramo.medio || 'Reserva compartida';
-        lodgingSummary = sharedPdf.tramo.alojamiento || 'Incluido';
+        transportSummary = sharedPdf.tramo.medio || t('cards.pdf_shared_booking');
+        lodgingSummary = sharedPdf.tramo.alojamiento || t('cards.pdf_included');
       } else {
         dCost += (parseFloat(d.precioIda || 0) || 0) * (numPersonas || 1);
         dCost += (parseFloat(d.precioAlojamiento || 0) || 0);
@@ -1952,13 +1960,13 @@ async function exportarPDF() {
       totalActivities += dActsCount;
       totalBudget += dCost;
 
-      const destName = d.nombre || d.ciudad || `Destino ${idx + 1}`;
+      const destName = d.nombre || d.ciudad || t('cards.dest_n', { n: idx + 1 });
       destinationsList.push({
         num: idx + 1,
         name: destName,
         days: dDays > 0 ? dDays : 1,
         transitPrev,
-        transitLabel: d.transitoEtiqueta || 'En navegacion',
+        transitLabel: d.transitoEtiqueta || t('cards.pdf_sailing'),
         transport: transportSummary,
         priceIda: parseFloat(d.precioIda || 0) || 0,
         lodging: lodgingSummary,
@@ -2007,20 +2015,21 @@ async function exportarPDF() {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(148, 163, 184); // slate-400
-  doc.text('Dossier e Itinerario Oficial de Viaje', 56, 25);
+  doc.text(t('cards.pdf_subtitle'), 56, 25);
 
   // Right Header info
   doc.setFontSize(8.5);
   doc.setTextColor(148, 163, 184);
   doc.text('plux.nibecarcofeben.com', pageWidth - 14, 18, { align: 'right' });
-  const todayStr = new Date().toLocaleDateString();
-  doc.text(`Generado el: ${todayStr}`, pageWidth - 14, 23, { align: 'right' });
+  const loc = typeof getLangLocale === 'function' ? getLangLocale() : undefined;
+  const todayStr = new Date().toLocaleDateString(loc);
+  doc.text(t('cards.pdf_generated_on', { date: todayStr }), pageWidth - 14, 23, { align: 'right' });
 
   // Main Trip Title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(26);
   doc.setTextColor(255, 255, 255);
-  const cleanTitlePDF = (tripTitle || 'EXPEDICION EN PLUX').toUpperCase();
+  const cleanTitlePDF = (tripTitle || t('cards.pdf_default_title')).toUpperCase();
   const splitTitle = doc.splitTextToSize(cleanTitlePDF, pageWidth - 28);
   doc.text(splitTitle, 14, 46);
 
@@ -2031,7 +2040,7 @@ async function exportarPDF() {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10.5);
   doc.setTextColor(148, 163, 184);
-  doc.text(`Organizado por: ${companionsFormatted}`, 14, afterTitleY);
+  doc.text(t('cards.pdf_organized_by', { names: companionsFormatted }), 14, afterTitleY);
 
   // ================= INTERACTIVE BUTTON (READER MODE) =================
   // Clean ASCII text without unicode emojis to prevent any character corruption (no Ø=þ€)
@@ -2044,7 +2053,7 @@ async function exportarPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(255, 255, 255);
-  doc.text('CLIC AQUI PARA ABRIR ESTE VIAJE EN VIVO (MODO LECTOR) ->', pageWidth / 2, ctaBtnY + 7.2, { align: 'center' });
+  doc.text(t('cards.pdf_cta_live_reader'), pageWidth / 2, ctaBtnY + 7.2, { align: 'center' });
 
   // Add clickable hyperlink directly on PDF button
   doc.link(14, ctaBtnY, ctaBtnW, ctaBtnH, { url: shareUrl });
@@ -2052,15 +2061,15 @@ async function exportarPDF() {
   // Overview Table
   const tableData = [
     [
-      { content: 'Origen / Salida', styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
+      { content: t('cards.pdf_tbl_origin'), styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
       { content: departureCity.toUpperCase(), styles: { textColor: [226, 232, 240] } },
-      { content: 'Fecha de Inicio', styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
+      { content: t('cards.pdf_tbl_start'), styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
       { content: startDay, styles: { textColor: [56, 189, 248] } }
     ],
     [
-      { content: 'Viajeros', styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
+      { content: t('cards.pdf_tbl_travelers'), styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
       { content: companionsFormatted, styles: { textColor: [226, 232, 240] } },
-      { content: 'Presupuesto Total Est.', styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
+      { content: t('cards.pdf_tbl_budget'), styles: { fontStyle: 'bold', fillColor: [15, 23, 42], textColor: [255, 255, 255] } },
       { content: `${Math.round(totalBudget)} ${currencySymbol}`, styles: { fontStyle: 'bold', textColor: [52, 211, 153] } }
     ]
   ];
@@ -2085,14 +2094,14 @@ async function exportarPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(236, 72, 153); // pink
-  doc.text('RUTA Y DESTINOS DEL VIAJE', 14, currentY);
+  doc.text(t('cards.pdf_route_hdr'), 14, currentY);
   currentY += 5;
 
   const destTable = destinationsList.map((d, i) => [
     `#${d.num}`,
     d.name,
-    `${d.days} dias`,
-    `${d.activities.length} actividades`,
+    t('cards.pdf_days_unit', { count: d.days }),
+    t('cards.pdf_acts_unit', { count: d.activities.length }),
     `${d.transport} / ${d.lodging}`
   ]);
 
@@ -2100,7 +2109,7 @@ async function exportarPDF() {
     safeAutoTable(doc, {
       startY: currentY,
       margin: { left: 14, right: 14 },
-      head: [['#', 'Destino', 'Estadia', 'Actividades', 'Transporte & Estadia']],
+      head: [['#', t('cards.pdf_col_dest'), t('cards.pdf_col_stay'), t('cards.pdf_col_acts'), t('cards.pdf_col_trans_stay')]],
       body: destTable,
       theme: 'plain',
       styles: {
@@ -2143,20 +2152,20 @@ async function exportarPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(52, 211, 153);
-  doc.text('MODO LECTOR DISPONIBLE', 74, qrBoxY + 18);
+  doc.text(t('cards.pdf_qr_badge'), 74, qrBoxY + 18);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(255, 255, 255);
-  doc.text('ESCANEA CON TU MOVIL PARA ABRIR ESTE VIAJE EN PLUX', 74, qrBoxY + 25);
+  doc.text(t('cards.pdf_qr_scan'), 74, qrBoxY + 25);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
   const expl = [
-    '1. Abre la camara de tu smartphone y enfoca el codigo QR.',
-    '2. Accederas de inmediato al mapa interactivo y presupuesto en Modo Lectura.',
-    '3. Disponible en cualquier navegador web, iOS y Android.'
+    t('cards.pdf_qr_step1'),
+    t('cards.pdf_qr_step2'),
+    t('cards.pdf_qr_step3')
   ];
   doc.text(expl, 74, qrBoxY + 33);
 
@@ -2166,7 +2175,7 @@ async function exportarPDF() {
   // Page 1 Footer
   doc.setFontSize(7.5);
   doc.setTextColor(100, 116, 139);
-  doc.text('PLUX • Pagina 1 de 2 • Itinerario Oficial', pageWidth / 2, pageHeight - 7, { align: 'center' });
+  doc.text(t('cards.pdf_footer_p1'), pageWidth / 2, pageHeight - 7, { align: 'center' });
 
   // ================= PAGE 2: DETAILED ITINERARY =================
   doc.addPage();
@@ -2178,11 +2187,11 @@ async function exportarPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(255, 255, 255);
-  doc.text('CRONOGRAMA DETALLADO DE ACTIVIDADES', 46, 17);
+  doc.text(t('cards.pdf_p2_title'), 46, 17);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
-  doc.text('Desglose diario de actividades, reservas y costos estimados', 46, 22);
+  doc.text(t('cards.pdf_p2_sub'), 46, 22);
 
   // Build activities rows
   const actRows = [];
@@ -2192,12 +2201,12 @@ async function exportarPDF() {
     if (dest.transitPrev > 0) {
       for (let tIdx = 0; tIdx < dest.transitPrev; tIdx++) {
         actRows.push([
-          `Dia ${dayCounter}`,
-          `Rumbo a ${dest.name}`,
-          dest.transitLabel || 'En navegacion / transito',
-          'Todo el dia',
-          'Incluido',
-          'Transito'
+          t('cards.pdf_day_num', { n: dayCounter }),
+          t('cards.pdf_bound_to', { dest: dest.name }),
+          dest.transitLabel || t('cards.pdf_transit_default'),
+          t('cards.pdf_all_day'),
+          t('cards.pdf_included'),
+          t('cards.pdf_status_transit')
         ]);
         dayCounter++;
       }
@@ -2205,22 +2214,22 @@ async function exportarPDF() {
     if (dest.activities && dest.activities.length > 0) {
       dest.activities.forEach(act => {
         actRows.push([
-          `Dia ${dayCounter + ((act.dia || 1) - 1)}`,
+          t('cards.pdf_day_num', { n: dayCounter + ((act.dia || 1) - 1) }),
           dest.name,
-          act.nombre || 'Actividad',
-          act.hora || 'Flexible',
-          (act.precio && parseFloat(act.precio) > 0) ? `${act.precio} ${currencySymbol}` : 'Gratis / Incluido',
-          act.completada ? 'Listo' : 'Planificado'
+          act.nombre || t('social.card_act_default'),
+          act.hora || t('cards.pdf_flexible'),
+          (act.precio && parseFloat(act.precio) > 0) ? `${act.precio} ${currencySymbol}` : t('cards.pdf_free_incl'),
+          act.completada ? t('cards.pdf_status_done') : t('cards.pdf_status_planned')
         ]);
       });
     } else {
       actRows.push([
-        `Dia ${dayCounter}`,
+        t('cards.pdf_day_num', { n: dayCounter }),
         dest.name,
-        'Exploracion libre y recorrido por la ciudad',
-        'Todo el dia',
+        t('cards.pdf_free_explore'),
+        t('cards.pdf_all_day'),
         '0.00 ' + currencySymbol,
-        'Planificado'
+        t('cards.pdf_status_planned')
       ]);
     }
     dayCounter += dest.days;
@@ -2229,7 +2238,7 @@ async function exportarPDF() {
   safeAutoTable(doc, {
     startY: 28,
     margin: { left: 14, right: 14 },
-    head: [['Dia', 'Destino', 'Actividad / Lugar', 'Horario', 'Costo Est.', 'Estado']],
+    head: [[t('cards.pdf_col_day'), t('cards.pdf_col_dest'), t('cards.pdf_col_act'), t('cards.pdf_col_time'), t('cards.pdf_col_cost'), t('cards.pdf_col_status')]],
     body: actRows,
     theme: 'grid',
     styles: {
@@ -2260,22 +2269,22 @@ async function exportarPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(56, 189, 248);
-  doc.text('INFORMACION IMPORTANTE & CONSEJOS PLUX', 18, notesY + 6);
+  doc.text(t('cards.pdf_tips_hdr'), 18, notesY + 6);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
   const tips = [
-    '• Guarda este documento en tu movil para acceder a los horarios de tu itinerario sin conexion.',
-    '• Puedes consultar el pronostico del clima actualizado y cambios de moneda en plux.nibecarcofeben.com.',
-    '• Para solicitar cambios en este viaje, contacta al organizador o ingresa con un codigo de editor.'
+    t('cards.pdf_tip1'),
+    t('cards.pdf_tip2'),
+    t('cards.pdf_tip3')
   ];
   doc.text(tips, 18, notesY + 12);
 
   // Page 2 Footer
   doc.setFontSize(7.5);
   doc.setTextColor(100, 116, 139);
-  doc.text('PLUX • Pagina 2 de 2 • Itinerario Oficial', pageWidth / 2, pageHeight - 7, { align: 'center' });
+  doc.text(t('cards.pdf_footer_p2'), pageWidth / 2, pageHeight - 7, { align: 'center' });
 
   // 3. Output to Modal with Download & Print
   const pdfBlob = doc.output('blob');
@@ -2295,7 +2304,7 @@ async function exportarPDF() {
     if (btnDownload) {
       btnDownload.onclick = () => {
         doc.save(safeFilename);
-        if (typeof showToast === 'function') showToast('PDF descargado con exito', 'success');
+        if (typeof showToast === 'function') showToast(t('cards.pdf_downloaded_toast'), 'success');
       };
     }
 
@@ -2315,14 +2324,14 @@ async function exportarPDF() {
       };
     }
 
-    if (typeof showToast === 'function') showToast('Dossier PDF oficial listo para ver', 'success');
+    if (typeof showToast === 'function') showToast(t('cards.pdf_ready_toast'), 'success');
   } else {
     doc.save(safeFilename);
-    if (typeof showToast === 'function') showToast('PDF generado correctamente', 'success');
+    if (typeof showToast === 'function') showToast(t('cards.pdf_generated_toast'), 'success');
   }
   } catch (err) {
     console.error('Error al generar PDF:', err);
-    if (typeof showToast === 'function') showToast('No se pudo generar el PDF: ' + (err.message || 'error inesperado'), 'error');
+    if (typeof showToast === 'function') showToast(t('cards.pdf_err_toast', { err: err.message || 'error' }), 'error');
   }
 }
 

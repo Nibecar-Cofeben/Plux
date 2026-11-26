@@ -64,10 +64,13 @@
 
     function getEmbajadorBadgeHtml(tpl) {
       if (!tpl || !tpl.embajadorSlug) return '';
-      const emb = getEmbajadorBySlug(tpl.embajadorSlug);
-      if (!emb) return '';
+      const rawEmb = getEmbajadorBySlug(tpl.embajadorSlug);
+      if (!rawEmb) return '';
+      const emb = typeof window.getLocalizedEmbajador === 'function' ? window.getLocalizedEmbajador(rawEmb) : rawEmb;
       const numStr = String(emb.numero).padStart(2, '0');
-      return `<span class="embajador-inline-pill" onclick="event.stopPropagation(); window.abrirPerfilEmbajador && window.abrirPerfilEmbajador('${escapeHtml(emb.slug)}')" title="Ver perfil oficial de ${escapeHtml(emb.nombre)}">${getEmbajadorSealSvg(13)}<span>Embajador #${numStr} · ${escapeHtml(emb.nombre)}</span></span>`;
+      const titleTxt = typeof t === 'function' ? t('templates.ambassador_inline_title', { name: emb.nombre }) : emb.nombre;
+      const badgeTxt = typeof t === 'function' ? t('templates.ambassador_short_num', { num: numStr }) : `Embajador #${numStr}`;
+      return `<span class="embajador-inline-pill" onclick="event.stopPropagation(); window.abrirPerfilEmbajador && window.abrirPerfilEmbajador('${escapeHtml(emb.slug)}')" title="${escapeHtml(titleTxt)}">${getEmbajadorSealSvg(13)}<span>${escapeHtml(badgeTxt)} · ${escapeHtml(emb.nombre)}</span></span>`;
     }
 
     const PLUX_OFICIAL_TEMPLATES = [
@@ -972,11 +975,11 @@
 
     function getCreatorBadgeHtml(autor, isExperienced = false) {
       if (!autor || autor === 'Viajero Anónimo') {
-        return `<span class="tpl-author" style="color:var(--gris);">Viajero Anónimo</span>`;
+        return `<span class="tpl-author" style="color:var(--gris);">${escapeHtml(t('templates.anonymous'))}</span>`;
       }
       const clean = autor.replace('@', '');
       const hasStar = isExperienced || isExperiencedCreator(clean);
-      return `<span class="tpl-author">@${escapeHtml(clean)} ${hasStar ? '<span class="star-badge" title="Creador experimentado de Plux (múltiples plantillas)">⭐</span>' : ''}</span>`;
+      return `<span class="tpl-author">@${escapeHtml(clean)} ${hasStar ? `<span class="star-badge" title="${escapeHtml(t('templates.experienced_creator'))}">⭐</span>` : ''}</span>`;
     }
 
     const INDEXNOW_KEY = 'dc826f48264d48e9b0c4f208eebc4963';
@@ -1009,12 +1012,12 @@
       const shareUrl = `https://plux.nibecarcofeben.com/join/plantillas/${id}`;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(shareUrl).then(() => {
-          showToast(`Enlace de plantilla copiado: ${shareUrl}`, 'success');
+          showToast(t('templates.link_copied_url', { url: shareUrl }), 'success');
         }).catch(() => {
-          prompt('Copia el enlace de esta plantilla:', shareUrl);
+          prompt(t('templates.prompt_copy_link'), shareUrl);
         });
       } else {
-        prompt('Copia el enlace de esta plantilla:', shareUrl);
+        prompt(t('templates.prompt_copy_link'), shareUrl);
       }
     }
     window.compartirPlantillaPublica = compartirPlantillaPublica;
@@ -1045,7 +1048,8 @@
 
       const likedSet = getLikedTemplatesSet();
 
-      getAllOfficialTemplatesWithEmbajadores().forEach(tpl => {
+      getAllOfficialTemplatesWithEmbajadores().forEach(rawTpl => {
+        const tpl = typeof window.getLocalizedTemplateMeta === 'function' ? window.getLocalizedTemplateMeta(rawTpl) : rawTpl;
         const isLiked = likedSet.has(tpl.id);
         const card = document.createElement('div');
         card.className = 'plantilla-card-premium' + (tpl.destacadaOficial ? ' plantilla-oficial-destacada' : '');
@@ -1059,29 +1063,29 @@
           <div>
             ${tpl.coverImg ? `<div class="tpl-cover-thumb" style="background-image:url('${escapeHtml(tpl.coverImg)}');"></div>` : ''}
             <div class="tpl-header">
-              <span class="plantilla-badge-oficial">${tpl.destacadaOficial ? 'Oficial Destacada' : 'Plux Oficial'}</span>
-              <span style="font-size:0.75rem; color:var(--gris);">${tpl.presupuestoAprox ? 'Aprox. ' + tpl.presupuestoAprox : ''}</span>
+              <span class="plantilla-badge-oficial">${escapeHtml(tpl.destacadaOficial ? t('templates.featured_badge') : t('templates.official_badge'))}</span>
+              <span style="font-size:0.75rem; color:var(--gris);">${tpl.presupuestoAprox ? escapeHtml(t('templates.approx_prefix')) + ' ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
             </div>
             ${embBadge ? `<div style="margin-top:6px;">${embBadge}</div>` : ''}
             <h4 class="tpl-title" style="margin-top:8px;">${escapeHtml(tpl.nombre)}</h4>
             <p style="font-size:0.82rem; color:var(--gris); margin:4px 0 8px; line-height:1.4;">${escapeHtml(tpl.descripcion)}</p>
             <div class="plantilla-tags">
-              ${(tpl.tags || []).map(t => `<span class="plantilla-tag">${escapeHtml(t)}</span>`).join('')}
-              <span class="plantilla-tag" style="background:rgba(52,211,153,0.1); color:#34d399; border-color:rgba(52,211,153,0.2);">${daysCount}d · ${eventsCount} actividades</span>
+              ${(tpl.tags || []).map(tg => `<span class="plantilla-tag">${escapeHtml(tg)}</span>`).join('')}
+              <span class="plantilla-tag" style="background:rgba(52,211,153,0.1); color:#34d399; border-color:rgba(52,211,153,0.2);">${daysCount}d · ${eventsCount} ${escapeHtml(t('common.activity_plural'))}</span>
             </div>
           </div>
           <div class="plantilla-footer" style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
-            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)" title="Votar plantilla">
+            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)" title="${escapeHtml(t('templates.vote_template_title'))}">
               <span class="heart-icon-wrap">${getHeartSvg(isLiked)}</span>
-              <span id="like-count-${tpl.id}" style="font-weight:700;">${votes}</span> <span style="font-size:0.75rem; color:var(--gris);">votos</span>
+              <span id="like-count-${tpl.id}" style="font-weight:700;">${votes}</span> <span style="font-size:0.75rem; color:var(--gris);">${escapeHtml(t('templates.votes_label'))}</span>
             </button>
             <div style="display:flex; gap:6px;">
-              <button class="plantilla-save-btn" onclick="window.guardarPlantillaEnMisPlantillas('${tpl.id}', '${originType}', event)" title="Guardar copia en Mis Plantillas" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+              <button class="plantilla-save-btn" onclick="window.guardarPlantillaEnMisPlantillas('${tpl.id}', '${originType}', event)" title="${escapeHtml(t('templates.save_to_mine_title'))}" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                <span>Guardar</span>
+                <span>${escapeHtml(t('common.save'))}</span>
               </button>
               <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', '${originType}')">
-                Clonar
+                ${escapeHtml(t('templates.clone_short'))}
               </button>
             </div>
           </div>
@@ -1099,13 +1103,13 @@
 
       // Merge Seeds with Firestore Community Templates (deduping by ID)
       const map = new Map();
-      PLUX_COMUNIDAD_SEEDS.forEach(t => map.set(t.id, t));
-      firestoreCommunityTemplates.forEach(t => map.set(t.id, t));
+      PLUX_COMUNIDAD_SEEDS.forEach(tItem => map.set(tItem.id, tItem));
+      firestoreCommunityTemplates.forEach(tItem => map.set(tItem.id, tItem));
 
       let list = Array.from(map.values());
 
       if (filtroComunidadActual === 'destacadas') {
-        list = list.filter(t => t.destacada);
+        list = list.filter(tItem => tItem.destacada);
       } else if (filtroComunidadActual === 'populares') {
         list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
       } else {
@@ -1117,11 +1121,12 @@
       }
 
       if (list.length === 0) {
-        container.innerHTML = '<p style="color:var(--gris); grid-column:1/-1; text-align:center; padding:20px;">No se encontraron plantillas en esta categoría.</p>';
+        container.innerHTML = `<p style="color:var(--gris); grid-column:1/-1; text-align:center; padding:20px;">${escapeHtml(t('templates.no_templates_in_cat'))}</p>`;
         return;
       }
 
-      list.forEach(tpl => {
+      list.forEach(rawTpl => {
+        const tpl = typeof window.getLocalizedTemplateMeta === 'function' ? window.getLocalizedTemplateMeta(rawTpl) : rawTpl;
         const isLiked = likedSet.has(tpl.id);
         const card = document.createElement('div');
         card.className = 'plantilla-card-premium';
@@ -1132,32 +1137,32 @@
           <div>
             <div class="tpl-header">
               ${getCreatorBadgeHtml(tpl.autor, tpl.isExperienced)}
-              ${tpl.destacada ? '<span class="plantilla-badge-destacada">Destacada ⭐</span>' : ''}
+              ${tpl.destacada ? `<span class="plantilla-badge-destacada">${escapeHtml(t('templates.featured_badge'))} ⭐</span>` : ''}
             </div>
             <h4 class="tpl-title" style="margin-top:8px;">${escapeHtml(tpl.nombre)}</h4>
             <p style="font-size:0.82rem; color:var(--gris); margin:4px 0 8px; line-height:1.4;">${escapeHtml(tpl.descripcion || '')}</p>
             <div class="plantilla-tags">
-              ${(tpl.tags || []).map(t => `<span class="plantilla-tag">${escapeHtml(t)}</span>`).join('')}
-              <span class="plantilla-tag" style="background:rgba(56,189,248,0.08); color:#38bdf8; border-color:rgba(56,189,248,0.2);">${daysCount} días</span>
-              <span class="plantilla-tag" style="background:rgba(52,211,153,0.08); color:#34d399; border-color:rgba(52,211,153,0.2);">${eventsCount} actividades</span>
+              ${(tpl.tags || []).map(tg => `<span class="plantilla-tag">${escapeHtml(tg)}</span>`).join('')}
+              <span class="plantilla-tag" style="background:rgba(56,189,248,0.08); color:#38bdf8; border-color:rgba(56,189,248,0.2);">${daysCount} ${escapeHtml(t('templates.days_label'))}</span>
+              <span class="plantilla-tag" style="background:rgba(52,211,153,0.08); color:#34d399; border-color:rgba(52,211,153,0.2);">${eventsCount} ${escapeHtml(t('common.activity_plural'))}</span>
             </div>
           </div>
           <div class="plantilla-footer" style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
-            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)" title="Votar plantilla">
+            <button class="plantilla-like-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikePlantilla('${tpl.id}', event)" title="${escapeHtml(t('templates.vote_template_title'))}">
               <span class="heart-icon-wrap">${getHeartSvg(isLiked)}</span>
-              <span id="like-count-${tpl.id}" style="font-weight:700;">${tpl.likes || 0}</span> <span style="font-size:0.75rem; color:var(--gris);">votos</span>
+              <span id="like-count-${tpl.id}" style="font-weight:700;">${tpl.likes || 0}</span> <span style="font-size:0.75rem; color:var(--gris);">${escapeHtml(t('templates.votes_label'))}</span>
             </button>
             <div style="display:flex; gap:6px;">
-              <button class="plantilla-save-btn" onclick="window.guardarPlantillaEnMisPlantillas('${tpl.id}', 'comunidad', event)" title="Guardar copia en Mis Plantillas" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+              <button class="plantilla-save-btn" onclick="window.guardarPlantillaEnMisPlantillas('${tpl.id}', 'comunidad', event)" title="${escapeHtml(t('templates.save_to_mine_title'))}" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                <span>Guardar</span>
+                <span>${escapeHtml(t('common.save'))}</span>
               </button>
-              <button class="plantilla-share-btn" onclick="window.compartirPlantillaPublica('${tpl.id}', '${escapeHtml(tpl.nombre)}', event)" title="Compartir enlace de plantilla" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+              <button class="plantilla-share-btn" onclick="window.compartirPlantillaPublica('${tpl.id}', '${escapeHtml(tpl.nombre)}', event)" title="${escapeHtml(t('templates.share_template'))}" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--texto); font-size:0.78rem; padding:6px 10px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                <span>Compartir</span>
+                <span>${escapeHtml(t('templates.share_template'))}</span>
               </button>
               <button class="plantilla-clonar-btn" onclick="window.clonarPlantillaCompleta('${tpl.id}', 'comunidad')">
-                Clonar
+                ${escapeHtml(t('templates.clone_short'))}
               </button>
             </div>
           </div>
@@ -1227,13 +1232,14 @@
 
     function guardarPlantillaEnMisPlantillas(tplId, origin, event) {
       if (event) event.stopPropagation();
-      let tpl = null;
+      let rawTpl = null;
       if (origin === 'oficial') {
-        tpl = PLUX_OFICIAL_TEMPLATES.find(t => t.id === tplId);
+        rawTpl = PLUX_OFICIAL_TEMPLATES.find(tItem => tItem.id === tplId);
       } else if (origin === 'comunidad') {
-        tpl = firestoreCommunityTemplates.find(t => t.id === tplId) || PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplId);
+        rawTpl = firestoreCommunityTemplates.find(tItem => tItem.id === tplId) || PLUX_COMUNIDAD_SEEDS.find(tItem => tItem.id === tplId);
       }
-      if (!tpl) return;
+      if (!rawTpl) return;
+      const tpl = typeof window.getLocalizedTemplateMeta === 'function' ? window.getLocalizedTemplateMeta(rawTpl) : rawTpl;
       const templates = getStoredTemplates();
       const copy = {
         id: 'tpl_' + Date.now().toString(36),
@@ -1251,7 +1257,7 @@
       if (typeof window.refrescarPlantillasSincronizadasDescubrir === 'function') {
         window.refrescarPlantillasSincronizadasDescubrir();
       }
-      showToast(`Plantilla "${tpl.nombre}" guardada en Mis Plantillas ✨`, 'success');
+      showToast(t('templates.saved_to_mine'), 'success');
     }
     window.guardarPlantillaEnMisPlantillas = guardarPlantillaEnMisPlantillas;
 
@@ -1261,14 +1267,14 @@
       let nombre = input ? input.value.trim() : '';
       if (!nombre) {
         if (destinos && destinos.length > 0) {
-          nombre = `Plantilla de ${destinos.map(d => d.nombre).slice(0, 2).join(' & ')}`;
+          nombre = t('templates.template_of_prefix', { name: destinos.map(d => d.nombre).slice(0, 2).join(' & ') });
         } else {
-          nombre = currentNickname ? `Plantilla de @${currentNickname}` : 'Mi Plantilla';
+          nombre = currentNickname ? t('templates.template_of_prefix', { name: '@' + currentNickname }) : t('templates.my_template_default');
         }
       }
 
       if (!destinos || destinos.length === 0) {
-        showToast('Añadí al menos un destino antes de guardar la plantilla', 'warning');
+        showToast(t('templates.add_dest_first_warn'), 'warning');
         return;
       }
 
@@ -1284,10 +1290,10 @@
       const newTemplate = {
         id: tplId,
         nombre: nombre,
-        descripcion: `Itinerario de ${daysTotal} días por ${destinos.map(d => d.nombre).slice(0, 3).join(', ')} con ${eventsTotal} actividades.`,
+        descripcion: t('templates.itinerary_desc_tpl', { days: daysTotal, dests: destinos.map(d => d.nombre).slice(0, 3).join(', '), events: eventsTotal }),
         tags: [
-          `${daysTotal} ${daysTotal === 1 ? 'Día' : 'Días'}`,
-          destinos[0]?.nombre || 'Viaje',
+          `${daysTotal} ${daysTotal === 1 ? t('common.day_singular') : t('common.day_plural')}`,
+          destinos[0]?.nombre || t('importer.trip_fallback_lbl'),
           activeEmb ? 'Oficial Destacada' : 'Comunidad'
         ],
         fecha: new Date().toISOString(),
@@ -1344,7 +1350,7 @@
       }
 
       if (input) input.value = '';
-      showToast(`Plantilla "${nombre}" guardada ${isPublic ? 'y despachada a IndexNow para indexacion en Bing' : ''}`, 'success');
+      showToast(isPublic ? t('templates.saved_template_public', { name: nombre }) : t('templates.saved_template_local', { name: nombre }), 'success');
       trackEvent('save_template', {
         template_name: nombre,
         is_public: isPublic,
@@ -1365,7 +1371,7 @@
       if (removed?.id && db) {
         db.collection("plux_plantillas_comunidad").doc(removed.id).delete().catch(() => {});
       }
-      showToast('Plantilla eliminada', 'info');
+      showToast(t('templates.deleted_toast'), 'info');
     }
     window.eliminarPlantilla = eliminarPlantilla;
 
@@ -1377,15 +1383,16 @@
 
       const notice = document.getElementById('creatorBadgeNotice');
       if (notice) {
-        const activeEmb = getCurrentEmbajador();
+        const rawEmb = getCurrentEmbajador();
+        const activeEmb = rawEmb && typeof window.getLocalizedEmbajador === 'function' ? window.getLocalizedEmbajador(rawEmb) : rawEmb;
         const isExp = isExperiencedCreator(currentNickname);
         if (activeEmb) {
           const numStr = String(activeEmb.numero).padStart(2, '0');
-          notice.innerHTML = `<span style="display:inline-flex; align-items:center; gap:6px;">${getEmbajadorSealSvg(14)} Publicando como <strong style="color:var(--verde);">${escapeHtml(activeEmb.nombre)}</strong> · <strong>Embajador Fundador #${numStr}</strong> (se destacará automáticamente como Ruta Oficial)</span>`;
+          notice.innerHTML = `<span style="display:inline-flex; align-items:center; gap:6px;">${getEmbajadorSealSvg(14)} ${t('templates.publishing_as_ambassador', { name: escapeHtml(activeEmb.nombre), num: numStr })}</span>`;
         } else if (currentNickname) {
-          notice.innerHTML = `Publicando como: <strong style="color:var(--verde);">@${escapeHtml(currentNickname)}</strong> ${isExp ? '<span style="color:#fbbf24;" title="Creador experimentado">⭐</span>' : ''}`;
+          notice.innerHTML = `${escapeHtml(t('templates.publishing_as_user'))} <strong style="color:var(--verde);">@${escapeHtml(currentNickname)}</strong> ${isExp ? `<span style="color:#fbbf24;" title="${escapeHtml(t('templates.experienced_creator'))}">⭐</span>` : ''}`;
         } else {
-          notice.innerHTML = `Publicando como: <span style="color:var(--gris);">Viajero Anónimo (sin sesión)</span>`;
+          notice.innerHTML = `${escapeHtml(t('templates.publishing_as_user'))} <span style="color:var(--gris);">${escapeHtml(t('templates.anonymous_no_login'))}</span>`;
         }
       }
 
@@ -1395,19 +1402,19 @@
         templates.forEach((tpl, index) => {
           const item = document.createElement('div');
           item.className = 'trip-item';
-          const dests = (tpl.destinos || []).map(d => d.nombre).join(', ') || 'Destino';
+          const dests = (tpl.destinos || []).map(d => d.nombre).join(', ') || t('importer.no_dest_label');
           const daysTotal = (tpl.destinos || []).reduce((acc, d, idx) => acc + (d.dias?.length || 0) + (idx > 0 ? (Math.floor(Number(d.diasTransitoPrevio) || 0)) : 0), 0);
           item.innerHTML = `
             <div class="trip-info" onclick="window.clonarPlantillaCompleta(${index}, 'mia')" style="cursor:pointer;flex:1;">
               <div style="display:flex; align-items:center; gap:8px;">
                 <h4 style="margin:0;">${escapeHtml(tpl.nombre)}</h4>
-                <span class="plantilla-tag" style="font-size:0.7rem;">${daysTotal} días</span>
+                <span class="plantilla-tag" style="font-size:0.7rem;">${daysTotal} ${escapeHtml(t('templates.days_label'))}</span>
               </div>
-              <small style="color:var(--gris);">${escapeHtml(dests)} · Click para cargar al editor</small>
+              <small style="color:var(--gris);">${escapeHtml(dests)} · ${escapeHtml(t('templates.click_load_editor'))}</small>
             </div>
             <div class="trip-actions">
-              <button onclick="event.stopPropagation(); window.clonarPlantillaCompleta(${index}, 'mia')" style="background:var(--verde); color:#030712; font-weight:600; font-size:0.75rem; padding:4px 10px; border-radius:6px; border:none; cursor:pointer;">Cargar</button>
-              <button onclick="event.stopPropagation(); eliminarPlantilla(${index})" style="background:#dc2626;" title="Eliminar">×</button>
+              <button onclick="event.stopPropagation(); window.clonarPlantillaCompleta(${index}, 'mia')" style="background:var(--verde); color:#030712; font-weight:600; font-size:0.75rem; padding:4px 10px; border-radius:6px; border:none; cursor:pointer;">${escapeHtml(t('templates.load_btn'))}</button>
+              <button onclick="event.stopPropagation(); eliminarPlantilla(${index})" style="background:#dc2626;" title="${escapeHtml(t('common.delete'))}">×</button>
             </div>
           `;
           plantillasList.appendChild(item);
@@ -1416,20 +1423,21 @@
     }
 
     function clonarPlantillaCompleta(tplIdOrIndex, origin = 'oficial') {
-      let tpl = null;
+      let rawTpl = null;
       if (origin === 'oficial') {
-        tpl = getAllOfficialTemplatesWithEmbajadores().find(t => t.id === tplIdOrIndex);
+        rawTpl = getAllOfficialTemplatesWithEmbajadores().find(tItem => tItem.id === tplIdOrIndex);
       } else if (origin === 'comunidad') {
-        tpl = firestoreCommunityTemplates.find(t => t.id === tplIdOrIndex) || PLUX_COMUNIDAD_SEEDS.find(t => t.id === tplIdOrIndex);
+        rawTpl = firestoreCommunityTemplates.find(tItem => tItem.id === tplIdOrIndex) || PLUX_COMUNIDAD_SEEDS.find(tItem => tItem.id === tplIdOrIndex);
       } else if (origin === 'mia') {
         const templates = getStoredTemplates();
-        tpl = templates[tplIdOrIndex];
+        rawTpl = templates[tplIdOrIndex];
       }
 
-      if (!tpl) {
-        showToast('No se encontró la plantilla', 'error');
+      if (!rawTpl) {
+        showToast(t('templates.not_found_err'), 'error');
         return;
       }
+      const tpl = typeof window.getLocalizedTemplateMeta === 'function' ? window.getLocalizedTemplateMeta(rawTpl) : rawTpl;
 
       const idBase = Date.now();
       const clonedDestinos = JSON.parse(JSON.stringify(tpl.destinos || [])).map((dest, dIdx) => ({
@@ -1539,7 +1547,7 @@
       if (typeof window.setActiveSession === 'function' && typeof currentTripId !== 'undefined') {
         window.setActiveSession({ mode: 'trip', explicit: false, tripId: currentTripId });
       }
-      showToast(`¡Plantilla "${tpl.nombre}" clonada como nuevo viaje!`, 'success');
+      showToast(t('templates.cloned_ok', { name: tpl.nombre }), 'success');
       trackEvent('clone_template', {
         template_id: String(tplIdOrIndex),
         template_name: tpl.nombre,
@@ -1588,7 +1596,7 @@
       if (event) event.stopPropagation();
       if (!navigator.onLine) {
         if (typeof showToast === 'function') {
-          showToast('Sin conexión: conectate a internet para abrir ' + tipo + '.', 'info');
+          showToast(t('templates.offline_open_network', { network: tipo }), 'info');
         }
         return false;
       }
@@ -1612,11 +1620,11 @@
         ta.select();
         try { document.execCommand('copy'); } catch (e) {}
         ta.remove();
-        if (typeof showToast === 'function') showToast('Enlace del embajador copiado al portapapeles', 'success');
+        if (typeof showToast === 'function') showToast(t('templates.ambassador_link_copied'), 'success');
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(shareUrl)
-          .then(() => { if (typeof showToast === 'function') showToast('Enlace del embajador copiado al portapapeles', 'success'); })
+          .then(() => { if (typeof showToast === 'function') showToast(t('templates.ambassador_link_copied'), 'success'); })
           .catch(fallbackCopy);
       } else {
         fallbackCopy();
@@ -1644,12 +1652,13 @@
     window.cerrarPerfilEmbajador = cerrarPerfilEmbajador;
 
     function abrirPerfilEmbajador(slug, pushUrl = true) {
-      const emb = getEmbajadorBySlug(slug);
-      if (!emb) return;
+      const rawEmb = getEmbajadorBySlug(slug);
+      if (!rawEmb) return;
+      const emb = typeof window.getLocalizedEmbajador === 'function' ? window.getLocalizedEmbajador(rawEmb) : rawEmb;
 
       cerrarPerfilEmbajador(true);
       if (!_origTitleBeforeEmbajador) _origTitleBeforeEmbajador = document.title;
-      document.title = `${emb.nombre} · Embajador Fundador de Plux`;
+      document.title = t('templates.ambassador_page_title', { name: emb.nombre });
 
       if (pushUrl) {
         try {
@@ -1676,7 +1685,8 @@
         return `<button type="button" class="emb-pill-btn emb-pill-${escapeHtml(r.tipo)}" onclick="window.abrirRedEmbajador('${escapeHtml(emb.slug)}', '${escapeHtml(r.label)}', '${escapeHtml(r.url)}', event)">${icon}<span>${escapeHtml(r.label)}</span></button>`;
       }).join('');
 
-      const rutasHtml = rutas.map(tpl => {
+      const rutasHtml = rutas.map(rawTpl => {
+        const tpl = typeof window.getLocalizedTemplateMeta === 'function' ? window.getLocalizedTemplateMeta(rawTpl) : rawTpl;
         const daysCount = (tpl.destinos || []).reduce((acc, d) => acc + ((d.dias || []).length || 0), 0);
         const eventsCount = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + (dia.eventos?.length || 0), 0), 0);
         const paradas = (tpl.destinos || []).map(d => d.nombre).join(' → ');
@@ -1687,8 +1697,8 @@
             <div class="embajador-route-cover" style="background-image:url('${escapeHtml(cover)}');">
               <div class="embajador-route-cover-overlay"></div>
               <div class="embajador-route-cover-top">
-                <span class="emb-route-tag">Oficial Destacada</span>
-                <span class="emb-route-meta">${daysCount} días · ${eventsCount} paradas ${tpl.presupuestoAprox ? '· ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
+                <span class="emb-route-tag">${escapeHtml(t('templates.featured_badge'))}</span>
+                <span class="emb-route-meta">${daysCount} ${escapeHtml(t('templates.days_label'))} · ${eventsCount} ${escapeHtml(t('templates.stops_label'))} ${tpl.presupuestoAprox ? '· ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
               </div>
               <div class="embajador-route-cover-bottom">
                 <div class="embajador-route-title">${escapeHtml(tpl.nombre)}</div>
@@ -1699,10 +1709,10 @@
               <div class="embajador-route-desc">${escapeHtml(tpl.descripcion)}</div>
               <div class="embajador-route-actions">
                 <button type="button" class="embajador-btn-clone" onclick="window.clonarPlantillaCompleta('${escapeHtml(tpl.id)}', '${originType}')">
-                  <i class="fa-solid fa-clone"></i> Clonar ruta en mi viaje
+                  <i class="fa-solid fa-clone"></i> ${escapeHtml(t('templates.clone_route_trip'))}
                 </button>
                 <button type="button" class="embajador-btn-save" onclick="window.guardarPlantillaEnMisPlantillas('${escapeHtml(tpl.id)}', '${originType}', event)">
-                  <i class="fa-regular fa-bookmark"></i> Guardar
+                  <i class="fa-regular fa-bookmark"></i> ${escapeHtml(t('common.save'))}
                 </button>
               </div>
             </div>
@@ -1714,13 +1724,13 @@
         <div class="embajador-modal-card">
           <div class="embajador-modal-banner" style="background-image:url('${escapeHtml(emb.cover)}');">
             <div class="embajador-modal-banner-grad"></div>
-            <button type="button" class="embajador-modal-close" onclick="window.cerrarPerfilEmbajador()" aria-label="Cerrar">
+            <button type="button" class="embajador-modal-close" onclick="window.cerrarPerfilEmbajador()" aria-label="${escapeHtml(t('common.close'))}">
               <i class="fa-solid fa-xmark"></i>
             </button>
             <div class="embajador-modal-identity">
               <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="embajador-avatar-img-lg" />
               <div style="flex:1; min-width:0;">
-                <div class="embajador-founder-tag">${getEmbajadorSealSvg(12)}<span>EMBAJADOR FUNDADOR #${numStr}</span></div>
+                <div class="embajador-founder-tag">${getEmbajadorSealSvg(12)}<span>${escapeHtml(t('templates.founder_num_badge', { num: numStr }))}</span></div>
                 <div class="embajador-modal-name">${escapeHtml(emb.nombre)}</div>
                 <div class="embajador-modal-sub">${escapeHtml(emb.subtitulo)} · ${escapeHtml(emb.especialidad)}</div>
               </div>
@@ -1733,12 +1743,12 @@
             <div class="embajador-modal-socials">
               ${redesHtml}
               <button type="button" class="emb-pill-btn emb-pill-share" onclick="window.copiarLinkEmbajador('${escapeHtml(emb.slug)}', event)">
-                <i class="fa-solid fa-link"></i><span>Copiar enlace</span>
+                <i class="fa-solid fa-link"></i><span>${escapeHtml(t('templates.copy_link'))}</span>
               </button>
             </div>
 
             <div class="embajador-routes-heading">
-              Rutas oficiales destacadas (${rutas.length})
+              ${escapeHtml(t('templates.featured_routes_count', { count: rutas.length }))}
             </div>
             <div class="embajador-routes-list">
               ${rutasHtml}
@@ -1758,8 +1768,9 @@
 
       const slug = window.currentTripEmbajadorSlug;
       if (!slug) return;
-      const emb = getEmbajadorBySlug(slug);
-      if (!emb) return;
+      const rawEmb = getEmbajadorBySlug(slug);
+      if (!rawEmb) return;
+      const emb = typeof window.getLocalizedEmbajador === 'function' ? window.getLocalizedEmbajador(rawEmb) : rawEmb;
 
       const destinosEl = document.getElementById('destinos');
       if (!destinosEl || !destinosEl.parentElement) return;
@@ -1772,10 +1783,10 @@
       bar.innerHTML = `
         <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="active-trip-emb-avatar" />
         <div style="flex:1; min-width:0;">
-          <div class="active-trip-emb-title">${getEmbajadorSealSvg(14)}<span>Ruta Oficial de ${escapeHtml(emb.nombre)}</span> <span class="active-trip-emb-num">Embajador #${numStr}</span></div>
-          <div class="active-trip-emb-sub">${escapeHtml(emb.especialidad)} · Podés editar libremente tu copia y llevarla offline</div>
+          <div class="active-trip-emb-title">${getEmbajadorSealSvg(14)}<span>${escapeHtml(t('templates.official_route_by', { name: emb.nombre }))}</span> <span class="active-trip-emb-num">${escapeHtml(t('templates.ambassador_short_num', { num: numStr }))}</span></div>
+          <div class="active-trip-emb-sub">${escapeHtml(emb.especialidad)} · ${escapeHtml(t('templates.can_edit_offline_copy'))}</div>
         </div>
-        <span class="active-trip-emb-link">Ver perfil y redes <i class="fa-solid fa-arrow-right"></i></span>
+        <span class="active-trip-emb-link">${escapeHtml(t('templates.view_profile_socials'))} <i class="fa-solid fa-arrow-right"></i></span>
       `;
       destinosEl.parentElement.insertBefore(bar, destinosEl);
     }
@@ -1786,18 +1797,19 @@
       const section = document.getElementById('embajadoresHomeSection');
       if (!section || !PLUX_EMBAJADORES.length) return;
 
-      const pillsHtml = PLUX_EMBAJADORES.map(emb => {
+      const pillsHtml = PLUX_EMBAJADORES.map(rawEmb => {
+        const emb = typeof window.getLocalizedEmbajador === 'function' ? window.getLocalizedEmbajador(rawEmb) : rawEmb;
         const rutas = getEmbajadorTemplates(emb.slug);
         const numStr = String(emb.numero).padStart(2, '0');
         return `
-          <div class="embajador-strip-item" onclick="window.abrirPerfilEmbajador('${escapeHtml(emb.slug)}')" title="Ver perfil oficial y rutas de ${escapeHtml(emb.nombre)}">
+          <div class="embajador-strip-item" onclick="window.abrirPerfilEmbajador('${escapeHtml(emb.slug)}')" title="${escapeHtml(t('templates.ambassador_inline_title', { name: emb.nombre }))}">
             <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="embajador-strip-avatar" />
             <div class="embajador-strip-info">
-              <span class="embajador-strip-badge">${getEmbajadorSealSvg(12)} FUNDADOR #${numStr}</span>
+              <span class="embajador-strip-badge">${getEmbajadorSealSvg(12)} ${escapeHtml(t('templates.founder_strip_badge', { num: numStr }))}</span>
               <span class="embajador-strip-name">${escapeHtml(emb.nombre)}</span>
               <span class="embajador-strip-meta">· ${escapeHtml(emb.especialidad)}</span>
             </div>
-            <span class="embajador-strip-cta">Explorar ${rutas.length} rutas <i class="fa-solid fa-arrow-right"></i></span>
+            <span class="embajador-strip-cta">${escapeHtml(t('templates.explore_n_routes', { count: rutas.length }))} <i class="fa-solid fa-arrow-right"></i></span>
           </div>
         `;
       }).join('');

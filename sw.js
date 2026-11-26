@@ -3,7 +3,7 @@
  * App Shell + Librerías CDN + Caché de Tiles de Mapas + Caché de APIs de Viaje
  */
 
-const SW_VERSION = 'v8.0.21';
+const SW_VERSION = 'v8.0.22';
 const STATIC_CACHE = `plux-static-${SW_VERSION}`;
 const CDN_CACHE = `plux-cdn-${SW_VERSION}`;
 const TILES_CACHE = `plux-tiles-${SW_VERSION}`;
@@ -28,6 +28,7 @@ const APP_SHELL_FILES = [
   '/css/plux-doodles.css',
   '/js/jspdf.umd.min.js',
   '/js/plux-i18n.js',
+  '/js/plux-i18n-catalog.js',
   '/js/plux-export-cards.js',
   '/js/plux-templates.js',
   '/js/plux-discover.js',

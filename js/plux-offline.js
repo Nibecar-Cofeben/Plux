@@ -348,7 +348,7 @@
       }
 
       if (hadPending && !silent && typeof window.showToast === 'function') {
-        window.showToast('🌐 Conexión restaurada: Tus cambios hechos offline ya se sincronizaron en la nube.', 'success');
+        window.showToast(t('offline.sync_restored_toast'), 'success');
       }
       return true;
     } catch (err) {
@@ -383,7 +383,7 @@
   // 3. PLUXY E IA EN MODO OFFLINE: "NO HAY SEÑAL" Y PUNTO
   // ===========================================================================
   function buildOfflinePluxyResponse() {
-    return '📵 No hay señal.';
+    return t('offline.pluxy_offline_reply');
   }
   window.buildOfflinePluxyResponse = buildOfflinePluxyResponse;
 
@@ -578,20 +578,20 @@
           const txt = document.getElementById('pluxOfflineProgressText');
           const pct = msg.total > 0 ? Math.min(100, Math.round((msg.loaded / msg.total) * 100)) : 100;
           if (bar) bar.style.width = `${pct}%`;
-          if (txt) txt.textContent = `Descargando cuadrículas de mapa (${msg.city || 'Ruta'})... ${pct}% (${msg.loaded}/${msg.total})`;
+          if (txt) txt.textContent = t('offline.precache_progress', { city: msg.city || t('offline.route_default'), pct, loaded: msg.loaded, total: msg.total });
         } else if (msg.type === 'PRECACHE_COMPLETE') {
           const bar = document.getElementById('pluxOfflineProgressBar');
           const txt = document.getElementById('pluxOfflineProgressText');
           const btn = document.getElementById('btnPrepareTripOffline');
           if (bar) bar.style.width = '100%';
-          if (txt) txt.innerHTML = `<span style="color:#34d399;font-weight:800;">✓ ¡Viaje 100% listo para Modo Avión! (${msg.total} cuadrículas de mapa y coordenadas guardadas en tu dispositivo)</span>`;
+          if (txt) txt.innerHTML = `<span style="color:#34d399;font-weight:800;">${t('offline.precache_complete', { total: msg.total })}</span>`;
           if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '✓ Mapas y Ruta Descargados (Actualizar)';
+            btn.innerHTML = t('offline.precache_btn_done');
           }
           refreshCacheStatsInModal();
           if (typeof window.showToast === 'function') {
-            window.showToast('✈️ Viaje preparado para Modo Avión: mapas, coordenadas y datos guardados offline.', 'success');
+            window.showToast(t('offline.precache_toast_done'), 'success');
           }
         }
       });
@@ -630,7 +630,7 @@
     if (bar) bar.style.width = '8%';
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '⏳ Preparando mapas y coordenadas...';
+      btn.innerHTML = t('offline.preparing_btn');
     }
 
     // 1. Recolectar ciudades del viaje activo y de los viajes guardados
@@ -653,7 +653,7 @@
 
     for (let i = 0; i < citiesArr.length; i++) {
       const city = citiesArr[i];
-      if (txt) txt.textContent = `Geocodificando y guardando coordenadas de ${city} (${i + 1}/${citiesArr.length})...`;
+      if (txt) txt.textContent = t('offline.geocoding_progress', { city, i: i + 1, total: citiesArr.length });
       let coord = lookupLocalCoordinate(city);
       if (!coord && typeof window.geocode === 'function') {
         coord = await window.geocode(city);
@@ -664,8 +664,9 @@
 
         // Pre-cachear clima exacto de 16 días y ficha de Wikipedia de la ciudad si estamos online
         if (navigator.onLine) {
+          const wikiLang = typeof getWikiLang === 'function' ? getWikiLang() : 'es';
           const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=16`;
-          const wikiUrl = `https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(city)}&gsrlimit=1&prop=extracts|pageimages&exintro=1&explaintext=1&piprop=thumbnail&pithumbsize=900&format=json&origin=*`;
+          const wikiUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(city)}&gsrlimit=1&prop=extracts|pageimages&exintro=1&explaintext=1&piprop=thumbnail&pithumbsize=900&format=json&origin=*`;
           fetch(weatherUrl).catch(() => {});
           fetch(wikiUrl).catch(() => {});
         }
@@ -690,11 +691,11 @@
     } else {
       if (bar) bar.style.width = '100%';
       if (txt) {
-        txt.innerHTML = `<span style="color:#34d399;font-weight:800;">✓ Coordenadas e itinerarios de ${resolvedLocations.length} destino(s) asegurados en almacenamiento local.</span>`;
+        txt.innerHTML = `<span style="color:#34d399;font-weight:800;">${t('offline.local_ready_msg', { count: resolvedLocations.length })}</span>`;
       }
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '✓ Datos Locales Asegurados';
+        btn.innerHTML = t('offline.local_ready_btn');
       }
     }
   }
@@ -740,24 +741,24 @@
 
     statsEl.innerHTML = `
       <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border, #334155); border-radius:14px; padding:12px;">
-        <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">Viajes en Dispositivo</div>
-        <div style="font-size:1.25rem; font-weight:800; color:var(--texto, #fff); margin-top:4px;">${trips.length} viajes · ${totalDestinos} destinos</div>
-        <div style="font-size:0.75rem; color:#34d399; margin-top:2px;">✓ Guardado local instantáneo</div>
+        <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">${t('offline.stat_trips_title')}</div>
+        <div style="font-size:1.25rem; font-weight:800; color:var(--texto, #fff); margin-top:4px;">${t('offline.stat_trips_val', { trips: trips.length, dests: totalDestinos })}</div>
+        <div style="font-size:0.75rem; color:#34d399; margin-top:2px;">${t('offline.stat_trips_sub')}</div>
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border, #334155); border-radius:14px; padding:12px;">
-        <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">Billetera & PDF Offline</div>
-        <div style="font-size:1.25rem; font-weight:800; color:var(--texto, #fff); margin-top:4px;">${vouchersCount} vouchers</div>
-        <div style="font-size:0.75rem; color:#34d399; margin-top:2px;">✓ Motor PDF y QR en caché</div>
+        <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">${t('offline.stat_wallet_title')}</div>
+        <div style="font-size:1.25rem; font-weight:800; color:var(--texto, #fff); margin-top:4px;">${t('offline.stat_wallet_val', { count: vouchersCount })}</div>
+        <div style="font-size:0.75rem; color:#34d399; margin-top:2px;">${t('offline.stat_wallet_sub')}</div>
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border, #334155); border-radius:14px; padding:12px;">
-        <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">Mapas y Coordenadas</div>
-        <div style="font-size:1.25rem; font-weight:800; color:var(--texto, #fff); margin-top:4px;">${stats.tilesCount} cuadrículas</div>
-        <div style="font-size:0.75rem; color:#38bdf8; margin-top:2px;">✓ ${geocodeCount} ciudades geocodificadas</div>
+        <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">${t('offline.stat_maps_title')}</div>
+        <div style="font-size:1.25rem; font-weight:800; color:var(--texto, #fff); margin-top:4px;">${t('offline.stat_maps_val', { count: stats.tilesCount })}</div>
+        <div style="font-size:0.75rem; color:#38bdf8; margin-top:2px;">${t('offline.stat_maps_sub', { count: geocodeCount })}</div>
       </div>
       <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border, #334155); border-radius:14px; padding:12px;">
-        <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">App Shell PWA (${stats.version})</div>
-        <div style="font-size:1.25rem; font-weight:800; color:var(--texto, #fff); margin-top:4px;">${stats.staticCount + stats.cdnCount} módulos</div>
-        <div style="font-size:0.75rem; color:#34d399; margin-top:2px;">✓ Abre sin internet</div>
+        <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">${t('offline.stat_shell_title', { version: stats.version })}</div>
+        <div style="font-size:1.25rem; font-weight:800; color:var(--texto, #fff); margin-top:4px;">${t('offline.stat_shell_val', { count: stats.staticCount + stats.cdnCount })}</div>
+        <div style="font-size:0.75rem; color:#34d399; margin-top:2px;">${t('offline.stat_shell_sub')}</div>
       </div>
     `;
   }
@@ -783,13 +784,13 @@
       : 'linear-gradient(135deg, rgba(245,158,11,0.22), rgba(239,68,68,0.12))';
     const statusBannerBorder = isOnline ? 'rgba(16,185,129,0.4)' : 'rgba(245,158,11,0.5)';
     const statusTitle = isOnline
-      ? '🟢 Conectado · Modo Offline 100% Activo y Sincronizado'
-      : '🟠 Modo Avión / Sin Conexión · Operando 100% desde tu Dispositivo';
+      ? t('offline.banner_online_title')
+      : t('offline.banner_offline_title');
     const statusDesc = isOnline
       ? (pending
-          ? 'Hay cambios locales listos para sincronizar con tu cuenta en la nube.'
-          : 'Plux está guardado en tu dispositivo. Podés cerrar la pestaña o activar Modo Avión y abrirá al instante.')
-      : 'Todos los cambios que hagas en tu itinerario, presupuesto, notas o vouchers se guardan localmente y se subirán solos al recuperar red.';
+          ? t('offline.banner_online_pending')
+          : t('offline.banner_online_clean'))
+      : t('offline.banner_offline_desc');
 
     modal.innerHTML = `
       <div class="modal-content" style="background:var(--card, #1e293b); border:1px solid var(--border, #334155); border-radius:24px; max-width:560px; width:100%; max-height:90vh; overflow-y:auto; padding:24px; color:var(--texto, #f8fafc); box-shadow:0 25px 70px rgba(0,0,0,0.75);">
@@ -797,8 +798,8 @@
           <div style="display:flex; align-items:center; gap:10px;">
             <span style="font-size:1.6rem;">✈️</span>
             <div>
-              <h3 style="margin:0; font-size:1.22rem; font-weight:800; color:var(--texto, #fff);">Centro Modo Offline & Modo Avión</h3>
-              <span style="font-size:0.78rem; color:var(--gris, #94a3b8);">Arquitectura PWA Offline-First · Sin pérdida de datos</span>
+              <h3 style="margin:0; font-size:1.22rem; font-weight:800; color:var(--texto, #fff);">${t('offline.modal_title')}</h3>
+              <span style="font-size:0.78rem; color:var(--gris, #94a3b8);">${t('offline.modal_subtitle')}</span>
             </div>
           </div>
           <button type="button" onclick="document.getElementById('modal-plux-offline').remove()" style="background:rgba(255,255,255,0.08); border:1px solid var(--border, #334155); color:var(--texto, #fff); width:34px; height:34px; border-radius:50%; font-size:1.1rem; cursor:pointer;">✕</button>
@@ -812,34 +813,34 @@
 
         <!-- Grid de Estadísticas Reales -->
         <div id="pluxOfflineCacheStatsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; margin-bottom:16px;">
-          <div style="padding:12px; color:var(--gris, #94a3b8); font-size:0.82rem;">Verificando almacenamiento offline...</div>
+          <div style="padding:12px; color:var(--gris, #94a3b8); font-size:0.82rem;">${t('offline.checking_storage')}</div>
         </div>
 
         <!-- Preparar Viaje para Modo Avión -->
         <div style="background:rgba(56,189,248,0.07); border:1px solid rgba(56,189,248,0.28); border-radius:16px; padding:16px; margin-bottom:16px;">
-          <div style="font-weight:800; font-size:0.92rem; color:#38bdf8; margin-bottom:6px;">🗺️ Descargar Mapas y Datos del Viaje para Modo Avión</div>
+          <div style="font-weight:800; font-size:0.92rem; color:#38bdf8; margin-bottom:6px;">${t('offline.prep_section_title')}</div>
           <div style="font-size:0.8rem; color:var(--gris, #cbd5e1); line-height:1.45; margin-bottom:12px;">
-            Pre-descarga las cuadrículas del mapa interactivo, coordenadas de tus ciudades y pronóstico actual para consultar el mapa día por día durante el vuelo o sin roaming.
-            ${preparedInfo?.cities?.length ? `<div style="margin-top:6px; color:#34d399; font-weight:700;">✓ Destinos preparados: ${preparedInfo.cities.join(', ')}</div>` : ''}
+            ${t('offline.prep_desc')}
+            ${preparedInfo?.cities?.length ? `<div style="margin-top:6px; color:#34d399; font-weight:700;">${t('offline.prep_destinations', { cities: preparedInfo.cities.join(', ') })}</div>` : ''}
           </div>
           <button type="button" id="btnPrepareTripOffline" onclick="window.prepararViajeParaModoAvion()" style="width:100%; padding:12px 16px; border-radius:12px; border:none; background:linear-gradient(135deg, #34d399, #3b82f6); color:#090d16; font-weight:800; font-size:0.88rem; cursor:pointer; box-shadow:0 6px 18px rgba(52,211,153,0.25);">
-            📥 Preparar Mapas y Ruta para Modo Avión
+            ${t('offline.prep_btn_full')}
           </button>
           <div id="pluxOfflineProgressWrap" style="display:none; margin-top:12px;">
             <div style="height:8px; width:100%; background:rgba(0,0,0,0.4); border-radius:99px; overflow:hidden; margin-bottom:6px;">
               <div id="pluxOfflineProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg, #34d399, #38bdf8); transition:width 0.25s ease;"></div>
             </div>
-            <div id="pluxOfflineProgressText" style="font-size:0.76rem; color:var(--gris, #cbd5e1);">Iniciando...</div>
+            <div id="pluxOfflineProgressText" style="font-size:0.76rem; color:var(--gris, #cbd5e1);">${t('offline.starting')}</div>
           </div>
         </div>
 
         <!-- Acciones Rápidas Offline -->
         <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
           <button type="button" onclick="if(typeof window.exportarPDF==='function'){ document.getElementById('modal-plux-offline').remove(); window.exportarPDF(); }" style="flex:1; min-width:170px; padding:10px 14px; border-radius:12px; border:1px solid var(--border, #334155); background:rgba(255,255,255,0.06); color:var(--texto, #fff); font-weight:700; font-size:0.82rem; cursor:pointer;">
-            📄 Exportar Itinerario PDF Offline
+            ${t('offline.export_pdf_btn')}
           </button>
           <button type="button" onclick="window.flushOfflineSyncQueue(false); document.getElementById('modal-plux-offline').remove();" ${!isOnline ? 'disabled' : ''} style="flex:1; min-width:170px; padding:10px 14px; border-radius:12px; border:1px solid ${isOnline ? 'rgba(16,185,129,0.5)' : 'var(--border, #334155)'}; background:${isOnline ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)'}; color:${isOnline ? '#34d399' : 'var(--gris, #64748b)'}; font-weight:700; font-size:0.82rem; cursor:${isOnline ? 'pointer' : 'not-allowed'};">
-            🔄 ${pending ? 'Sincronizar Cambios Pendientes' : 'Forzar Sincronización Nube'}
+            🔄 ${pending ? t('offline.sync_pending_btn') : t('offline.sync_force_btn')}
           </button>
         </div>
       </div>
@@ -859,7 +860,7 @@
       window.updateLiveCollabBadge();
     }
     if (typeof window.showToast === 'function') {
-      window.showToast('📴 Modo Offline activado: Podés seguir editando tu viaje, presupuesto y vouchers sin conexión.', 'info');
+      window.showToast(t('offline.offline_toast'), 'info');
     }
   });
 

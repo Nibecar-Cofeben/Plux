@@ -1290,9 +1290,9 @@ function abrirTerminalARPANET() {
         mcXpCurrentLevel += 1;
         playSound('minecraft-xp');
         if (lvlEl) lvlEl.textContent = String(mcXpCurrentLevel);
-        showPluxeeToast(\`✨ <strong>¡Nivel \${mcXpCurrentLevel} alcanzado!</strong> XP de explorador subida.\`);
+        showPluxeeToast(`✨ <strong>¡Nivel ${mcXpCurrentLevel} alcanzado!</strong> XP de explorador subida.`);
       }
-      if (fill) fill.style.width = \`\${mcXpProgress}%\`;
+      if (fill) fill.style.width = `${mcXpProgress}%`;
     }
 
     function toggleMcHud(forceState) {
@@ -1490,7 +1490,7 @@ function abrirTerminalARPANET() {
       const data = PLUXEES['muertos'];
       if (data) {
         document.getElementById('modalTag').textContent = data.modalTag;
-        document.getElementById('modalTitle').textContent = data.modalTitle;
+        document.getElementById('doodleModalTitle').textContent = data.modalTitle;
         document.getElementById('modalBody').innerHTML = data.modalBody;
         document.getElementById('doodleModal').classList.add('active');
       }
@@ -1534,7 +1534,7 @@ function abrirTerminalARPANET() {
       const data = PLUXEES['laika'];
       if (data) {
         document.getElementById('modalTag').textContent = data.modalTag;
-        document.getElementById('modalTitle').textContent = data.modalTitle;
+        document.getElementById('doodleModalTitle').textContent = data.modalTitle;
         document.getElementById('modalBody').innerHTML = data.modalBody;
         document.getElementById('doodleModal').classList.add('active');
       }
@@ -1622,7 +1622,7 @@ function abrirTerminalARPANET() {
       const data = PLUXEES['tradicion'];
       if (data) {
         document.getElementById('modalTag').textContent = data.modalTag;
-        document.getElementById('modalTitle').textContent = data.modalTitle;
+        document.getElementById('doodleModalTitle').textContent = data.modalTitle;
         document.getElementById('modalBody').innerHTML = data.modalBody;
         document.getElementById('doodleModal').classList.add('active');
       }
@@ -1863,7 +1863,7 @@ function abrirTerminalARPANET() {
       const data = PLUXEES['patrimonio'];
       if (data) {
         document.getElementById('modalTag').textContent = data.modalTag;
-        document.getElementById('modalTitle').textContent = data.modalTitle;
+        document.getElementById('doodleModalTitle').textContent = data.modalTitle;
         document.getElementById('modalBody').innerHTML = data.modalBody;
         document.getElementById('doodleModal').classList.add('active');
       }
@@ -1947,7 +1947,7 @@ function abrirTerminalARPANET() {
       const data = PLUXEES['montgolfier'];
       if (data) {
         document.getElementById('modalTag').textContent = data.modalTag;
-        document.getElementById('modalTitle').textContent = data.modalTitle;
+        document.getElementById('doodleModalTitle').textContent = data.modalTitle;
         document.getElementById('modalBody').innerHTML = data.modalBody;
         document.getElementById('doodleModal').classList.add('active');
       }
@@ -1989,7 +1989,7 @@ function abrirTerminalARPANET() {
       const data = PLUXEES['curiosity'];
       if (data) {
         document.getElementById('modalTag').textContent = data.modalTag;
-        document.getElementById('modalTitle').textContent = data.modalTitle;
+        document.getElementById('doodleModalTitle').textContent = data.modalTitle;
         document.getElementById('modalBody').innerHTML = data.modalBody;
         document.getElementById('doodleModal').classList.add('active');
       }
@@ -2572,7 +2572,53 @@ function abrirTerminalARPANET() {
 
     function abrirModalTradicion() {
       const modal = document.getElementById('tradicionFogonModal');
-      if (modal) modal.classList.add('active');
+      if (modal) {
+        if (!modal.innerHTML.trim()) {
+          modal.innerHTML = `
+    <div class="tradicion-fogon-modal">
+      <div class="tradicion-header">
+        <div class="tradicion-title-group">
+          <span style="font-size: 26px;">🧉</span>
+          <h3>10 DE NOVIEMBRE · DÍA DE LA TRADICIÓN (FOGÓN CRIOLLO &amp; MATE)</h3>
+        </div>
+        <button class="tradicion-close-btn" onclick="cerrarModalTradicion()">✕ Guardar Mate</button>
+      </div>
+      <div class="tradicion-telemetry-row">
+        <div class="tradicion-stat-box">
+          <span class="label">Homenaje Nacional</span>
+          <span class="val">JOSÉ HERNÁNDEZ (1834)</span>
+        </div>
+        <div class="tradicion-stat-box">
+          <span class="label">Temperatura del Agua</span>
+          <span class="val" id="tradicionTempAgua">78°C · PUNTO MATE</span>
+        </div>
+        <div class="tradicion-stat-box">
+          <span class="label">Ronda Compartida</span>
+          <span class="val" id="tradicionRondaContador">MATE #1 · CEBADO</span>
+        </div>
+      </div>
+      <div class="tradicion-fogon-stage">
+        <div class="fogon-flames-wrap">
+          <div class="fogon-flame"></div>
+          <div class="fogon-flame"></div>
+          <div class="fogon-flame"></div>
+        </div>
+        <div class="mate-calabaza-visual" onclick="cebarMateTradicion()" title="¡Toca el mate para cebar!">
+          <div class="bombilla-silver"></div>
+          <div class="calabaza-virola"></div>
+          <div class="calabaza-body"></div>
+          <div class="calabaza-bubble-count" id="calabazaBubbleText">¡CHRRR!</div>
+        </div>
+        <div style="font-size:12px; color:#fde68a; font-family:monospace; line-height:1.4; text-align:right;">
+          <div style="color:#75aadb; font-weight:700;">🇦🇷 LA PAMPA INFINITA</div>
+          <div>VIENTOS DEL SUR: 14 KM/H</div>
+          <div>FOGÓN ENCENDIDO</div>
+        </div>
+      </div>
+    </div>`;
+        }
+        modal.classList.add('active');
+      }
       playSound('guitar-strum');
       showPluxeeToast('🧉 <strong>DÍA DE LA TRADICIÓN:</strong> Fogón criollo y ronda de mate encendida.');
     }
@@ -2705,7 +2751,7 @@ function abrirTerminalARPANET() {
       if (!data) return;
 
       document.getElementById('modalTag').textContent = data.modalTag;
-      document.getElementById('modalTitle').textContent = data.modalTitle;
+      document.getElementById('doodleModalTitle').textContent = data.modalTitle;
       document.getElementById('modalBody').innerHTML = data.modalBody;
       document.getElementById('doodleModal').classList.add('active');
       playSound('coin');

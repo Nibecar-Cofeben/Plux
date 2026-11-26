@@ -24,16 +24,16 @@ function getActiveTripMetadata() {
     : [];
   if (!tripTitle) {
     if (destNames.length > 0) {
-      tripTitle = `Viaje a ${destNames.slice(0, 3).join(' & ')}`;
+      tripTitle = t('social.collab_trip_to', { dests: destNames.slice(0, 3).join(' & ') });
     } else if (typeof lugarSalida !== 'undefined' && lugarSalida && lugarSalida.trim()) {
-      tripTitle = `Viaje desde ${lugarSalida.trim()}`;
+      tripTitle = t('social.collab_trip_from', { origin: lugarSalida.trim() });
     } else {
-      tripTitle = 'Viaje en Plux';
+      tripTitle = t('social.collab_trip_default');
     }
   }
   return {
     nombreViaje: tripTitle,
-    destinosResumen: destNames.length > 0 ? destNames.join(', ') : 'Sin destinos aún'
+    destinosResumen: destNames.length > 0 ? destNames.join(', ') : t('social.collab_no_dests')
   };
 }
 
@@ -193,7 +193,7 @@ async function generarCodigoInApp() {
     await garantizarDocumentoColaborativoEnNube();
     activarListenerNube();
     if (typeof abrirColaboradores === 'function') abrirColaboradores();
-    showToast(`Código activo: ${syncCode}`, 'info');
+    showToast(t('social.collab_code_active', { code: syncCode }), 'info');
     return syncCode;
   }
 
@@ -242,7 +242,7 @@ async function generarCodigoInApp() {
     abrirColaboradores();
   }
 
-  showToast(`Código generado: ${code}`, 'success');
+  showToast(t('social.collab_code_generated', { code }), 'success');
   return code;
 }
 window.generarCodigoInApp = generarCodigoInApp;
@@ -257,7 +257,7 @@ async function garantizarDocumentoColaborativoEnNube() {
   }
   if (typeof db === 'undefined' || !db || !syncCode) return;
 
-  const ownerName = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Viajero';
+  const ownerName = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : t('social.collab_traveler_default');
   const meta = getActiveTripMetadata();
   const tripId = (typeof getCurrentTripId === 'function') ? getCurrentTripId() : syncCode;
 
@@ -351,9 +351,9 @@ function renderListaColaboradoresDOM(docData) {
         actionsDiv.id = 'plux-collab-share-actions';
         actionsDiv.style.cssText = 'display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px;';
         actionsDiv.innerHTML = `
-          <button type="button" onclick="window.copiarCodigoColaborativo()" style="padding:7px 12px; border-radius:8px; border:1px solid var(--verde); background:rgba(52,211,153,0.15); color:var(--verde); font-size:0.78rem; font-weight:700; cursor:pointer;">📋 Copiar Código</button>
-          <button type="button" onclick="window.copiarEnlaceColaborativo('editor')" style="padding:7px 12px; border-radius:8px; border:1px solid var(--azul); background:rgba(56,189,248,0.15); color:var(--azul); font-size:0.78rem; font-weight:700; cursor:pointer;">🔗 Link para Editar</button>
-          <button type="button" onclick="window.copiarEnlaceColaborativo('reader')" style="padding:7px 12px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.06); color:var(--texto); font-size:0.78rem; font-weight:600; cursor:pointer;">👁️ Link Solo Lectura</button>
+          <button type="button" onclick="window.copiarCodigoColaborativo()" style="padding:7px 12px; border-radius:8px; border:1px solid var(--verde); background:rgba(52,211,153,0.15); color:var(--verde); font-size:0.78rem; font-weight:700; cursor:pointer;">${t('social.collab_copy_code_btn')}</button>
+          <button type="button" onclick="window.copiarEnlaceColaborativo('editor')" style="padding:7px 12px; border-radius:8px; border:1px solid var(--azul); background:rgba(56,189,248,0.15); color:var(--azul); font-size:0.78rem; font-weight:700; cursor:pointer;">${t('social.collab_copy_edit_link')}</button>
+          <button type="button" onclick="window.copiarEnlaceColaborativo('reader')" style="padding:7px 12px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.06); color:var(--texto); font-size:0.78rem; font-weight:600; cursor:pointer;">${t('social.collab_copy_read_link')}</button>
         `;
         inviteCodeContainer.appendChild(actionsDiv);
       }
@@ -362,7 +362,7 @@ function renderListaColaboradoresDOM(docData) {
     if (inviteCodeContainer) inviteCodeContainer.style.display = 'none';
     if (colabGenBtn) {
       colabGenBtn.style.display = 'block';
-      colabGenBtn.textContent = (typeof t === 'function' && t('colab_gen_code') !== 'colab_gen_code') ? t('colab_gen_code') : '⚡ Generar Código de Invitación';
+      colabGenBtn.textContent = t('social.collab_gen_code_btn');
     }
   }
 
@@ -422,10 +422,10 @@ function renderListaColaboradoresDOM(docData) {
   if (members.length === 0) {
     html += `
       <div style="display:flex; align-items:center; gap:15px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
-        <div class="colab-avatar" style="background:var(--rosa); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">TÚ</div>
+        <div class="colab-avatar" style="background:var(--rosa); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">${escapeHtml(t('social.you').toUpperCase().slice(0, 3))}</div>
         <div>
-          <strong style="color:var(--texto);">👤 Invitado (Tú)</strong>
-          <p style="font-size:0.8rem; color:var(--verde); margin:2px 0 0 0;">En línea · Iniciá sesión con un nickname para colaborar con tu perfil</p>
+          <strong style="color:var(--texto);">${t('social.collab_guest_title')}</strong>
+          <p style="font-size:0.8rem; color:var(--verde); margin:2px 0 0 0;">${t('social.collab_guest_sub')}</p>
         </div>
       </div>
     `;
@@ -436,13 +436,13 @@ function renderListaColaboradoresDOM(docData) {
       const initials = m.nick.substring(0, 2).toUpperCase();
       const avatarBg = m.isOwner ? 'linear-gradient(135deg, #f59e0b, #ec4899)' : (m.isMe ? 'var(--rosa)' : 'var(--azul)');
 
-      let roleLabel = '✏️ Editor';
+      let roleLabel = t('social.collab_role_editor');
       let roleColor = 'var(--verde)';
       if (m.isOwner) {
-        roleLabel = '👑 Propietario';
+        roleLabel = t('social.collab_role_owner');
         roleColor = '#fbbf24';
       } else if (m.role === 'viajero' || m.role === 'reader' || m.role === 'lector') {
-        roleLabel = '👁️ Viajero (Solo lectura)';
+        roleLabel = t('social.collab_role_reader');
         roleColor = 'var(--azul)';
       }
 
@@ -455,20 +455,20 @@ function renderListaColaboradoresDOM(docData) {
           </div>
           <div style="flex:1; min-width:0;">
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-              <strong style="color:var(--texto); font-size:0.95rem;">@${safeNick}${m.isMe ? ' (Tú)' : ''}</strong>
+              <strong style="color:var(--texto); font-size:0.95rem;">@${safeNick}${m.isMe ? ` (${t('social.you')})` : ''}</strong>
               <span style="font-size:0.72rem; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,0.07); color:${roleColor}; font-weight:700;">${roleLabel}</span>
             </div>
             <p style="font-size:0.78rem; color:var(--gris); margin:3px 0 0 0;">
-              ${m.isMe ? '<span style="color:var(--verde);">● Conectado ahora</span>' : 'Sincronizado en tiempo real'}
+              ${m.isMe ? `<span style="color:var(--verde);">${t('social.collab_connected_now')}</span>` : t('social.collab_synced_live')}
             </p>
           </div>
           ${(isMeOwner && !m.isMe && syncCode) ? `
             <div style="display:flex; align-items:center; gap:6px;">
               <select onchange="window.cambiarRolColaborador('${safeNick}', this.value)" style="padding:5px 8px; border-radius:8px; background:var(--card); color:var(--texto); border:1px solid var(--border); font-size:0.75rem; cursor:pointer;">
-                <option value="editor" ${m.role === 'editor' ? 'selected' : ''}>✏️ Editor</option>
-                <option value="viajero" ${(m.role === 'viajero' || m.role === 'reader') ? 'selected' : ''}>👁️ Lectura</option>
+                <option value="editor" ${m.role === 'editor' ? 'selected' : ''}>${t('social.collab_role_editor')}</option>
+                <option value="viajero" ${(m.role === 'viajero' || m.role === 'reader') ? 'selected' : ''}>${t('social.collab_role_reader_short')}</option>
               </select>
-              <button type="button" onclick="window.eliminarColaboradorDeViaje('${safeNick}')" title="Quitar del viaje" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:8px; width:28px; height:28px; cursor:pointer; font-weight:bold;">×</button>
+              <button type="button" onclick="window.eliminarColaboradorDeViaje('${safeNick}')" title="${escapeHtml(t('social.collab_remove_title'))}" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:8px; width:28px; height:28px; cursor:pointer; font-weight:bold;">×</button>
             </div>
           ` : ''}
         </div>
@@ -477,9 +477,9 @@ function renderListaColaboradoresDOM(docData) {
   }
 
   if (!syncCode) {
-    html += `<p style="text-align:center; color:var(--gris); font-size:0.84rem; margin-top:10px;">Generá un código abajo o invitá directamente por @nickname para activar la edición colaborativa en tiempo real.</p>`;
+    html += `<p style="text-align:center; color:var(--gris); font-size:0.84rem; margin-top:10px;">${t('social.collab_hint_no_code')}</p>`;
   } else if (members.length <= 1) {
-    html += `<p style="text-align:center; color:var(--gris); font-size:0.85rem; margin-top:12px;">Compartí el código <strong>${syncCode}</strong> o invitá a tus amigos por su @nickname.</p>`;
+    html += `<p style="text-align:center; color:var(--gris); font-size:0.85rem; margin-top:12px;">${t('social.collab_hint_single', { code: syncCode })}</p>`;
   }
 
   lista.innerHTML = html;
@@ -542,14 +542,14 @@ window.mobileActionInvitar = mobileActionInvitar;
 window.copiarCodigoColaborativo = function() {
   if (!syncCode) return;
   navigator.clipboard?.writeText(syncCode).then(() => {
-    showToast(`Código ${syncCode} copiado al portapapeles 📋`, 'success');
+    showToast(t('social.collab_code_copied', { code: syncCode }), 'success');
   });
 };
 
 window.copiarEnlaceColaborativo = async function(mode = 'editor') {
   const url = await asegurarViajeEnNubeParaCompartir(mode);
   navigator.clipboard?.writeText(url).then(() => {
-    showToast(mode === 'editor' ? 'Enlace de edición colaborativa copiado 🔗' : 'Enlace de solo lectura copiado 👁️', 'success');
+    showToast(mode === 'editor' ? t('social.collab_edit_link_copied') : t('social.collab_read_link_copied'), 'success');
   });
 };
 
@@ -566,10 +566,10 @@ window.cambiarRolColaborador = async function(targetNick, newRole) {
         [clean]: newRole
       }
     }, { merge: true });
-    showToast(`Rol de @${clean} actualizado a ${newRole === 'editor' ? 'Editor' : 'Solo lectura'} ✅`, 'success');
+    showToast(t('social.collab_role_updated', { nick: clean, role: newRole === 'editor' ? t('social.collab_role_editor_word') : t('social.collab_role_reader_word') }), 'success');
   } catch (e) {
     console.error('Error cambiando rol:', e);
-    showToast('No se pudo cambiar el rol', 'error');
+    showToast(t('social.collab_role_err'), 'error');
   }
 };
 
@@ -584,11 +584,11 @@ window.eliminarColaboradorDeViaje = async function(targetNick) {
       colaboradores: firebase.firestore.FieldValue.arrayRemove(clean)
     });
     window.colaboradoresActuales = (window.colaboradoresActuales || []).filter(c => c.toLowerCase() !== clean.toLowerCase());
-    showToast(`@${clean} fue quitado del viaje`, 'info');
+    showToast(t('social.collab_removed_toast', { nick: clean }), 'info');
     abrirColaboradores();
   } catch (e) {
     console.error('Error quitando colaborador:', e);
-    showToast('Error al quitar colaborador', 'error');
+    showToast(t('social.collab_remove_err'), 'error');
   }
 };
 
@@ -620,19 +620,19 @@ async function invitarColaboradorPorNickname() {
   const nickInput = document.getElementById('invite-nickname-input');
   const rawTarget = nickInput ? nickInput.value.trim() : '';
   if (!rawTarget) {
-    showToast('Ingresá el @nickname de la persona a invitar', 'error');
+    showToast(t('social.collab_enter_nick'), 'error');
     return;
   }
 
   const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : localStorage.getItem('Plux_Nickname');
   if (!myNick) {
-    showToast('Iniciá sesión con tu cuenta o nickname para invitar amigos', 'error');
+    showToast(t('social.collab_login_to_invite'), 'error');
     return;
   }
 
   const cleanInput = rawTarget.replace(/^@/, '').trim();
   if (cleanInput.toLowerCase() === myNick.toLowerCase()) {
-    showToast('Ya estás en este viaje como participante', 'info');
+    showToast(t('social.collab_already_in'), 'info');
     return;
   }
 
@@ -640,7 +640,7 @@ async function invitarColaboradorPorNickname() {
     if (typeof initFirebaseAuth === 'function') await initFirebaseAuth();
   }
   if (typeof db === 'undefined' || !db) {
-    showToast('Base de datos en la nube no disponible', 'error');
+    showToast(t('social.collab_db_unavail'), 'error');
     return;
   }
 
@@ -648,11 +648,11 @@ async function invitarColaboradorPorNickname() {
   try {
     resolvedNick = await resolvePluxUserNickname(cleanInput);
     if (!resolvedNick) {
-      showToast(`El usuario @${cleanInput} no existe en Plux`, 'error');
+      showToast(t('social.collab_user_not_found', { nick: cleanInput }), 'error');
       return;
     }
   } catch (e) {
-    showToast('Error al verificar el usuario', 'error');
+    showToast(t('social.collab_user_check_err'), 'error');
     return;
   }
 
@@ -690,12 +690,12 @@ async function invitarColaboradorPorNickname() {
       window.sumarUsuarioAlChatDelViaje(resolvedNick, 'invitado');
     }
 
-    showToast(`@${resolvedNick} invitado al viaje como ${role === 'editor' ? 'Editor' : 'Viajero'} ✅`, 'success');
+    showToast(t('social.collab_invited_toast', { nick: resolvedNick, role: role === 'editor' ? t('social.collab_role_editor_word') : t('social.collab_role_traveler_word') }), 'success');
     if (nickInput) nickInput.value = '';
     abrirColaboradores();
   } catch (e) {
     console.error('Error al invitar colaborador:', e);
-    showToast('Error al enviar la invitación', 'error');
+    showToast(t('social.collab_invite_err'), 'error');
   }
 }
 window.invitarColaboradorPorNickname = invitarColaboradorPorNickname;
@@ -740,15 +740,15 @@ async function cargarViajeCompartido(rawCode) {
     if (typeof initFirebaseAuth === 'function') await initFirebaseAuth();
   }
   if (typeof db === 'undefined' || !db) {
-    showToast('Base de datos no disponible', 'error');
+    showToast(t('social.collab_db_err'), 'error');
     return;
   }
 
-  showToast(`Conectando al viaje ${code}...`, 'info');
+  showToast(t('social.collab_connecting', { code }), 'info');
   try {
     const docSnap = await db.collection('plux_viajes_compartidos').doc(code).get();
     if (!docSnap.exists) {
-      showToast('No se encontró ningún viaje con ese código', 'error');
+      showToast(t('social.collab_not_found'), 'error');
       return;
     }
 
@@ -793,12 +793,12 @@ async function cargarViajeCompartido(rawCode) {
 
     const urlParams = new URLSearchParams(window.location.search);
     const isForcedReader = urlParams.get('mode') === 'reader' || urlParams.get('role') === 'reader' || urlParams.get('mode') === 'lector';
-    const joiningName = myNick || 'Viajero';
+    const joiningName = myNick || t('social.collab_traveler_default');
 
     if (isForcedReader) {
       window.currentTripRole = 'reader';
       if (typeof mostrarAdvertenciaSoloLectura === 'function') mostrarAdvertenciaSoloLectura();
-      showToast('Modo Lectura Activo · Podés explorar o clonar este itinerario', 'info');
+      showToast(t('social.collab_reader_toast'), 'info');
     } else {
       if (myNick) {
         await db.collection('plux_viajes_compartidos').doc(code).set({
@@ -862,10 +862,10 @@ async function cargarViajeCompartido(rawCode) {
     if (typeof cerrarModalDecisionViaje === 'function') cerrarModalDecisionViaje();
     if (typeof empezar === 'function') empezar();
 
-    showToast(`¡Conectado en tiempo real al viaje ${code}!`, 'success');
+    showToast(t('social.collab_connected_toast', { code }), 'success');
   } catch (e) {
     console.error('Error cargando viaje compartido:', e);
-    showToast('Error al cargar el viaje compartido', 'error');
+    showToast(t('social.collab_load_err'), 'error');
   }
 }
 window.cargarViajeCompartido = cargarViajeCompartido;
@@ -915,15 +915,15 @@ async function renderSharedTripsList() {
           if (!destSummary && Array.isArray(parsed.destinos)) {
             destSummary = parsed.destinos.map(d => d.nombre).filter(Boolean).join(', ');
           }
-          if (!tripName && destSummary) tripName = `Viaje a ${destSummary}`;
+          if (!tripName && destSummary) tripName = t('social.collab_trip_to', { dests: destSummary });
         } catch (err) {}
       }
-      if (!tripName) tripName = `Viaje compartido (${code})`;
+      if (!tripName) tripName = t('social.collab_shared_title', { code });
 
       const safeTitle = typeof escapeHtml === 'function' ? escapeHtml(tripName) : tripName;
-      const safeDests = typeof escapeHtml === 'function' ? escapeHtml(destSummary || `Código: ${code}`) : (destSummary || `Código: ${code}`);
+      const safeDests = typeof escapeHtml === 'function' ? escapeHtml(destSummary || t('social.collab_code_lbl', { code })) : (destSummary || t('social.collab_code_lbl', { code }));
       const safeOwner = typeof escapeHtml === 'function' ? escapeHtml(owner) : owner;
-      const roleBadge = (myRole === 'viajero' || myRole === 'reader') ? '👁️ Lectura' : '✏️ Editor';
+      const roleBadge = (myRole === 'viajero' || myRole === 'reader') ? t('social.collab_role_reader_short') : t('social.collab_role_editor');
       const item = document.createElement('div');
       item.className = 'trip-item';
       item.style.cursor = 'pointer';
@@ -932,15 +932,15 @@ async function renderSharedTripsList() {
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
             <h4 style="color:var(--verde); margin:0; font-size:1.02rem; font-weight:700;">${safeTitle}</h4>
             <span style="font-size:0.68rem; padding:2px 7px; border-radius:999px; background:rgba(52,211,153,0.15); color:var(--verde); font-weight:700;">${roleBadge}</span>
-            <span style="font-size:0.68rem; padding:2px 6px; border-radius:6px; background:rgba(255,255,255,0.06); color:var(--gris); font-family:monospace; border:1px solid rgba(255,255,255,0.08);" title="Código de sincronización">#${code}</span>
+            <span style="font-size:0.68rem; padding:2px 6px; border-radius:6px; background:rgba(255,255,255,0.06); color:var(--gris); font-family:monospace; border:1px solid rgba(255,255,255,0.08);" title="${escapeHtml(t('social.collab_sync_code_title'))}">#${code}</span>
           </div>
           <small style="color:var(--gris); font-size:0.82rem; display:block;">
-            Por <strong style="color:var(--texto);">@${safeOwner}</strong> · <span style="color:rgba(255,255,255,0.7);">${safeDests}</span>
+            ${t('social.collab_by_owner', { owner: safeOwner })} · <span style="color:rgba(255,255,255,0.7);">${safeDests}</span>
           </small>
         </div>
         <div class="trip-actions">
-          <button onclick="window.cargarViajeCompartido('${code}')" style="background:linear-gradient(135deg, var(--verde), var(--azul));color:black;font-weight:700;padding:8px 14px;border-radius:10px;border:none;cursor:pointer;">Abrir</button>
-          <button onclick="window.abandonarViajeCompartido('${code}')" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);padding:8px 12px;border-radius:10px;cursor:pointer;" title="Salir del viaje">Salir</button>
+          <button onclick="window.cargarViajeCompartido('${code}')" style="background:linear-gradient(135deg, var(--verde), var(--azul));color:black;font-weight:700;padding:8px 14px;border-radius:10px;border:none;cursor:pointer;">${t('social.collab_open_btn')}</button>
+          <button onclick="window.abandonarViajeCompartido('${code}')" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);padding:8px 12px;border-radius:10px;cursor:pointer;" title="${escapeHtml(t('social.collab_leave_title'))}">${t('social.collab_leave_btn')}</button>
         </div>
       `;
       list.appendChild(item);

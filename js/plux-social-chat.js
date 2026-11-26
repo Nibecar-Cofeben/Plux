@@ -16,12 +16,12 @@
     const tripChatId = getTripChatChannelId();
     pluxActiveChatId = tripChatId;
     if (!pluxSocialChats) pluxSocialChats = {};
-    const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Vos';
+    const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : t('social.you');
     pluxSocialChats[tripChatId] = {
       id: tripChatId,
       tripId: getCurrentTripId(),
       type: 'group',
-      name: 'Viaje Nuevo ✈️',
+      name: t('social.new_trip_name'),
       participants: [myNick],
       messages: []
     };
@@ -46,14 +46,14 @@
 
     const tripNames = (typeof destinos !== 'undefined' && destinos.length > 0)
       ? destinos.map(d => d.nombre).join(' & ')
-      : 'Mi Viaje';
+      : t('social.my_trip_fallback');
 
     if (!pluxSocialChats[newChatId]) {
       pluxSocialChats[newChatId] = {
         id: newChatId,
         tripId: code,
         type: 'group',
-        name: `Viaje a ${tripNames} ✈️`,
+        name: t('social.trip_to_name', { dests: tripNames }),
         participants: (typeof getTripParticipants === 'function') ? getTripParticipants() : [],
         messages: msgsToMigrate
       };
@@ -95,7 +95,7 @@
         ? firebase.database.ServerValue.TIMESTAMP
         : Date.now();
       
-      const previewText = lastMsgText ? String(lastMsgText).slice(0, 100) : 'Mensaje nuevo';
+      const previewText = lastMsgText ? String(lastMsgText).slice(0, 100) : t('social.new_message_preview');
       const cleanSender = senderUser.toLowerCase().trim().replace(/^@/, '');
       const cleanOther = otherUser.toLowerCase().trim().replace(/^@/, '');
 
@@ -160,7 +160,7 @@
             changed = true;
             // Si el modal está cerrado o en otro chat y el mensaje es de otro usuario
             if (convInfo.sender && convInfo.sender.toLowerCase() !== cleanNick && pluxActiveChatId !== dmId) {
-              showToast(`Nuevo mensaje de @${otherNick}: "${convInfo.lastMessage || '...'}"`, 'info');
+              showToast(t('social.dm_incoming_toast', { nick: otherNick, msg: convInfo.lastMessage || '...' }), 'info');
             }
           }
         });
@@ -216,8 +216,8 @@
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const actionText = motivo === 'unido'
-        ? `👋 @${cleanNick} se unió al viaje y al chat grupal ✈️`
-        : `🎉 @${cleanNick} fue sumado(a) al viaje y al chat grupal ✈️`;
+        ? t('social.sys_joined', { nick: cleanNick })
+        : t('social.sys_added', { nick: cleanNick });
 
       const isDup = chat.messages.some(m => m.isSystem && m.text === actionText && (Date.now() - (m.timestampMs || 0)) < 15000);
       if (!isDup) {
@@ -305,13 +305,13 @@
     if (!pluxSocialChats[tripChatId]) {
       const tripNames = (typeof destinos !== 'undefined' && destinos.length > 0)
         ? destinos.map(d => d.nombre).join(' & ')
-        : 'Mi Viaje';
+        : t('social.my_trip_fallback');
 
       pluxSocialChats[tripChatId] = {
         id: tripChatId,
         tripId: getCurrentTripId(),
         type: 'group',
-        name: `Viaje a ${tripNames} ✈️`,
+        name: t('social.trip_to_name', { dests: tripNames }),
         participants: (typeof getTripParticipants === 'function') ? getTripParticipants() : [],
         messages: []
       };
@@ -327,7 +327,7 @@
         id: pluxActiveChatId,
         tripId: pluxActiveChatId.startsWith('trip_') ? getCurrentTripId() : null,
         type: isGroup ? 'group' : 'direct',
-        name: isGroup ? (pluxActiveChatId.startsWith('group_') ? 'Grupo 👥' : 'Viaje ✈️') : pluxActiveChatId.replace('dm_', '@'),
+        name: isGroup ? (pluxActiveChatId.startsWith('group_') ? t('social.group_fallback') : t('social.trip_fallback')) : pluxActiveChatId.replace('dm_', '@'),
         participants: isGroup ? (pluxActiveChatId.startsWith('group_') ? [currentNickname || 'yo'] : getTripParticipants()) : [],
         messages: []
       };
@@ -395,8 +395,8 @@
     if (pluxSocialChats[activeTripId]) {
       const tripNames = (typeof destinos !== 'undefined' && destinos.length > 0)
         ? destinos.map(d => d.nombre).join(' & ')
-        : 'Mi Viaje';
-      pluxSocialChats[activeTripId].name = `Viaje a ${tripNames} ✈️`;
+        : t('social.my_trip_fallback');
+      pluxSocialChats[activeTripId].name = t('social.trip_to_name', { dests: tripNames });
     }
 
     const modal = document.getElementById('modal-plux-chat-social');
@@ -442,10 +442,11 @@
         const participants = (typeof getTripParticipants === 'function') ? getTripParticipants() : [];
         const count = Math.max(participants.length, 1);
         const namesList = participants.slice(0, 3).map(p => p.startsWith('@') ? p : '@' + p).join(', ');
-        const extra = participants.length > 3 ? ` y ${participants.length - 3} más` : '';
-        subtitleEl.textContent = `Grupo del viaje · ${count} ${count === 1 ? 'viajero' : 'viajeros'} (${namesList}${extra})`;
+        const extra = participants.length > 3 ? t('social.and_more', { count: participants.length - 3 }) : '';
+        const word = count === 1 ? t('social.traveler_singular') : t('social.traveler_plural');
+        subtitleEl.textContent = t('social.group_subtitle', { count, word, names: `${namesList}${extra}` });
       } else {
-        subtitleEl.textContent = `Chat Directo · ${chat.targetUser ? '@' + chat.targetUser : 'En línea'}`;
+        subtitleEl.textContent = t('social.dm_subtitle', { target: chat.targetUser ? '@' + chat.targetUser : t('social.online_status') });
       }
     }
   }
@@ -473,8 +474,8 @@
               <circle cx="15.5" cy="12" r="1.2" fill="#a855f7" />
             </svg>
           </div>
-          <h4>Chat del Viaje</h4>
-          <p>Escribe tu primer mensaje para coordinar el viaje con tu grupo o menciona a <strong>@pluxy</strong> para recibir sugerencias de itinerario.</p>
+          <h4>${t('social.empty_chat_title')}</h4>
+          <p>${t('social.empty_chat_desc')}</p>
         </div>
       `;
       return;
@@ -486,7 +487,8 @@
       msgs = msgs.filter(m => (m.text && m.text.toLowerCase().includes(q)) || (m.sender && m.sender.toLowerCase().includes(q)));
     }
 
-    const currentNickNorm = (currentNickname || 'Vos').toLowerCase();
+    const youNorm = t('social.you').toLowerCase();
+    const currentNickNorm = (currentNickname || t('social.you')).toLowerCase();
 
     timeline.innerHTML = msgs.map(m => {
       if (m.isSystem || m.cardType === 'system_notice') {
@@ -498,7 +500,8 @@
           </div>
         `;
       }
-      const isSelf = m.isSelf || (m.sender && m.sender.toLowerCase() === currentNickNorm) || (m.sender && m.sender.toLowerCase() === 'vos');
+      const senderLower = m.sender ? m.sender.toLowerCase() : '';
+      const isSelf = m.isSelf || (senderLower === currentNickNorm) || senderLower === 'vos' || senderLower === youNorm;
       const side = isSelf ? 'right' : 'left';
       const color = m.color || getParticipantColor(m.sender);
       const initial = getParticipantInitial(m.sender);
@@ -508,13 +511,13 @@
         cardHtml = `
           <div class="plux-msg-rich-card">
             <div class="plux-rich-card-header">
-              <span class="plux-rich-card-badge dest">🗺️ Destino</span>
-              <span class="plux-rich-card-title">${escapeHtml(m.cardData.nombre || 'Destino')}</span>
+              <span class="plux-rich-card-badge dest">${t('social.card_dest_badge')}</span>
+              <span class="plux-rich-card-title">${escapeHtml(m.cardData.nombre || t('social.card_dest_default'))}</span>
             </div>
-            <div class="plux-rich-card-meta">${escapeHtml(m.cardData.pais ? 'País: ' + m.cardData.pais : 'Destino del itinerario')} · ${m.cardData.dias ? m.cardData.dias.length + ' días' : ''}</div>
+            <div class="plux-rich-card-meta">${escapeHtml(m.cardData.pais ? t('social.card_dest_country', { country: m.cardData.pais }) : t('social.card_dest_itinerary'))} · ${m.cardData.dias ? t('social.days_count', { count: m.cardData.dias.length }) : ''}</div>
             <button class="plux-rich-card-action-btn" onclick="window.cerrarChatSocial(); window.mostrarDestinos();">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              <span>Ver en itinerario</span>
+              <span>${t('social.view_in_itinerary')}</span>
             </button>
           </div>
         `;
@@ -522,11 +525,11 @@
         cardHtml = `
           <div class="plux-msg-rich-card">
             <div class="plux-rich-card-header">
-              <span class="plux-rich-card-badge event">📅 Actividad</span>
-              <span class="plux-rich-card-title">${escapeHtml(m.cardData.titulo || 'Actividad')}</span>
+              <span class="plux-rich-card-badge event">${t('social.card_act_badge')}</span>
+              <span class="plux-rich-card-title">${escapeHtml(m.cardData.titulo || t('social.card_act_default'))}</span>
             </div>
             <div class="plux-rich-card-meta">
-              ⏰ ${escapeHtml(m.cardData.hora || 'Todo el día')} ${m.cardData.destino ? '· 📍 ' + escapeHtml(m.cardData.destino) : ''}
+              ⏰ ${escapeHtml(m.cardData.hora || t('social.all_day'))} ${m.cardData.destino ? '· 📍 ' + escapeHtml(m.cardData.destino) : ''}
               ${m.cardData.costo ? '<br>💵 ' + escapeHtml(m.cardData.costo) : ''}
             </div>
           </div>
@@ -536,8 +539,8 @@
         cardHtml = `
           <div class="plux-msg-rich-card">
             <div class="plux-rich-card-header">
-              <span class="plux-rich-card-badge chk">✅ Checklist</span>
-              <span class="plux-rich-card-title">${escapeHtml(m.cardData.titulo || 'Preparativos')}</span>
+              <span class="plux-rich-card-badge chk">${t('social.card_chk_badge')}</span>
+              <span class="plux-rich-card-title">${escapeHtml(m.cardData.titulo || t('social.card_chk_default'))}</span>
             </div>
             <div style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
               ${items.map((it, idx) => `
@@ -552,13 +555,13 @@
       } else if (m.cardType === 'poll_card' && m.cardData) {
         const poll = m.cardData;
         const totalVotes = (poll.options || []).reduce((acc, opt) => acc + (opt.votes ? opt.votes.length : 0), 0);
-        const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Viajero';
+        const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : t('social.collab_traveler_default');
 
         cardHtml = `
           <div class="plux-msg-rich-card plux-poll-card" id="poll-card-${m.id}" style="min-width:250px; max-width:340px; background:rgba(15,23,42,0.75); border:1px solid rgba(56,189,248,0.25); border-radius:14px; padding:12px; box-shadow:0 4px 16px rgba(0,0,0,0.3);">
             <div class="plux-rich-card-header" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">
               <span class="plux-rich-card-badge poll" style="align-self:flex-start; background:rgba(14,165,233,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.3); font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;">
-                <i class="fa-solid fa-square-poll-vertical"></i> Encuesta de grupo
+                <i class="fa-solid fa-square-poll-vertical"></i> ${t('social.poll_badge')}
               </span>
               <span class="plux-rich-card-title" style="font-size:0.95rem; font-weight:800; color:#fff; line-height:1.35;">${escapeHtml(poll.question)}</span>
             </div>
@@ -585,20 +588,20 @@
               }).join('')}
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:0.72rem; color:var(--gris);">
-              <span>${totalVotes} ${totalVotes === 1 ? 'voto' : 'votos'}</span>
-              <span>Toca para votar</span>
+              <span>${totalVotes} ${totalVotes === 1 ? t('social.vote_singular') : t('social.votes')}</span>
+              <span>${t('social.tap_to_vote')}</span>
             </div>
           </div>
         `;
       } else if ((m.cardType === 'photo_card' || m.imageUrl) && (m.imageUrl || m.cardData?.url)) {
         const photoUrl = m.imageUrl || m.cardData?.url || '';
-        const caption = m.cardData?.caption || 'Foto del viaje';
+        const caption = m.cardData?.caption || t('social.photo_default_caption');
         cardHtml = `
           <div class="plux-msg-photo-card" onclick="window.abrirFotoGrande('${escapeHtml(photoUrl).replace(/'/g, "\\'")}', '${escapeHtml(caption).replace(/'/g, "\\'")}')">
             <img src="${photoUrl}" alt="${escapeHtml(caption)}" loading="lazy">
             <div class="plux-msg-photo-caption">
               <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">📸 ${escapeHtml(caption)}</span>
-              <span class="plux-msg-photo-zoom-hint">🔍 Ampliar</span>
+              <span class="plux-msg-photo-zoom-hint">${t('social.photo_zoom_hint')}</span>
             </div>
           </div>
         `;
@@ -652,20 +655,21 @@
     if (activeTripChat) {
       const isActive = pluxActiveChatId === activeTripChatId;
       const lastMsg = activeTripChat.messages && activeTripChat.messages.length > 0
-        ? (activeTripChat.messages[activeTripChat.messages.length - 1].text || 'Tarjeta adjunta')
-        : 'Sin mensajes aún';
+        ? (activeTripChat.messages[activeTripChat.messages.length - 1].text || t('social.attached_card'))
+        : t('social.no_messages');
       const participants = (typeof getTripParticipants === 'function') ? getTripParticipants() : [];
       const participantsCount = Math.max(participants.length, 1);
+      const word = participantsCount === 1 ? t('social.traveler_singular') : t('social.traveler_plural');
       
       html += `
         <div style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; padding:6px 12px 4px 12px;">
-          Viaje Activo
+          ${t('social.active_trip_hdr')}
         </div>
         <div class="plux-channel-item ${isActive ? 'active' : ''}" onclick="window.cambiarCanalSocial('${activeTripChatId}')">
           <div style="font-size:1.2rem;">✈️</div>
           <div style="flex:1; min-width:0;">
             <div style="font-weight:700; font-size:0.85rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(activeTripChat.name)}</div>
-            <div style="font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lastMsg)} · <span style="color:#10b981;">${participantsCount} ${participantsCount === 1 ? 'viajero' : 'viajeros'}</span></div>
+            <div style="font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lastMsg)} · <span style="color:#10b981;">${participantsCount} ${word}</span></div>
           </div>
         </div>
       `;
@@ -676,19 +680,19 @@
     if (groupChannels.length > 0) {
       html += `
         <div style="font-size:0.75rem; font-weight:700; color:#34d399; text-transform:uppercase; letter-spacing:0.5px; padding:12px 12px 4px 12px; display:flex; justify-content:space-between; align-items:center;">
-          <span>Grupos</span>
+          <span>${t('social.groups_hdr')}</span>
         </div>
       `;
       groupChannels.forEach(c => {
         const isActive = c.id === pluxActiveChatId;
-        const lastMsg = c.messages && c.messages.length > 0 ? (c.messages[c.messages.length - 1].text || 'Tarjeta adjunta') : 'Sin mensajes aún';
+        const lastMsg = c.messages && c.messages.length > 0 ? (c.messages[c.messages.length - 1].text || t('social.attached_card')) : t('social.no_messages');
         const membersCount = c.participants ? c.participants.length : 1;
         html += `
           <div class="plux-channel-item ${isActive ? 'active' : ''}" onclick="window.cambiarCanalSocial('${c.id}')">
             <div style="font-size:1.2rem;">👥</div>
             <div style="flex:1; min-width:0;">
               <div style="font-weight:700; font-size:0.85rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
-              <div style="font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lastMsg)} · <span style="color:#10b981;">${membersCount} miembros</span></div>
+              <div style="font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lastMsg)} · <span style="color:#10b981;">${t('social.members_count', { count: membersCount })}</span></div>
             </div>
           </div>
         `;
@@ -709,13 +713,13 @@
 
     html += `
       <div style="font-size:0.75rem; font-weight:700; color:#a855f7; text-transform:uppercase; letter-spacing:0.5px; padding:12px 12px 4px 12px; display:flex; justify-content:space-between; align-items:center;">
-        <span>Chats Directos</span>
+        <span>${t('social.dms_hdr')}</span>
       </div>
     `;
 
     directChannels.forEach(c => {
       const isActive = c.id === pluxActiveChatId;
-      const lastMsg = c.messages && c.messages.length > 0 ? (c.messages[c.messages.length - 1].text || 'Tarjeta adjunta') : 'Sin mensajes aún';
+      const lastMsg = c.messages && c.messages.length > 0 ? (c.messages[c.messages.length - 1].text || t('social.attached_card')) : t('social.no_messages');
       const isPluxy = c.id === 'dm_pluxy';
       const icon = isPluxy ? '<img src="/pet.png" alt="Pluxy" style="width:22px; height:22px; object-fit:contain; display:block;">' : '👤';
       html += `
@@ -790,7 +794,7 @@
     const chat = pluxSocialChats[pluxActiveChatId] || getActiveTripChat();
     if (!chat) return;
 
-    const myName = currentNickname || 'Vos';
+    const myName = currentNickname || t('social.you');
     const now = new Date();
     const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
@@ -830,7 +834,7 @@
       const thinkingMsg = {
         id: 'msg_thinking_' + Date.now(),
         sender: 'Pluxy',
-        text: '✨ Pluxy está escribiendo...',
+        text: t('social.pluxy_typing'),
         time: timeStr,
         color: 'pluxy'
       };
@@ -853,6 +857,7 @@ Estás en el chat de Plux respondiendo a los viajeros como Pluxy, el asistente d
 Contexto del viaje actual: ${destContext}
 Personas: ${numPersonas}. Salida: ${lugarSalida || 'No especificada'}.${weatherCtx}
 IMPORTANTE: Tienes capacidades agenticas completas para modificar el viaje si los viajeros te lo piden. Puedes agregar destinos, actividades, itinerarios, transporte, etc., usando los comandos [ACCION:...].
+Idioma actual de la interfaz (responde en este idioma): ${typeof getCurrentLang === 'function' ? getCurrentLang() : 'es'}.
 Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️.`;
 
         // Gather recent conversation history from this chat channel
@@ -910,7 +915,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
         chat.messages.push({
           id: 'msg_ai_err_' + Date.now(),
           sender: 'Pluxy',
-          text: 'Tuve un pequeño problema de conexión, pero estoy listo para ayudarte ✨.',
+          text: t('social.pluxy_conn_err'),
           time: timeStr,
           color: 'pluxy'
         });
@@ -926,7 +931,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     const chat = pluxSocialChats[pluxActiveChatId] || getActiveTripChat();
     if (!chat) return;
 
-    const myName = currentNickname || 'Vos';
+    const myName = currentNickname || t('social.you');
     const now = new Date();
     const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
@@ -959,7 +964,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     if (pluxActiveChatId && pluxActiveChatId.startsWith('dm_') && pluxActiveChatId !== 'dm_pluxy') {
       const otherNick = pluxActiveChatId.replace('dm_', '').toLowerCase().trim();
       if (typeof registrarConversacionDirecta === 'function') {
-        registrarConversacionDirecta(myName, otherNick, newMsg.text || 'Tarjeta adjunta', timeStr);
+        registrarConversacionDirecta(myName, otherNick, newMsg.text || t('social.attached_card'), timeStr);
       }
     }
   }
@@ -982,7 +987,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     const msg = chat.messages.find(m => m.id === msgId);
     if (!msg || !msg.cardData || !Array.isArray(msg.cardData.options)) return;
 
-    const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Viajero';
+    const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : t('social.collab_traveler_default');
     const opt = msg.cardData.options[optIdx];
     if (!opt) return;
 
@@ -1022,8 +1027,8 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
       const container = document.getElementById('pollOptionsContainer');
       if (container) {
         container.innerHTML = `
-          <input type="text" class="poll-option-input" placeholder="Opción 1" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:9px 12px; color:#fff; font-size:0.88rem;">
-          <input type="text" class="poll-option-input" placeholder="Opción 2" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:9px 12px; color:#fff; font-size:0.88rem;">
+          <input type="text" class="poll-option-input" placeholder="${escapeHtml(t('social.poll_opt_n', { n: 1 }))}" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:9px 12px; color:#fff; font-size:0.88rem;">
+          <input type="text" class="poll-option-input" placeholder="${escapeHtml(t('social.poll_opt_n', { n: 2 }))}" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:9px 12px; color:#fff; font-size:0.88rem;">
         `;
       }
     }
@@ -1043,7 +1048,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'poll-option-input';
-    input.placeholder = `Opción ${count}`;
+    input.placeholder = t('social.poll_opt_n', { n: count });
     input.style.cssText = 'width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:9px 12px; color:#fff; font-size:0.88rem;';
     container.appendChild(input);
     input.focus();
@@ -1054,21 +1059,21 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     const qInput = document.getElementById('pollQuestionInput');
     const question = qInput ? qInput.value.trim() : '';
     if (!question) {
-      if (typeof showToast === 'function') showToast('Escribe una pregunta para la encuesta', 'info');
+      if (typeof showToast === 'function') showToast(t('social.poll_need_question'), 'info');
       return;
     }
     const container = document.getElementById('pollOptionsContainer');
     const inputs = container ? Array.from(container.querySelectorAll('.poll-option-input')) : [];
     const validOptions = inputs.map(inp => inp.value.trim()).filter(Boolean);
     if (validOptions.length < 2) {
-      if (typeof showToast === 'function') showToast('Ingresa al menos 2 opciones de votación', 'info');
+      if (typeof showToast === 'function') showToast(t('social.poll_need_2_opts'), 'info');
       return;
     }
 
     cerrarModalCrearEncuestaChat();
 
     enviarCardChatSocial({
-      introText: 'Nueva encuesta de grupo:',
+      introText: t('social.poll_intro'),
       cardType: 'poll_card',
       cardData: {
         question: question,
@@ -1076,7 +1081,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
       }
     });
 
-    if (typeof showToast === 'function') showToast('Encuesta publicada en el chat', 'success');
+    if (typeof showToast === 'function') showToast(t('social.poll_published_toast'), 'success');
   }
   window.publicarEncuestaChat = publicarEncuestaChat;
 
@@ -1130,8 +1135,8 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     if (tripParticipants.length === 0 && friends.length === 0) {
       container.innerHTML = `
         <div style="background:rgba(255,255,255,0.03); border:1px dashed var(--border); border-radius:14px; padding:14px; text-align:center; color:#94a3b8; font-size:0.82rem;">
-          No tienes otros amigos o compañeros agregados todavía.<br>
-          <span style="color:#38bdf8;">Escribe el @nickname arriba para iniciar una conversación.</span>
+          ${t('social.no_contacts_yet')}<br>
+          <span style="color:#38bdf8;">${t('social.type_nick_hint')}</span>
         </div>
       `;
       return;
@@ -1142,7 +1147,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     if (tripParticipants.length > 0) {
       html += `
         <div style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; margin-bottom:6px;">
-          ✈️ Compañeros de este viaje
+          ${t('social.trip_companions_hdr')}
         </div>
       `;
       tripParticipants.forEach(nick => {
@@ -1153,9 +1158,9 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
             <div class="plux-chat-avatar plux-avatar-${color}" style="width:38px; height:38px; display:flex; align-items:center; justify-content:center;">${initial}</div>
             <div style="flex:1; min-width:0;">
               <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">@${escapeHtml(nick)}</div>
-              <div style="color:#38bdf8; font-size:0.75rem;">Compañero de viaje</div>
+              <div style="color:#38bdf8; font-size:0.75rem;">${t('social.trip_companion_sub')}</div>
             </div>
-            <button class="plux-contact-start-btn">Chatear</button>
+            <button class="plux-contact-start-btn">${t('social.chat_btn')}</button>
           </div>
         `;
       });
@@ -1164,7 +1169,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     if (friends.length > 0) {
       html += `
         <div style="font-size:0.75rem; font-weight:700; color:#a855f7; text-transform:uppercase; letter-spacing:0.5px; margin-top:10px; margin-bottom:6px;">
-          👥 Tus Amigos
+          ${t('social.your_friends_hdr')}
         </div>
       `;
       friends.forEach(nick => {
@@ -1175,9 +1180,9 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
             <div class="plux-chat-avatar plux-avatar-${color}" style="width:38px; height:38px; display:flex; align-items:center; justify-content:center;">${initial}</div>
             <div style="flex:1; min-width:0;">
               <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">@${escapeHtml(nick)}</div>
-              <div style="color:#a855f7; font-size:0.75rem;">Amigo guardado</div>
+              <div style="color:#a855f7; font-size:0.75rem;">${t('social.saved_friend_sub')}</div>
             </div>
-            <button class="plux-contact-start-btn">Chatear</button>
+            <button class="plux-contact-start-btn">${t('social.chat_btn')}</button>
           </div>
         `;
       });
@@ -1192,7 +1197,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     const cleanNick = rawNick.toLowerCase().replace(/[^a-z0-9_]/g, '');
 
     if (!cleanNick) {
-      showToast('Ingresá un nickname válido', 'info');
+      showToast(t('social.enter_valid_nick'), 'info');
       return;
     }
 
@@ -1217,7 +1222,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     // No permitir chat directo con uno mismo
     const myNick = (currentNickname || '').toLowerCase().trim();
     if (myNick && cleanNick === myNick) {
-      showToast('No podés iniciar un chat directo con vos mismo', 'info');
+      showToast(t('social.no_self_dm'), 'info');
       return;
     }
 
@@ -1254,7 +1259,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     }
 
     if (!userExists) {
-      showToast(`El usuario @${targetDisplayName} no existe en Plux ❌`, 'error');
+      showToast(t('social.collab_user_not_found', { nick: targetDisplayName }) + ' ❌', 'error');
       return;
     }
 
@@ -1273,7 +1278,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
 
     cerrarModalNuevaConversacion();
     cambiarCanalSocial(chatId);
-    showToast(`Chat abierto con @${targetDisplayName} ✨`, 'success');
+    showToast(t('social.chat_opened_toast', { nick: targetDisplayName }), 'success');
   }
   window.iniciarChatConUsuario = iniciarChatConUsuario;
 
@@ -1282,7 +1287,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     if (!input) return;
     const val = input.value.trim();
     if (!val) {
-      showToast('Por favor escribe un @nickname o código', 'info');
+      showToast(t('social.enter_nick_or_code'), 'info');
       return;
     }
     iniciarChatConUsuario(val);
@@ -1300,25 +1305,25 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
   function adjuntarEventoAlChat() {
     mostrarMenuAdjuntosChat();
     if (typeof destinos === 'undefined' || destinos.length === 0) {
-      showToast('No hay eventos creados en el viaje aún', 'info');
+      showToast(t('social.no_events_yet'), 'info');
       return;
     }
     const primerDest = destinos[0];
     const primerEvt = primerDest.dias?.[0]?.eventos?.[0];
     if (primerEvt) {
       enviarCardChatSocial({
-        introText: 'Propongo esta actividad para el itinerario:',
+        introText: t('social.propose_act_intro'),
         cardType: 'event_card',
         cardData: {
-          titulo: primerEvt.titulo || 'Paseo / Actividad',
+          titulo: primerEvt.titulo || t('social.act_walk_default'),
           hora: primerEvt.hora || '10:00',
           destino: primerDest.nombre,
-          costo: primerEvt.costo || 'Gratis'
+          costo: primerEvt.costo || t('social.free_cost')
         }
       });
     } else {
       enviarCardChatSocial({
-        introText: 'Destino propuesto para nuestro viaje:',
+        introText: t('social.propose_dest_intro'),
         cardType: 'dest_card',
         cardData: {
           nombre: primerDest.nombre,
@@ -1334,7 +1339,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     if (typeof destinos !== 'undefined' && destinos.length > 0) {
       const dest = destinos[0];
       enviarCardChatSocial({
-        introText: '¡Miren este destino que tenemos en el viaje!',
+        introText: t('social.look_dest_intro'),
         cardType: 'dest_card',
         cardData: {
           nombre: dest.nombre,
@@ -1344,11 +1349,11 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
       });
     } else {
       enviarCardChatSocial({
-        introText: '¿Qué ciudad les gustaría agregar al viaje?',
+        introText: t('social.ask_city_intro'),
         cardType: 'dest_card',
         cardData: {
-          nombre: 'Próximo Destino',
-          pais: 'Por definir'
+          nombre: t('social.next_dest_placeholder'),
+          pais: t('social.tbd_placeholder')
         }
       });
     }
@@ -1358,15 +1363,15 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
   function adjuntarChecklistAlChat() {
     mostrarMenuAdjuntosChat();
     enviarCardChatSocial({
-      introText: '📋 Checklist del viaje para el grupo:',
+      introText: t('social.chk_intro'),
       cardType: 'checklist_card',
       cardData: {
-        titulo: 'Preparativos esenciales',
+        titulo: t('social.chk_title_default'),
         items: [
-          { text: 'Pasaporte / Documentación vigente', done: false },
-          { text: 'Alojamiento confirmado', done: false },
-          { text: 'Equipaje y ropa adecuada', done: false },
-          { text: 'Cargadores y adaptador de corriente', done: false }
+          { text: t('social.chk_item_1'), done: false },
+          { text: t('social.chk_item_2'), done: false },
+          { text: t('social.chk_item_3'), done: false },
+          { text: t('social.chk_item_4'), done: false }
         ]
       }
     });
@@ -1438,15 +1443,15 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      showToast('Por favor selecciona un archivo de imagen válido', 'error');
+      showToast(t('social.invalid_img_toast'), 'error');
       return;
     }
 
-    showToast('Subiendo foto de perfil con Cloudinary... ☁️', 'info');
+    showToast(t('social.uploading_profile_photo'), 'info');
 
     try {
       const photoUrl = await uploadToCloudinary(file);
-      if (!photoUrl) throw new Error('No se pudo procesar la imagen');
+      if (!photoUrl) throw new Error('Image processing failed');
 
       localStorage.setItem('Plux_UserProfile_Photo', photoUrl);
 
@@ -1465,11 +1470,11 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
       }
 
       updateUserButtonDisplay();
-      showToast('¡Foto de perfil actualizada con éxito! ✨', 'success');
+      showToast(t('social.profile_photo_updated'), 'success');
       if (event.target) event.target.value = '';
     } catch (err) {
       console.error('Error subiendo foto de perfil:', err);
-      showToast('Error al actualizar la foto de perfil', 'error');
+      showToast(t('social.profile_photo_err'), 'error');
     }
   }
   window.handleProfilePhotoUpload = handleProfilePhotoUpload;
@@ -1487,36 +1492,37 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      showToast('Por favor selecciona un archivo de imagen', 'error');
+      showToast(t('social.select_img_toast'), 'error');
       return;
     }
 
-    showToast('Subiendo foto con Cloudinary para el chat... ☁️', 'info');
+    showToast(t('social.uploading_chat_photo'), 'info');
 
     try {
       const photoUrl = await uploadToCloudinary(file);
-      if (!photoUrl) throw new Error('Error al procesar la imagen');
+      if (!photoUrl) throw new Error('Image processing failed');
 
-      const rawName = file.name ? file.name.replace(/\.[^/.]+$/, "") : 'Foto del viaje';
+      const rawName = file.name ? file.name.replace(/\.[^/.]+$/, "") : t('social.photo_default_caption');
       enviarCardChatSocial({
-        introText: '📸 Foto compartida:',
+        introText: t('social.shared_photo_intro'),
         cardType: 'photo_card',
         cardData: {
           url: photoUrl,
           caption: rawName
         }
       });
-      showToast('¡Foto enviada al chat! 📸', 'success');
+      showToast(t('social.photo_sent_toast'), 'success');
       if (event.target) event.target.value = '';
     } catch (err) {
       console.error('Error enviando foto al chat:', err);
-      showToast('Error al subir la foto al chat', 'error');
+      showToast(t('social.photo_upload_err'), 'error');
     }
   }
   window.handleChatPhotoUpload = handleChatPhotoUpload;
 
   // --- Photo Lightbox Fullscreen Modal Handlers ---
-  function abrirFotoGrande(url, caption = 'Foto del viaje') {
+  function abrirFotoGrande(url, caption = '') {
+    const resolvedCaption = caption || t('social.photo_default_caption');
     const modal = document.getElementById('modal-foto-lightbox');
     const img = document.getElementById('photoLightboxImg');
     const title = document.getElementById('photoLightboxTitle');
@@ -1524,7 +1530,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     if (!modal || !img) return;
 
     img.src = url;
-    if (title) title.innerText = caption ? `📸 ${caption}` : '📸 Foto del viaje';
+    if (title) title.innerText = `📸 ${resolvedCaption}`;
     if (dl) {
       dl.setAttribute('data-url', url);
       if (dl.tagName === 'A') dl.href = url;

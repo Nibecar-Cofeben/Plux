@@ -121,7 +121,7 @@
     function esDestinoNavegacion(nombre) {
       if (!nombre) return false;
       const n = String(nombre).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-      return /^(en\s+)?navegaci[oó]n\b|^alta\s*mar\b|^at\s*sea\b|^sea\s*day\b|^d[ií]a\s+de\s+navegaci[oó]n/i.test(n);
+      return /^(en\s+)?navegaci[oó]n\b|^alta\s*mar\b|^at\s*sea\b|^sea\s*day\b|^d[ií]a\s+de\s+navegaci[oó]n|^en\s+mer\b|^journ[eé]e\s+en\s+mer\b|^auf\s+see\b|^seetag\b|^in\s+navigazione\b|^giorno\s+di\s+navigazione/i.test(n);
     }
     window.esDestinoNavegacion = esDestinoNavegacion;
 
@@ -387,8 +387,14 @@
       const lang = currentLang || 'es';
       localStorage.setItem('pluxUserLanguage', lang);
       localStorage.setItem('Plux_Lang', lang);
+      document.documentElement.lang = lang;
+      document.title = t('app_title') || 'Plux';
       document.body.className = document.body.className.replace(/lang-\w+/, `lang-${lang}`);
       if (!document.body.className.includes(`lang-${lang}`)) document.body.classList.add(`lang-${lang}`);
+
+      if (typeof window.applyDeclarativeI18n === 'function') {
+        window.applyDeclarativeI18n();
+      }
       
       const langBtn = document.getElementById('langButton');
       if (langBtn) langBtn.textContent = lang.toUpperCase();
@@ -438,7 +444,7 @@
       ph('traveler-chip-input', 'quienes_van_ph');
       el('fechaInicioLabel', 'fecha_inicio_label');
       el('vueltaLabel', 'vuelta_label');
-      ph('vuelta', 'vuelta_desc_ph');
+      ph('vuelta', 'editor.vuelta_ph');
       el('btnAgregarCostoVuelta', 'btn_costo_vuelta');
       el('settHeaderLabel', 'settings_header');
       el('addDestBtn', 'add_dest_button');
@@ -450,9 +456,9 @@
       el('tabGuardadosBtn', 'tab_saved');
       el('tabPlantillasBtn', 'tab_templates');
       ph('nombreViaje', 'save_trip_placeholder');
-      ph('nombrePlantilla', 'nombre_plantilla');
+      ph('nombrePlantilla', 'templates.name_ph');
       el('guardarViajeBtn', 'save_trip_button');
-      el('guardarPlantillaBtn', 'guardar_plantilla');
+      el('guardarPlantillaBtn', 'templates.save_btn');
       el('importarBtn', 'importar_btn');
       el('exportarBtn', 'exportar_btn');
       el('sharedTripsTitle', 'shared_trips_title');
@@ -463,27 +469,21 @@
       // Summary (Resumen)
       el('summaryTitle', 'summary_title');
       el('pdfBtn', 'pdf_btn');
-      el('shareCardBtn', 'share_social_card_btn');
+      el('shareCardBtn', 'summary.story_btn');
       el('calendarBtn', 'calendar_btn');
       el('compartirBtn', 'compartir_btn');
       el('mapaResumenBtn', 'mapa_btn');
-      el('toggleVistaBtn', 'timeline_view_btn');
+      el('toggleVistaBtn', typeof vistaTimeline !== 'undefined' && vistaTimeline ? 'summary.cards_btn' : 'summary.timeline_btn');
 
-      // Tools Panel & Modals
+      // Tools Panel & Modals (buttons with <i> icons are handled by inner <span data-i18n>)
       el('herramientasTitle', 'herramientas_title');
       el('calendarioTitle', 'calendario_title');
-      el('btnCalendario', 'calendario_title');
-      el('btnMapa', 'mapa_btn');
-      el('btnClima', 'clima_btn');
       el('climaTitle', 'clima_title');
       el('climaSearchBtn', 'clima_search');
       ph('clima-search-input', 'clima_placeholder');
-      el('btnConversor', 'conversor_title');
       el('conversorTitle', 'conversor_title');
       el('conversorBtn', 'conversor_btn');
-      el('btnTraductor', 'btn_traductor');
       el('traductorTitle', 'traductor_title');
-      el('btnPreferencias', 'preferencias_btn');
       el('btnViajeActivo', 'viaje_activo_btn');
       el('viajeActivoTitle', 'viaje_activo_modal_title');
       el('checklistTitle', 'checklist_title');
@@ -492,6 +492,19 @@
       el('joinHintHerramientas', 'join_invite');
       el('joinBtnHerramientas', 'join_btn');
       ph('join-code-input-herramientas', 'join_placeholder');
+
+      // Sync translator selected labels with active language
+      const fromCode = document.getElementById('trad-lang-from')?.value;
+      const toCode = document.getElementById('trad-lang-to')?.value;
+      if (fromCode) {
+        const lblFrom = document.getElementById('trad-label-from');
+        const k = fromCode === 'autodetect' ? 'translator.lang_auto' : 'translator.lang_' + fromCode;
+        if (lblFrom) lblFrom.textContent = t(k);
+      }
+      if (toCode) {
+        const lblTo = document.getElementById('trad-label-to');
+        if (lblTo) lblTo.textContent = t('translator.lang_' + toCode);
+      }
 
       // Collaborators
       el('colabTitle', 'colab_title');
@@ -506,10 +519,6 @@
       el('anteriorBtn', 'present_prev');
       el('siguienteBtn', 'present_next');
       el('mapTitle', 'map_title');
-      const dTitle = document.getElementById('descubrirTitle');
-      if (dTitle) {
-        dTitle.innerHTML = '<i class="fa-solid fa-compass" style="color:var(--verde); margin-right:8px;"></i>' + (t('descubrir_title') || 'Descubrir');
-      }
       el('eventosDiaTitle', 'eventos_dia_title');
       if (document.body.classList.contains('theme-ares')) {
         el('ares-esc-banner', 'ares_esc');
@@ -517,7 +526,6 @@
 
       // Pluxy AI Assistant
       el('pluxyBtnText', 'pluxy_name');
-      el('pluxyAssistant', 'pluxy_assistant');
       el('pluxyHint', 'pluxy_hint');
       ph('chat-input', 'chat_input_ph');
 
@@ -2068,14 +2076,14 @@
     window.toggleMobileMoreMenu = toggleMobileMoreMenu;
 
     const PLUX_THEMES = [
-      { id: 'theme-claro', name: 'Claro' },
-      { id: 'theme-oscuro', name: 'Oscuro' },
-      { id: 'theme-tokyo', name: 'Tokyo Night' },
-      { id: 'theme-grid', name: 'The Grid' },
-      { id: 'theme-terminal', name: 'Terminal' },
-      { id: 'theme-starship', name: 'Starship' },
-      { id: 'theme-ares', name: 'Ares' },
-      { id: 'theme-minecraft', name: 'Minecraft' }
+      { id: 'theme-claro', name: 'Claro', i18nKey: 'temas.claro' },
+      { id: 'theme-oscuro', name: 'Oscuro', i18nKey: 'temas.oscuro' },
+      { id: 'theme-tokyo', name: 'Tokyo Night', i18nKey: 'temas.tokyo' },
+      { id: 'theme-grid', name: 'The Grid', i18nKey: 'temas.grid' },
+      { id: 'theme-terminal', name: 'Terminal', i18nKey: 'temas.terminal' },
+      { id: 'theme-starship', name: 'Starship', i18nKey: 'temas.starship' },
+      { id: 'theme-ares', name: 'Ares', i18nKey: 'temas.ares' },
+      { id: 'theme-minecraft', name: 'Minecraft', i18nKey: 'temas.minecraft' }
     ];
 
     function toggleLangDropdown(e) {
@@ -2132,8 +2140,9 @@
       if (!td) return;
       td.innerHTML = PLUX_THEMES.map(th => {
         const isActive = currentTheme === th.id;
+        const label = (th.i18nKey && typeof t === 'function') ? t(th.i18nKey) : th.name;
         return `
-          <div class="theme-option ${isActive ? 'active' : ''}" data-theme="${th.id}" onclick="window.setTheme('${th.id}')">${th.name}</div>
+          <div class="theme-option ${isActive ? 'active' : ''}" data-theme="${th.id}" onclick="window.setTheme('${th.id}')">${label}</div>
         `;
       }).join('');
     }
@@ -2311,10 +2320,11 @@
       const curr = targetCurrency || getMonedaActiva();
       const val = parseFloat(amount) || 0;
       const symbol = getSimboloMoneda(curr);
+      const loc = typeof getLangLocale === 'function' ? getLangLocale() : 'es-ES';
       if (curr === 'ARS' || curr === 'JPY' || curr === 'CLP' || curr === 'COP') {
-        return `${symbol} ${Math.round(val).toLocaleString('es-ES')}`;
+        return `${symbol} ${Math.round(val).toLocaleString(loc)}`;
       }
-      return `${symbol} ${val.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+      return `${symbol} ${val.toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
     }
     window.formatMoneda = formatMoneda;
 
@@ -2332,7 +2342,7 @@
       const currBtn = document.getElementById('currencyButton');
       if (currBtn) {
         currBtn.textContent = code;
-        currBtn.title = `Moneda: ${code} (${getSimboloMoneda(code)})`;
+        currBtn.title = t('currency_tooltip', { code, symbol: getSimboloMoneda(code) });
       }
       const hdrTxt = document.getElementById('headerCurrencyTxt');
       if (hdrTxt) {
@@ -2355,7 +2365,7 @@
       if (sync && typeof autoSave === 'function') {
         autoSave();
       }
-      if (sync) showToast(`Moneda activa: ${code} (${getSimboloMoneda(code)})`, 'info');
+      if (sync) showToast(t('currency_active_toast', { code, symbol: getSimboloMoneda(code) }), 'info');
     }
     window.setMonedaActiva = setMonedaActiva;
 
@@ -2389,11 +2399,18 @@
     function renderCurrencyDropdown() {
       const activeCurr = getMonedaActiva();
       const allDropdowns = document.querySelectorAll('.currency-dropdown');
+      const getCurrName = (c) => {
+        if (typeof t === 'function') {
+          const translated = t(`currencies.${c.code}`);
+          if (translated && translated !== `currencies.${c.code}`) return translated;
+        }
+        return c.name;
+      };
       const optionsHtml = PLUX_CURRENCIES.map(c => {
         const isActive = activeCurr === c.code;
         return `
           <div class="currency-option ${isActive ? 'active' : ''}" onclick="window.setMonedaActiva('${c.code}')">
-            <span>${c.name} (${c.symbol})</span>
+            <span>${getCurrName(c)} (${c.symbol})</span>
             <span class="currency-badge">${c.badge}</span>
           </div>
         `;
@@ -2406,7 +2423,7 @@
       const sel = document.getElementById('monedaViajeSelect');
       if (sel) {
         sel.innerHTML = PLUX_CURRENCIES.map(c => {
-          return `<option value="${c.code}" ${c.code === activeCurr ? 'selected' : ''}>${c.code} (${c.symbol}) - ${c.name}</option>`;
+          return `<option value="${c.code}" ${c.code === activeCurr ? 'selected' : ''}>${c.code} (${c.symbol}) - ${getCurrName(c)}</option>`;
         }).join('');
       }
     }
@@ -3032,12 +3049,28 @@
       // Aplicar textos en la interfaz
       if (typeof applyGlobalI18n === 'function') applyGlobalI18n();
       if (typeof applyCuentaModalI18n === 'function') applyCuentaModalI18n();
+      if (typeof renderThemeDropdown === 'function') renderThemeDropdown();
+      if (typeof renderCurrencyDropdown === 'function') renderCurrencyDropdown();
+      const currBtn = document.getElementById('currencyButton');
+      if (currBtn) {
+        const activeCode = typeof getMonedaActiva === 'function' ? getMonedaActiva() : 'EUR';
+        currBtn.title = t('currency_tooltip', { code: activeCode, symbol: typeof getSimboloMoneda === 'function' ? getSimboloMoneda(activeCode) : '€' });
+      }
       if (typeof renderDestinos === 'function' && document.getElementById('app') && document.getElementById('app').style.display !== 'none') {
         renderDestinos();
       }
       if (typeof renderTripLists === 'function') renderTripLists();
-      if (typeof renderResumen === 'function' && document.getElementById('modal-resumen') && document.getElementById('modal-resumen').style.display === 'flex') {
+      if (typeof renderResumen === 'function' && document.getElementById('pantalla-resumen') && document.getElementById('pantalla-resumen').style.display !== 'none') {
         renderResumen();
+      }
+      if (typeof renderChecklist === 'function' && document.getElementById('modal-checklist')?.style.display !== 'none') {
+        renderChecklist();
+      }
+      if (typeof renderCalendario === 'function' && document.getElementById('modal-calendario')?.style.display !== 'none') {
+        renderCalendario();
+      }
+      if (typeof window.renderEmbajadoresHome === 'function') {
+        window.renderEmbajadoresHome();
       }
 
       // Sincronizar en Firestore si el usuario está autenticado
@@ -3337,7 +3370,7 @@
 
     function getTripParticipants() {
       const participants = new Set();
-      const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Vos';
+      const myNick = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : t('social.you');
       participants.add(myNick);
 
       if (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros)) {
@@ -3991,11 +4024,12 @@
 
     async function generarChecklistIA() {
       const body = document.getElementById('checklist-body');
-      body.innerHTML = '<p style="color:var(--gris);text-align:center;padding:30px;"> Generando checklist personalizada...</p>';
+      body.innerHTML = `<p style="color:var(--gris);text-align:center;padding:30px;">${t('common.loading')}</p>`;
       
-      const destNames = destinos.map(d => d.nombre).join(', ') || 'destino genérico';
+      const destNames = destinos.map(d => d.nombre).join(', ') || 'destination';
       const personas = numPersonas || 1;
-      const prompt = `Genera una checklist de viaje personalizada para ${personas} persona(s) que viajan a: ${destNames}. Crea items categorizados en: Documentos, Ropa, Electrónica, Salud, Dinero, Miscelánea. Responde SOLO con JSON: {"categorias":[{"nombre":"Documentos","emoji":"Doc","items":["Pasaporte","DNI"]}]}`;
+      const langName = typeof window.getLangName === 'function' ? window.getLangName() : 'Español';
+      const prompt = `Generate a personalized travel packing checklist in ${langName} for ${personas} traveler(s) going to: ${destNames}. Create categorized items (Documents, Clothing, Electronics, Health, Money, Misc) written in ${langName}. Respond ONLY with valid JSON: {"categorias":[{"nombre":"Documents","emoji":"Doc","items":["Passport","ID card"]}]}`;
       
       try {
         const text = await callAI(prompt);
@@ -4010,21 +4044,18 @@
         });
         localStorage.setItem('PluxChecklist_V2', JSON.stringify(checklistData));
         renderChecklist();
-        showToast('Checklist personalizada generada', 'success');
+        showToast(t('common.success'), 'success');
       } catch(e) {
-        // Fallback: static checklist
         checklistData = [
-          { categoria: 'Documentos', emoji: 'Item', item: 'Pasaporte / DNI', done: false, id: 1 },
-          { categoria: 'Documentos', emoji: 'Item', item: 'Seguro de viaje', done: false, id: 2 },
-          { categoria: 'Documentos', emoji: 'Item', item: 'Reservas impresas / PDF', done: false, id: 3 },
-          { categoria: 'Electrónica', emoji: 'Item', item: 'Cargador y adaptador de corriente', done: false, id: 4 },
-          { categoria: 'Electrónica', emoji: 'Item', item: 'Auriculares', done: false, id: 5 },
-          { categoria: 'Salud', emoji: 'Item', item: 'Medicamentos habituales', done: false, id: 6 },
-          { categoria: 'Salud', emoji: 'Item', item: 'Protector solar', done: false, id: 7 },
-          { categoria: 'Dinero', emoji: 'Item', item: 'Tarjetas de crédito/débito', done: false, id: 8 },
-          { categoria: 'Dinero', emoji: 'Item', item: 'Efectivo en moneda local', done: false, id: 9 },
-          { categoria: 'Miscelánea', emoji: 'Item', item: 'Botella de agua reutilizable', done: false, id: 10 },
-          { categoria: 'Miscelánea', emoji: 'Item', item: 'Candado para equipaje', done: false, id: 11 },
+          { categoria: 'Documents', emoji: '📄', item: 'Passport / ID', done: false, id: 1 },
+          { categoria: 'Documents', emoji: '📄', item: 'Travel insurance', done: false, id: 2 },
+          { categoria: 'Documents', emoji: '📄', item: 'Bookings / PDFs', done: false, id: 3 },
+          { categoria: 'Tech', emoji: '🔌', item: 'Charger & adapter', done: false, id: 4 },
+          { categoria: 'Tech', emoji: '🎧', item: 'Headphones', done: false, id: 5 },
+          { categoria: 'Health', emoji: '🩺', item: 'Personal medication', done: false, id: 6 },
+          { categoria: 'Health', emoji: '🧴', item: 'Sunscreen', done: false, id: 7 },
+          { categoria: 'Money', emoji: '💳', item: 'Cards & local cash', done: false, id: 8 },
+          { categoria: 'Misc', emoji: '🎒', item: 'Reusable water bottle', done: false, id: 9 },
         ];
         renderChecklist();
       }
@@ -4034,7 +4065,7 @@
       const body = document.getElementById('checklist-body');
       const done = checklistData.filter(i => i.done).length;
       const total = checklistData.length;
-      document.getElementById('checklist-count').textContent = `${done} de ${total} completados`;
+      document.getElementById('checklist-count').textContent = `${done} / ${total}`;
       document.getElementById('checklist-progress-bar').style.width = total > 0 ? `${(done/total)*100}%` : '0%';
       
       const cats = {};
@@ -4182,7 +4213,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       // Validar email
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showToast('Email inválido', 'error');
+        showToast(t('support_invalid_email'), 'error');
         return;
       }
 
@@ -4194,7 +4225,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         other: t('support_other')
       };
 
-      const tipoLabel = tipoMap[tipo] || 'Consulta';
+      const tipoLabel = tipoMap[tipo] || t('support_inquiry_fallback');
 
       // 1. Guardar ticket directamente en Cloud Firestore ('soporte')
       let firestoreSaved = false;
@@ -4531,7 +4562,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (spotlight) spotlight.style.display = 'none';
       if (tooltip) tooltip.style.display = 'none';
       
-      showToast('¡Tour completado! 🎉', 'success');
+      showToast(t('tour_completed_toast'), 'success');
     }
 
     // Make tour functions globally accessible
@@ -5139,8 +5170,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       chatHistory.push({ role: 'user', content: texto });
       const weatherCtx = await getWeatherContextForTrip();
       const appLang = (typeof currentLang === 'string' && currentLang) ? currentLang : 'es';
+      const langName = typeof window.getLangName === 'function' ? window.getLangName(appLang) : appLang;
       const messages = [
-        { role: 'system', content: `${CHAT_SYSTEM}\n\nContexto del viaje: ${destContext} Personas: ${numPersonas}. Presupuesto: no especificado.${weatherCtx}\nIdioma preferido de la app: ${appLang}. RECORDATORIO: Si el mensaje del usuario está en inglés o cualquier otro idioma, responde en ese mismo idioma.` },
+        { role: 'system', content: `${CHAT_SYSTEM}\n\nTrip context: ${destContext} Travelers: ${numPersonas}.${weatherCtx}\nActive UI language: ${langName} (${appLang}). CRITICAL: Reply in ${langName} (or in the user's message language if they explicitly write in a different language).` },
         ...chatHistory.slice(-8)
       ];
 
@@ -5158,9 +5190,16 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } catch(e) {
         const typingEl = document.getElementById(typingId);
         if (typingEl) typingEl.remove();
-        agregarMensajeChat('ai', 'No pude conectar con la IA. Verificá tu conexión.');
+        agregarMensajeChat('ai', t('common.offline_no_signal'));
       }
     }
+
+    window.chatSendQuick = function(key) {
+      const promptText = t('pluxy.prompt_' + key);
+      if (promptText && promptText !== 'pluxy.prompt_' + key) {
+        chatSend(promptText);
+      }
+    };
 
     function agregarMensajeChat(tipo, texto, id) {
       const container = document.getElementById('chat-messages');
@@ -5393,7 +5432,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         }
 
         dropdown.style.display = 'block';
-        dropdown.innerHTML = `<div class="city-autocomplete-loading">Buscando "${escapeHtml(val)}"...</div>`;
+        dropdown.innerHTML = `<div class="city-autocomplete-loading">${t('city_searching', { query: escapeHtml(val) })}</div>`;
 
         timer = setTimeout(async () => {
           try {
@@ -5620,55 +5659,52 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     // ================== QUICK START GUIDE ==================
     function mostrarGuiaComoEmpezar() {
       cerrarSupport();
-      let modal = document.getElementById('modal-como-empezar');
-      if (!modal) {
-        const html = `
-          <div id="modal-como-empezar" class="modal-como-empezar" onclick="if(event.target===this)this.remove()">
-            <div class="como-empezar-content">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="color:var(--verde); margin:0;">🚀 Cómo empezar en Plux</h2>
-                <span onclick="document.getElementById('modal-como-empezar').remove()" style="cursor:pointer; font-size:2rem; color:var(--gris);">×</span>
-              </div>
-              
-              <div class="como-empezar-step">
-                <div class="como-empezar-step-num">1</div>
-                <div class="como-empezar-step-text">
-                  <h4>Elige tu Origen y Fecha</h4>
-                  <p>Indica desde dónde saldrás y cuántas personas viajan. La fecha sirve para calcular automáticamente el clima exacto.</p>
-                </div>
-              </div>
-
-              <div class="como-empezar-step">
-                <div class="como-empezar-step-num">2</div>
-                <div class="como-empezar-step-text">
-                  <h4>Añade tus Destinos</h4>
-                  <p>Escribe cualquier ciudad del mundo. El selector inteligente te sugerirá el país exacto (ej. Roma, IT vs Rome, US).</p>
-                </div>
-              </div>
-
-              <div class="como-empezar-step">
-                <div class="como-empezar-step-num">3</div>
-                <div class="como-empezar-step-text">
-                  <h4>Genera con IA (Pluxy)</h4>
-                  <p>Toca 🪄 Generar itinerario en cualquier destino o habla con Pluxy para armar actividades, alojamientos y transportes automáticamente.</p>
-                </div>
-              </div>
-
-              <div class="como-empezar-step">
-                <div class="como-empezar-step-num">4</div>
-                <div class="como-empezar-step-text">
-                  <h4>Invita a tus Amigos</h4>
-                  <p>Comparte el código único de tu viaje para planificar en tiempo real con tu familia o amigos sin complicaciones.</p>
-                </div>
-              </div>
-
-              <button onclick="document.getElementById('modal-como-empezar').remove(); document.getElementById('startBtn').click();" class="btn-add-feed" style="width:100%; padding:15px; margin-top:15px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; font-size:1.05rem;">¡Empezar mi viaje ahora!</button>
+      const existing = document.getElementById('modal-como-empezar');
+      if (existing) existing.remove();
+      const html = `
+        <div id="modal-como-empezar" class="modal-como-empezar" onclick="if(event.target===this)this.remove()">
+          <div class="como-empezar-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h2 style="color:var(--verde); margin:0;">🚀 ${escapeHtml(t('tour_guide_title'))}</h2>
+              <span onclick="document.getElementById('modal-como-empezar').remove()" style="cursor:pointer; font-size:2rem; color:var(--gris);">×</span>
             </div>
-          </div>`;
-        document.body.insertAdjacentHTML('beforeend', html);
-      } else {
-        modal.style.display = 'flex';
-      }
+            
+            <div class="como-empezar-step">
+              <div class="como-empezar-step-num">1</div>
+              <div class="como-empezar-step-text">
+                <h4>${escapeHtml(t('tour_s1_t'))}</h4>
+                <p>${escapeHtml(t('tour_s1_d'))}</p>
+              </div>
+            </div>
+
+            <div class="como-empezar-step">
+              <div class="como-empezar-step-num">2</div>
+              <div class="como-empezar-step-text">
+                <h4>${escapeHtml(t('tour_s2_t'))}</h4>
+                <p>${escapeHtml(t('tour_s2_d'))}</p>
+              </div>
+            </div>
+
+            <div class="como-empezar-step">
+              <div class="como-empezar-step-num">3</div>
+              <div class="como-empezar-step-text">
+                <h4>${escapeHtml(t('tour_s3_t'))}</h4>
+                <p>${escapeHtml(t('tour_s3_d'))}</p>
+              </div>
+            </div>
+
+            <div class="como-empezar-step">
+              <div class="como-empezar-step-num">4</div>
+              <div class="como-empezar-step-text">
+                <h4>${escapeHtml(t('tour_s4_t'))}</h4>
+                <p>${escapeHtml(t('tour_s4_d'))}</p>
+              </div>
+            </div>
+
+            <button onclick="document.getElementById('modal-como-empezar').remove(); document.getElementById('startBtn').click();" class="btn-add-feed" style="width:100%; padding:15px; margin-top:15px; background:linear-gradient(135deg, var(--verde), var(--azul)); color:black; font-weight:bold; font-size:1.05rem;">${escapeHtml(t('tour_start_btn'))}</button>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', html);
     }
 
     // ================== INICIALIZACIÓN ==================
@@ -5919,10 +5955,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             }
             activeNotificationTimeouts.forEach(t => clearTimeout(t));
             activeNotificationTimeouts = [];
-            showToast('Modo viaje activo desactivado', 'info');
+            showToast(t('viaje_activo_off_toast'), 'info');
         } else {
             verificarViajeActivo(true);
-            showToast('Modo viaje activo activado ✨', 'success');
+            showToast(t('viaje_activo_on_toast'), 'success');
         }
     }
     
@@ -5943,9 +5979,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             tieneContenido = true;
             html += `
               <div style="margin-bottom:20px; padding:18px; background:rgba(56,189,248,0.08); border-radius:12px; border-left:4px solid #38bdf8;">
-                <h3 style="color:#38bdf8; margin:0 0 8px 0; font-size:1.2rem;"><i class="fa-solid fa-ship" style="margin-right:8px;"></i>${escapeHtml(slot.transitLabel || 'En navegación / tránsito')} hacia ${escapeHtml(slot.destName || '')}</h3>
+                <h3 style="color:#38bdf8; margin:0 0 8px 0; font-size:1.2rem;"><i class="fa-solid fa-ship" style="margin-right:8px;"></i>${escapeHtml(slot.transitLabel || t('editor.in_navigation'))} → ${escapeHtml(slot.destName || '')}</h3>
                 <p style="color:var(--gris); margin:0; font-size:0.9rem;">
-                  ${slot.dateLabel ? `<strong>${escapeHtml(slot.dateLabel)}</strong> · ` : ''}Día de tránsito ${slot.transitIndex + 1} de ${slot.transitTotal}. Próxima parada: <strong>${escapeHtml(slot.destName || '')}</strong>.
+                  ${slot.dateLabel ? `<strong>${escapeHtml(slot.dateLabel)}</strong> · ` : ''}${t('day_prefix')} ${slot.transitIndex + 1}/${slot.transitTotal} · <strong>${escapeHtml(slot.destName || '')}</strong>.
                 </p>
               </div>`;
             content.innerHTML = html;
@@ -5960,24 +5996,24 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 tieneContenido = true;
                 const shared = resolveSharedBookingForDest(dIdx);
                 html += `<div style="margin-bottom:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; border-left:4px solid var(--verde);">`;
-                html += `<h3 style="color:var(--verde); margin:0 0 15px 0; font-size:1.3rem;">📍 ${escapeHtml(d.nombre)} <small style="color:var(--gris); font-size:0.85rem;">(Día ${slot.diaNum} en destino${slot.dateLabel ? ' · ' + escapeHtml(slot.dateLabel) : ''})</small></h3>`;
+                html += `<h3 style="color:var(--verde); margin:0 0 15px 0; font-size:1.3rem;">📍 ${escapeHtml(d.nombre)} <small style="color:var(--gris); font-size:0.85rem;">(${t('day_prefix')} ${slot.diaNum}${slot.dateLabel ? ' · ' + escapeHtml(slot.dateLabel) : ''})</small></h3>`;
 
                 // TRANSPORTE LLEGADA / RESERVA COMPARTIDA
                 if (d.tramos && d.tramos.length > 0) {
                     html += `<div style="margin-bottom:12px;">`;
-                    html += `<p style="color:var(--rosa); font-weight:bold; font-size:0.9rem; margin:0;">🚗 TRANSPORTE:</p>`;
+                    html += `<p style="color:var(--rosa); font-weight:bold; font-size:0.9rem; margin:0;">🚗 ${t('budget.cat_transport').toUpperCase()}:</p>`;
                     d.tramos.forEach(tramo => {
                         html += `<p style="color:var(--gris); margin:4px 0; font-size:0.85rem;">${escapeHtml(tramo.origen || '')} → ${escapeHtml(tramo.destino || d.nombre)} | ${escapeHtml(tramo.medio || '')} (${fmt(tramo.precio)})</p>`;
                     });
                     html += `</div>`;
                 } else if (shared && shared.tramo) {
-                    html += `<div style="margin-bottom:12px; padding:8px 10px; background:rgba(56,189,248,0.08); border-radius:8px; font-size:0.85rem; color:var(--gris);">Cubierto por <strong style="color:var(--texto);">${escapeHtml(shared.tramo.medio || 'Reserva compartida')}</strong>${shared.tramo.alojamiento ? ' · ' + escapeHtml(shared.tramo.alojamiento) : ''}</div>`;
+                    html += `<div style="margin-bottom:12px; padding:8px 10px; background:rgba(56,189,248,0.08); border-radius:8px; font-size:0.85rem; color:var(--gris);">${t('editor.covered_by')} <strong style="color:var(--texto);">${escapeHtml(shared.tramo.medio || t('editor.shared_booking'))}</strong>${shared.tramo.alojamiento ? ' · ' + escapeHtml(shared.tramo.alojamiento) : ''}</div>`;
                 }
 
                 // ALOJAMIENTO
                 if (dia.alojamiento) {
                     html += `<div style="margin-bottom:12px; padding:10px; background:rgba(16,185,129,0.1); border-radius:8px;">`;
-                    html += `<p style="color:var(--verde); font-weight:bold; font-size:0.9rem; margin:0;">🏨 ALOJAMIENTO:</p>`;
+                    html += `<p style="color:var(--verde); font-weight:bold; font-size:0.9rem; margin:0;">🏨 ${t('accommodation').toUpperCase()}:</p>`;
                     html += `<p style="color:var(--gris); margin:4px 0; font-size:0.85rem;">${escapeHtml(dia.alojamiento.nombre || '')} - ${fmt(dia.alojamiento.precioTotal)}</p>`;
                     html += `</div>`;
                 }
@@ -5985,10 +6021,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 // EVENTOS
                 if (dia.eventos && dia.eventos.length > 0) {
                     html += `<div style="margin-bottom:12px;">`;
-                    html += `<p style="color:var(--azul); font-weight:bold; font-size:0.9rem; margin:0;">📅 EVENTOS:</p>`;
+                    html += `<p style="color:var(--azul); font-weight:bold; font-size:0.9rem; margin:0;">📅 ${t('summary.badge_activities')}:</p>`;
                     dia.eventos.forEach(ev => {
                         eventosHoy++;
-                        const horaDisplay = ev.hora ? `<strong style="color:var(--rosa); font-size:1rem;">${escapeHtml(ev.hora)}</strong>` : '<strong style="color:var(--gris);">Sin hora</strong>';
+                        const horaDisplay = ev.hora ? `<strong style="color:var(--rosa); font-size:1rem;">${escapeHtml(ev.hora)}</strong>` : '<strong style="color:var(--gris);">--:--</strong>';
                         html += `
                         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin:8px 0; border-left:3px solid var(--rosa);">
                             ${horaDisplay} - <strong>${escapeHtml(ev.titulo || '')}</strong>
@@ -7062,23 +7098,23 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const transitDays = (destIdx > 0 && Number(d.diasTransitoPrevio) > 0) ? Math.floor(Number(d.diasTransitoPrevio)) : 0;
         if (transitDays > 0) {
           const transitSlots = schedule.filter(s => s.isTransit && s.destId === d.id);
-          const transitLabel = (d.transitoEtiqueta || '').trim() || 'En navegación';
+          const transitLabel = (d.transitoEtiqueta || '').trim() || t('editor.in_navigation');
           let rangeLabel = '';
           if (transitSlots.length === 1 && transitSlots[0].dateLabel) {
             rangeLabel = transitSlots[0].dateLabel;
           } else if (transitSlots.length > 1 && transitSlots[0].dateLabel && transitSlots[transitSlots.length - 1].dateLabel) {
             rangeLabel = `${transitSlots[0].dateLabel} – ${transitSlots[transitSlots.length - 1].dateLabel}`;
           }
-          const transitIconClass = /navegaci[oó]n|mar|crucero|ferry/i.test(transitLabel) ? 'fa-ship' : (/tren|train/i.test(transitLabel) ? 'fa-train' : 'fa-route');
+          const transitIconClass = /navegaci[oó]n|mar|crucero|ferry|sea|navigation|meer|see|navigazione|mer/i.test(transitLabel) ? 'fa-ship' : (/tren|train|zug|treno/i.test(transitLabel) ? 'fa-train' : 'fa-route');
           const connectorEl = document.createElement('div');
           connectorEl.className = 'plux-transit-connector';
           connectorEl.dataset.destId = d.id;
           connectorEl.innerHTML = `
-            <span class="plux-transit-connector-pill" onclick="window.abrirLogisticaParada(${d.id})" title="Editar días en tránsito">
+            <span class="plux-transit-connector-pill" onclick="window.abrirLogisticaParada(${d.id})" title="${escapeHtml(t('editor.transit_days_edit'))}">
               <i class="fa-solid ${transitIconClass}"></i>
-              <span>${transitDays} ${transitDays === 1 ? 'día' : 'días'} · ${escapeHtml(transitLabel)}${rangeLabel ? ` · ${escapeHtml(rangeLabel)}` : ''}</span>
+              <span>${transitDays} ${transitDays === 1 ? t('common.day_singular') : t('common.day_plural')} · ${escapeHtml(transitLabel)}${rangeLabel ? ` · ${escapeHtml(rangeLabel)}` : ''}</span>
             </span>
-            <button type="button" class="plux-transit-remove-btn" onclick="event.stopPropagation(); window.actualizarTransitoPrevio(${d.id}, 0)" title="Quitar días en tránsito">×</button>
+            <button type="button" class="plux-transit-remove-btn" onclick="event.stopPropagation(); window.actualizarTransitoPrevio(${d.id}, 0)" title="${escapeHtml(t('editor.transit_days_remove'))}">×</button>
           `;
           cont.appendChild(connectorEl);
         }
@@ -7122,9 +7158,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const transportIconClass = isSeaDay ? 'fa-ship' : getTransportIconForMedio(effectiveMedio);
 
         const stopTypeMap = {
-          embarque: { cls: 'plux-stop-badge--embarque', label: 'Embarque' },
-          escala: { cls: 'plux-stop-badge--escala', label: 'Escala' },
-          desembarque: { cls: 'plux-stop-badge--desembarque', label: 'Desembarque' }
+          embarque: { cls: 'plux-stop-badge--embarque', label: t('editor.stop_embarque') },
+          escala: { cls: 'plux-stop-badge--escala', label: t('editor.stop_escala') },
+          desembarque: { cls: 'plux-stop-badge--desembarque', label: t('editor.stop_desembarque') }
         };
         const stopTypeInfo = d.tipoParada && stopTypeMap[d.tipoParada] ? stopTypeMap[d.tipoParada] : null;
         const stopTypeBadge = stopTypeInfo
@@ -7138,32 +7174,32 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
         const isTenderStop = /tender|bote auxiliar/i.test(d.notaParada || '');
         const tenderBadge = isTenderStop
-          ? `<span class="plux-stop-badge plux-stop-badge--tender" title="${escapeHtml(d.notaParada)}">Bote auxiliar (tenders)</span>`
+          ? `<span class="plux-stop-badge plux-stop-badge--tender" title="${escapeHtml(d.notaParada)}">${t('editor.tender_badge')}</span>`
           : '';
 
-        const addTramoBtnText = sharedBooking ? '+ Agregar traslado local opcional' : t('agregar_tramo');
+        const addTramoBtnText = sharedBooking ? t('editor.add_local_transfer') : t('agregar_tramo');
 
         div.innerHTML = `
           <div class="destino-header" onclick="toggleEditorDestino(${d.id}, event)" style="cursor:pointer; user-select:none;">
             <div class="destino-header-top-row" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;">
               <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden;">
-                <span class="drag-handle drag-handle-dest" data-drag-type="dest" data-dest-id="${d.id}" data-dest-idx="${destIdx}" title="Arrastra o mantén presionado para reordenar destino" onclick="event.stopPropagation()">⠿</span>
-                <div class="bubble-name" style="flex-shrink:0;">${isSeaDay ? 'MAR' : d.nombre.slice(0,3).toUpperCase()}</div>
+                <span class="drag-handle drag-handle-dest" data-drag-type="dest" data-dest-id="${d.id}" data-dest-idx="${destIdx}" title="${escapeHtml(t('editor.drag_dest'))}" onclick="event.stopPropagation()">⠿</span>
+                <div class="bubble-name" style="flex-shrink:0;">${isSeaDay ? 'SEA' : d.nombre.slice(0,3).toUpperCase()}</div>
                 <h2 style="margin:0; font-size:1.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${escapeHtml(d.nombre)}</h2>
               </div>
               <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                <span id="editor-dest-chev-${d.id}" class="chevron-indicator" style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,0.06); transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.75rem;" title="Plegar / Expandir">▼</span>
-                <button class="close-icon" onclick="event.stopPropagation(); eliminarDestino(${d.id});" style="font-size:1.8rem; line-height:1; padding:0 4px;" title="Eliminar destino">×</button>
+                <span id="editor-dest-chev-${d.id}" class="chevron-indicator" style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,0.06); transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.75rem;" title="${escapeHtml(t('editor.collapse_toggle_title'))}">▼</span>
+                <button class="close-icon" onclick="event.stopPropagation(); eliminarDestino(${d.id});" style="font-size:1.8rem; line-height:1; padding:0 4px;" title="${escapeHtml(t('editor.delete_dest_title'))}">×</button>
               </div>
             </div>
             <div class="destino-header-badges-row" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:8px; padding-left:36px;">
               ${isSeaDay ? '' : `
-              <button type="button" class="btn-dest-info" onclick="event.stopPropagation(); window.abrirModalInfoDestinoPorId(${d.id}, 'desc')" title="Ver ficha y recomendaciones de ${escapeHtml(d.nombre)}">
+              <button type="button" class="btn-dest-info" onclick="event.stopPropagation(); window.abrirModalInfoDestinoPorId(${d.id}, 'desc')" title="${escapeHtml(t('editor.info_dest_title', { name: d.nombre }))}">
                 <i class="fa-solid fa-circle-info"></i>
-                <span>Ficha</span>
+                <span>${t('discover.info_btn')}</span>
               </button>`}
               ${advisoryBtnHtml}
-              <span style="font-size:0.75rem; font-weight:600; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:999px; white-space:nowrap;">${numDiasDest} ${numDiasDest === 1 ? 'día' : 'días'}</span>
+              <span style="font-size:0.75rem; font-weight:600; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:999px; white-space:nowrap;">${numDiasDest} ${numDiasDest === 1 ? t('common.day_singular') : t('common.day_plural')}</span>
               ${stopTypeBadge}
               ${portWindowBadge}
               ${tenderBadge}
@@ -7171,10 +7207,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           </div>
           <div id="editor-dest-body-${d.id}" style="display:${isCollapsed ? 'none' : 'block'};">
             <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; align-items:center;">
-              <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;" title="Transporte, logística y alojamiento"><i class="fa-solid ${transportIconClass}"></i></div>
+              <div class="transport-icon" onclick="toggleTransportFields(${d.id})" style="cursor:pointer; z-index:10;" title="${escapeHtml(t('editor.transport_icon_title'))}"><i class="fa-solid ${transportIconClass}"></i></div>
               <button onclick="generarItinerarioAuto(${d.id})" style="padding:6px 14px; font-size:0.8rem; background:linear-gradient(135deg, #6366f1, #8b5cf6); border:none; color:white; border-radius:8px; cursor:pointer;">${t('generar_itinerario_btn')}</button>
-              <button type="button" onclick="window.abrirImportadorParaDestino && window.abrirImportadorParaDestino('${escapeHtml(d.nombre)}')" style="padding:6px 12px; font-size:0.78rem; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.32); color:#38bdf8; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-weight:700;" title="Importar vuelo, hotel, tren o entrada para ${escapeHtml(d.nombre)}">
-                <i class="fa-solid fa-file-import"></i> Importar reserva
+              <button type="button" onclick="window.abrirImportadorParaDestino && window.abrirImportadorParaDestino('${escapeHtml(d.nombre)}')" style="padding:6px 12px; font-size:0.78rem; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.32); color:#38bdf8; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-weight:700;" title="${escapeHtml(t('editor.import_dest_title', { name: d.nombre }))}">
+                <i class="fa-solid fa-file-import"></i> ${t('editor.import_booking_btn')}
               </button>
             </div>
             <div class="transport-fields ${isTransportOpen ? 'show' : ''}" id="transport-${d.id}">
@@ -7256,11 +7292,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         container.innerHTML = '';
         return;
       }
-      container.innerHTML = `<div style="color:var(--gris);font-size:0.9rem;">Buscando lugares turísticos...</div>`;
+      container.innerHTML = `<div style="color:var(--gris);font-size:0.9rem;">${t('editor.wiki_searching')}</div>`;
       try {
         const coords = await geocode(dest.nombre);
         if(!coords) { container.innerHTML=''; return; }
-        const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts|coordinates|pageimages|description&exintro&explaintext&exchars=100&pithumbsize=240&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=50&format=json&origin=*`;
+        const wikiLang = typeof window.getWikiLang === 'function' ? window.getWikiLang() : 'es';
+        const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&prop=extracts|coordinates|pageimages|description&exintro&explaintext&exchars=100&pithumbsize=240&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=50&format=json&origin=*`;
         const res = await fetch(url);
         const data = await res.json();
         if(!data.query || !data.query.pages) { container.innerHTML=''; return; }
@@ -7281,14 +7318,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const img = page.thumbnail?.source ? `<img src="${page.thumbnail.source}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:8px;">` : '';
           const descSummary = page.description
             ? escapeHtml(page.description)
-            : (page.extract ? escapeHtml(page.extract.substring(0, 70) + '...') : 'Punto de interés turístico');
+            : (page.extract ? escapeHtml(page.extract.substring(0, 70) + '...') : t('editor.wiki_poi_fallback'));
           const safeTitleJs = String(page.title || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
           html += `
             <div style="min-width:180px; max-width:220px; background:rgba(0,0,0,0.3); padding:10px; border-radius:10px; border:1px solid var(--border); flex-shrink:0;">
               ${img}
               <strong style="color:var(--rosa); font-size:0.85rem;">${escapeHtml(page.title)}</strong>
               <p style="font-size:0.75rem; color:var(--gris); margin:5px 0;">${descSummary}</p>
-              <button onclick="agregarEventoDesdeWiki(${destId}, '${safeTitleJs}'); event.stopPropagation();" style="padding:4px 8px; font-size:0.75rem; background:var(--azul); width:100%;">+ Añadir</button>
+              <button onclick="agregarEventoDesdeWiki(${destId}, '${safeTitleJs}'); event.stopPropagation();" style="padding:4px 8px; font-size:0.75rem; background:var(--azul); width:100%;">+ ${t('common.add')}</button>
             </div>
            `;
         });
@@ -7307,10 +7344,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             dest.dias.push({ id: Date.now(), eventos: [] });
         }
         const dia = dest.dias[0];
-        dia.eventos.push({ id: Date.now(), hora: "", titulo: titulo, notas: "Sugerencia de Wikipedia", costo: 0, duracion: 0 });
+        dia.eventos.push({ id: Date.now(), hora: "", titulo: titulo, notas: t('editor.wiki_note'), costo: 0, duracion: 0 });
         renderDias(destId);
         autoSave();
-        showToast(`${titulo} añadido al Día 1 de ${dest.nombre}`, 'success');
+        showToast(t('editor.wiki_added_toast', { title: titulo, dest: dest.nombre }), 'success');
     };
 
     // ================== AI CORE (FALLBACK CHAIN - ALL PROVIDERS) ==================
@@ -7333,6 +7370,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     async function callAI(prompt, useJson = true) {
       console.log('🤖 AI_CORE: Iniciando petición multi-proveedor...', { useJson });
+      const langName = typeof window.getLangName === 'function' ? window.getLangName() : 'Español';
+      const langSystem = `${AI_SYSTEM_PROMPT} CRITICAL LANGUAGE RULE: All human-readable JSON string values (titles, notes, descriptions, categories, item names) MUST be written in ${langName}.`;
 
       const fetchWithTimeout = async (url, options, timeout = 15000) => {
         const controller = new AbortController();
@@ -7355,7 +7394,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: prompt,
-            system: AI_SYSTEM_PROMPT
+            system: langSystem
           })
         }, 12000);
         if (workerResp.ok) {
@@ -7381,7 +7420,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     // Non-JSON AI call (for Pluxy Chat Agent)
     async function callAIText(messages) {
       if (!navigator.onLine) {
-        return '📵 No hay señal.';
+        return t('common.offline_no_signal');
       }
       // 1. Prioridad: Cloudflare Worker Seguro y Multimodelo
       try {
@@ -7399,11 +7438,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } catch (e) {
         console.warn('⚠️ Cloudflare Worker pluxy fallback to direct keys:', e);
         if (!navigator.onLine) {
-          return '📵 No hay señal.';
+          return t('common.offline_no_signal');
         }
       }
 
-      return '📵 No hay señal.';
+      return t('common.offline_no_signal');
     }
 
     function computeStopEffectiveWindow(dest) {
@@ -7446,7 +7485,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     async function generarItinerarioAuto(destId, diasForzados = null) {
       if (!checkEditPermission()) return;
       if (!navigator.onLine) {
-        showToast('📵 No hay señal', 'warning');
+        showToast(t('common.offline_no_signal'), 'warning');
         return;
       }
       const dest = destinos.find(d => d.id === destId);
@@ -7455,35 +7494,37 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const btn = typeof event !== 'undefined' ? event?.target : null;
       const oldText = btn ? btn.innerText : '';
       if(btn) {
-          btn.innerText = 'Generando...';
+          btn.innerText = t('editor.generating');
           btn.disabled = true;
           btn.style.opacity = '0.7';
       }
 
       const stopWin = computeStopEffectiveWindow(dest);
       let numDias = diasForzados || (dest.dias ? dest.dias.length : 0);
+      const dayUnit = numDias === 1 ? t('common.day_singular') : t('common.day_plural');
       if (numDias === 0) {
         numDias = (esDestinoNavegacion(dest.nombre) || stopWin.hasWindow || dest.tipoParada === 'escala' || dest.tipoParada === 'embarque' || dest.tipoParada === 'desembarque') ? 1 : 3;
-        showToast(`Generando itinerario de ${numDias} ${numDias === 1 ? 'día' : 'días'}...`, 'info');
+        showToast(t('editor.generating_days', { n: numDias, unit: numDias === 1 ? t('common.day_singular') : t('common.day_plural') }), 'info');
       } else if (diasForzados) {
-        showToast(`Generando itinerario de ${numDias} días...`, 'info');
+        showToast(t('editor.generating_days', { n: numDias, unit: dayUnit }), 'info');
       }
 
       // Preservar intactos los eventos ancla importados (Embarque, Arribo, Zarpe, Desembarque) y costos adicionales
       const preservedAnchorsByDay = (dest.dias || []).map(dia => (dia.eventos || []).filter(ev => Boolean(ev && ev.importSyncKey)));
       const preservedExtrasByDay = (dest.dias || []).map(dia => Array.isArray(dia.costosAdicionales) ? [...dia.costosAdicionales] : []);
+      const langName = typeof window.getLangName === 'function' ? window.getLangName() : 'Español';
 
       try {
         let prompt;
         if (esDestinoNavegacion(dest.nombre)) {
-          prompt = `Genera un itinerario de ${numDias} ${numDias === 1 ? 'día' : 'días'} de actividades a bordo de un crucero (en navegación / alta mar). Sugiere ${userPreferences.eventsPerDay || 3} actividades por día (desayuno con vista al mar, piscina/solarium, spa, espectáculo de teatro, cena, etc.) con costo 0 si están incluidas. Responde ESTRICTAMENTE con un objeto JSON válido: {"dias":[{"eventos":[{"hora":"10:00","titulo":"Actividad a bordo","notas":"Descripción breve","costo":0,"duracion":90}]}]}`;
+          prompt = `Generate a ${numDias}-day cruise sea-day activity itinerary (onboard/at sea) in ${langName}. Suggest ${userPreferences.eventsPerDay || 3} activities per day (ocean-view breakfast, pool/solarium, spa, evening show, dinner, etc.) with cost 0 if included. Write ALL "titulo" and "notas" fields in ${langName}. Respond STRICTLY with valid JSON: {"dias":[{"eventos":[{"hora":"10:00","titulo":"Onboard activity","notas":"Brief description","costo":0,"duracion":90}]}]}`;
         } else if (stopWin.hasWindow) {
           const tenderHint = stopWin.isTender
-            ? ' Esta escala utiliza bote auxiliar (tenders), por lo que el tiempo efectivo en tierra ya incluye +45 min para bajar y -60 min para regresar.'
+            ? ' This stop uses tender boats, so the effective ashore window already excludes +45 min disembark and -60 min return.'
             : '';
-          prompt = `Genera un itinerario turístico de ${numDias} ${numDias === 1 ? 'día' : 'días'} para una escala en ${dest.nombre} respetando estrictamente la ventana efectiva en tierra de ${stopWin.startStr} a ${stopWin.endStr} (horario puerto: ${stopWin.rawLabel}).${tenderHint} Sugiere ${userPreferences.eventsPerDay || 3} actividades realistas y cercanas al puerto dentro de ese horario con precios estimados en euros. Responde ESTRICTAMENTE con un objeto JSON válido: {"dias":[{"eventos":[{"hora":"${stopWin.startStr}","titulo":"Lugar o Actividad","notas":"Descripción breve","costo":20,"duracion":90}]}]}`;
+          prompt = `Generate a ${numDias}-day tourist itinerary for a stop in ${dest.nombre} in ${langName}, strictly respecting the effective ashore window from ${stopWin.startStr} to ${stopWin.endStr} (port schedule: ${stopWin.rawLabel}).${tenderHint} Suggest ${userPreferences.eventsPerDay || 3} realistic activities near the port within that window with estimated costs in EUR. Write ALL "titulo" and "notas" fields in ${langName}. Respond STRICTLY with valid JSON: {"dias":[{"eventos":[{"hora":"${stopWin.startStr}","titulo":"Place or Activity","notas":"Brief description","costo":20,"duracion":90}]}]}`;
         } else {
-          prompt = `Genera un itinerario turístico de ${numDias} días para ${dest.nombre}. Sugiere exactamente ${userPreferences.eventsPerDay || 3} actividades por día con horarios realistas y precios estimados en euros (ej. costo: 15, 25, 0 si es libre). Responde ESTRICTAMENTE con un objeto JSON válido: {"dias":[{"eventos":[{"hora":"09:00","titulo":"Lugar o Actividad","notas":"Descripción breve","costo":25,"duracion":90}]}]}`;
+          prompt = `Generate a ${numDias}-day tourist itinerary for ${dest.nombre} in ${langName}. Suggest exactly ${userPreferences.eventsPerDay || 3} realistic activities per day with times and estimated EUR prices (e.g., 15, 25, or 0 if free). Write ALL "titulo" and "notas" fields in ${langName}. Respond STRICTLY with valid JSON: {"dias":[{"eventos":[{"hora":"09:00","titulo":"Place or Activity","notas":"Brief description","costo":25,"duracion":90}]}]}`;
         }
         const textContent = await callAI(prompt);
         if (!textContent) throw new Error('No AI response');
@@ -7505,7 +7546,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               diaObj.eventos.push({
                 id: Date.now() + d * 100 + i,
                 hora: ev.hora || stopWin.startStr || '10:00',
-                titulo: ev.titulo || 'Actividad',
+                titulo: ev.titulo || t('untitled_event'),
                 notas: ev.notas || '',
                 costo: evCost,
                 precio: evCost,
@@ -7520,14 +7561,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         
         renderDias(destId);
         autoSave();
-        showToast('¡Itinerario generado con éxito!', 'success');
+        showToast(t('editor.itinerary_success'), 'success');
       } catch(e) {
         console.error('Itinerary error:', e);
         if (!navigator.onLine) {
-          showToast('📵 No hay señal', 'warning');
+          showToast(t('common.offline_no_signal'), 'warning');
           return;
         }
-        showToast('Error con la IA, usando Wikipedia...', 'warning');
+        showToast(t('editor.ai_fallback_wiki'), 'warning');
         await generarItinerarioWikiFallback(destId, numDias);
       } finally {
           if(btn) {
@@ -7548,11 +7589,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       try {
         const coords = await geocode(dest.nombre);
-        if (!coords) { showToast('No se pudo ubicar el destino', 'error'); return; }
-        const url = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|description&exintro&explaintext&exchars=100&pithumbsize=240&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=50&format=json&origin=*`;
+        if (!coords) { showToast(t('summary.geocode_error'), 'error'); return; }
+        const wikiLang = typeof window.getWikiLang === 'function' ? window.getWikiLang() : 'es';
+        const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|description&exintro&explaintext&exchars=100&pithumbsize=240&generator=geosearch&ggsradius=10000&ggscoord=${coords.lat}|${coords.lon}&ggslimit=50&format=json&origin=*`;
         const res = await fetch(url);
         const data = await res.json();
-        if (!data.query?.pages) { showToast('Sin resultados', 'error'); return; }
+        if (!data.query?.pages) { showToast(t('discover.wiki_empty'), 'error'); return; }
         
         const allPlaces = Object.values(data.query.pages)
           .map(p => ({ page: p, score: scoreTouristPlace(p, dest.nombre) }))
@@ -7561,7 +7603,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           .map(item => item.page);
 
         if (allPlaces.length === 0) {
-          showToast('No se encontraron puntos turísticos destacados en Wikipedia para este destino', 'warning');
+          showToast(t('discover.wiki_empty'), 'warning');
           return;
         }
         
@@ -7588,7 +7630,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               id: Date.now() + d * 100 + i,
               hora: slotHora,
               titulo: place.title,
-              notas: place.description || (place.extract ? place.extract.substring(0, 80) : 'Punto de interés'),
+              notas: place.description || (place.extract ? place.extract.substring(0, 80) : t('editor.wiki_poi_fallback')),
               costo: 0,
               duracion: 60
             });
@@ -7599,9 +7641,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         dest.dias = newDias;
         renderDias(destId);
         autoSave();
-        showToast(`Itinerario generado con ${Math.min(allPlaces.length, numDias * perDay)} lugares turísticos`, 'success');
+        showToast(t('editor.itinerary_success'), 'success');
       } catch(e) {
-        showToast('Error al generar itinerario', 'error');
+        showToast(t('common.error'), 'error');
       }
     }
 
@@ -7695,8 +7737,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const origIata = resolverCodigoIata(origenStr);
       const destIata = resolverCodigoIata(destinoStr);
       const pers = Math.max(1, parseInt(numPers) || 1);
-      const origNombre = (origenStr && origenStr.trim()) ? origenStr.trim() : 'Origen';
-      const destNombre = (destinoStr && destinoStr.trim()) ? destinoStr.trim() : 'Destino';
+      const origNombre = (origenStr && origenStr.trim()) ? origenStr.trim() : t('transport.origin_default');
+      const destNombre = (destinoStr && destinoStr.trim()) ? destinoStr.trim() : t('add_dest_placeholder');
       const cleanFechaYmd = fechaYmd || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
       const kiwiUrl = `https://www.kiwi.com/deep?from=${encodeURIComponent(origIata)}&to=${encodeURIComponent(destIata)}&departure=${cleanFechaYmd}&passengers=${pers}`;
@@ -7711,57 +7753,60 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const trainPrice = Math.round((isIntercontinental ? 90 : 45) * pers);
       const busPrice = Math.round((isIntercontinental ? 50 : 25) * pers);
       const carPrice = Math.round(40 * pers);
+      const flightDur = isIntercontinental ? '11h 50m' : '2h 15m';
+      const trainDur = isIntercontinental ? '—' : '2h 45m';
+      const busDur = isIntercontinental ? '—' : '4h 30m';
 
       return [
         {
           tipoIcon: '✈️',
-          modo: 'Avión / Vuelo',
-          titulo: '✈️ Vuelo Directo / Rápido',
-          descripcion: `Vuelo comercial · ${isIntercontinental ? '11h 50m' : '2h 15m'} (${origIata} ➔ ${destIata})`,
-          medioTexto: `✈️ Avión (${isIntercontinental ? '11h 50m' : '2h 15m'})`,
+          modo: t('booking.flight_mode'),
+          titulo: t('booking.direct_flight'),
+          descripcion: t('booking.flight_desc', { dur: flightDur, orig: origIata, dest: destIata }),
+          medioTexto: `✈️ ${t('booking.flight_mode')} (${flightDur})`,
           precio: flightPrice,
           precioPersona: Math.round(flightPrice / pers),
           bookingUrl: kiwiUrl,
-          badge: 'Más Rápido',
+          badge: t('booking.fastest'),
           badgeColor: '#10b981',
           proveedor: 'Kiwi.com / Skyscanner'
         },
         {
           tipoIcon: '🚆',
-          modo: 'Tren de Alta Velocidad',
-          titulo: '🚆 Tren Alta Velocidad / Regional',
-          descripcion: `Confortable y céntrico · ${isIntercontinental ? 'Conexión ferroviaria' : '2h 45m'}`,
-          medioTexto: `🚆 Tren de Alta Velocidad`,
+          modo: t('booking.train_mode'),
+          titulo: t('booking.hs_train'),
+          descripcion: t('booking.train_desc', { dur: trainDur }),
+          medioTexto: `🚆 ${t('booking.train_mode')}`,
           precio: trainPrice,
           precioPersona: Math.round(trainPrice / pers),
           bookingUrl: trainlineUrl,
-          badge: 'Cómodo',
+          badge: t('booking.comfortable'),
           badgeColor: '#0ea5e9',
           proveedor: 'Trainline / Renfe / Omio'
         },
         {
           tipoIcon: '🚌',
-          modo: 'Bus / Ómnibus Larga Distancia',
-          titulo: '🚌 Bus Larga Distancia (Low-Cost)',
-          descripcion: `Tarifa económica con equipaje · ${isIntercontinental ? 'Ruta de bus' : '4h 30m'}`,
-          medioTexto: `🚌 Bus Larga Distancia`,
+          modo: t('booking.bus_mode'),
+          titulo: t('booking.bus_title'),
+          descripcion: t('booking.bus_desc', { dur: busDur }),
+          medioTexto: `🚌 ${t('booking.bus_mode')}`,
           precio: busPrice,
           precioPersona: Math.round(busPrice / pers),
           bookingUrl: omioBusUrl,
-          badge: 'Económico',
+          badge: t('booking.budget'),
           badgeColor: '#f59e0b',
           proveedor: 'FlixBus / Alsa / Omio'
         },
         {
           tipoIcon: '🚗',
-          modo: 'Alquiler de Auto',
-          titulo: '🚗 Alquiler de Auto / Conducir',
-          descripcion: `Libertad total de ruta · Retiro en origen o aeropuerto`,
-          medioTexto: `🚗 Auto de alquiler`,
+          modo: t('booking.car_mode'),
+          titulo: t('booking.car_title'),
+          descripcion: t('booking.car_desc'),
+          medioTexto: `🚗 ${t('booking.car_mode')}`,
           precio: carPrice,
           precioPersona: Math.round(carPrice / pers),
           bookingUrl: rentalCarsUrl,
-          badge: 'Flexibilidad',
+          badge: t('booking.flexible'),
           badgeColor: '#8b5cf6',
           proveedor: 'Rentalcars / Booking Cars'
         }
@@ -7769,9 +7814,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     }
 
     function generarOpcionesHoteles(destinoStr, checkinYmd, checkoutYmd, numDias = 3, numPers = 1) {
-      const destNombre = (destinoStr && destinoStr.trim()) ? destinoStr.trim() : 'Destino';
+      const destNombre = (destinoStr && destinoStr.trim()) ? destinoStr.trim() : t('add_dest_placeholder');
       const pers = Math.max(1, parseInt(numPers) || 1);
       const noches = Math.max(1, parseInt(numDias) || 1);
+      const nightUnit = noches === 1 ? t('common.night_singular') : t('common.night_plural');
 
       const bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(destNombre)}&checkin=${checkinYmd}&checkout=${checkoutYmd}&group_adults=${pers}&no_rooms=1`;
       const hotellookUrl = `https://hotellook.com/search/#?location=${encodeURIComponent(destNombre)}&checkIn=${checkinYmd}&checkOut=${checkoutYmd}&adults=${pers}`;
@@ -7787,9 +7833,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       return [
         {
-          nombre: `Airbnb: Depto entero en ${destNombre}`,
-          tipo: 'Airbnb Departamento',
-          detalles: `Superhost · Cocina equipada, WiFi alta velocidad, auto check-in · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
+          nombre: t('booking.airbnb_apt', { dest: destNombre }),
+          tipo: 'Airbnb',
+          detalles: t('booking.airbnb_apt_det', { n: noches, unit: nightUnit }),
           puntuacion: '★ 4.92 Superhost',
           precio: airbnbDeptoPrice,
           precioNoche: Math.round(airbnbDeptoPrice / noches),
@@ -7799,10 +7845,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           proveedor: 'Airbnb'
         },
         {
-          nombre: `Hotel Central Plaza ${destNombre} ★★★★`,
-          tipo: 'Hotel 4 Estrellas Booking',
-          detalles: `Ubicación céntrica · Desayuno buffet incluido · Cancelación gratis · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
-          puntuacion: '★ 8.9 Fabuloso',
+          nombre: t('booking.hotel_4', { dest: destNombre }),
+          tipo: 'Booking.com',
+          detalles: t('booking.hotel_4_det', { n: noches, unit: nightUnit }),
+          puntuacion: '★ 8.9',
           precio: hotelCenterPrice,
           precioNoche: Math.round(hotelCenterPrice / noches),
           bookingUrl: bookingUrl,
@@ -7811,34 +7857,34 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           proveedor: 'Booking.com'
         },
         {
-          nombre: `Airbnb: Habitación privada & terraza en ${destNombre}`,
-          tipo: 'Airbnb Habitación',
-          detalles: `Zona céntrica y turística · Balcón privado, ambiente tranquilo · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
-          puntuacion: '★ 4.88 Excelente',
+          nombre: t('booking.airbnb_room', { dest: destNombre }),
+          tipo: 'Airbnb',
+          detalles: t('booking.airbnb_room_det', { n: noches, unit: nightUnit }),
+          puntuacion: '★ 4.88',
           precio: airbnbRoomPrice,
           precioNoche: Math.round(airbnbRoomPrice / noches),
           bookingUrl: airbnbRoomUrl,
-          badge: 'Airbnb Económico',
+          badge: t('booking.budget'),
           badgeColor: '#ff385c',
           proveedor: 'Airbnb'
         },
         {
-          nombre: `Gran Resort & Spa ${destNombre} ★★★★★`,
-          tipo: 'Hotel 5 Estrellas Booking / Lujo',
-          detalles: `Piscina climatizada, Spa, Vista panorámica · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
-          puntuacion: '★ 9.5 Excepcional',
+          nombre: t('booking.hotel_5', { dest: destNombre }),
+          tipo: 'Booking.com',
+          detalles: t('booking.hotel_5_det', { n: noches, unit: nightUnit }),
+          puntuacion: '★ 9.5',
           precio: hotelLuxuryPrice,
           precioNoche: Math.round(hotelLuxuryPrice / noches),
           bookingUrl: bookingUrl,
-          badge: 'Booking Lujo',
+          badge: 'Resort 5★',
           badgeColor: '#ec4899',
           proveedor: 'Booking.com'
         },
         {
-          nombre: `Hostel Boutique & Suites ${destNombre}`,
-          tipo: 'Hostel / Low-Cost Confort',
-          detalles: `Habitación privada o compartida de diseño · Ambiente internacional · ${noches} ${noches === 1 ? 'noche' : 'noches'}`,
-          puntuacion: '★ 8.5 Muy Bueno',
+          nombre: t('booking.hostel', { dest: destNombre }),
+          tipo: 'Hostel',
+          detalles: t('booking.hostel_det', { n: noches, unit: nightUnit }),
+          puntuacion: '★ 8.5',
           precio: hostelEcoPrice,
           precioNoche: Math.round(hostelEcoPrice / noches),
           bookingUrl: hotellookUrl,
@@ -7870,15 +7916,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       document.querySelectorAll('.live-booking-dropdown').forEach(d => d.style.display = 'none');
 
+      const sym = typeof getSimboloMoneda === 'function' ? getSimboloMoneda() : '$';
+      const travelerUnit = numPersonas === 1 ? t('common.traveler_singular') : t('common.traveler_plural');
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
           <div style="font-size:0.8rem; font-weight:700; color:#38bdf8;">
-            🧭 Comparar transporte: ${escapeHtml(origen)} ➔ ${escapeHtml(destino)}
+            🧭 ${t('booking.compare_transport')} ${escapeHtml(origen)} ➔ ${escapeHtml(destino)}
           </div>
           <button type="button" onclick="document.getElementById('dropdown-transporte-${destId}-${tramoIda}').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1.1rem; line-height:1; padding:0 4px;">×</button>
         </div>
         <div style="font-size:0.75rem; color:var(--gris); margin-bottom:8px;">
-          📅 Fecha estimada: <b>${fechas.checkinDmy}</b> · 👥 <b>${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</b>
+          📅 ${t('booking.est_date')} <b>${fechas.checkinDmy}</b> · 👥 <b>${numPersonas} ${travelerUnit}</b>
         </div>
       `;
 
@@ -7891,11 +7939,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <span style="font-size:0.65rem; font-weight:700; background:${op.badgeColor}; color:white; padding:1px 6px; border-radius:999px;">${op.badge}</span>
               </div>
               <div style="font-size:0.72rem; color:var(--gris);">${escapeHtml(op.descripcion)}</div>
-              <div style="font-size:0.68rem; color:#38bdf8; margin-top:2px;">🔗 Reserva en ${op.proveedor}</div>
+              <div style="font-size:0.68rem; color:#38bdf8; margin-top:2px;">🔗 ${t('booking.from_supplier', { supplier: op.proveedor })}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:1rem; font-weight:800; color:#10b981;">$${op.precio.toLocaleString()}</div>
-              <div style="font-size:0.68rem; color:var(--gris);">$${op.precioPersona.toLocaleString()} / pers</div>
+              <div style="font-size:1rem; font-weight:800; color:#10b981;">${sym}${op.precio.toLocaleString()}</div>
+              <div style="font-size:0.68rem; color:var(--gris);">${sym}${op.precioPersona.toLocaleString()} ${t('booking.per_pers_short')}</div>
             </div>
           </div>
         `;
@@ -7903,7 +7951,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       html += `
         <div style="margin-top:8px; text-align:center; font-size:0.7rem; color:var(--gris);">
-          💡 Al seleccionar una opción se carga en Plux y se abre la web de reserva.
+          💡 ${t('booking.load_hint')}
         </div>
       `;
 
@@ -7915,8 +7963,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const destIndex = destinos.findIndex(d => d.id === destId);
       if (destIndex === -1) return;
       const dest = destinos[destIndex];
-      const origen = (destIndex === 0) ? (lugarSalida || 'Buenos Aires') : (destinos[destIndex - 1]?.nombre || lugarSalida || 'Origen');
-      const destino = dest.nombre || 'Destino';
+      const origen = (destIndex === 0) ? (lugarSalida || 'Buenos Aires') : (destinos[destIndex - 1]?.nombre || lugarSalida || t('transport.origin_default'));
+      const destino = dest.nombre || t('add_dest_placeholder');
       const fechas = obtenerFechasDestino(destId);
       const opciones = generarOpcionesTransporte(origen, destino, fechas.checkinYmd, numPersonas);
       const op = opciones[transIndex];
@@ -7941,7 +7989,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } catch(e) {}
 
       autoSave();
-      showToast(`🧭 Transporte "${op.modo}" cargado ($${op.precio}) y enlace de reserva abierto`, 'success');
+      const sym = typeof getSimboloMoneda === 'function' ? getSimboloMoneda() : '$';
+      showToast(t('booking.loaded_transport_toast', { mode: op.modo, price: `${sym}${op.precio}` }), 'success');
     };
 
     window.abrirBusquedaHotelesTramo = function(destId, tramoIda, event) {
@@ -7949,7 +7998,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const dest = destinos.find(d => d.id === destId);
       if (!dest) return;
       
-      const destino = dest.nombre || 'Destino';
+      const destino = dest.nombre || t('add_dest_placeholder');
       const fechas = obtenerFechasDestino(destId);
       const opciones = generarOpcionesHoteles(destino, fechas.checkinYmd, fechas.checkoutYmd, fechas.dias, numPersonas);
       
@@ -7963,15 +8012,18 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       document.querySelectorAll('.live-booking-dropdown').forEach(d => d.style.display = 'none');
 
+      const sym = typeof getSimboloMoneda === 'function' ? getSimboloMoneda() : '$';
+      const nightUnit = fechas.dias === 1 ? t('common.night_singular') : t('common.night_plural');
+      const stayRange = t('booking.stay_range', { checkin: fechas.checkinDmy, checkout: fechas.checkoutDmy, n: fechas.dias, unit: nightUnit });
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
           <div style="font-size:0.8rem; font-weight:700; color:#f472b6;">
-            🏨/🏡 Alojamientos (Airbnb & Booking): ${escapeHtml(destino)}
+            🏨/🏡 ${t('booking.stays_title')} ${escapeHtml(destino)}
           </div>
           <button type="button" onclick="document.getElementById('dropdown-hoteles-${destId}-${tramoIda}').style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1.1rem; line-height:1; padding:0 4px;">×</button>
         </div>
         <div style="font-size:0.75rem; color:var(--gris); margin-bottom:8px;">
-          📅 Estadía: <b>${fechas.checkinDmy}</b> al <b>${fechas.checkoutDmy}</b> (${fechas.dias} ${fechas.dias === 1 ? 'noche' : 'noches'}) · 👥 <b>${numPersonas} huéspedes</b>
+          📅 ${stayRange} · 👥 <b>${numPersonas} ${t('common.guest_plural')}</b>
         </div>
       `;
 
@@ -7984,11 +8036,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <span style="font-size:0.65rem; font-weight:700; background:${op.badgeColor}; color:white; padding:1px 6px; border-radius:999px;">${op.badge}</span>
               </div>
               <div style="font-size:0.72rem; color:var(--gris);">${escapeHtml(op.detalles)} · <b style="color:#fbbf24;">${op.puntuacion}</b></div>
-              <div style="font-size:0.68rem; color:#f472b6; margin-top:2px;">🔗 Reserva en ${op.proveedor}</div>
+              <div style="font-size:0.68rem; color:#f472b6; margin-top:2px;">🔗 ${t('booking.from_supplier', { supplier: op.proveedor })}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:1rem; font-weight:800; color:#10b981;">$${op.precio.toLocaleString()}</div>
-              <div style="font-size:0.68rem; color:var(--gris);">$${op.precioNoche.toLocaleString()} / noche</div>
+              <div style="font-size:1rem; font-weight:800; color:#10b981;">${sym}${op.precio.toLocaleString()}</div>
+              <div style="font-size:0.68rem; color:var(--gris);">${sym}${op.precioNoche.toLocaleString()} ${t('booking.per_night_short')}</div>
             </div>
           </div>
         `;
@@ -7996,7 +8048,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       html += `
         <div style="margin-top:8px; text-align:center; font-size:0.7rem; color:var(--gris);">
-          💡 Al seleccionar un alojamiento se carga en Plux y se abre la ficha de reserva.
+          💡 ${t('booking.stay_hint')}
         </div>
       `;
 
@@ -8007,7 +8059,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     window.seleccionarHotelTramo = function(destId, tramoIda, hotelIndex) {
       const dest = destinos.find(d => d.id === destId);
       if (!dest) return;
-      const destino = dest.nombre || 'Destino';
+      const destino = dest.nombre || t('add_dest_placeholder');
       const fechas = obtenerFechasDestino(destId);
       const opciones = generarOpcionesHoteles(destino, fechas.checkinYmd, fechas.checkoutYmd, fechas.dias, numPersonas);
       const op = opciones[hotelIndex];
@@ -8032,7 +8084,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } catch(e) {}
 
       autoSave();
-      showToast(`🏡 "${op.nombre}" cargado ($${op.precio}) y enlace de ${op.proveedor} abierto`, 'success');
+      const sym = typeof getSimboloMoneda === 'function' ? getSimboloMoneda() : '$';
+      showToast(t('booking.loaded_stay_toast', { name: op.nombre, price: `${sym}${op.precio}`, supplier: op.proveedor }), 'success');
     };
 
     window.abrirBusquedaTransporteVuelta = function(event) {
@@ -8081,15 +8134,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       document.querySelectorAll('.live-booking-dropdown').forEach(d => d.style.display = 'none');
 
+      const sym = typeof getSimboloMoneda === 'function' ? getSimboloMoneda() : '$';
+      const travelerUnit = numPersonas === 1 ? t('common.traveler_singular') : t('common.traveler_plural');
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
           <div style="font-size:0.8rem; font-weight:700; color:#38bdf8;">
-            🧭 Transporte de Vuelta: ${escapeHtml(lastDest)} ➔ ${escapeHtml(destinoVuelta)}
+            🧭 ${t('booking.return_transport')} ${escapeHtml(lastDest)} ➔ ${escapeHtml(destinoVuelta)}
           </div>
           <button type="button" onclick="(document.getElementById('dropdown-transporte-vuelta')||document.getElementById('dropdown-vuelos-vuelta')).style.display='none'" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:1.1rem; line-height:1; padding:0 4px;">×</button>
         </div>
         <div style="font-size:0.75rem; color:var(--gris); margin-bottom:8px;">
-          📅 Fecha estimada regreso: <b>${returnDmy}</b> · 👥 <b>${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</b>
+          📅 ${t('booking.est_return_date')} <b>${returnDmy}</b> · 👥 <b>${numPersonas} ${travelerUnit}</b>
         </div>
       `;
 
@@ -8102,11 +8157,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <span style="font-size:0.65rem; font-weight:700; background:${op.badgeColor}; color:white; padding:1px 6px; border-radius:999px;">${op.badge}</span>
               </div>
               <div style="font-size:0.72rem; color:var(--gris);">${escapeHtml(op.descripcion)}</div>
-              <div style="font-size:0.68rem; color:#38bdf8; margin-top:2px;">🔗 Reserva en ${op.proveedor}</div>
+              <div style="font-size:0.68rem; color:#38bdf8; margin-top:2px;">🔗 ${t('booking.from_supplier', { supplier: op.proveedor })}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:1rem; font-weight:800; color:#10b981;">$${op.precio.toLocaleString()}</div>
-              <div style="font-size:0.68rem; color:var(--gris);">$${op.precioPersona.toLocaleString()} / pers</div>
+              <div style="font-size:1rem; font-weight:800; color:#10b981;">${sym}${op.precio.toLocaleString()}</div>
+              <div style="font-size:0.68rem; color:var(--gris);">${sym}${op.precioPersona.toLocaleString()} ${t('booking.per_pers_short')}</div>
             </div>
           </div>
         `;
@@ -8114,7 +8169,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       html += `
         <div style="margin-top:8px; text-align:center; font-size:0.7rem; color:var(--gris);">
-          💡 Al seleccionar una opción se carga en Plux y se abre el link de reserva.
+          💡 ${t('booking.load_hint')}
         </div>
       `;
 
@@ -8125,11 +8180,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
     window.seleccionarTransporteVuelta = function(transIndex) {
       const lastDest = (destinos && destinos.length > 0 && destinos[destinos.length - 1]?.nombre) 
         ? destinos[destinos.length - 1].nombre 
-        : 'Último destino';
+        : t('add_dest_placeholder');
       const inputSalida = document.getElementById('lugarSalida');
       const destinoVuelta = (inputSalida && inputSalida.value.trim()) 
         ? inputSalida.value.trim() 
-        : (lugarSalida || 'Origen');
+        : (lugarSalida || t('transport.origin_default'));
       const fInicio = document.getElementById('fechaInicio')?.value;
       const nowFallback = new Date();
       let baseDate = parseLocalNoon(fInicio) || new Date(nowFallback.getFullYear(), nowFallback.getMonth(), nowFallback.getDate() + 14, 12, 0, 0);
@@ -8166,7 +8221,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       } catch(e) {}
 
       autoSave();
-      showToast(`🧭 Transporte de vuelta "${op.modo}" cargado ($${op.precio}) y enlace de reserva abierto`, 'success');
+      const sym = typeof getSimboloMoneda === 'function' ? getSimboloMoneda() : '$';
+      showToast(t('booking.loaded_return_toast', { mode: op.modo, price: `${sym}${op.precio}` }), 'success');
     };
 
     window.abrirBusquedaVuelosVuelta = window.abrirBusquedaTransporteVuelta;
@@ -8191,53 +8247,58 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const tipoVal = dest.tipoParada || 'estadia';
       const hasCustomLogistics = Boolean(transitVal > 0 || dest.horaLlegada || dest.horaSalida || dest.notaParada || (tipoVal && tipoVal !== 'estadia'));
       const summaryParts = [];
-      if (tipoVal !== 'estadia') summaryParts.push(tipoVal.charAt(0).toUpperCase() + tipoVal.slice(1));
-      if (transitVal > 0) summaryParts.push(`${transitVal} ${transitVal === 1 ? 'día' : 'días'} previo${transitVal === 1 ? '' : 's'} en tránsito`);
-      if (dest.horaLlegada || dest.horaSalida) summaryParts.push([dest.horaLlegada ? `Lleg. ${dest.horaLlegada}` : '', dest.horaSalida ? `Sal. ${dest.horaSalida}` : ''].filter(Boolean).join(' · '));
+      const stopTypeLabels = {
+        embarque: t('editor.stop_embarque'),
+        escala: t('editor.stop_escala'),
+        desembarque: t('editor.stop_desembarque')
+      };
+      if (tipoVal !== 'estadia') summaryParts.push(stopTypeLabels[tipoVal] || tipoVal);
+      if (transitVal > 0) summaryParts.push(t('logistics.prev_transit_short', { n: transitVal, unit: transitVal === 1 ? t('common.day_singular') : t('common.day_plural') }));
+      if (dest.horaLlegada || dest.horaSalida) summaryParts.push([dest.horaLlegada ? `${t('logistics.arr_short')} ${dest.horaLlegada}` : '', dest.horaSalida ? `${t('logistics.dep_short')} ${dest.horaSalida}` : ''].filter(Boolean).join(' · '));
       const summaryLabel = summaryParts.length > 0
         ? summaryParts.join(' · ')
-        : 'Horarios de llegada/salida, escala o días previos en ruta (opcional)';
+        : t('logistics.summary_default');
 
       box.innerHTML = `
         <details class="plux-stop-logistics-details" ${hasCustomLogistics ? 'open' : ''}>
           <summary class="plux-stop-logistics-summary">
             <span><i class="fa-regular fa-clock" style="margin-right:6px; color:#38bdf8;"></i> ${escapeHtml(summaryLabel)}</span>
-            <span style="font-size:0.72rem; color:var(--gris);">Configurar</span>
+            <span style="font-size:0.72rem; color:var(--gris);">${t('logistics.configure')}</span>
           </summary>
           <div class="plux-stop-logistics-row">
             <div class="plux-stop-logistics-field">
-              <label>Tipo de parada</label>
+              <label>${t('logistics.stop_type')}</label>
               <select onchange="window.actualizarCampoParada(${destId}, 'tipoParada', this.value)">
-                <option value="estadia" ${tipoVal === 'estadia' ? 'selected' : ''}>Estadía normal</option>
-                <option value="embarque" ${tipoVal === 'embarque' ? 'selected' : ''}>Embarque / Inicio</option>
-                <option value="escala" ${tipoVal === 'escala' ? 'selected' : ''}>Escala de paso</option>
-                <option value="desembarque" ${tipoVal === 'desembarque' ? 'selected' : ''}>Desembarque / Fin</option>
+                <option value="estadia" ${tipoVal === 'estadia' ? 'selected' : ''}>${t('logistics.type_normal')}</option>
+                <option value="embarque" ${tipoVal === 'embarque' ? 'selected' : ''}>${t('logistics.type_embark')}</option>
+                <option value="escala" ${tipoVal === 'escala' ? 'selected' : ''}>${t('logistics.type_port')}</option>
+                <option value="desembarque" ${tipoVal === 'desembarque' ? 'selected' : ''}>${t('logistics.type_disembark')}</option>
               </select>
             </div>
             ${destIdx > 0 ? `
             <div class="plux-stop-logistics-field">
-              <label>Días previos en ruta / mar</label>
+              <label>${t('logistics.prev_transit_days')}</label>
               <div class="plux-transit-stepper">
-                <button type="button" onclick="window.stepTransitoPrevio(${destId}, -1)" title="Restar día de tránsito">−</button>
+                <button type="button" onclick="window.stepTransitoPrevio(${destId}, -1)" title="${escapeHtml(t('logistics.dec_transit'))}">−</button>
                 <span>${transitVal}</span>
-                <button type="button" onclick="window.stepTransitoPrevio(${destId}, 1)" title="Sumar día de tránsito">+</button>
+                <button type="button" onclick="window.stepTransitoPrevio(${destId}, 1)" title="${escapeHtml(t('logistics.inc_transit'))}">+</button>
               </div>
             </div>
             <div class="plux-stop-logistics-field">
-              <label>Nombre del tránsito</label>
-              <input type="text" value="${escapeHtml(dest.transitoEtiqueta || '')}" placeholder="Ej: En navegación, Tren..." onchange="window.actualizarCampoParada(${destId}, 'transitoEtiqueta', this.value)">
+              <label>${t('logistics.transit_name')}</label>
+              <input type="text" value="${escapeHtml(dest.transitoEtiqueta || '')}" placeholder="${escapeHtml(t('logistics.transit_ph'))}" onchange="window.actualizarCampoParada(${destId}, 'transitoEtiqueta', this.value)">
             </div>` : ''}
             <div class="plux-stop-logistics-field">
-              <label>Hora llegada</label>
+              <label>${t('logistics.arrival_time')}</label>
               <input type="time" value="${escapeHtml(dest.horaLlegada || '')}" onchange="window.actualizarCampoParada(${destId}, 'horaLlegada', this.value)">
             </div>
             <div class="plux-stop-logistics-field">
-              <label>Hora salida</label>
+              <label>${t('logistics.departure_time')}</label>
               <input type="time" value="${escapeHtml(dest.horaSalida || '')}" onchange="window.actualizarCampoParada(${destId}, 'horaSalida', this.value)">
             </div>
             <div class="plux-stop-logistics-field plux-stop-logistics-field--wide">
-              <label>Terminal / Muelle / Aviso</label>
-              <input type="text" value="${escapeHtml(dest.notaParada || '')}" placeholder="Ej. Terminal, muelle o desembarque con lancha" onchange="window.actualizarCampoParada(${destId}, 'notaParada', this.value)">
+              <label>${t('logistics.terminal_notice')}</label>
+              <input type="text" value="${escapeHtml(dest.notaParada || '')}" placeholder="${escapeHtml(t('logistics.terminal_ph'))}" onchange="window.actualizarCampoParada(${destId}, 'notaParada', this.value)">
             </div>
           </div>
         </details>
@@ -8257,7 +8318,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const addBtn = document.getElementById(`btn-add-tramo-${destId}`);
       if (addBtn) {
         addBtn.style.display = sharedBooking ? 'none' : '';
-        addBtn.textContent = sharedBooking ? '+ Agregar traslado local opcional' : t('agregar_tramo');
+        addBtn.textContent = sharedBooking ? t('editor.add_local_transfer') : t('agregar_tramo');
       }
 
       if (dest.tramos.length === 0 && sharedBooking) {
@@ -8268,9 +8329,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         chip.innerHTML = `
           <div class="plux-shared-booking-chip-info">
             <i class="fa-solid ${shIcon}"></i>
-            <span>Cubierto por <strong>${escapeHtml(shTramo.medio || 'Reserva compartida')}</strong>${shTramo.alojamiento ? ` · ${escapeHtml(shTramo.alojamiento)}` : ''} · presupuestado en <strong>${escapeHtml(sharedBooking.hostDest.nombre)}</strong></span>
+            <span>${t('editor.covered_by')} <strong>${escapeHtml(shTramo.medio || t('editor.shared_booking'))}</strong>${shTramo.alojamiento ? ` · ${escapeHtml(shTramo.alojamiento)}` : ''} · ${t('editor.budgeted_in')} <strong>${escapeHtml(sharedBooking.hostDest.nombre)}</strong></span>
           </div>
-          <button type="button" class="plux-shared-booking-btn" onclick="agregarTramo(${destId})">+ Agregar traslado local opcional</button>
+          <button type="button" class="plux-shared-booking-btn" onclick="agregarTramo(${destId})">${t('editor.add_local_transfer')}</button>
         `;
         container.appendChild(chip);
         return;
@@ -8286,37 +8347,37 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const hasPartialInfo = (Number(tramo.montoPagado) > 0 || Number(tramo.saldoPendiente) > 0);
         const partialBarHtml = hasPartialInfo
           ? `<div style="margin-top:8px; font-size:0.78rem; color:var(--gris); display:flex; gap:12px; flex-wrap:wrap;">
-               <span style="color:#34d399;">Pagado: <strong>${formatMoneda(Number(tramo.montoPagado) || 0, tramoMoneda)}</strong></span>
-               <span style="color:#fbbf24;">Saldo pendiente: <strong>${formatMoneda(Number(tramo.saldoPendiente) || 0, tramoMoneda)}</strong></span>
+               <span style="color:#34d399;">${t('editor.paid_label')} <strong>${formatMoneda(Number(tramo.montoPagado) || 0, tramoMoneda)}</strong></span>
+               <span style="color:#fbbf24;">${t('editor.pending_balance')} <strong>${formatMoneda(Number(tramo.saldoPendiente) || 0, tramoMoneda)}</strong></span>
              </div>`
           : '';
 
         tramoDiv.innerHTML = `
           <div class="tramo-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h6 style="margin:0; color:var(--rosa); font-weight:700; letter-spacing:0.5px;"><i class="fa-solid ${tramoIcon}" style="margin-right:6px;"></i> ${t('transport').toUpperCase()} Y ${t('accommodation').toUpperCase()} #${ida+1}</h6>
+            <h6 style="margin:0; color:var(--rosa); font-weight:700; letter-spacing:0.5px;"><i class="fa-solid ${tramoIcon}" style="margin-right:6px;"></i> ${t('editor.transport_and_stay').toUpperCase()} #${ida+1}</h6>
             <button class="close-icon" onclick="eliminarTramo(${destId}, ${ida})">×</button>
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
             <div class="field-boa" style="position:relative;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--gris); margin:0;">${t('transport').toUpperCase()}</label>
+                <label style="font-size:0.75rem; font-weight:700; color:var(--gris); margin:0;">${t('budget.cat_transport').toUpperCase()}</label>
                 <button type="button" class="btn-live-search" onclick="window.abrirBusquedaTransporteTramo(${destId}, ${ida}, event)">
-                  <i class="fa-solid fa-compass" style="margin-right:4px;"></i> <span>Buscar transporte</span>
+                  <i class="fa-solid fa-compass" style="margin-right:4px;"></i> <span>${t('editor.search_transport')}</span>
                 </button>
               </div>
-              <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="Avión, Crucero, Tren, Bus, Auto..." value="${escapeHtml(tramo.medio || '')}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <input type="text" id="tramo-medio-${destId}-${ida}" placeholder="${escapeHtml(t('editor.transport_ph'))}" value="${escapeHtml(tramo.medio || '')}" onchange="actualizarTramo(${destId}, ${ida}, 'medio', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
               <div id="dropdown-transporte-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:99999;"></div>
             </div>
             <div class="field-boa">
-              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('transport_price') || 'PRECIO TRANSPORTE'} (${getSimboloMoneda(tramoMoneda)})</label>
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('transport_price')} (${getSimboloMoneda(tramoMoneda)})</label>
               <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap;">
                 <input type="number" id="tramo-precio-${destId}-${ida}" placeholder="0.00" value="${tramo.precio || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precio', parseFloat(this.value)||0)" style="flex:1; min-width:72px; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
-                <select class="plux-moneda-select" onchange="actualizarTramo(${destId}, ${ida}, 'moneda', this.value)" style="width:78px; min-width:70px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.8rem; font-weight:600;" title="Moneda transporte">
+                <select class="plux-moneda-select" onchange="actualizarTramo(${destId}, ${ida}, 'moneda', this.value)" style="width:78px; min-width:70px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.8rem; font-weight:600;" title="${escapeHtml(t('editor.currency_transport'))}">
                   ${renderCurrencyOptions(tramoMoneda)}
                 </select>
-                <select onchange="actualizarTramo(${destId}, ${ida}, 'modoPrecio', this.value)" style="width:110px; min-width:96px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.76rem; font-weight:600;" title="Tipo de importe">
-                  <option value="persona" ${modoPrecio === 'persona' ? 'selected' : ''}>Por persona</option>
-                  <option value="total" ${modoPrecio === 'total' ? 'selected' : ''}>Total grupo</option>
+                <select onchange="actualizarTramo(${destId}, ${ida}, 'modoPrecio', this.value)" style="width:110px; min-width:96px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.76rem; font-weight:600;" title="${escapeHtml(t('editor.price_type'))}">
+                  <option value="persona" ${modoPrecio === 'persona' ? 'selected' : ''}>${t('editor.per_person')}</option>
+                  <option value="total" ${modoPrecio === 'total' ? 'selected' : ''}>${t('editor.total_group')}</option>
                 </select>
               </div>
               ${partialBarHtml}
@@ -8325,17 +8386,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
                 <label style="font-size:0.75rem; font-weight:700; color:var(--gris); margin:0;">${t('alojamiento_label')}</label>
                 <button type="button" class="btn-live-search hotel-btn" onclick="window.abrirBusquedaHotelesTramo(${destId}, ${ida}, event)">
-                  <i class="fa-solid fa-hotel" style="margin-right:4px;"></i> <span>Buscar alojamiento</span>
+                  <i class="fa-solid fa-hotel" style="margin-right:4px;"></i> <span>${t('editor.search_stay')}</span>
                 </button>
               </div>
-              <input type="text" id="tramo-alojamiento-${destId}-${ida}" placeholder="${t('alojamiento_ph')}" value="${escapeHtml(tramo.alojamiento || '')}" onchange="actualizarTramo(${destId}, ${ida}, 'alojamiento', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
+              <input type="text" id="tramo-alojamiento-${destId}-${ida}" placeholder="${escapeHtml(t('alojamiento_ph'))}" value="${escapeHtml(tramo.alojamiento || '')}" onchange="actualizarTramo(${destId}, ${ida}, 'alojamiento', this.value)" style="width:100%; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
               <div id="dropdown-hoteles-${destId}-${ida}" class="live-booking-dropdown" style="display:none; z-index:99999;"></div>
             </div>
             <div class="field-boa" style="grid-column: 1 / -1;">
               <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--gris); margin-bottom:6px;">${t('precio_alojamiento_label')} (${getSimboloMoneda(tramo.monedaAlojamiento || getMonedaActiva())})</label>
               <div style="display:flex; gap:6px; align-items:center;">
                 <input type="number" id="tramo-precioAlojamiento-${destId}-${ida}" placeholder="0.00" value="${tramo.precioAlojamiento || 0}" onchange="actualizarTramo(${destId}, ${ida}, 'precioAlojamiento', parseFloat(this.value)||0)" style="flex:1; height:40px; background:var(--fondo); border:1px solid var(--border); border-radius:8px; padding:0 10px;">
-                <select class="plux-moneda-select" onchange="actualizarTramo(${destId}, ${ida}, 'monedaAlojamiento', this.value)" style="width:78px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.8rem; font-weight:600;" title="Moneda alojamiento">
+                <select class="plux-moneda-select" onchange="actualizarTramo(${destId}, ${ida}, 'monedaAlojamiento', this.value)" style="width:78px; height:40px; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:0.8rem; font-weight:600;" title="${escapeHtml(t('editor.currency_stay'))}">
                   ${renderCurrencyOptions(tramo.monedaAlojamiento || getMonedaActiva())}
                 </select>
               </div>
@@ -8343,7 +8404,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           </div>
           <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:0.8rem; color:var(--gris); cursor:pointer;">
             <input type="checkbox" ${tramo.cubreParadas ? 'checked' : ''} onchange="actualizarTramo(${destId}, ${ida}, 'cubreParadas', this.checked)" style="width:16px !important; min-width:16px !important; height:16px !important; min-height:16px !important; padding:0 !important; margin:0 !important; flex-shrink:0; accent-color:#10b981;">
-            <span>Este mismo transporte y alojamiento cubre las paradas siguientes (crucero, tren nocturno, motorhome)</span>
+            <span>${t('editor.covers_following_stops')}</span>
           </label>
           <div class="escalas-container" id="escalas-${destId}-${ida}" style="margin-top:12px;"></div>
           <button class="add-escala-btn" onclick="agregarEscala(${destId}, ${ida})" style="margin-top:10px; background:transparent; border:1px dashed var(--border); color:var(--gris); width:100%; padding:8px; border-radius:8px; cursor:pointer;">${t('agregar_escala_btn')}</button>
@@ -8480,17 +8541,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         diaDiv.innerHTML = `
           <div class="dia-header" onclick="toggleEditorDia(${destId}, ${dia.id}, event)" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; gap:6px;">
             <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; overflow:hidden;">
-              <span class="drag-handle drag-handle-dia" data-drag-type="dia" data-dest-id="${destId}" data-dia-id="${dia.id}" data-dia-idx="${diaIdx}" title="Arrastra o mantén presionado para reordenar día" onclick="event.stopPropagation()">⠿</span>
+              <span class="drag-handle drag-handle-dia" data-drag-type="dia" data-dest-id="${destId}" data-dia-id="${dia.id}" data-dia-idx="${diaIdx}" title="${escapeHtml(t('editor.drag_day'))}" onclick="event.stopPropagation()">⠿</span>
               <h4 style="margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t('day_prefix')} ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris);font-weight:normal">(${daySched.dateLabel})</small>` : ''}</h4>
               <span id="editor-dia-ev-badge-${destId}-${dia.id}" style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:999px; white-space:nowrap; flex-shrink:0;">${evCount}</span>
             </div>
             <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-              <div id="weather-day-${destId}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-day-${destId}-${dia.id}')" title="Clima del día">
+              <div id="weather-day-${destId}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-day-${destId}-${dia.id}')" title="${escapeHtml(t('summary.weather_day_title'))}">
                 <div class="weather-chip-row"><span class="weather-chip-icon"><i class="fa-solid fa-cloud-sun"></i></span><span class="weather-chip-temp">...</span></div>
               </div>
-              <span id="editor-dia-chev-${destId}-${dia.id}" class="chevron-indicator" style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; background:rgba(255,255,255,0.06); transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.72rem;" title="Plegar / Expandir">▼</span>
+              <span id="editor-dia-chev-${destId}-${dia.id}" class="chevron-indicator" style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; background:rgba(255,255,255,0.06); transition:transform 0.2s ease; transform:${isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.72rem;" title="${escapeHtml(t('editor.collapse_toggle_title'))}">▼</span>
               <div class="dia-actions" style="display:flex; align-items:center; gap:3px;">
-                <span class="copy-icon" onclick="event.stopPropagation(); duplicarDia(${destId}, ${dia.id});" title="${t('copy_button')}" style="padding:2px 4px;">⎘</span>
+                <span class="copy-icon" onclick="event.stopPropagation(); duplicarDia(${destId}, ${dia.id});" title="${escapeHtml(t('copy_button'))}" style="padding:2px 4px;">⎘</span>
                 <button class="close-icon" onclick="event.stopPropagation(); eliminarDia(${destId}, ${dia.id});" style="font-size:1.6rem; line-height:1; padding:0 2px;">×</button>
               </div>
             </div>
@@ -8586,31 +8647,31 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           evDiv.title = t('conflict_warning');
         } else if (isShortGap) {
           evDiv.style.borderLeft = "4px solid #facc15";
-          evDiv.title = "Poco tiempo entre eventos (menos de 15 min)";
+          evDiv.title = t('warning_15min');
         }
 
         evDiv.innerHTML = `
           <div class="fila-hora-titulo" style="display:flex; align-items:center; gap:6px;">
-            <span class="drag-handle drag-handle-ev" data-drag-type="evento" data-dest-id="${destId}" data-dia-id="${diaId}" data-ev-idx="${ida}" title="Arrastra o mantén presionado para reordenar actividad" onclick="event.stopPropagation()">⠿</span>
-            <span id="editor-ev-chev-${destId}-${diaId}-${ida}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isEvCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.75rem; cursor:pointer;" onclick="toggleEditorEvento(${destId}, ${diaId}, ${ida}, event)" title="Plegar / Expandir detalles">▼</span>
-            <input type="time" value="${ev.hora || ''}" style="width:105px; min-width:95px;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'hora', this.value)" title="Hora del evento">
-            <input type="text" value="${escapeHtml(ev.titulo || '')}" placeholder="${t('event_title_placeholder')}" style="flex:1;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'titulo', this.value)">
+            <span class="drag-handle drag-handle-ev" data-drag-type="evento" data-dest-id="${destId}" data-dia-id="${diaId}" data-ev-idx="${ida}" title="${escapeHtml(t('editor.drag_event'))}" onclick="event.stopPropagation()">⠿</span>
+            <span id="editor-ev-chev-${destId}-${diaId}-${ida}" class="chevron-indicator" style="display:inline-block; transition:transform 0.2s ease; transform:${isEvCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; color:var(--gris); font-size:0.75rem; cursor:pointer;" onclick="toggleEditorEvento(${destId}, ${diaId}, ${ida}, event)" title="${escapeHtml(t('editor.collapse_toggle_title'))}">▼</span>
+            <input type="time" value="${ev.hora || ''}" style="width:105px; min-width:95px;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'hora', this.value)" title="${escapeHtml(t('event_time_placeholder'))}">
+            <input type="text" value="${escapeHtml(ev.titulo || '')}" placeholder="${escapeHtml(t('event_title_placeholder'))}" style="flex:1;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'titulo', this.value)">
             <button class="close-icon" onclick="eliminarEvento(${destId}, ${diaId}, ${ida})" style="margin-left:auto;">×</button>
           </div>
           <div id="editor-ev-body-${destId}-${diaId}-${ida}" style="display:${isEvCollapsed ? 'none' : 'block'}; margin-top:8px;">
-            <input type="text" class="notas-input" value="${escapeHtml(ev.notas || '')}" placeholder="${t('event_notes_placeholder')}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'notas', this.value)">
+            <input type="text" class="notas-input" value="${escapeHtml(ev.notas || '')}" placeholder="${escapeHtml(t('event_notes_placeholder'))}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'notas', this.value)">
             <div class="detalles-evento">
               <div class="detalle-field">
-                <label>${t('event_cost_placeholder')} (${getSimboloMoneda(ev.moneda || getMonedaActiva())})</label>
+                <label>${t('budget.col_cost')} (${getSimboloMoneda(ev.moneda || getMonedaActiva())})</label>
                 <div style="display:flex; gap:6px; align-items:center;">
                   <input type="number" value="${ev.costo || 0}" style="flex:1;" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'costo', parseFloat(this.value)||0)">
-                  <select class="plux-moneda-select" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'moneda', this.value)" style="width:78px; padding:6px 4px; font-size:0.8rem; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:6px; color:#fff;" title="Moneda de este gasto">
+                  <select class="plux-moneda-select" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'moneda', this.value)" style="width:78px; padding:6px 4px; font-size:0.8rem; background:rgba(15,23,42,0.95); border:1px solid var(--border); border-radius:6px; color:#fff;">
                     ${renderCurrencyOptions(ev.moneda || getMonedaActiva())}
                   </select>
                 </div>
               </div>
               <div class="detalle-field">
-                <label>${t('event_duration_placeholder')} (min)</label>
+                <label>${t('event_duration_placeholder')}</label>
                 <input type="number" value="${ev.duracion || 0}" onchange="actualizarEvento(${destId}, ${diaId}, ${ida}, 'duracion', parseInt(this.value)||0)">
               </div>
             </div>
@@ -9199,10 +9260,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         abrirPresentacion();
         modoVista = 0;
         const btnView = document.querySelector('.view-toggle');
-        if (btnView) btnView.textContent = t('view_modes')['timeline'];
+        if (btnView) btnView.textContent = t('view_modes.timeline');
       } else {
         const btnView = document.querySelector('.view-toggle');
-        if (btnView) btnView.textContent = t('view_modes')[modos[(modoVista + 1) % 3]];
+        if (btnView) btnView.textContent = t('view_modes.' + modos[(modoVista + 1) % 3]);
       }
       renderResumen();
     }
@@ -9262,7 +9323,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (typeof nombresPersonasGlobal === 'string' && nombresPersonasGlobal) {
         nombresPersonasGlobal.split(',').forEach(v => { if (v && String(v).trim()) set.add(String(v).trim()); });
       }
-      if (set.size === 0) set.add('Viajero 1');
+      if (set.size === 0) set.add(t('traveler_one_default'));
       return Array.from(set);
     }
     window.obtenerListaViajerosTotal = obtenerListaViajerosTotal;
@@ -9334,8 +9395,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               destIndex: destIdx,
               subId: null,
               itemIndex: tramoIdx,
-              concepto: `Transporte a ${dest.nombre} (${tramo.medio || 'Trayecto'})`,
-              categoria: 'Transporte',
+              concepto: t('budget.transport_to', { dest: dest.nombre, mode: tramo.medio || t('summary.segment_default') }),
+              categoria: t('budget.cat_transport'),
               costoUnitario: redondearMoneda(precioTransp, monedaActiva),
               costoTotal: cTransp,
               modoPrecio: tramo.modoPrecio === 'total' ? 'total' : 'persona',
@@ -9360,8 +9421,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               destIndex: destIdx,
               subId: null,
               itemIndex: tramoIdx,
-              concepto: `Alojamiento en ${dest.nombre} (${tramo.alojamiento || 'Estancia'})`,
-              categoria: 'Alojamiento',
+              concepto: t('budget.stay_in', { dest: dest.nombre, stay: tramo.alojamiento || t('summary.stay_default') }),
+              categoria: t('budget.cat_stay'),
               costoUnitario: redondearMoneda(precioAloj, monedaActiva),
               costoTotal: cAloj,
               modoPrecio: tramo.modoPrecio === 'total' ? 'total' : 'persona',
@@ -9390,13 +9451,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 subId: dia.id,
                 diaIndex: diaIdx,
                 itemIndex: evIdx,
-                concepto: ev.titulo || t('untitled_event') || 'Actividad',
-                categoria: 'Actividades',
+                concepto: ev.titulo || t('untitled_event'),
+                categoria: t('budget.cat_activities'),
                 costoUnitario: evCostoUnit,
                 costoTotal: c,
                 pagadoPor: ev.pagadoPor || 'Todos',
                 pagado: isPaid,
-                ubicacion: `${dest.nombre} - Dia ${diaIdx + 1}`
+                ubicacion: `${dest.nombre} - ${t('day_prefix')} ${diaIdx + 1}`
               });
             }
           });
@@ -9415,13 +9476,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 subId: dia.id,
                 diaIndex: diaIdx,
                 itemIndex: cIdx,
-                concepto: c.concepto || c.descripcion || 'Gasto adicional',
-                categoria: 'Extras',
+                concepto: c.concepto || c.descripcion || t('budget.additional_expense'),
+                categoria: t('budget.cat_extras'),
                 costoUnitario: p,
                 costoTotal: p,
                 pagadoPor: c.pagadoPor || 'Todos',
                 pagado: isPaid,
-                ubicacion: `${dest.nombre} - Dia ${diaIdx + 1}`
+                ubicacion: `${dest.nombre} - ${t('day_prefix')} ${diaIdx + 1}`
               });
             }
           });
@@ -9444,13 +9505,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           destIndex: null,
           subId: null,
           itemIndex: null,
-          concepto: `Regreso / Vuelta (${vueltaGlobal || 'Retorno'})`,
-          categoria: 'Transporte',
+          concepto: t('budget.return_concept', { desc: vueltaGlobal || t('budget.return_loc') }),
+          categoria: t('budget.cat_transport'),
           costoUnitario: vUnit,
           costoTotal: vCost,
           pagadoPor: (typeof vueltaPagadoPor !== 'undefined') ? vueltaPagadoPor : 'Todos',
           pagado: isPaid,
-          ubicacion: 'Regreso'
+          ubicacion: t('budget.return_loc')
         });
       }
 
@@ -9467,13 +9528,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             destIndex: null,
             subId: null,
             itemIndex: vcIdx,
-            concepto: vc.descripcion || vc.concepto || 'Extra de vuelta',
-            categoria: 'Extras',
+            concepto: vc.descripcion || vc.concepto || t('budget.return_extra'),
+            categoria: t('budget.cat_extras'),
             costoUnitario: p,
             costoTotal: p,
             pagadoPor: vc.pagadoPor || 'Todos',
             pagado: isPaid,
-            ubicacion: 'Regreso'
+            ubicacion: t('budget.return_loc')
           });
         }
       });
@@ -9481,11 +9542,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       // Update hero subtitle
       const fechaEl = document.getElementById('fechaInicio');
       const fechaParsed = fechaEl?.value ? parseLocalNoon(fechaEl.value) : null;
-      const fecha = fechaParsed ? fechaParsed.toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      const dateLocale = typeof window.getLangLocale === 'function' ? window.getLangLocale() : 'es-ES';
+      const fecha = fechaParsed ? fechaParsed.toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
       const subtitleEl = document.getElementById('resumen-subtitle');
       if (subtitleEl) {
-        let sub = fecha ? `Salida: ${fecha} • ${destinos.map(d => d.nombre).join(' → ')}` : destinos.map(d => d.nombre).join(' → ');
-        if (nombresPersonasGlobal) sub += ` • Viajeros: ${nombresPersonasGlobal}`;
+        let sub = fecha ? `${t('summary.departure_prefix')} ${fecha} • ${destinos.map(d => d.nombre).join(' → ')}` : destinos.map(d => d.nombre).join(' → ');
+        if (nombresPersonasGlobal) sub += ` • ${t('summary.travelers_prefix')} ${nombresPersonasGlobal}`;
         subtitleEl.textContent = sub;
       }
 
@@ -9495,31 +9557,33 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const statGrid = document.getElementById('stat-grid');
       if (statGrid) {
         const totalNoches = totalDias > 1 ? totalDias - 1 : (totalDias === 1 ? 1 : 0);
+        const dayUnit = totalDias === 1 ? t('common.day_singular') : t('common.day_plural');
+        const nightUnit = totalNoches === 1 ? t('common.night_singular') : t('common.night_plural');
         statGrid.innerHTML = `
           <div class="stat-card stat-azul">
-            <div class="stat-badge">DURACION</div>
+            <div class="stat-badge">${t('summary.badge_duration')}</div>
             <div class="stat-value">${totalDias}</div>
-            <div class="stat-label">${totalDias} Dias • ${totalNoches} Noches</div>
+            <div class="stat-label">${t('summary.days_nights_summary', { days: totalDias, dayUnit, nights: totalNoches, nightUnit })}</div>
           </div>
           <div class="stat-card stat-verde">
-            <div class="stat-badge">ACTIVIDADES</div>
+            <div class="stat-badge">${t('summary.badge_activities')}</div>
             <div class="stat-value">${totalEventos}</div>
-            <div class="stat-label">Itinerario planificado</div>
+            <div class="stat-label">${t('summary.planned_itinerary')}</div>
           </div>
           <div class="stat-card stat-amarillo">
-            <div class="stat-badge">DESTINOS</div>
+            <div class="stat-badge">${t('summary.badge_destinations')}</div>
             <div class="stat-value">${destinos.length}</div>
-            <div class="stat-label">Ciudades y paradas</div>
+            <div class="stat-label">${t('summary.cities_and_stops')}</div>
           </div>
           <div class="stat-card stat-rosa">
-            <div class="stat-badge">PRESUPUESTO TOTAL</div>
+            <div class="stat-badge">${t('summary.badge_total_budget')}</div>
             <div class="stat-value">${formatMoneda(costoGlobal)}</div>
-            <div class="stat-label">Total estimado</div>
+            <div class="stat-label">${t('summary.est_total')}</div>
           </div>
           <div class="stat-card stat-azul">
-            <div class="stat-badge">POR PERSONA</div>
+            <div class="stat-badge">${t('summary.badge_per_person')}</div>
             <div class="stat-value">${formatMoneda(numPersonas > 0 ? (costoGlobal / numPersonas) : 0)}</div>
-            <div class="stat-label">${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</div>
+            <div class="stat-label">${numPersonas} ${numPersonas === 1 ? t('common.traveler_singular') : t('common.traveler_plural')}</div>
           </div>
         `;
       }
@@ -9533,7 +9597,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
         collectMapRoutePoints().then(({ puntos }) => {
           if (!puntos || puntos.length === 0) {
-            mapContainer.innerHTML = '<p style="color:var(--gris);text-align:center;padding:20px;">No se pudieron geocodificar destinos</p>';
+            mapContainer.innerHTML = `<p style="color:var(--gris);text-align:center;padding:20px;">${t('summary.geocode_error')}</p>`;
             return;
           }
           if (window._resumenMap) { try { window._resumenMap.remove(); } catch(e){} window._resumenMap = null; }
@@ -9545,7 +9609,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const latlngs = puntos.map(p => [p.lat, p.lon]);
           puntos.forEach((p) => {
             if (p.isReturnClone || p.isCircularReturn) return;
-            const sub = p.isCircularOrigin ? 'Salida y Regreso' : (p.isOrigin ? 'Punto de partida' : (getStopTimeBadgeText(p) || `${p.dias} ${p.dias === 1 ? 'día' : 'días'}`));
+            const sub = p.isCircularOrigin ? t('summary.origin_and_return') : (p.isOrigin ? t('summary.starting_point') : (getStopTimeBadgeText(p) || `${p.dias} ${p.dias === 1 ? t('common.day_singular') : t('common.day_plural')}`));
             L.marker([p.lat, p.lon]).addTo(miniMap).bindPopup(`<b>${escapeHtml(p.nombre)}</b><br><small>${escapeHtml(sub)}</small>`);
           });
 
@@ -9569,13 +9633,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const transitDays = (destIdx > 0 && Number(dest.diasTransitoPrevio) > 0) ? Math.floor(Number(dest.diasTransitoPrevio)) : 0;
         if (transitDays <= 0) return '';
         const tSlots = tripSchedule.filter(s => s.isTransit && s.destId === dest.id);
-        const label = (dest.transitoEtiqueta || '').trim() || 'En navegación';
+        const label = (dest.transitoEtiqueta || '').trim() || t('editor.in_navigation');
         let rangeText = '';
         if (tSlots.length === 1 && tSlots[0].dateLabel) rangeText = tSlots[0].dateLabel;
         else if (tSlots.length > 1 && tSlots[0].dateLabel && tSlots[tSlots.length - 1].dateLabel) {
           rangeText = `${tSlots[0].dateLabel} – ${tSlots[tSlots.length - 1].dateLabel}`;
         }
-        return `<div class="plux-transit-connector" style="margin:8px 0 12px;"><span class="plux-transit-connector-pill" style="cursor:default;"><i class="fa-solid fa-ship"></i><span>${transitDays} ${transitDays === 1 ? 'día' : 'días'} · ${escapeHtml(label)}${rangeText ? ' · ' + escapeHtml(rangeText) : ''}</span></span></div>`;
+        return `<div class="plux-transit-connector" style="margin:8px 0 12px;"><span class="plux-transit-connector-pill" style="cursor:default;"><i class="fa-solid fa-ship"></i><span>${transitDays} ${transitDays === 1 ? t('common.day_singular') : t('common.day_plural')} · ${escapeHtml(label)}${rangeText ? ' · ' + escapeHtml(rangeText) : ''}</span></span></div>`;
       };
 
       if (isTimeline) {
@@ -9583,7 +9647,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         if (lugarSalida && !skipDupOriginBlock) {
           cont.innerHTML += `
             <div class="ciudad-block timeline" style="border-left:none; margin-bottom:24px;">
-              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:700;">PUNTO DE PARTIDA</div>
+              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:700;">${t('summary.starting_point').toUpperCase()}</div>
               <div style="font-size:1.1rem; font-weight:700; color:#f8fafc; margin-top:4px;">${escapeHtml(lugarSalida)}</div>
             </div>
           `;
@@ -9597,7 +9661,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             <div class="ciudad-block timeline" style="border-left:none; margin-bottom:32px;">
               <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:8px; gap:8px; flex-wrap:wrap;">
                 <h3 style="color:#38bdf8; margin:0; font-size:1.3rem; font-weight:700;">${destIdx + 1}. ${escapeHtml(dest.nombre)}${stopTimeStr ? ` <small style="color:var(--gris); font-size:0.8rem; font-weight:500;">(${escapeHtml(stopTimeStr)})</small>` : ''}</h3>
-                ${(dest.tramos || []).length ? `<small style="color:var(--gris); font-size:0.82rem;">${dest.tramos.map(t => escapeHtml(t.medio || 'Trayecto')).join(' • ')}</small>` : (sharedBooking ? `<small style="color:var(--gris); font-size:0.82rem;">${escapeHtml(sharedBooking.tramo.medio || 'Reserva compartida')}</small>` : '')}
+                ${(dest.tramos || []).length ? `<small style="color:var(--gris); font-size:0.82rem;">${dest.tramos.map(tr => escapeHtml(tr.medio || t('summary.segment_default'))).join(' • ')}</small>` : (sharedBooking ? `<small style="color:var(--gris); font-size:0.82rem;">${escapeHtml(sharedBooking.tramo.medio || t('editor.shared_booking'))}</small>` : '')}
               </div>
           `;
 
@@ -9609,8 +9673,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             const sumConv = cTransp + cAloj;
             html += `
               <div style="margin-bottom:12px; font-size:0.88rem; color:var(--gris); background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:8px;">
-                <strong style="color:#f8fafc;">Transporte / Estancia ${i + 1}:</strong> ${escapeHtml(tramo.medio || 'Trayecto')}
-                ${tramo.alojamiento ? ` • Alojamiento: ${escapeHtml(tramo.alojamiento)}` : ''}
+                <strong style="color:#f8fafc;">${t('summary.transport_stay_n', { n: i + 1 })}</strong> ${escapeHtml(tramo.medio || t('summary.segment_default'))}
+                ${tramo.alojamiento ? ` • ${t('accommodation')}: ${escapeHtml(tramo.alojamiento)}` : ''}
                 ${sumConv ? ` — <span style="color:#34d399; font-weight:600;">${formatMoneda(sumConv)}</span>` : ''}
               </div>
             `;
@@ -9618,7 +9682,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           if ((!dest.tramos || dest.tramos.length === 0) && sharedBooking) {
             html += `
               <div style="margin-bottom:12px; font-size:0.84rem; color:var(--gris); background:rgba(56,189,248,0.06); padding:8px 12px; border-radius:8px; border:1px solid rgba(56,189,248,0.18);">
-                Cubierto por <strong style="color:#f8fafc;">${escapeHtml(sharedBooking.tramo.medio || 'Reserva compartida')}</strong>${sharedBooking.tramo.alojamiento ? ` · ${escapeHtml(sharedBooking.tramo.alojamiento)}` : ''} · presupuestado en ${escapeHtml(sharedBooking.hostDest.nombre)}
+                ${t('summary.covered_by')} <strong style="color:#f8fafc;">${escapeHtml(sharedBooking.tramo.medio || t('editor.shared_booking'))}</strong>${sharedBooking.tramo.alojamiento ? ` · ${escapeHtml(sharedBooking.tramo.alojamiento)}` : ''} · ${t('editor.budgeted_in')} ${escapeHtml(sharedBooking.hostDest.nombre)}
               </div>
             `;
           }
@@ -9632,15 +9696,15 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             html += `
               <div class="dia-resumen timeline">
                 <div class="dia-resumen-header" style="margin-bottom:10px;">
-                  <h4 style="margin:0; font-size:1.02rem; font-weight:700; color:#f8fafc;">Dia ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris); font-weight:normal;">(${daySched.dateLabel})</small>` : ''}</h4>
-                  <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="Pronostico del dia">
+                  <h4 style="margin:0; font-size:1.02rem; font-weight:700; color:#f8fafc;">${t('day_prefix')} ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris); font-weight:normal;">(${daySched.dateLabel})</small>` : ''}</h4>
+                  <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="${escapeHtml(t('summary.weather_day_title'))}">
                     <div class="weather-chip-row"><span class="weather-chip-icon">...</span><span class="weather-chip-temp">...</span></div>
                   </div>
                 </div>
             `;
 
             if (!dia.eventos || dia.eventos.length === 0) {
-              html += `<p style="color:var(--gris); font-size:0.85rem; margin:6px 0; font-style:italic;">Sin actividades registradas</p>`;
+              html += `<p style="color:var(--gris); font-size:0.85rem; margin:6px 0; font-style:italic;">${t('summary.no_activities')}</p>`;
             } else {
               dia.eventos.forEach(ev => {
                 const evCostConv = convertirMonto(Number(ev.costo) || 0, ev.moneda || monedaActiva, monedaActiva);
@@ -9651,7 +9715,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                       <strong style="color:#f8fafc; font-size:0.95rem;">${escapeHtml(ev.titulo || t('untitled_event'))}</strong>
                       ${ev.duracion ? `<small style="color:var(--gris); margin-left:8px;">[${ev.duracion} min]</small>` : ''}
                       ${evCostConv ? `<small style="color:#fbbf24; margin-left:8px; font-weight:700;">${formatMoneda(evCostConv * numPersonas)}</small>` : ''}
-                      ${ev.lugar ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.82rem;">Ubicacion: ${escapeHtml(ev.lugar)}</p>` : ''}
+                      ${ev.lugar ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.82rem;">${t('summary.location_label')} ${escapeHtml(ev.lugar)}</p>` : ''}
                       ${ev.notas ? `<p class="nota-resumen" style="margin:3px 0 0 0; color:var(--gris); font-size:0.85rem;">↳ ${escapeHtml(ev.notas)}</p>` : ''}
                     </div>
                   </div>
@@ -9664,7 +9728,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 const extraConv = convertirMonto(Number(c.precio) || 0, c.moneda || monedaActiva, monedaActiva);
                 html += `
                   <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--gris); padding:4px 0; border-top:1px dashed rgba(255,255,255,0.05); margin-top:6px;">
-                    <span>Costo adicional: ${escapeHtml(c.concepto || 'Extra')}</span>
+                    <span>${t('summary.extra_cost_label')} ${escapeHtml(c.concepto || 'Extra')}</span>
                     <span style="color:#f472b6; font-weight:600;">${formatMoneda(extraConv)}</span>
                   </div>
                 `;
@@ -9682,8 +9746,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const vConv = convertirMonto(Number(vueltaPrecioGlobal) || 0, (typeof vueltaMonedaGlobal !== 'undefined' && vueltaMonedaGlobal) || monedaActiva, monedaActiva);
           let vueltaHtml = `
             <div class="ciudad-block timeline" style="border-left:none; margin-top:20px;">
-              <h3 style="color:#f472b6; margin:0 0 8px 0; font-size:1.15rem; font-weight:700;">Regreso / Vuelta</h3>
-              <div><strong style="color:#f8fafc;">${escapeHtml(vueltaGlobal || 'Viaje de retorno')}</strong>${vConv ? ` — <span style="color:#f472b6; font-weight:700;">${formatMoneda(vConv * numPersonas)}</span>` : ''}</div>
+              <h3 style="color:#f472b6; margin:0 0 8px 0; font-size:1.15rem; font-weight:700;">${t('summary.return_trip')}</h3>
+              <div><strong style="color:#f8fafc;">${escapeHtml(vueltaGlobal || t('summary.return_default'))}</strong>${vConv ? ` — <span style="color:#f472b6; font-weight:700;">${formatMoneda(vConv * numPersonas)}</span>` : ''}</div>
             </div>
           `;
           cont.innerHTML += vueltaHtml;
@@ -9693,7 +9757,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         if (lugarSalida && !skipDupOriginBlock) {
           cont.innerHTML += `
             <div class="ciudad-block" style="border-left: 3px solid #38bdf8; margin-bottom: 16px;">
-              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:700;">PUNTO DE PARTIDA</div>
+              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:700;">${t('summary.starting_point').toUpperCase()}</div>
               <div style="font-size:1.05rem; font-weight:600; color:#f8fafc; margin-top:2px;">${escapeHtml(lugarSalida)}</div>
             </div>
           `;
@@ -9711,12 +9775,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div class="collapsible-header" onclick="toggleResumenDestino(${dest.id})">
                 <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                   <span id="resumen-dest-chev-${dest.id}" class="chevron-indicator" style="transform:${isDestCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
-                  <span style="background:rgba(56,189,248,0.12); color:#38bdf8; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:6px; letter-spacing:0.04em;">DESTINO ${destIdx + 1}</span>
+                  <span style="background:rgba(56,189,248,0.12); color:#38bdf8; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:6px; letter-spacing:0.04em;">${t('summary.destination_n', { n: destIdx + 1 })}</span>
                   <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#f8fafc;">${escapeHtml(dest.nombre)}</h3>
                   ${stopTimeStr ? `<span class="plux-stop-badge">${escapeHtml(stopTimeStr)}</span>` : ''}
                 </div>
                 <div style="font-size:0.82rem; color:var(--gris); font-weight:500;">
-                  ${destStats.diasCount} ${destStats.diasCount === 1 ? 'dia' : 'dias'}${destStats.costo > 0 ? ` • <span style="color:#34d399; font-weight:600;">${formatMoneda(destStats.costo)}</span>` : ''}
+                  ${destStats.diasCount} ${destStats.diasCount === 1 ? t('common.day_singular') : t('common.day_plural')}${destStats.costo > 0 ? ` • <span style="color:#34d399; font-weight:600;">${formatMoneda(destStats.costo)}</span>` : ''}
                 </div>
               </div>
               <div id="resumen-dest-body-${dest.id}" style="display:${isDestCollapsed ? 'none' : 'block'}; padding: 12px 16px 16px;">
@@ -9732,8 +9796,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div class="transp-summary-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
                   <div>
-                    <strong>Transporte / Estancia ${i + 1}:</strong> ${escapeHtml(tramo.medio || 'Trayecto')}
-                    ${tramo.alojamiento ? `<span style="color:var(--gris);"> • Alojamiento: ${escapeHtml(tramo.alojamiento)}</span>` : ''}
+                    <strong>${t('summary.transport_stay_n', { n: i + 1 })}</strong> ${escapeHtml(tramo.medio || t('summary.segment_default'))}
+                    ${tramo.alojamiento ? `<span style="color:var(--gris);"> • ${t('accommodation')}: ${escapeHtml(tramo.alojamiento)}</span>` : ''}
                   </div>
                   ${sumConv ? `<span style="color:#38bdf8; font-weight:600; font-size:0.85rem;">${formatMoneda(sumConv)}</span>` : ''}
                 </div>
@@ -9744,7 +9808,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             html += `
               <div class="transp-summary-card" style="background:rgba(56,189,248,0.06); border-color:rgba(56,189,248,0.18);">
                 <div style="font-size:0.84rem; color:var(--gris);">
-                  Cubierto por <strong style="color:#f8fafc;">${escapeHtml(sharedBooking.tramo.medio || 'Reserva compartida')}</strong>${sharedBooking.tramo.alojamiento ? ` · ${escapeHtml(sharedBooking.tramo.alojamiento)}` : ''} · presupuestado en ${escapeHtml(sharedBooking.hostDest.nombre)}
+                  ${t('summary.covered_by')} <strong style="color:#f8fafc;">${escapeHtml(sharedBooking.tramo.medio || t('editor.shared_booking'))}</strong>${sharedBooking.tramo.alojamiento ? ` · ${escapeHtml(sharedBooking.tramo.alojamiento)}` : ''} · ${t('editor.budgeted_in')} ${escapeHtml(sharedBooking.hostDest.nombre)}
                 </div>
               </div>
             `;
@@ -9764,10 +9828,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <div class="dia-resumen-header" onclick="toggleResumenDia(${dest.id}, ${dia.id})" style="cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.03);">
                   <div style="display:flex; align-items:center; gap:8px;">
                     <span id="resumen-dia-chev-${dest.id}-${dia.id}" class="chevron-indicator" style="font-size:0.75rem; transform:${isDiaCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'};">▼</span>
-                    <h4 style="margin:0; font-size:0.95rem; font-weight:600;">Dia ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris); font-weight:normal;">(${daySched.dateLabel})</small>` : ''}</h4>
-                    <span style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">${evCount} ${evCount === 1 ? 'actividad' : 'actividades'}</span>
+                    <h4 style="margin:0; font-size:0.95rem; font-weight:600;">${t('day_prefix')} ${diaIdx + 1}${daySched?.dateLabel ? ` <small style="color:var(--gris); font-weight:normal;">(${daySched.dateLabel})</small>` : ''}</h4>
+                    <span style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">${evCount} ${evCount === 1 ? t('common.activity_singular') : t('common.activity_plural')}</span>
                   </div>
-                  <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="Pronostico del dia">
+                  <div id="weather-resumen-day-${dest.id}-${dia.id}" class="weather-chip weather-chip-day" data-city="${dest.nombre.replace(/"/g, '&quot;')}" data-date="${dateStr}" data-fidx="${fidx}" onclick="event.stopPropagation(); toggleWeatherWidget('weather-resumen-day-${dest.id}-${dia.id}')" title="${escapeHtml(t('summary.weather_day_title'))}">
                     <div class="weather-chip-row"><span class="weather-chip-icon">...</span><span class="weather-chip-temp">...</span></div>
                   </div>
                 </div>
@@ -9775,13 +9839,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             `;
 
             if (!dia.eventos || dia.eventos.length === 0) {
-              html += `<p style="color:var(--gris); font-size:0.85rem; margin:6px 0; font-style:italic;">Sin actividades registradas</p>`;
+              html += `<p style="color:var(--gris); font-size:0.85rem; margin:6px 0; font-style:italic;">${t('summary.no_activities')}</p>`;
             } else {
               dia.eventos.forEach(ev => {
                 const hasDetails = Boolean(ev.notas || ev.lugar || ev.categoria);
                 const evCostConv = convertirMonto(Number(ev.costo) || 0, ev.moneda || monedaActiva, monedaActiva);
                 html += `
-                  <div class="evento-row-compact" onclick="toggleResumenEventoDetails(this)" title="${hasDetails ? 'Click para ver mas detalles' : ''}">
+                  <div class="evento-row-compact" onclick="toggleResumenEventoDetails(this)" title="${hasDetails ? escapeHtml(t('summary.click_details')) : ''}">
                     <div class="ev-main-line">
                       <span class="ev-time">${ev.hora || '--:--'}</span>
                       <span class="ev-title">${escapeHtml(ev.titulo || t('untitled_event'))}</span>
@@ -9790,7 +9854,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                     </div>
                     ${hasDetails ? `
                       <div class="ev-details">
-                        ${ev.lugar ? `<div style="font-weight:600; margin-bottom:2px;">Ubicacion: ${escapeHtml(ev.lugar)}</div>` : ''}
+                        ${ev.lugar ? `<div style="font-weight:600; margin-bottom:2px;">${t('summary.location_label')} ${escapeHtml(ev.lugar)}</div>` : ''}
                         ${ev.notas ? `<div>${escapeHtml(ev.notas)}</div>` : ''}
                       </div>
                     ` : ''}
@@ -9804,7 +9868,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 const extraConv = convertirMonto(Number(c.precio) || 0, c.moneda || monedaActiva, monedaActiva);
                 html += `
                   <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--gris); padding:4px 8px; border-top:1px dashed rgba(255,255,255,0.05); margin-top:4px;">
-                    <span>Costo adicional: ${escapeHtml(c.concepto || 'Extra')}</span>
+                    <span>${t('summary.extra_cost_label')} ${escapeHtml(c.concepto || 'Extra')}</span>
                     <span style="color:#f472b6; font-weight:600;">${formatMoneda(extraConv)}</span>
                   </div>
                 `;
@@ -9822,9 +9886,9 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const vConv = convertirMonto(Number(vueltaPrecioGlobal) || 0, (typeof vueltaMonedaGlobal !== 'undefined' && vueltaMonedaGlobal) || monedaActiva, monedaActiva);
           let vueltaHtml = `
             <div class="collapsible-card" style="border-left: 3px solid #f472b6; margin-top: 16px; padding: 14px 18px;">
-              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#f472b6; font-weight:700;">REGRESO / VUELTA</div>
+              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#f472b6; font-weight:700;">${t('summary.return_trip').toUpperCase()}</div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-                <div style="font-weight:600; color:#f8fafc; font-size:1rem;">${escapeHtml(vueltaGlobal || 'Viaje de vuelta')}</div>
+                <div style="font-weight:600; color:#f8fafc; font-size:1rem;">${escapeHtml(vueltaGlobal || t('summary.return_default'))}</div>
                 ${vConv ? `<span style="color:#f472b6; font-weight:700; font-size:1rem;">${formatMoneda(vConv * numPersonas)}</span>` : ''}
               </div>
             </div>
@@ -9838,26 +9902,27 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       // ==========================================
       const presupuestoKpiGrid = document.getElementById('presupuesto-kpi-grid');
       if (presupuestoKpiGrid) {
+        const pctPaid = costoGlobal > 0 ? Math.round((totalPagado / costoGlobal) * 100) : 0;
         presupuestoKpiGrid.innerHTML = `
           <div class="stat-card stat-rosa">
-            <div class="stat-badge">TOTAL ESTIMADO</div>
+            <div class="stat-badge">${t('budget.total_estimated')}</div>
             <div class="stat-value">${formatMoneda(costoGlobal)}</div>
-            <div class="stat-label">Costo global del viaje</div>
+            <div class="stat-label">${t('budget.global_cost_label')}</div>
           </div>
           <div class="stat-card stat-azul">
-            <div class="stat-badge">POR PERSONA</div>
+            <div class="stat-badge">${t('summary.badge_per_person')}</div>
             <div class="stat-value">${formatMoneda(numPersonas > 0 ? (costoGlobal / numPersonas) : 0)}</div>
-            <div class="stat-label">${numPersonas} ${numPersonas === 1 ? 'viajero' : 'viajeros'}</div>
+            <div class="stat-label">${numPersonas} ${numPersonas === 1 ? t('common.traveler_singular') : t('common.traveler_plural')}</div>
           </div>
           <div class="stat-card stat-verde">
-            <div class="stat-badge">TOTAL PAGADO</div>
+            <div class="stat-badge">${t('budget.total_paid')}</div>
             <div class="stat-value">${formatMoneda(totalPagado)}</div>
-            <div class="stat-label">${costoGlobal > 0 ? Math.round((totalPagado / costoGlobal) * 100) : 0}% completado</div>
+            <div class="stat-label">${t('budget.completed_pct', { pct: pctPaid })}</div>
           </div>
           <div class="stat-card stat-amarillo">
-            <div class="stat-badge">PENDIENTE</div>
+            <div class="stat-badge">${t('budget.pending_label')}</div>
             <div class="stat-value">${formatMoneda(totalPendiente)}</div>
-            <div class="stat-label">Por abonar o liquidar</div>
+            <div class="stat-label">${t('budget.to_pay_label')}</div>
           </div>
         `;
       }
@@ -9872,7 +9937,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           window._chartDonut = new Chart(ctxDonut, {
             type: 'doughnut',
             data: {
-              labels: ['Transporte', 'Alojamiento', 'Actividades', 'Extras'],
+              labels: [t('budget.cat_transport'), t('budget.cat_stay'), t('budget.cat_activities'), t('budget.cat_extras')],
               datasets: [{
                 data: [costoTransporte, costoAlojamiento, costoEventos, costoOtros],
                 backgroundColor: ['#38bdf8', '#818cf8', '#34d399', '#f472b6'],
@@ -9898,28 +9963,28 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             breakdownBox.innerHTML = `
               <div class="breakdown-item">
                 <div class="breakdown-header">
-                  <span><span class="breakdown-dot" style="background:#38bdf8;"></span>Transporte</span>
+                  <span><span class="breakdown-dot" style="background:#38bdf8;"></span>${t('budget.cat_transport')}</span>
                   <span class="breakdown-amt">${formatMoneda(costoTransporte)} <small>(${pctTransp}%)</small></span>
                 </div>
                 <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctTransp}%; background:#38bdf8;"></div></div>
               </div>
               <div class="breakdown-item">
                 <div class="breakdown-header">
-                  <span><span class="breakdown-dot" style="background:#818cf8;"></span>Alojamiento</span>
+                  <span><span class="breakdown-dot" style="background:#818cf8;"></span>${t('budget.cat_stay')}</span>
                   <span class="breakdown-amt">${formatMoneda(costoAlojamiento)} <small>(${pctAloj}%)</small></span>
                 </div>
                 <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctAloj}%; background:#818cf8;"></div></div>
               </div>
               <div class="breakdown-item">
                 <div class="breakdown-header">
-                  <span><span class="breakdown-dot" style="background:#34d399;"></span>Actividades</span>
+                  <span><span class="breakdown-dot" style="background:#34d399;"></span>${t('budget.cat_activities')}</span>
                   <span class="breakdown-amt">${formatMoneda(costoEventos)} <small>(${pctAct}%)</small></span>
                 </div>
                 <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctAct}%; background:#34d399;"></div></div>
               </div>
               <div class="breakdown-item">
                 <div class="breakdown-header">
-                  <span><span class="breakdown-dot" style="background:#f472b6;"></span>Extras</span>
+                  <span><span class="breakdown-dot" style="background:#f472b6;"></span>${t('budget.cat_extras')}</span>
                   <span class="breakdown-amt">${formatMoneda(costoOtros)} <small>(${pctOtros}%)</small></span>
                 </div>
                 <div class="breakdown-track"><div class="breakdown-fill" style="width:${pctOtros}%; background:#f472b6;"></div></div>
@@ -9928,7 +9993,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           }
         } else {
           if (breakdownBox) {
-            breakdownBox.innerHTML = '<p style="color:var(--gris);text-align:center;padding:15px;margin:0;font-size:0.85rem;">Sin gastos asignados en este viaje</p>';
+            breakdownBox.innerHTML = `<p style="color:var(--gris);text-align:center;padding:15px;margin:0;font-size:0.85rem;">${t('budget.no_expenses_chart')}</p>`;
           }
         }
       }
@@ -9936,7 +10001,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       // Vaca / Split bill & Balances
       const costEl = document.getElementById('costoGlobal');
       if (costEl) {
-        costEl.innerHTML = costoGlobal > 0 ? `<strong>Total del viaje: ${formatMoneda(costoGlobal)}</strong>` : '';
+        costEl.innerHTML = costoGlobal > 0 ? `<strong>${t('budget.trip_total')} ${formatMoneda(costoGlobal)}</strong>` : '';
       }
       const vacaGlobal = document.getElementById('vacaGlobal');
       const vacaToggle = document.getElementById('vaca-toggle');
@@ -9960,7 +10025,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       if (vacaGlobal && vacaToggle) {
         if (vacaToggle.checked && costoGlobal > 0 && numTotalV > 1) {
-          vacaGlobal.innerHTML = `Cuota equitativa por persona: ${formatMoneda(cuotaIndividual)}`;
+          vacaGlobal.innerHTML = `${t('budget.equal_share')} ${formatMoneda(cuotaIndividual)}`;
           vacaGlobal.style.display = 'block';
         } else {
           vacaGlobal.innerHTML = '';
@@ -9975,12 +10040,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             const pagado = aportesPorPersona[v] || 0;
             const balance = pagado - cuotaIndividual;
             const balColor = balance > 0.01 ? '#34d399' : (balance < -0.01 ? '#f87171' : 'var(--gris)');
-            const balTexto = balance > 0.01 ? `+${formatMoneda(balance)} (a favor)` : (balance < -0.01 ? `${formatMoneda(Math.abs(balance))} (debe)` : 'Al dia');
+            const balTexto = balance > 0.01 ? `+${formatMoneda(balance)} (${t('budget.in_favor')})` : (balance < -0.01 ? `${formatMoneda(Math.abs(balance))} (${t('budget.owes')})` : t('budget.settled'));
             balHtml += `
               <div class="balance-person-card">
                 <div class="balance-person-name">${v}</div>
-                <div class="balance-person-stat"><span>Abonado:</span> <strong style="color:#f8fafc;">${formatMoneda(pagado)}</strong></div>
-                <div class="balance-person-stat"><span>Balance:</span> <strong style="color:${balColor};">${balTexto}</strong></div>
+                <div class="balance-person-stat"><span>${t('budget.paid_amount')}</span> <strong style="color:#f8fafc;">${formatMoneda(pagado)}</strong></div>
+                <div class="balance-person-stat"><span>${t('budget.balance_label')}</span> <strong style="color:${balColor};">${balTexto}</strong></div>
               </div>
             `;
           });
@@ -9995,26 +10060,26 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const tablaGastosEl = document.getElementById('resumen-gastos-tabla');
       if (tablaGastosEl) {
         if (allExpenses.length === 0) {
-          tablaGastosEl.innerHTML = `<p style="color:var(--gris); text-align:center; padding:16px; margin:0;">No hay gastos registrados en este viaje.</p>`;
+          tablaGastosEl.innerHTML = `<p style="color:var(--gris); text-align:center; padding:16px; margin:0;">${t('budget.no_expenses')}</p>`;
         } else {
           let tHtml = `
             <div class="tabla-gastos-container">
               <table class="tabla-gastos">
                 <thead>
                   <tr>
-                    <th>Concepto</th>
-                    <th>Categoria</th>
-                    <th>Ubicacion</th>
-                    <th>Costo</th>
-                    <th>Pagado por</th>
-                    <th>Estado</th>
+                    <th>${t('budget.col_concept')}</th>
+                    <th>${t('budget.col_category')}</th>
+                    <th>${t('budget.col_location')}</th>
+                    <th>${t('budget.col_cost')}</th>
+                    <th>${t('budget.col_paid_by')}</th>
+                    <th>${t('budget.col_status')}</th>
                   </tr>
                 </thead>
                 <tbody>
           `;
           allExpenses.forEach(exp => {
             const optionsPayer = ['Todos', ...listaViajerosTotal].map(p => {
-              return `<option value="${p}" ${exp.pagadoPor === p ? 'selected' : ''}>${p}</option>`;
+              return `<option value="${p}" ${exp.pagadoPor === p ? 'selected' : ''}>${p === 'Todos' ? t('budget.everyone') : p}</option>`;
             }).join('');
 
             tHtml += `
@@ -10026,7 +10091,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                   <input type="number" step="any" min="0" value="${exp.costoUnitario}" 
                     style="width:75px; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:6px; padding:4px 6px; color:#f8fafc; font-weight:700;"
                     onchange="window.actualizarGastoResumen('${exp.tipo}', ${exp.destId !== null ? exp.destId : 'null'}, ${exp.subId !== null ? exp.subId : 'null'}, ${exp.itemIndex !== null ? exp.itemIndex : 'null'}, 'costo', this.value)">
-                  <span style="font-size:0.75rem; color:var(--gris);">${getSimboloMoneda()}${numPersonas > 1 && exp.modoPrecio !== 'total' && (exp.tipo === 'evento' || exp.tipo === 'tramo_transporte' || exp.tipo === 'tramo_alojamiento' || exp.tipo === 'vuelta') ? ` (x${numPersonas})` : (exp.modoPrecio === 'total' ? ' (total)' : '')}</span>
+                  <span style="font-size:0.75rem; color:var(--gris);">${getSimboloMoneda()}${numPersonas > 1 && exp.modoPrecio !== 'total' && (exp.tipo === 'evento' || exp.tipo === 'tramo_transporte' || exp.tipo === 'tramo_alojamiento' || exp.tipo === 'vuelta') ? ` (x${numPersonas})` : (exp.modoPrecio === 'total' ? ` (${t('transport.total_short') || 'total'})` : '')}</span>
                 </td>
                 <td>
                   <select style="background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:6px; padding:4px 8px; color:#f8fafc; font-size:0.82rem;"
@@ -10037,7 +10102,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <td>
                   <span class="badge-pago ${exp.pagado ? 'pagado' : 'pendiente'}" 
                     onclick="window.toggleEstadoPago('${exp.tipo}', ${exp.destId !== null ? exp.destId : 'null'}, ${exp.subId !== null ? exp.subId : 'null'}, ${exp.itemIndex !== null ? exp.itemIndex : 'null'})">
-                    ${exp.esPagoParcial ? `Parcial (${formatMoneda(exp.montoPagado)})` : (exp.pagado ? 'Pagado' : 'Pendiente')}
+                    ${exp.esPagoParcial ? t('budget.partial', { amt: formatMoneda(exp.montoPagado) }) : (exp.pagado ? t('budget.paid') : t('budget.pending'))}
                   </span>
                 </td>
               </tr>
@@ -10059,7 +10124,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const showInitialOriginNode = destinos.length === 0 || (lugarSalida && normCityName(lugarSalida) !== normCityName(destinos[0].nombre));
         trHtml += `<div class="transporte-route-overview">`;
         if (showInitialOriginNode) {
-          trHtml += `<div class="route-node"><span>${escapeHtml(lugarSalida || 'Origen')}</span></div>`;
+          trHtml += `<div class="route-node"><span>${escapeHtml(lugarSalida || t('transport.origin_default'))}</span></div>`;
         }
         destinos.forEach((dest, dIdx) => {
           if (showInitialOriginNode || dIdx > 0) {
@@ -10070,7 +10135,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         if (vueltaGlobal) {
           trHtml += `
             <div class="route-arrow">➔</div>
-            <div class="route-node"><span>Vuelta: ${escapeHtml(lugarSalida || 'Retorno')}</span></div>
+            <div class="route-node"><span>${t('transport.return_prefix')} ${escapeHtml(lugarSalida || t('budget.return_loc'))}</span></div>
           `;
         }
         trHtml += `</div>`;
@@ -10079,7 +10144,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         destinos.forEach((dest, destIdx) => {
           const tramos = Array.isArray(dest.tramos) ? dest.tramos : [];
           const sharedBooking = resolveSharedBookingForDest(destIdx);
-          const origenNombre = destIdx === 0 ? (lugarSalida || dest.nombre || 'Origen') : (destinos[destIdx - 1]?.nombre || 'Origen');
+          const origenNombre = destIdx === 0 ? (lugarSalida || dest.nombre || t('transport.origin_default')) : (destinos[destIdx - 1]?.nombre || t('transport.origin_default'));
 
           if (tramos.length === 0) {
             if (sharedBooking && sharedBooking.tramo) {
@@ -10089,16 +10154,16 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <div class="transporte-segment-card" style="border-left: 3px solid #38bdf8;">
                   <div class="transporte-card-header">
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                      <span class="transporte-mode-badge">${escapeHtml(sh.medio || 'Reserva compartida')}</span>
+                      <span class="transporte-mode-badge">${escapeHtml(sh.medio || t('editor.shared_booking'))}</span>
                       <h3 style="margin:0; font-size:1.1rem; color:#f8fafc;">${escapeHtml(origenNombre)} ➔ ${escapeHtml(dest.nombre)}</h3>
                     </div>
                     ${stopTimeStr ? `<span class="plux-stop-badge">${escapeHtml(stopTimeStr)}</span>` : ''}
                   </div>
                   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:0.85rem; color:var(--gris); padding-top:6px;">
                     <div>
-                      Cubierto por <strong style="color:#f8fafc;">${escapeHtml(sh.medio || 'Reserva compartida')}</strong>${sh.alojamiento ? ` · ${escapeHtml(sh.alojamiento)}` : ''}${dest.notaParada ? ` · <em>${escapeHtml(dest.notaParada)}</em>` : ''}
+                      ${t('summary.covered_by')} <strong style="color:#f8fafc;">${escapeHtml(sh.medio || t('editor.shared_booking'))}</strong>${sh.alojamiento ? ` · ${escapeHtml(sh.alojamiento)}` : ''}${dest.notaParada ? ` · <em>${escapeHtml(dest.notaParada)}</em>` : ''}
                     </div>
-                    <span style="color:#34d399; font-weight:600;">Incluido en ${escapeHtml(sharedBooking.hostDest.nombre)}</span>
+                    <span style="color:#34d399; font-weight:600;">${t('transport.included_in', { dest: escapeHtml(sharedBooking.hostDest.nombre) })}</span>
                   </div>
                 </div>
               `;
@@ -10107,10 +10172,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <div class="transporte-segment-card" style="opacity:0.85;">
                   <div class="transporte-card-header">
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                      <span class="transporte-mode-badge">Sin asignar</span>
+                      <span class="transporte-mode-badge">${t('transport.unassigned')}</span>
                       <h3 style="margin:0; font-size:1.05rem; color:#f8fafc;">${escapeHtml(origenNombre)} ➔ ${escapeHtml(dest.nombre)}</h3>
                     </div>
-                    <span style="font-size:0.8rem; color:var(--gris);">Sin transporte cargado en el editor</span>
+                    <span style="font-size:0.8rem; color:var(--gris);">${t('transport.no_transport_editor')}</span>
                   </div>
                 </div>
               `;
@@ -10134,35 +10199,35 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               <div class="transporte-segment-card">
                 <div class="transporte-card-header">
                   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <span class="transporte-mode-badge">${escapeHtml(tramo.medio || 'Transporte')}</span>
+                    <span class="transporte-mode-badge">${escapeHtml(tramo.medio || t('budget.cat_transport'))}</span>
                     <h3 style="margin:0; font-size:1.15rem; color:#f8fafc;">${escapeHtml(segTitle)}</h3>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px;">
                     <a href="${searchUrl}" target="_blank" rel="noopener" style="font-size:0.78rem; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); padding:5px 12px; border-radius:8px; text-decoration:none;">
-                      Buscar pasajes
+                      ${t('transport.search_tickets')}
                     </a>
                   </div>
                 </div>
 
                 <div class="transporte-times-grid">
                   <div class="time-field-box">
-                    <span class="time-field-label">Hora Salida</span>
+                    <span class="time-field-label">${t('transport.dep_time')}</span>
                     <input type="time" class="time-field-input" value="${horaSalida}"
                       onchange="window.actualizarTransporteResumen('tramo', ${dest.id}, ${tramoIdx}, 'horaSalida', this.value)">
                   </div>
                   <div class="time-field-box">
-                    <span class="time-field-label">Duracion (min)</span>
+                    <span class="time-field-label">${t('transport.duration_min')}</span>
                     <input type="number" min="0" step="5" class="time-field-input" value="${duracion}"
                       onchange="window.actualizarTransporteResumen('tramo', ${dest.id}, ${tramoIdx}, 'duracion', this.value)">
                   </div>
                   <div class="time-field-box">
-                    <span class="time-field-label">Retraso / Demora (min)</span>
+                    <span class="time-field-label">${t('transport.delay_min')}</span>
                     <input type="number" min="0" step="5" class="time-field-input" value="${retraso}"
                       style="color:${retraso > 0 ? '#fbbf24' : 'white'};"
                       onchange="window.actualizarTransporteResumen('tramo', ${dest.id}, ${tramoIdx}, 'retraso', this.value)">
                   </div>
                   <div class="time-field-box">
-                    <span class="time-field-label">Llegada Estimada</span>
+                    <span class="time-field-label">${t('transport.est_arrival')}</span>
                     <div style="padding:7px 8px; background:rgba(52,211,153,0.12); border:1px solid rgba(52,211,153,0.3); border-radius:6px; color:#34d399; font-weight:800; font-size:0.95rem; text-align:center;">
                       ${horaLlegada}
                     </div>
@@ -10171,16 +10236,16 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
                 ${retraso > 0 ? `
                   <div class="retraso-warning-box">
-                    <span>Aviso: Retraso de ${retraso} minutos registrado. Llegada recalculada a las ${horaLlegada}.</span>
+                    <span>${t('transport.delay_warning', { min: retraso, time: horaLlegada })}</span>
                   </div>
                 ` : ''}
 
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:0.85rem; color:var(--gris); border-top:1px solid rgba(255,255,255,0.04); padding-top:10px;">
                   <div>
-                    ${tramo.alojamiento ? `<span>Alojamiento al llegar: <strong style="color:#f8fafc;">${escapeHtml(tramo.alojamiento)}</strong></span>` : '<span>Sin alojamiento asignado</span>'}
+                    ${tramo.alojamiento ? `<span>${t('transport.stay_on_arrival')} <strong style="color:#f8fafc;">${escapeHtml(tramo.alojamiento)}</strong></span>` : `<span>${t('transport.no_stay_assigned')}</span>`}
                   </div>
                   <div>
-                    <span>Precio tramo: <strong style="color:#38bdf8;">${formatMoneda(tramoPrecioConv)}</strong></span>
+                    <span>${t('transport.segment_price')} <strong style="color:#38bdf8;">${formatMoneda(tramoPrecioConv)}</strong></span>
                   </div>
                 </div>
               </div>
@@ -10194,8 +10259,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const vDuracion = (typeof vueltaDuracion !== 'undefined' && vueltaDuracion) ? parseInt(vueltaDuracion, 10) : 180;
           const vRetraso = (typeof vueltaRetraso !== 'undefined' && vueltaRetraso) ? parseInt(vueltaRetraso, 10) : 0;
           const vLlegada = calcularHoraLlegada(vHoraSalida, vDuracion, vRetraso);
-          const ultimoDest = destinos.length > 0 ? destinos[destinos.length - 1].nombre : 'Destino';
-          const origenVuelta = lugarSalida || 'Origen';
+          const ultimoDest = destinos.length > 0 ? destinos[destinos.length - 1].nombre : t('add_dest_placeholder');
+          const origenVuelta = lugarSalida || t('transport.origin_default');
           const searchVueltaUrl = `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(ultimoDest)}+to+${encodeURIComponent(origenVuelta)}`;
           const vueltaPrecioConv = convertirMonto(Number(vueltaPrecioGlobal) || 0, (typeof vueltaMonedaGlobal !== 'undefined' && vueltaMonedaGlobal) || monedaActivaGlobal, monedaActivaGlobal) * numPersonas;
 
@@ -10203,35 +10268,35 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             <div class="transporte-segment-card" style="border-left: 3px solid #f472b6;">
               <div class="transporte-card-header">
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                  <span class="transporte-mode-badge" style="background:rgba(244,114,182,0.12); color:#f472b6; border-color:rgba(244,114,182,0.3);">Regreso</span>
+                  <span class="transporte-mode-badge" style="background:rgba(244,114,182,0.12); color:#f472b6; border-color:rgba(244,114,182,0.3);">${t('transport.return_badge')}</span>
                   <h3 style="margin:0; font-size:1.15rem; color:#f8fafc;">${escapeHtml(ultimoDest)} ➔ ${escapeHtml(origenVuelta)}</h3>
                 </div>
                 <div>
                   <a href="${searchVueltaUrl}" target="_blank" rel="noopener" style="font-size:0.78rem; font-weight:700; color:#f472b6; background:rgba(244,114,182,0.1); border:1px solid rgba(244,114,182,0.3); padding:5px 12px; border-radius:8px; text-decoration:none;">
-                    Buscar regreso
+                    ${t('transport.search_return')}
                   </a>
                 </div>
               </div>
 
               <div class="transporte-times-grid">
                 <div class="time-field-box">
-                  <span class="time-field-label">Hora Salida</span>
+                  <span class="time-field-label">${t('transport.dep_time')}</span>
                   <input type="time" class="time-field-input" value="${vHoraSalida}"
                     onchange="window.actualizarTransporteResumen('vuelta', null, null, 'vueltaHoraSalida', this.value)">
                 </div>
                 <div class="time-field-box">
-                  <span class="time-field-label">Duracion (min)</span>
+                  <span class="time-field-label">${t('transport.duration_min')}</span>
                   <input type="number" min="0" step="5" class="time-field-input" value="${vDuracion}"
                     onchange="window.actualizarTransporteResumen('vuelta', null, null, 'vueltaDuracion', this.value)">
                 </div>
                 <div class="time-field-box">
-                  <span class="time-field-label">Retraso / Demora (min)</span>
+                  <span class="time-field-label">${t('transport.delay_min')}</span>
                   <input type="number" min="0" step="5" class="time-field-input" value="${vRetraso}"
                     style="color:${vRetraso > 0 ? '#fbbf24' : 'white'};"
                     onchange="window.actualizarTransporteResumen('vuelta', null, null, 'vueltaRetraso', this.value)">
                 </div>
                 <div class="time-field-box">
-                  <span class="time-field-label">Llegada Estimada</span>
+                  <span class="time-field-label">${t('transport.est_arrival')}</span>
                   <div style="padding:7px 8px; background:rgba(52,211,153,0.12); border:1px solid rgba(52,211,153,0.3); border-radius:6px; color:#34d399; font-weight:800; font-size:0.95rem; text-align:center;">
                     ${vLlegada}
                   </div>
@@ -10240,13 +10305,13 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
               ${vRetraso > 0 ? `
                 <div class="retraso-warning-box">
-                  <span>Aviso: Retraso de ${vRetraso} minutos en el regreso. Llegada recalculada a las ${vLlegada}.</span>
+                  <span>${t('transport.return_delay_warning', { min: vRetraso, time: vLlegada })}</span>
                 </div>
               ` : ''}
 
               <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:0.85rem; color:var(--gris); border-top:1px solid rgba(255,255,255,0.04); padding-top:10px;">
-                <div><span>Detalle: <strong style="color:#f8fafc;">${escapeHtml(vueltaGlobal || 'Viaje de retorno')}</strong></span></div>
-                <div><span>Precio vuelta: <strong style="color:#f472b6;">${formatMoneda(vueltaPrecioConv)}</strong></span></div>
+                <div><span>${t('transport.detail_label')} <strong style="color:#f8fafc;">${escapeHtml(vueltaGlobal || t('summary.return_default'))}</strong></span></div>
+                <div><span>${t('transport.return_price')} <strong style="color:#f472b6;">${formatMoneda(vueltaPrecioConv)}</strong></span></div>
               </div>
             </div>
           `;
@@ -10515,8 +10580,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const menu = document.getElementById(which === 'from' ? 'trad-menu-from' : 'trad-menu-to');
       const trigger = document.getElementById(which === 'from' ? 'trad-trigger-from' : 'trad-trigger-to');
 
+      const langKey = code === 'autodetect' ? 'translator.lang_auto' : 'translator.lang_' + code;
+      const localizedName = (typeof t === 'function' && t(langKey) !== langKey) ? t(langKey) : (name || TRAD_LANG_NAMES[code] || code);
       if (input) input.value = code;
-      if (label) label.innerText = name || TRAD_LANG_NAMES[code] || code;
+      if (label) label.innerText = localizedName;
 
       if (menu) {
         menu.classList.remove('show');
@@ -10533,22 +10600,35 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const modal = document.getElementById('modal-traductor');
       if (modal) {
         modal.style.display = 'flex';
+        // Sincronizar idioma de origen por defecto con el idioma activo de la app si está vacío o no tocado
+        const appLang = typeof window.getCurrentLang === 'function' ? window.getCurrentLang() : (currentLang || 'es');
+        const fromInput = document.getElementById('trad-lang-from');
+        const fromLabel = document.getElementById('trad-label-from');
+        const toInput = document.getElementById('trad-lang-to');
+        const toLabel = document.getElementById('trad-label-to');
+        if (fromInput && !fromInput._userChanged) {
+          fromInput.value = appLang;
+          if (fromLabel) fromLabel.innerText = t('translator.lang_' + appLang);
+          if (toInput && toInput.value === appLang) {
+            const alt = appLang === 'en' ? 'es' : 'en';
+            toInput.value = alt;
+            if (toLabel) toLabel.innerText = t('translator.lang_' + alt);
+          }
+        }
         // Sugerir idioma destino según el primer destino del viaje si está disponible
         if (typeof destinos !== 'undefined' && destinos && destinos.length > 0 && destinos[0]?.nombre) {
           const destName = destinos[0].nombre.toLowerCase();
           let suggestedCode = null;
-          if (destName.includes('roma') || destName.includes('italia') || destName.includes('milan') || destName.includes('florencia') || destName.includes('venecia')) suggestedCode = 'it';
-          else if (destName.includes('paris') || destName.includes('francia') || destName.includes('niza') || destName.includes('lyon')) suggestedCode = 'fr';
-          else if (destName.includes('berlin') || destName.includes('alemania') || destName.includes('munich') || destName.includes('frankfurt')) suggestedCode = 'de';
-          else if (destName.includes('tokio') || destName.includes('japon') || destName.includes('kyoto') || destName.includes('osaka')) suggestedCode = 'ja';
-          else if (destName.includes('londres') || destName.includes('york') || destName.includes('miami') || destName.includes('angeles') || destName.includes('eeuu') || destName.includes('usa') || destName.includes('uk')) suggestedCode = 'en';
+          if (destName.includes('roma') || destName.includes('rome') || destName.includes('italia') || destName.includes('italy') || destName.includes('milan') || destName.includes('florencia') || destName.includes('venecia')) suggestedCode = 'it';
+          else if (destName.includes('paris') || destName.includes('francia') || destName.includes('france') || destName.includes('niza') || destName.includes('lyon')) suggestedCode = 'fr';
+          else if (destName.includes('berlin') || destName.includes('alemania') || destName.includes('germany') || destName.includes('munich') || destName.includes('frankfurt')) suggestedCode = 'de';
+          else if (destName.includes('tokio') || destName.includes('tokyo') || destName.includes('japon') || destName.includes('japan') || destName.includes('kyoto') || destName.includes('osaka')) suggestedCode = 'ja';
+          else if (destName.includes('londres') || destName.includes('london') || destName.includes('york') || destName.includes('miami') || destName.includes('angeles') || destName.includes('eeuu') || destName.includes('usa') || destName.includes('uk')) suggestedCode = 'en';
           else if (destName.includes('brasil') || destName.includes('rio') || destName.includes('lisboa') || destName.includes('portugal')) suggestedCode = 'pt';
 
           if (suggestedCode) {
-            const toInput = document.getElementById('trad-lang-to');
-            const toLabel = document.getElementById('trad-label-to');
             if (toInput) toInput.value = suggestedCode;
-            if (toLabel) toLabel.innerText = TRAD_LANG_NAMES[suggestedCode] || suggestedCode;
+            if (toLabel) toLabel.innerText = t('translator.lang_' + suggestedCode);
             const toMenu = document.getElementById('trad-menu-to');
             if (toMenu) {
               toMenu.querySelectorAll('.trad-option').forEach(opt => {
@@ -10570,7 +10650,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
               _traductorDebounceTimer = setTimeout(ejecutarTraduccion, 500);
             } else {
               const resDiv = document.getElementById('trad-result-text');
-              if (resDiv) resDiv.innerText = 'Tu traducción aparecerá aquí...';
+              if (resDiv) resDiv.innerText = t('translator.result_ph');
             }
           });
         }
@@ -10607,8 +10687,8 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       fromInput.value = toCode;
       toInput.value = fromCode;
 
-      if (fromLabel) fromLabel.innerText = TRAD_LANG_NAMES[toCode] || toCode;
-      if (toLabel) toLabel.innerText = TRAD_LANG_NAMES[fromCode] || fromCode;
+      if (fromLabel) fromLabel.innerText = t(toCode === 'autodetect' ? 'translator.lang_auto' : 'translator.lang_' + toCode);
+      if (toLabel) toLabel.innerText = t('translator.lang_' + fromCode);
 
       const fromMenu = document.getElementById('trad-menu-from');
       if (fromMenu) {
@@ -10625,7 +10705,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       const srcInput = document.getElementById('trad-source-text');
       const resText = document.getElementById('trad-result-text');
-      if (srcInput && resText && resText.innerText && !resText.innerText.includes('aparecerá')) {
+      if (srcInput && resText && resText.innerText && resText.innerText.trim() !== t('translator.result_ph') && !resText.innerText.includes('aparecerá')) {
         srcInput.value = resText.innerText;
         document.getElementById('trad-char-count').innerText = srcInput.value.length;
       }
@@ -10642,6 +10722,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       }
     }
 
+    window.insertarFraseTraductorKey = function(key) {
+      insertarFraseTraductor(t('translator.phrase_' + key));
+    };
+
     async function ejecutarTraduccion() {
       const srcInput = document.getElementById('trad-source-text');
       const resDiv = document.getElementById('trad-result-text');
@@ -10650,23 +10734,23 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
       const text = srcInput.value.trim();
       if (!text) {
-        resDiv.innerText = 'Tu traducción aparecerá aquí...';
-        if (statusDiv) statusDiv.innerText = 'Listo';
+        resDiv.innerText = t('translator.result_ph');
+        if (statusDiv) statusDiv.innerText = t('translator.status_ready');
         return;
       }
 
-      let from = document.getElementById('trad-lang-from')?.value || 'es';
+      let from = document.getElementById('trad-lang-from')?.value || (typeof getCurrentLang === 'function' ? getCurrentLang() : 'es');
       const to = document.getElementById('trad-lang-to')?.value || 'en';
 
-      if (from === 'autodetect') from = 'es';
+      if (from === 'autodetect') from = typeof getCurrentLang === 'function' ? getCurrentLang() : 'es';
 
       if (from === to) {
         resDiv.innerText = text;
-        if (statusDiv) statusDiv.innerText = 'Mismo idioma';
+        if (statusDiv) statusDiv.innerText = t('translator.status_done');
         return;
       }
 
-      if (statusDiv) statusDiv.innerText = 'Traduciendo...';
+      if (statusDiv) statusDiv.innerText = t('translator.status_translating');
       resDiv.style.opacity = '0.6';
 
       try {
@@ -10676,33 +10760,46 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const data = await resp.json();
           if (data && data.responseData && data.responseData.translatedText) {
             resDiv.innerText = data.responseData.translatedText;
-            if (statusDiv) statusDiv.innerText = 'Completado ✓';
+            if (statusDiv) statusDiv.innerText = t('translator.status_done');
           } else {
-            throw new Error('Sin respuesta estructurada');
+            throw new Error('Empty translation');
           }
         } else {
-          throw new Error('Error de conexión');
+          throw new Error('Connection error');
         }
       } catch (err) {
-        console.warn('MyMemory traducción fallo, usando fallback offline:', err);
+        console.warn('MyMemory fallback offline:', err);
         const offlineDic = {
-          'hola': { en: 'Hello', fr: 'Bonjour', it: 'Ciao', de: 'Hallo', pt: 'Olá' },
-          'hola, ¿cómo estás?': { en: 'Hello, how are you?', fr: 'Bonjour, comment allez-vous ?', it: 'Ciao, come stai?', de: 'Hallo, wie geht es dir?', pt: 'Olá, como vai você?' },
-          'muchas gracias': { en: 'Thank you very much', fr: 'Merci beaucoup', it: 'Grazie mille', de: 'Vielen Dank', pt: 'Muito obrigado' },
-          'la cuenta, por favor': { en: 'The bill, please', fr: "L'addition, s'il vous plaît", it: 'Il conto, per favore', de: 'Die Rechnung, bitte', pt: 'A conta, por favor' },
-          '¿cuánto cuesta esto?': { en: 'How much does this cost?', fr: 'Combien ça coûte ?', it: 'Quanto costa questo?', de: 'Wie viel kostet das?', pt: 'Quanto custa isso?' },
-          '¿dónde está el baño?': { en: 'Where is the bathroom?', fr: 'Où sont les toilettes ?', it: 'Dov\'è il bagno?', de: 'Wo ist die Toilette?', pt: 'Onde fica o banheiro?' },
-          '¿dónde está la estación de tren o metro?': { en: 'Where is the train or metro station?', fr: 'Où est la gare ou le métro ?', it: 'Dov\'è la stazione del treno o della metropolitana?', de: 'Wo ist der Bahnhof oder die U-Bahn-Station?', pt: 'Onde fica a estação de trem ou metrô?' },
-          'tengo una reserva a mi nombre': { en: 'I have a reservation under my name', fr: 'J\'ai une réservation à mon nom', it: 'Ho una prenotazione a mio nome', de: 'Ich habe eine Reservierung auf meinen Namen', pt: 'Tenho uma reserva em meu nome' },
-          'necesito ayuda, por favor': { en: 'I need help, please', fr: 'J\'ai besoin d\'aide, s\'il vous plaît', it: 'Ho bisogno di aiuto, per favore', de: 'Ich brauche Hilfe, bitte', pt: 'Preciso de ajuda, por favor' }
+          'hola': { es: 'Hola', en: 'Hello', fr: 'Bonjour', it: 'Ciao', de: 'Hallo', pt: 'Olá' },
+          'hola, ¿cómo estás?': { es: 'Hola, ¿cómo estás?', en: 'Hello, how are you?', fr: 'Bonjour, comment allez-vous ?', it: 'Ciao, come stai?', de: 'Hallo, wie geht es dir?', pt: 'Olá, como vai você?' },
+          'muchas gracias': { es: 'Muchas gracias', en: 'Thank you very much', fr: 'Merci beaucoup', it: 'Grazie mille', de: 'Vielen Dank', pt: 'Muito obrigado' },
+          'la cuenta, por favor': { es: 'La cuenta, por favor', en: 'The bill, please', fr: "L'addition, s'il vous plaît", it: 'Il conto, per favore', de: 'Die Rechnung, bitte', pt: 'A conta, por favor' },
+          '¿cuánto cuesta esto?': { es: '¿Cuánto cuesta esto?', en: 'How much does this cost?', fr: 'Combien ça coûte ?', it: 'Quanto costa questo?', de: 'Wie viel kostet das?', pt: 'Quanto custa isso?' },
+          '¿dónde está el baño?': { es: '¿Dónde está el baño?', en: 'Where is the bathroom?', fr: 'Où sont les toilettes ?', it: 'Dov\'è il bagno?', de: 'Wo ist die Toilette?', pt: 'Onde fica o banheiro?' },
+          '¿dónde está la estación de tren o metro?': { es: '¿Dónde está la estación de tren o metro?', en: 'Where is the train or metro station?', fr: 'Où est la gare ou le métro ?', it: 'Dov\'è la stazione del treno o della metropolitana?', de: 'Wo ist der Bahnhof oder die U-Bahn-Station?', pt: 'Onde fica a estação de trem ou metrô?' },
+          'tengo una reserva a mi nombre': { es: 'Tengo una reserva a mi nombre', en: 'I have a reservation under my name', fr: 'J\'ai une réservation à mon nom', it: 'Ho una prenotazione a mio nome', de: 'Ich habe eine Reservierung auf meinen Namen', pt: 'Tenho uma reserva em meu nome' },
+          'necesito ayuda, por favor': { es: 'Necesito ayuda, por favor', en: 'I need help, please', fr: 'J\'ai besoin d\'aide, s\'il vous plaît', it: 'Ho bisogno di aiuto, per favore', de: 'Ich brauche Hilfe, bitte', pt: 'Preciso de ajuda, por favor' }
         };
         const lower = text.toLowerCase().trim();
-        if (offlineDic[lower] && offlineDic[lower][to]) {
-          resDiv.innerText = offlineDic[lower][to];
+        let matched = offlineDic[lower]?.[to];
+        if (!matched) {
+          const phraseKeys = ['hello', 'thanks', 'bill', 'price', 'bathroom', 'station', 'reservation', 'help'];
+          for (const pk of phraseKeys) {
+            if (typeof i18n !== 'undefined') {
+              const isMatch = ['es','en','fr','de','it'].some(l => (i18n[l]?.translator?.['phrase_' + pk] || '').toLowerCase() === lower);
+              if (isMatch && i18n[to]?.translator?.['phrase_' + pk]) {
+                matched = i18n[to].translator['phrase_' + pk];
+                break;
+              }
+            }
+          }
+        }
+        if (matched) {
+          resDiv.innerText = matched;
           if (statusDiv) statusDiv.innerText = 'Offline ✓';
         } else {
           resDiv.innerText = text;
-          if (statusDiv) statusDiv.innerText = 'Sin conexión';
+          if (statusDiv) statusDiv.innerText = t('translator.status_error');
         }
       } finally {
         resDiv.style.opacity = '1';
@@ -10711,19 +10808,19 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     function copiarTraduccion() {
       const resDiv = document.getElementById('trad-result-text');
-      if (!resDiv || !resDiv.innerText || resDiv.innerText.includes('aparecerá')) return;
+      if (!resDiv || !resDiv.innerText || resDiv.innerText.trim() === t('translator.result_ph') || resDiv.innerText.includes('aparecerá')) return;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(resDiv.innerText).then(() => {
-          showToast('Traducción copiada al portapapeles', 'success');
+          showToast(t('translator.copied_toast'), 'success');
         }).catch(() => {
-          showToast('Copiado', 'success');
+          showToast(t('translator.copied_toast'), 'success');
         });
       }
     }
 
     function pronunciarTextoTraductor(tipo) {
       if (!('speechSynthesis' in window)) {
-        showToast('Tu navegador no soporta síntesis de voz', 'warning');
+        showToast(t('translator_no_tts'), 'warning');
         return;
       }
       window.speechSynthesis.cancel();
@@ -10734,14 +10831,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       if (tipo === 'source') {
         text = document.getElementById('trad-source-text')?.value || '';
         lang = document.getElementById('trad-lang-from')?.value || 'es';
-        if (lang === 'autodetect') lang = 'es';
+        if (lang === 'autodetect') lang = currentLang || 'es';
       } else {
         const resDiv = document.getElementById('trad-result-text');
         text = resDiv ? resDiv.innerText : '';
         lang = document.getElementById('trad-lang-to')?.value || 'en';
       }
 
-      if (!text || text.includes('aparecerá')) return;
+      if (!text || text.trim() === t('translator.result_ph') || text.includes('aparecerá')) return;
 
       const langMap = {
         es: 'es-ES',
@@ -10879,7 +10976,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     const WMO_DESC = {
       es: { 0:'Despejado',1:'Mayormente despejado',2:'Parcialmente nublado',3:'Nublado',45:'Niebla',48:'Niebla',51:'Llovizna',53:'Llovizna',55:'Llovizna',61:'Lluvia',63:'Lluvia',65:'Lluvia fuerte',71:'Nieve',73:'Nieve',75:'Nieve',80:'Chubascos',81:'Chubascos',82:'Chubascos fuertes',95:'Tormenta',96:'Tormenta',99:'Tormenta' },
-      en: { 0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Drizzle',53:'Drizzle',55:'Drizzle',61:'Rain',63:'Rain',65:'Heavy rain',71:'Snow',73:'Snow',75:'Snow',80:'Showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm' }
+      en: { 0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Drizzle',53:'Drizzle',55:'Drizzle',61:'Rain',63:'Rain',65:'Heavy rain',71:'Snow',73:'Snow',75:'Snow',80:'Showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm' },
+      fr: { 0:'Ciel dégagé',1:'Plutôt dégagé',2:'Partiellement nuageux',3:'Couvert',45:'Brouillard',48:'Brouillard',51:'Bruine',53:'Bruine',55:'Bruine',61:'Pluie',63:'Pluie',65:'Forte pluie',71:'Neige',73:'Neige',75:'Neige',80:'Averses',81:'Averses',82:'Fortes averses',95:'Orage',96:'Orage',99:'Orage' },
+      de: { 0:'Klar',1:'Überwiegend klar',2:'Teilweise bewölkt',3:'Bedeckt',45:'Nebel',48:'Nebel',51:'Nieselregen',53:'Nieselregen',55:'Nieselregen',61:'Regen',63:'Regen',65:'Starker Regen',71:'Schnee',73:'Schnee',75:'Schnee',80:'Schauer',81:'Schauer',82:'Starke Schauer',95:'Gewitter',96:'Gewitter',99:'Gewitter' },
+      it: { 0:'Sereno',1:'Prevalentemente sereno',2:'Parzialmente nuvoloso',3:'Nuvoloso',45:'Nebbia',48:'Nebbia',51:'Pioviggine',53:'Pioviggine',55:'Pioviggine',61:'Pioggia',63:'Pioggia',65:'Pioggia forte',71:'Neve',73:'Neve',75:'Neve',80:'Rovesci',81:'Rovesci',82:'Rovesci forti',95:'Temporale',96:'Temporale',99:'Temporale' }
     };
 
     function weatherLang() {
@@ -11446,11 +11546,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const input = document.getElementById('clima-search-input');
       const resultados = document.getElementById('clima-resultados');
       if (resultados && !input?.value.trim()) {
-        resultados.innerHTML = `<p class="clima-placeholder clima-search-hint">${t('clima_search') ? 'O buscá otra ciudad abajo.' : 'O buscá otra ciudad abajo.'}</p>`;
+        resultados.innerHTML = `<p class="clima-placeholder clima-search-hint">${t('common.or_search_city_below')}</p>`;
       }
       if (input) {
-        const sugerencia = destinos[0]?.nombre || lugarSalida || '';
-        if (sugerencia && !input.value) input.placeholder = `Buscar ciudad (ej: ${sugerencia})...`;
+        input.placeholder = t('clima_placeholder');
         input.focus();
       }
     }
@@ -11463,17 +11562,15 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const input = document.getElementById('clima-search-input');
       const resultados = document.getElementById('clima-resultados');
       const city = input?.value.trim();
-      if (!city) { showToast('Escribí una ciudad', 'error'); return; }
-      resultados.innerHTML = '<p class="clima-placeholder">Cargando pronóstico...</p>';
+      if (!city) { showToast(t('clima_placeholder'), 'error'); return; }
+      resultados.innerHTML = `<p class="clima-placeholder">${t('weather_loading')}</p>`;
       try {
         const w = await fetchWeatherData(city);
         resultados.innerHTML = renderClimaCardHTML(w);
       } catch (e) {
-        const msg = e.message === 'Ciudad no encontrada'
-          ? 'No encontramos esa ciudad. Probá "Buenos Aires", "Roma" o "Paris".'
-          : 'No pudimos cargar el clima. Revisá tu conexión.';
+        const msg = t('common.error');
         resultados.innerHTML = `<p class="clima-placeholder">${msg}</p>`;
-        showToast(e.message === 'Ciudad no encontrada' ? 'Ciudad no encontrada' : 'Error de clima', 'error');
+        showToast(msg, 'error');
       }
     }
 
@@ -11668,9 +11765,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           iconSize: [32, 32],
           iconAnchor: [16, 16]
         });
+        const dUnit = (n) => n === 1 ? t('common.day_singular') : t('common.day_plural');
         const subtitle = p.isCircularOrigin
-          ? `Salida y Regreso · ${p.diasTotalCircular || p.dias} días · ${p.eventosTotalCircular || p.eventos} eventos`
-          : (p.isOrigin ? 'Punto de partida' : `${p.dias} ${p.dias === 1 ? 'día' : 'días'} · ${p.eventos} eventos${p.horarioEscala ? ' · ' + p.horarioEscala : ''}`);
+          ? `${t('summary.origin_and_return')} · ${p.diasTotalCircular || p.dias} ${dUnit(p.diasTotalCircular || p.dias)} · ${p.eventosTotalCircular || p.eventos}`
+          : (p.isOrigin ? t('summary.starting_point') : `${p.dias} ${dUnit(p.dias)} · ${p.eventos}${p.horarioEscala ? ' · ' + p.horarioEscala : ''}`);
         L.marker([p.lat, p.lon], { icon: numIcon })
           .bindPopup(`<div style="font-family:system-ui;"><strong>${escapeHtml(p.nombre)}</strong><br><span style="color:#6366f1;">${escapeHtml(subtitle)}</span></div>`)
           .addTo(markersLayer);
@@ -11759,7 +11857,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       diaSeleccionado = fechaStr;
       const listEl = document.getElementById('eventos-dia-lista');
       if (!listEl) return;
-      if (!getTripStartDate()) { listEl.innerHTML = '<p>No hay fecha de inicio</p>'; return; }
+      if (!getTripStartDate()) { listEl.innerHTML = `<p>${escapeHtml(t('cal_no_start'))}</p>`; return; }
       const schedule = buildTripDaySchedule().filter(s => s.dateStr === fechaStr);
       let html = '';
       let foundCount = 0;
@@ -11767,7 +11865,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       schedule.forEach(slot => {
         if (slot.isTransit) {
           foundCount++;
-          html += `<div class="evento-item" style="border-left:3px solid #38bdf8;"><strong>${escapeHtml(slot.transitLabel || 'En navegación')}</strong> <small style="color:var(--gris);">hacia ${escapeHtml(slot.destName || '')} (Día ${slot.transitIndex + 1}/${slot.transitTotal})</small></div>`;
+          html += `<div class="evento-item" style="border-left:3px solid #38bdf8;"><strong>${escapeHtml(slot.transitLabel || t('importer.at_sea_default'))}</strong> <small style="color:var(--gris);">${escapeHtml(t('cal_transit_to'))} ${escapeHtml(slot.destName || '')} (${escapeHtml(t('common.day_singular'))} ${slot.transitIndex + 1}/${slot.transitTotal})</small></div>`;
           return;
         }
         if (slot.isDestOnly) return;
@@ -11776,11 +11874,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         if (!dest || !dia) return;
         (dia.eventos || []).forEach(ev => {
           foundCount++;
-          html += `<div class="evento-item"><strong>${escapeHtml(ev.titulo || 'Evento')}</strong> <small style="color:var(--gris);">(${escapeHtml(dest.nombre || '')})</small> - ${escapeHtml(ev.hora || '--:--')}</div>`;
+          html += `<div class="evento-item"><strong>${escapeHtml(ev.titulo || t('common.activity_singular'))}</strong> <small style="color:var(--gris);">(${escapeHtml(dest.nombre || '')})</small> - ${escapeHtml(ev.hora || '--:--')}</div>`;
         });
       });
 
-      if (foundCount === 0) html = '<p>No hay eventos</p>';
+      if (foundCount === 0) html = `<p>${escapeHtml(t('cal_no_events'))}</p>`;
       listEl.innerHTML = html;
     }
 
@@ -11979,11 +12077,11 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
           const item = document.createElement('div');
           item.className = 'trip-item';
           item.style.cursor = 'pointer';
-          const dests = (trip.destinos || []).map(d => d.nombre).join(', ') || 'Sin destinos';
+          const dests = (trip.destinos || []).map(d => d.nombre).join(', ') || t('no_destinations');
           const embSealHtml = (trip.embajadorSlug && typeof window.getEmbajadorBadgeHtml === 'function') ? window.getEmbajadorBadgeHtml(trip) : '';
           const vCount = Array.isArray(trip.vouchers) ? trip.vouchers.length : 0;
           const vBadgeHtml = vCount > 0
-            ? `<button onclick="event.stopPropagation(); window.abrirVouchersDeViaje(${index})" style="background:rgba(16,185,129,0.14); border:1px solid rgba(16,185,129,0.38); color:#34d399; border-radius:999px; padding:2px 8px; font-size:0.72rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Ver vouchers adjuntos a este viaje"><i class="fa-solid fa-ticket"></i> ${vCount} ${vCount === 1 ? 'voucher' : 'vouchers'}</button>`
+            ? `<button onclick="event.stopPropagation(); window.abrirVouchersDeViaje(${index})" style="background:rgba(16,185,129,0.14); border:1px solid rgba(16,185,129,0.38); color:#34d399; border-radius:999px; padding:2px 8px; font-size:0.72rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="${escapeHtml(t('tools.trip_vouchers'))}"><i class="fa-solid fa-ticket"></i> ${vCount}</button>`
             : '';
           item.innerHTML = `
             <div class="trip-info" onclick="cargarViaje(${index})" style="cursor:pointer;flex:1;">
@@ -11991,14 +12089,14 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                 <h4 style="margin:0;">${escapeHtml(trip.nombre)}</h4>
                 ${embSealHtml}
                 ${vBadgeHtml}
-                <button onclick="event.stopPropagation(); window.renombrarViajeGuardado(${index})" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:0.85rem; padding:2px 4px;" title="Renombrar viaje">✏️</button>
+                <button onclick="event.stopPropagation(); window.renombrarViajeGuardado(${index})" style="background:none; border:none; color:var(--gris); cursor:pointer; font-size:0.85rem; padding:2px 4px;" title="${escapeHtml(t('common.edit'))}">✏️</button>
               </div>
-              <small style="color:var(--gris);">${new Date(trip.fecha).toLocaleDateString()} · ${escapeHtml(dests)}</small>
+              <small style="color:var(--gris);">${new Date(trip.fecha).toLocaleDateString(typeof window.getLangLocale === 'function' ? window.getLangLocale() : 'es-ES')} · ${escapeHtml(dests)}</small>
             </div>
             <div class="trip-actions">
-              <button onclick="event.stopPropagation(); window.abrirVouchersDeViaje(${index})" style="background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.4); color:#34d399;" title="Vouchers adjuntos del viaje"><i class="fa-solid fa-ticket"></i></button>
-              <button onclick="event.stopPropagation();abrirCompartirModal(${index})" style="background:var(--azul);" title="Compartir">🔗</button>
-              <button onclick="event.stopPropagation();eliminarViaje(${index})" style="background:#dc2626;" title="Eliminar">×</button>
+              <button onclick="event.stopPropagation(); window.abrirVouchersDeViaje(${index})" style="background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.4); color:#34d399;" title="${escapeHtml(t('tools.trip_vouchers'))}"><i class="fa-solid fa-ticket"></i></button>
+              <button onclick="event.stopPropagation();abrirCompartirModal(${index})" style="background:var(--azul);" title="${escapeHtml(t('compartir_btn'))}">🔗</button>
+              <button onclick="event.stopPropagation();eliminarViaje(${index})" style="background:#dc2626;" title="${escapeHtml(t('delete_button'))}">×</button>
             </div>
           `;
           tripList.appendChild(item);
@@ -12218,7 +12316,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       }
 
       if (autoStart) {
-        showToast(`Viaje "${viaje.nombre}" cargado`, 'success');
+        showToast(t('trip_loaded_toast', { name: viaje.nombre }), 'success');
       }
     }
 
@@ -12372,7 +12470,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
       const removeBtn = document.getElementById('prefRemovePhotoBtn');
       if (removeBtn) removeBtn.style.display = 'none';
       updateUserButtonDisplay();
-      showToast('Foto de perfil eliminada', 'info');
+      showToast(t('profile_photo_removed_toast'), 'info');
     }
     window.quitarFotoPerfil = quitarFotoPerfil;
 
@@ -12386,36 +12484,36 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const curLang = localStorage.getItem('Plux_Lang') || 'es';
 
         const themes = [
-          { id: 'theme-oscuro', name: 'Oscuro', desc: 'Predeterminado', color: '#090d16', border: '1.5px solid #475569', activeBorder: '#38bdf8' },
-          { id: 'theme-claro', name: 'Claro', desc: 'Luminoso', color: '#ffffff', border: '1.5px solid #94a3b8', activeBorder: '#0284c7' },
-          { id: 'theme-tokyo', name: 'Tokyo Night', desc: 'Cyber Neon', color: '#1a1b26', border: '1.5px solid #7aa2f7', activeBorder: '#7aa2f7' },
-          { id: 'theme-grid', name: 'Cyber Grid', desc: 'Futurista', color: '#00f0ff', border: 'none', activeBorder: '#00f0ff' },
-          { id: 'theme-starship', name: 'Starship', desc: 'Galáctico', color: '#a855f7', border: 'none', activeBorder: '#a855f7' },
-          { id: 'theme-terminal', name: 'Terminal', desc: 'Hacker', color: '#00ff66', border: 'none', activeBorder: '#00ff66' },
-          { id: 'theme-ares', name: 'Ares', desc: 'Crimson', color: '#ff3333', border: 'none', activeBorder: '#ff3333' },
-          { id: 'theme-minecraft', name: 'Minecraft', desc: 'Voxel 8-Bit', color: '#5b8e31', border: '1.5px solid #866043', activeBorder: '#80ff00' }
+          { id: 'theme-oscuro', name: t('temas.oscuro'), desc: t('prefs.desc_oscuro'), color: '#090d16', border: '1.5px solid #475569', activeBorder: '#38bdf8' },
+          { id: 'theme-claro', name: t('temas.claro'), desc: t('prefs.desc_claro'), color: '#ffffff', border: '1.5px solid #94a3b8', activeBorder: '#0284c7' },
+          { id: 'theme-tokyo', name: t('temas.tokyo'), desc: t('prefs.desc_tokyo'), color: '#1a1b26', border: '1.5px solid #7aa2f7', activeBorder: '#7aa2f7' },
+          { id: 'theme-grid', name: t('temas.grid'), desc: t('prefs.desc_grid'), color: '#00f0ff', border: 'none', activeBorder: '#00f0ff' },
+          { id: 'theme-starship', name: t('temas.starship'), desc: t('prefs.desc_starship'), color: '#a855f7', border: 'none', activeBorder: '#a855f7' },
+          { id: 'theme-terminal', name: t('temas.terminal'), desc: t('prefs.desc_terminal'), color: '#00ff66', border: 'none', activeBorder: '#00ff66' },
+          { id: 'theme-ares', name: t('temas.ares'), desc: t('prefs.desc_ares'), color: '#ff3333', border: 'none', activeBorder: '#ff3333' },
+          { id: 'theme-minecraft', name: t('temas.minecraft'), desc: t('prefs.desc_minecraft'), color: '#5b8e31', border: '1.5px solid #866043', activeBorder: '#80ff00' }
         ];
 
         let html = `<div id="modal-preferencias" style="position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2100;padding:15px;" onclick="if(event.target===this) this.remove()">
             <div class="cuenta-content" style="background:linear-gradient(135deg,var(--card),var(--fondo));border:1px solid var(--border);border-radius:26px;padding:26px;max-width:500px;width:100%;max-height:88vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 25px 80px rgba(0,0,0,0.8);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-                    <h2 style="color:var(--verde);margin:0;font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:8px;">Personalización</h2>
+                    <h2 style="color:var(--verde);margin:0;font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:8px;">${t('prefs.title')}</h2>
                     <span class="modal-close-btn" onclick="document.getElementById('modal-preferencias').remove()">×</span>
                 </div>
 
                 <!-- 1. FOTO DE PERFIL -->
                 <div style="background:rgba(125,125,125,0.06);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
-                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Foto de perfil</label>
+                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">${t('prefs.profile_photo_lbl')}</label>
                     <div style="display:flex;align-items:center;gap:16px;">
                         <div id="prefAvatarPreview" style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:2px solid var(--verde);flex-shrink:0;background:linear-gradient(135deg,var(--verde),var(--azul));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(52,211,153,0.3);">
                             ${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;display:block;">` : `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`}
                         </div>
                         <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
                             <button type="button" onclick="window.cambiarFotoPerfil()" style="padding:10px 14px;background:linear-gradient(135deg,var(--verde),var(--azul));color:black;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:0.86rem;display:flex;align-items:center;justify-content:center;gap:6px;">
-                                Cambiar foto
+                                ${t('prefs.change_photo')}
                             </button>
                             <button type="button" id="prefRemovePhotoBtn" onclick="window.quitarFotoPerfil()" style="display:${photo ? 'block' : 'none'};padding:6px 10px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;cursor:pointer;font-size:0.78rem;">
-                                Quitar foto
+                                ${t('prefs.remove_photo')}
                             </button>
                         </div>
                     </div>
@@ -12423,7 +12521,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
                 <!-- 2. IDIOMA -->
                 <div style="background:rgba(125,125,125,0.06);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
-                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Idioma de la aplicación</label>
+                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">${t('prefs.app_lang_lbl')}</label>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:8px;">
                         ${[
                           { id: 'es', code: 'ES', label: 'Español' },
@@ -12432,7 +12530,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                           { id: 'de', code: 'DE', label: 'Deutsch' },
                           { id: 'it', code: 'IT', label: 'Italiano' }
                         ].map(l => `
-                          <button type="button" onclick="window.setLanguage('${l.id}'); document.querySelectorAll('.pref-lang-btn').forEach(b => { const active = (b.dataset.lang==='${l.id}'); b.style.background = active ? 'rgba(52,211,153,0.18)' : 'rgba(125,125,125,0.05)'; b.style.borderColor = active ? 'var(--verde)' : 'var(--border)'; b.style.color = active ? 'var(--verde)' : 'var(--texto)'; });" data-lang="${l.id}" class="pref-lang-btn" style="padding:10px 4px;border-radius:12px;border:1.5px solid ${curLang === l.id ? 'var(--verde)' : 'var(--border)'};background:${curLang === l.id ? 'rgba(52,211,153,0.18)' : 'rgba(125,125,125,0.05)'};color:${curLang === l.id ? 'var(--verde)' : 'var(--texto)'};font-weight:600;cursor:pointer;font-size:0.82rem;display:flex;flex-direction:column;align-items:center;gap:3px;">
+                          <button type="button" onclick="window.setLanguage('${l.id}'); document.querySelectorAll('.pref-lang-btn').forEach(b => { const active = (b.dataset.lang==='${l.id}'); b.style.background = active ? 'rgba(52,211,153,0.18)' : 'rgba(125,125,125,0.05)'; b.style.borderColor = active ? 'var(--verde)' : 'var(--border)'; b.style.color = active ? 'var(--verde)' : 'var(--texto)'; }); window.abrirPreferencias();" data-lang="${l.id}" class="pref-lang-btn" style="padding:10px 4px;border-radius:12px;border:1.5px solid ${curLang === l.id ? 'var(--verde)' : 'var(--border)'};background:${curLang === l.id ? 'rgba(52,211,153,0.18)' : 'rgba(125,125,125,0.05)'};color:${curLang === l.id ? 'var(--verde)' : 'var(--texto)'};font-weight:600;cursor:pointer;font-size:0.82rem;display:flex;flex-direction:column;align-items:center;gap:3px;">
                             <span style="font-weight:800;font-size:0.95rem;color:var(--verde);">${l.code}</span>
                             <span style="color:inherit;">${l.label}</span>
                           </button>
@@ -12442,19 +12540,19 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
                 <!-- 3. TEMA VISUAL (GRID DE TARJETAS LIMPIO SIN EMOJIS) -->
                 <div style="background:rgba(125,125,125,0.06);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;">
-                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Tema visual</label>
+                    <label style="display:block;margin-bottom:10px;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">${t('prefs.visual_theme_lbl')}</label>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
-                        ${themes.map(t => {
-                          const active = curTheme === t.id;
-                          const bColor = t.activeBorder || t.color;
+                        ${themes.map(th => {
+                          const active = curTheme === th.id;
+                          const bColor = th.activeBorder || th.color;
                           return `
-                            <div onclick="window.setTheme('${t.id}'); document.querySelectorAll('.pref-theme-card').forEach(c => { const act = c.dataset.themeId==='${t.id}'; c.style.borderColor = act ? '${bColor}' : 'var(--border)'; c.style.background = act ? 'rgba(52,211,153,0.12)' : 'rgba(125,125,125,0.05)'; const chk = c.querySelector('.theme-check-icon'); if (chk) chk.style.display = act ? 'inline-block' : 'none'; });" data-theme-id="${t.id}" class="pref-theme-card" style="cursor:pointer;padding:12px;border-radius:12px;border:2px solid ${active ? bColor : 'var(--border)'};background:${active ? 'rgba(52,211,153,0.12)' : 'rgba(125,125,125,0.05)'};display:flex;flex-direction:column;gap:6px;transition:all 0.2s ease;">
+                            <div onclick="window.setTheme('${th.id}'); document.querySelectorAll('.pref-theme-card').forEach(c => { const act = c.dataset.themeId==='${th.id}'; c.style.borderColor = act ? '${bColor}' : 'var(--border)'; c.style.background = act ? 'rgba(52,211,153,0.12)' : 'rgba(125,125,125,0.05)'; const chk = c.querySelector('.theme-check-icon'); if (chk) chk.style.display = act ? 'inline-block' : 'none'; });" data-theme-id="${th.id}" class="pref-theme-card" style="cursor:pointer;padding:12px;border-radius:12px;border:2px solid ${active ? bColor : 'var(--border)'};background:${active ? 'rgba(52,211,153,0.12)' : 'rgba(125,125,125,0.05)'};display:flex;flex-direction:column;gap:6px;transition:all 0.2s ease;">
                               <div style="display:flex;align-items:center;justify-content:space-between;">
-                                <span style="width:14px; height:14px; border-radius:50%; background:${t.color}; border:${t.border || 'none'}; box-shadow:0 0 8px ${t.color === '#ffffff' ? 'rgba(0,0,0,0.15)' : t.color}; display:inline-block;"></span>
+                                <span style="width:14px; height:14px; border-radius:50%; background:${th.color}; border:${th.border || 'none'}; box-shadow:0 0 8px ${th.color === '#ffffff' ? 'rgba(0,0,0,0.15)' : th.color}; display:inline-block;"></span>
                                 <span class="theme-check-icon" style="display:${active ? 'inline-block' : 'none'};color:var(--verde);font-size:0.85rem;font-weight:bold;">✓</span>
                               </div>
-                              <span class="theme-name" style="font-size:0.9rem;font-weight:700;color:var(--texto);">${t.name}</span>
-                              <span class="theme-desc" style="font-size:0.75rem;color:var(--gris);">${t.desc}</span>
+                              <span class="theme-name" style="font-size:0.9rem;font-weight:700;color:var(--texto);">${th.name}</span>
+                              <span class="theme-desc" style="font-size:0.75rem;color:var(--gris);">${th.desc}</span>
                             </div>
                           `;
                         }).join('')}
@@ -12463,24 +12561,24 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
                 <!-- 4. RITMO Y EVENTOS IA -->
                 <div style="background:rgba(125,125,125,0.06);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px;">
-                    <label style="display:block;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Preferencias de viaje (IA)</label>
+                    <label style="display:block;font-size:0.82rem;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">${t('prefs.ai_prefs_lbl')}</label>
                     <div>
-                        <label style="display:block;margin-bottom:6px;font-size:0.84rem;color:var(--gris);">Ritmo del itinerario:</label>
+                        <label style="display:block;margin-bottom:6px;font-size:0.84rem;color:var(--gris);">${t('prefs.pace_lbl')}</label>
                         <select id="pref-pace" style="width:100%;padding:10px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--texto);font-size:0.9rem;box-sizing:border-box;outline:none;">
-                            <option value="relaxed" ${userPreferences.pace==='relaxed'?'selected':''}>Relajado</option>
-                            <option value="moderate" ${userPreferences.pace==='moderate'?'selected':''}>Moderado</option>
-                            <option value="intense" ${userPreferences.pace==='intense'?'selected':''}>Intenso</option>
+                            <option value="relaxed" ${userPreferences.pace==='relaxed'?'selected':''}>${t('prefs.pace_relaxed')}</option>
+                            <option value="moderate" ${userPreferences.pace==='moderate'?'selected':''}>${t('prefs.pace_moderate')}</option>
+                            <option value="intense" ${userPreferences.pace==='intense'?'selected':''}>${t('prefs.pace_intense')}</option>
                         </select>
                     </div>
                     <div>
-                        <label style="display:block;margin-bottom:6px;font-size:0.84rem;color:var(--gris);">Actividades por día sugeridas:</label>
+                        <label style="display:block;margin-bottom:6px;font-size:0.84rem;color:var(--gris);">${t('prefs.events_per_day_lbl')}</label>
                         <input type="number" id="pref-events" value="${userPreferences.eventsPerDay}" min="1" max="10" style="width:100%;padding:10px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--texto);box-sizing:border-box;">
                     </div>
                 </div>
 
                 <div style="display:flex;gap:10px;">
-                    <button onclick="guardarPreferencias()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--verde),var(--azul));color:black;border:none;border-radius:14px;font-weight:bold;cursor:pointer;font-size:0.95rem;">Guardar cambios</button>
-                    <button onclick="document.getElementById('modal-preferencias').remove()" style="flex:1;padding:14px;background:rgba(125,125,125,0.1);color:var(--texto);border:1px solid var(--border);border-radius:14px;cursor:pointer;font-size:0.95rem;font-weight:600;">Cerrar</button>
+                    <button onclick="guardarPreferencias()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--verde),var(--azul));color:black;border:none;border-radius:14px;font-weight:bold;cursor:pointer;font-size:0.95rem;">${t('prefs.save_btn')}</button>
+                    <button onclick="document.getElementById('modal-preferencias').remove()" style="flex:1;padding:14px;background:rgba(125,125,125,0.1);color:var(--texto);border:1px solid var(--border);border-radius:14px;cursor:pointer;font-size:0.95rem;font-weight:600;">${t('prefs.close_btn')}</button>
                 </div>
             </div>
         </div>`;
@@ -12496,7 +12594,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         autoSave();
         const m = document.getElementById('modal-preferencias');
         if (m) m.remove();
-        showToast('Preferencias guardadas correctamente ✨', 'success');
+        showToast(t('prefs.saved_toast'), 'success');
     }
     window.guardarPreferencias = guardarPreferencias;
 
@@ -12564,7 +12662,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
     function abrirAmigos() {
         if (!currentUserUid) {
-            showToast('Iniciá sesión para ver tus amigos y familia', 'info');
+            showToast(t('profile.friends_login_req'), 'info');
             return;
         }
         const el = document.getElementById('modal-amigos');
@@ -12583,7 +12681,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         if (!container) return;
         
         if (friends.length === 0) {
-            container.innerHTML = `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:20px;">No tenés amigos agregados. Agregalos usando su Nickname.</p>`;
+            container.innerHTML = `<p style="text-align:center; color:var(--gris); font-size:0.9rem; margin-top:20px;">${escapeHtml(t('profile.friends_empty_hint'))}</p>`;
             return;
         }
         
@@ -12610,17 +12708,17 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                         </div>
                         <div style="display:flex; flex-direction:column; min-width:0;">
                             <strong style="color:white; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${escapeHtml(clean)}</strong>
-                            <span style="font-size:0.75rem; color:var(--gris);">Ver perfil</span>
+                            <span style="font-size:0.75rem; color:var(--gris);">${escapeHtml(t('profile.view_profile'))}</span>
                         </div>
                     </div>
                     <div style="display:flex; gap:6px; flex-shrink:0;">
-                        <button onclick="window.cerrarAmigos(); window.iniciarChatConUsuario('${escapeHtml(clean)}');" style="background:rgba(52,211,153,0.15); border:1px solid var(--verde); width:32px; height:32px; border-radius:8px; color:var(--verde); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;" title="Chatear con @${escapeHtml(clean)}">
+                        <button onclick="window.cerrarAmigos(); window.iniciarChatConUsuario('${escapeHtml(clean)}');" style="background:rgba(52,211,153,0.15); border:1px solid var(--verde); width:32px; height:32px; border-radius:8px; color:var(--verde); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;" title="${escapeHtml(t('community_forum.chat_with_title', { nick: clean }))}">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                         </button>
-                        <button onclick="abrirDetalleAmigo('${escapeHtml(clean)}')" style="background:rgba(96,165,250,0.1); border:1px solid var(--azul); width:32px; height:32px; border-radius:8px; color:var(--azul); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;" title="Ver perfil">
+                        <button onclick="abrirDetalleAmigo('${escapeHtml(clean)}')" style="background:rgba(96,165,250,0.1); border:1px solid var(--azul); width:32px; height:32px; border-radius:8px; color:var(--azul); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;" title="${escapeHtml(t('profile.view_profile'))}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         </button>
-                        <button onclick="eliminarAmigo('${escapeHtml(clean)}')" style="background:rgba(239,68,68,0.1); border:1px solid var(--rojo); width:32px; height:32px; border-radius:8px; color:var(--rojo); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;" title="Eliminar de amigos">
+                        <button onclick="eliminarAmigo('${escapeHtml(clean)}')" style="background:rgba(239,68,68,0.1); border:1px solid var(--rojo); width:32px; height:32px; border-radius:8px; color:var(--rojo); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;" title="${escapeHtml(t('profile.remove_friend'))}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </div>
@@ -12647,29 +12745,29 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const nick = rawNick.toLowerCase().replace(/[^a-z0-9]/g, '');
         
         if (!nick) {
-            showToast('Ingresá un nickname', 'error');
+            showToast(t('profile.enter_nick_err'), 'error');
             return;
         }
         if (nick === currentNickname?.toLowerCase()) {
-            showToast('No podés agregarte a vos mismo', 'error');
+            showToast(t('profile.no_self_add'), 'error');
             return;
         }
         
         const friends = getStoredFriends();
         if (friends.some(f => (typeof f === 'string' ? f.toLowerCase().replace(/^@/, '') : '') === nick)) {
-            showToast(`@${nick} ya está en tu lista`, 'info');
+            showToast(t('profile.already_friend', { nick }), 'info');
             return;
         }
         
         if (!db) {
-            showToast('Base de datos no disponible', 'error');
+            showToast(t('profile.db_unavailable'), 'error');
             return;
         }
         
         try {
             const userDoc = await db.collection('plux_usuarios').doc(nick).get();
             if (!userDoc.exists) {
-                showToast(`El usuario @${nick} no existe en Plux`, 'error');
+                showToast(t('profile.user_not_found', { nick }), 'error');
                 return;
             }
             
@@ -12684,23 +12782,23 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
 
             friends.push(nick);
             saveFriends(friends);
-            showToast(`@${nick} agregado correctamente`, 'success');
+            showToast(t('profile.friend_added_ok', { nick }), 'success');
             if (input) input.value = '';
             renderAmigosList();
             if (typeof renderContactosNuevaConversacion === 'function') renderContactosNuevaConversacion();
         } catch(e) {
             console.error('Error al agregar amigo:', e);
-            showToast('Error al conectar con la base de datos', 'error');
+            showToast(t('profile.db_connect_err'), 'error');
         }
     }
 
     function eliminarAmigo(friendNick) {
         const cleanNick = (friendNick || '').replace(/^@/, '').trim();
-        if (!confirm(`¿Estás seguro de que querés eliminar a @${cleanNick} de tu lista?`)) return;
+        if (!confirm(t('profile.confirm_remove_friend', { nick: cleanNick }))) return;
         let friends = getStoredFriends();
         friends = friends.filter(f => (typeof f === 'string' ? f.toLowerCase().replace(/^@/, '').trim() : '') !== cleanNick.toLowerCase());
         saveFriends(friends);
-        showToast(`@${cleanNick} eliminado de amigos`, 'info');
+        showToast(t('profile.friend_removed', { nick: cleanNick }), 'info');
         renderAmigosList();
         if (typeof renderContactosNuevaConversacion === 'function') renderContactosNuevaConversacion();
     }
@@ -12716,7 +12814,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         const nameHeaderEl = document.getElementById('friendDetailName');
         if (nameHeaderEl) nameHeaderEl.innerText = titleNick;
         const connEl = document.getElementById('friendDetailConnection');
-        if (connEl) connEl.innerText = 'Cargando...';
+        if (connEl) connEl.innerText = t('common.loading');
         const setStat = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
         setStat('friendStatTrips', '--');
         setStat('friendStatDestinations', '--');
@@ -12728,7 +12826,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
         if (infoCard) infoCard.style.display = 'none';
 
         if (!db) {
-            showToast('Base de datos no disponible', 'error');
+            showToast(t('profile.db_unavailable'), 'error');
             return;
         }
         
@@ -12758,7 +12856,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             }
 
             if (!data) {
-                if (connEl) connEl.innerText = 'Última conexión: No disponible';
+                if (connEl) connEl.innerText = t('profile.last_seen_na');
                 setStat('friendStatTrips', '0');
                 setStat('friendStatDestinations', '0');
                 setStat('friendStatDays', '0');
@@ -12785,7 +12883,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             let countries = new Set();
             
             // Format Last Connection safely
-            let connStr = 'Reciente';
+            let connStr = t('profile.last_seen_recent');
             if (data.ultimaConexion) {
               try {
                 let connDate;
@@ -12795,11 +12893,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
                   connDate = new Date(data.ultimaConexion);
                 }
                 if (!isNaN(connDate.getTime())) {
-                  connStr = connDate.toLocaleDateString() + ' ' + connDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  const loc = typeof window.getLangLocale === 'function' ? window.getLangLocale() : undefined;
+                  connStr = connDate.toLocaleDateString(loc) + ' ' + connDate.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
                 }
               } catch(e) {}
             }
-            if (connEl) connEl.innerText = `Última conexión: ${connStr}`;
+            if (connEl) connEl.innerText = t('profile.last_seen_tpl', { when: connStr });
 
             // Render Friend Personal Info (respecting privacy toggles)
             const rawPersonal = data.info_personal || data.infoPersonal || data.personalInfo || data.info || {};
@@ -12831,7 +12930,7 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             const ageEl = document.getElementById('friendDetailAge');
             const ageRow = document.getElementById('friendDetailAgeRow');
             if (personalInfo.age) {
-              if (ageEl) ageEl.innerText = `${personalInfo.age} años`;
+              if (ageEl) ageEl.innerText = t('profile.years_old', { age: personalInfo.age });
               if (ageRow) ageRow.style.display = 'block';
               hasAnyInfo = true;
             } else if (ageRow) {
@@ -12842,10 +12941,10 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             const genderRow = document.getElementById('friendDetailGenderRow');
             if (personalInfo.gender) {
               const genderMap = {
-                'masculino': 'Masculino',
-                'femenino': 'Femenino',
-                'no_binario': 'No binario',
-                'otro': 'Otro',
+                'masculino': t('profile.gender_male'),
+                'femenino': t('profile.gender_female'),
+                'no_binario': t('profile.gender_nb'),
+                'otro': t('profile.gender_other'),
                 'prefiero_no_decir': ''
               };
               const gText = genderMap[personalInfo.gender] || personalInfo.gender;
@@ -12874,12 +12973,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             const styleRow = document.getElementById('friendDetailStyleRow');
             if (personalInfo.travelStyle) {
               const styleMap = {
-                'mochilero': 'Mochilero y Aventura',
-                'relax': 'Relax y Playa',
-                'cultural': 'Cultural y Museos',
-                'gastronomico': 'Gastronómico',
-                'urbano': 'Urbano y Noche',
-                'lujo': 'Lujo y Confort'
+                'mochilero': t('community_forum.style_mochilero'),
+                'relax': t('community_forum.style_relax'),
+                'cultural': t('community_forum.style_cultural'),
+                'gastronomico': t('community_forum.style_gastronomico'),
+                'urbano': t('community_forum.style_urbano'),
+                'lujo': t('community_forum.style_lujo')
               };
               if (styleEl) styleEl.innerText = styleMap[personalInfo.travelStyle] || personalInfo.travelStyle;
               if (styleRow) styleRow.style.display = 'block';
@@ -12902,12 +13001,12 @@ Cuando el usuario pide hacer algo, HACELO con los comandos correspondientes adem
             if (!isProfilePublic) {
               if (privateNotice) {
                 privateNotice.style.display = 'block';
-                privateNotice.innerText = '🔒 Este viajero mantiene su información personal privada.';
+                privateNotice.innerText = t('profile.private_all');
               }
             } else if (!isAgePublic || !isCityPublic) {
               if (privateNotice) {
                 privateNotice.style.display = 'block';
-                privateNotice.innerText = '🔒 Este viajero configuró algunos datos como privados.';
+                privateNotice.innerText = t('profile.private_partial');
               }
             } else if (privateNotice) {
               privateNotice.style.display = 'none';

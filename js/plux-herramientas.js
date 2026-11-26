@@ -238,7 +238,8 @@
     localStorage.setItem('plux_logros_unlocked', JSON.stringify(guardados));
 
     if (typeof window.showToast === 'function') {
-      window.showToast(`Logro obtenido: ${logro.titulo}`, 'success');
+      const locLogro = typeof window.getLocalizedAchievement === 'function' ? window.getLocalizedAchievement(logro) : logro;
+      window.showToast(typeof t === 'function' ? t('tools_modals.ach_unlocked_toast', { title: locLogro.titulo }) : `Logro obtenido: ${locLogro.titulo}`, 'success');
     }
     renderizarLogrosModal();
   }
@@ -273,8 +274,8 @@
 
   function filtrarLogrosPorCategoria(cat) {
     categoriaFiltroLogros = cat;
-    document.querySelectorAll('.logros-cat-tab').forEach(t => {
-      t.classList.toggle('active', t.getAttribute('data-cat') === cat);
+    document.querySelectorAll('.logros-cat-tab').forEach(tabEl => {
+      tabEl.classList.toggle('active', tabEl.getAttribute('data-cat') === cat);
     });
     renderizarLogrosModal();
   }
@@ -300,13 +301,28 @@
 
     container.innerHTML = '';
 
-    listaFiltrada.forEach(l => {
+    const catKeyMap = {
+      'Ruta': 'tools_modals.cat_badge_Ruta',
+      'Exploración': 'tools_modals.cat_badge_Exploracion',
+      'Bitácora': 'tools_modals.cat_badge_Bitacora',
+      'Grupo': 'tools_modals.cat_badge_Grupo',
+      'Lienzo': 'tools_modals.cat_badge_Lienzo'
+    };
+    const loc = typeof window.getLangLocale === 'function' ? window.getLangLocale() : undefined;
+
+    listaFiltrada.forEach(rawL => {
+      const l = typeof window.getLocalizedAchievement === 'function' ? window.getLocalizedAchievement(rawL) : rawL;
       const data = guardados[l.id];
       const isUnlocked = Boolean(data);
 
       const dateStr = isUnlocked && data.unlockedAt 
-        ? new Date(data.unlockedAt).toLocaleDateString()
-        : 'Pendiente';
+        ? new Date(data.unlockedAt).toLocaleDateString(loc)
+        : (typeof t === 'function' ? t('tools_modals.ach_pending') : 'Pendiente');
+
+      const catLabel = (typeof t === 'function' && catKeyMap[rawL.cat]) ? t(catKeyMap[rawL.cat]) : rawL.cat;
+      const statusText = isUnlocked
+        ? (typeof t === 'function' ? t('tools_modals.ach_obtained_on', { date: dateStr }) : `Obtenido el ${dateStr}`)
+        : (typeof t === 'function' ? t('tools_modals.ach_not_reached') : 'No alcanzado aún');
 
       const card = document.createElement('div');
       card.className = `logro-card ${isUnlocked ? 'desbloqueado' : 'bloqueado'}`;
@@ -317,10 +333,10 @@
         <div class="logro-info">
           <div style="display:flex; justify-content:space-between; align-items:baseline;">
             <h4>${l.titulo}</h4>
-            <span style="font-size:0.68rem; color:var(--gris); text-transform:uppercase;">${l.cat}</span>
+            <span style="font-size:0.68rem; color:var(--gris); text-transform:uppercase;">${catLabel}</span>
           </div>
           <p>${l.desc}</p>
-          <div class="logro-unlocked-date">${isUnlocked ? 'Obtenido el ' + dateStr : 'No alcanzado aún'}</div>
+          <div class="logro-unlocked-date">${statusText}</div>
         </div>
       `;
       container.appendChild(card);
@@ -328,14 +344,18 @@
 
     const percent = Math.round((unlockedTotal / totalCount) * 100);
     if (progressFill) progressFill.style.width = percent + '%';
-    if (progressText) progressText.textContent = `${unlockedTotal} de ${totalCount} hitos alcanzados (${percent}%)`;
+    if (progressText) {
+      progressText.textContent = typeof t === 'function'
+        ? t('tools_modals.progress_tpl', { done: unlockedTotal, count: unlockedTotal, total: totalCount, pct: percent })
+        : `${unlockedTotal} de ${totalCount} hitos alcanzados (${percent}%)`;
+    }
   }
 
 
   // ========================================================================
   // 2. RULETA DE DECISIONES
   // ========================================================================
-  let ruletaOpciones = ['Restaurante local', 'Punto histórico', 'Cafetería', 'Mercado gastronómico', 'Caminata'];
+  let ruletaOpciones = null;
   let ruletaAngulo = 0;
   let ruletaSpinning = false;
   const PALETA_RULETA = [
@@ -343,8 +363,19 @@
     '#7c3aed', '#0891b2', '#4b5563', '#4f46e5'
   ];
 
+  function ensureRuletaOpciones() {
+    if (!Array.isArray(ruletaOpciones)) {
+      const listStr = typeof t === 'function' ? t('tools_modals.ruleta_init_list') : '';
+      ruletaOpciones = listStr && listStr.includes('|')
+        ? listStr.split('|')
+        : ['Restaurante local', 'Punto histórico', 'Cafetería', 'Mercado gastronómico', 'Caminata'];
+    }
+  }
+
   function abrirModalRuleta() {
     cerrarModalesHerramientas();
+    ruletaOpciones = null;
+    ensureRuletaOpciones();
     const modal = document.getElementById('modal-ruleta');
     if (modal) {
       modal.style.display = 'flex';
@@ -361,6 +392,7 @@
   window.cerrarModalRuleta = cerrarModalRuleta;
 
   function dibujarRuleta() {
+    ensureRuletaOpciones();
     const canvas = document.getElementById('ruleta-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -377,7 +409,7 @@
       ctx.fillStyle = '#64748b';
       ctx.font = '500 14px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Añade opciones a la lista', cx, cy);
+      ctx.fillText(typeof t === 'function' ? t('tools_modals.ruleta_empty_canvas') : 'Añade opciones a la lista', cx, cy);
       return;
     }
 
@@ -499,7 +531,8 @@
 
     const banner = document.getElementById('ruleta-winner-banner');
     if (banner) {
-      banner.innerHTML = `Opción seleccionada: <strong>${ganador}</strong>`;
+      const selLbl = typeof t === 'function' ? t('tools_modals.ruleta_selected') : 'Opción seleccionada:';
+      banner.innerHTML = `${selLbl} <strong>${ganador}</strong>`;
       banner.style.display = 'block';
     }
 
@@ -507,22 +540,25 @@
   }
 
   function renderizarOpcionesRuleta() {
+    ensureRuletaOpciones();
     const container = document.getElementById('ruleta-options-container');
     if (!container) return;
     container.innerHTML = '';
 
+    const delTitle = typeof t === 'function' ? t('common.delete') : 'Eliminar';
     ruletaOpciones.forEach((opt, idx) => {
       const pill = document.createElement('div');
       pill.className = 'ruleta-option-pill';
       pill.innerHTML = `
         <span>${opt}</span>
-        <button class="ruleta-del-opt-btn" onclick="window.eliminarOpcionRuleta(${idx})" title="Eliminar">&times;</button>
+        <button class="ruleta-del-opt-btn" onclick="window.eliminarOpcionRuleta(${idx})" title="${delTitle}">&times;</button>
       `;
       container.appendChild(pill);
     });
   }
 
   function agregarOpcionRuleta() {
+    ensureRuletaOpciones();
     const input = document.getElementById('ruleta-input-nueva-opcion');
     if (!input) return;
     const txt = input.value.trim();
@@ -536,9 +572,10 @@
   window.agregarOpcionRuleta = agregarOpcionRuleta;
 
   function eliminarOpcionRuleta(idx) {
+    ensureRuletaOpciones();
     if (ruletaOpciones.length <= 2) {
       if (typeof window.showToast === 'function') {
-        window.showToast('La ruleta requiere al menos 2 opciones', 'info');
+        window.showToast(typeof t === 'function' ? t('tools_modals.ruleta_min_two') : 'La ruleta requiere al menos 2 opciones', 'info');
       }
       return;
     }
@@ -549,25 +586,29 @@
   window.eliminarOpcionRuleta = eliminarOpcionRuleta;
 
   function setPresetRuleta(tipo) {
+    const parseList = (k, fb) => {
+      const v = typeof t === 'function' ? t(k) : '';
+      return v && v.includes('|') ? v.split('|') : fb;
+    };
     if (tipo === 'gastronomia') {
-      ruletaOpciones = ['Restaurante local', 'Mercado gastronómico', 'Cafetería', 'Comida rápida', 'Parrilla', 'Cocina de autor'];
+      ruletaOpciones = parseList('tools_modals.ruleta_food_list', ['Restaurante local', 'Mercado gastronómico', 'Cafetería', 'Comida rápida', 'Parrilla', 'Cocina de autor']);
       desbloquearLogro('l36');
     } else if (tipo === 'actividades') {
-      ruletaOpciones = ['Museo histórico', 'Mirador panorámico', 'Paseo en parque', 'Recorrido céntrico', 'Centro comercial', 'Tiempo libre'];
+      ruletaOpciones = parseList('tools_modals.ruleta_act_list', ['Museo histórico', 'Mirador panorámico', 'Paseo en parque', 'Recorrido céntrico', 'Centro comercial', 'Tiempo libre']);
       desbloquearLogro('l37');
     } else if (tipo === 'pago') {
       const parts = typeof window.getTripParticipants === 'function' ? window.getTripParticipants() : [];
       if (parts && parts.length >= 2) {
         ruletaOpciones = parts.map(p => p.startsWith('@') ? p : '@' + p);
       } else {
-        ruletaOpciones = ['Viajero principal', 'Acompañante 1', 'Acompañante 2', 'División equitativa'];
+        ruletaOpciones = parseList('tools_modals.ruleta_pay_list', ['Viajero principal', 'Acompañante 1', 'Acompañante 2', 'División equitativa']);
       }
       desbloquearLogro('l38');
     } else if (tipo === 'destinos') {
       if (Array.isArray(window.destinos) && window.destinos.length >= 2) {
-        ruletaOpciones = window.destinos.map(d => d.nombre || 'Destino');
+        ruletaOpciones = window.destinos.map(d => d.nombre || (typeof t === 'function' ? t('common.untitled') : 'Destino'));
       } else {
-        ruletaOpciones = ['Roma', 'Tokio', 'París', 'Nueva York', 'Buenos Aires'];
+        ruletaOpciones = parseList('tools_modals.ruleta_dest_list', ['Roma', 'Tokio', 'París', 'Nueva York', 'Buenos Aires']);
       }
     }
     dibujarRuleta();
@@ -651,7 +692,7 @@
     if (!files || !files.length) return;
 
     const statusEl = document.getElementById('bitacora-upload-status');
-    if (statusEl) statusEl.textContent = `Procesando ${files.length} archivo(s)...`;
+    if (statusEl) statusEl.textContent = typeof t === 'function' ? t('tools_modals.processing_files', { count: files.length }) : `Procesando ${files.length} archivo(s)...`;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -686,7 +727,7 @@
       }
     }
 
-    if (statusEl) statusEl.textContent = 'Archivos cargados correctamente.';
+    if (statusEl) statusEl.textContent = typeof t === 'function' ? t('tools_modals.files_loaded_ok') : 'Archivos cargados correctamente.';
     renderizarPreviewMultimedia();
     event.target.value = '';
   }
@@ -737,14 +778,14 @@
 
     if (!titulo && !texto) {
       if (typeof window.showToast === 'function') {
-        window.showToast('Por favor ingrese un título o contenido para el registro', 'info');
+        window.showToast(typeof t === 'function' ? t('tools_modals.entry_required_toast') : 'Por favor ingrese un título o contenido para el registro', 'info');
       }
       return;
     }
 
     const nuevaEntrada = {
       id: 'entry_' + Date.now().toString(36),
-      titulo: titulo || 'Registro de viaje',
+      titulo: titulo || (typeof t === 'function' ? t('tools_modals.entry_default_title') : 'Registro de viaje'),
       texto: texto,
       fecha: fecha,
       destino: destino,
@@ -762,7 +803,7 @@
     if (entries.length >= 10) desbloquearLogro('l24');
 
     if (typeof window.showToast === 'function') {
-      window.showToast('Entrada guardada en la bitácora', 'success');
+      window.showToast(typeof t === 'function' ? t('tools_modals.entry_saved_toast') : 'Entrada guardada en la bitácora', 'success');
     }
 
     ocultarEditorBitacora();
@@ -776,7 +817,8 @@
 
     const destSelect = document.getElementById('bitacora-select-destino');
     if (destSelect && Array.isArray(window.destinos)) {
-      destSelect.innerHTML = '<option value="">(Destino general)</option>';
+      const genLbl = typeof t === 'function' ? t('tools_modals.general_dest') : '(Destino general)';
+      destSelect.innerHTML = `<option value="">${genLbl}</option>`;
       window.destinos.forEach(d => {
         if (d && d.nombre) {
           destSelect.innerHTML += `<option value="${d.nombre}">${d.nombre}</option>`;
@@ -789,13 +831,17 @@
       container.innerHTML = `
         <div style="text-align:center; padding:48px 20px; color:var(--gris, #94a3b8);">
           <div style="font-size:2.2rem; margin-bottom:12px; opacity:0.6;"><i class="fa-solid fa-book-bookmark"></i></div>
-          <h3 style="margin:0 0 6px 0; color:#fff; font-weight:600;">Sin registros de viaje</h3>
-          <p style="margin:0 0 16px 0; font-size:0.88rem;">Documenta memorias, notas de ruta, fotos y videos de tus jornadas.</p>
-          <button class="bitacora-btn-primary" onclick="window.mostrarEditorBitacora()" style="margin:0 auto;">Nuevo registro</button>
+          <h3 style="margin:0 0 6px 0; color:#fff; font-weight:600;">${typeof t === 'function' ? t('tools_modals.empty_journal_title') : 'Sin registros de viaje'}</h3>
+          <p style="margin:0 0 16px 0; font-size:0.88rem;">${typeof t === 'function' ? t('tools_modals.empty_journal_desc') : 'Documenta memorias, notas de ruta, fotos y videos de tus jornadas.'}</p>
+          <button class="bitacora-btn-primary" onclick="window.mostrarEditorBitacora()" style="margin:0 auto;">${typeof t === 'function' ? t('tools_modals.new_entry') : 'Nuevo registro'}</button>
         </div>
       `;
       return;
     }
+
+    const pinTitle = typeof t === 'function' ? t('tools_modals.pin_canvas_title') : 'Fijar como nota en el lienzo';
+    const pinBtn = typeof t === 'function' ? t('tools_modals.pin_canvas_btn') : 'Lienzo';
+    const delTitle = typeof t === 'function' ? t('common.delete') : 'Eliminar';
 
     container.innerHTML = '';
     entries.forEach(e => {
@@ -809,7 +855,7 @@
           if (m.type === 'video') {
             mediaHtml += `<video src="${m.url}" controls playsinline class="bitacora-video-player"></video>`;
           } else {
-            mediaHtml += `<img src="${m.url}" class="bitacora-media-item" alt="Archivo adjunto" onclick="if(window.abrirFotoGrande) window.abrirFotoGrande('${m.url}', '${e.titulo.replace(/'/g, "\\'")}')">`;
+            mediaHtml += `<img src="${m.url}" class="bitacora-media-item" alt="Media" onclick="if(window.abrirFotoGrande) window.abrirFotoGrande('${m.url}', '${e.titulo.replace(/'/g, "\\'")}')">`;
           }
         });
         mediaHtml += '</div>';
@@ -823,8 +869,8 @@
         <div class="bitacora-entry-header">
           <h3 class="bitacora-entry-title">${e.titulo}</h3>
           <div style="display:flex; gap:6px;">
-            <button onclick="window.pegarEntradaEnLienzo('${e.id}')" title="Fijar como nota en el lienzo" class="bitacora-action-btn"><i class="fa-solid fa-thumbtack"></i> Lienzo</button>
-            <button onclick="window.eliminarEntradaBitacora('${e.id}')" title="Eliminar entrada" class="bitacora-action-btn bitacora-del-btn"><i class="fa-solid fa-trash-can"></i></button>
+            <button onclick="window.pegarEntradaEnLienzo('${e.id}')" title="${pinTitle}" class="bitacora-action-btn"><i class="fa-solid fa-thumbtack"></i> ${pinBtn}</button>
+            <button onclick="window.eliminarEntradaBitacora('${e.id}')" title="${delTitle}" class="bitacora-action-btn bitacora-del-btn"><i class="fa-solid fa-trash-can"></i></button>
           </div>
         </div>
         <div class="bitacora-entry-meta">
@@ -839,7 +885,7 @@
   }
 
   function eliminarEntradaBitacora(id) {
-    if (!confirm('¿Deseas eliminar este registro de la bitácora?')) return;
+    if (!confirm(typeof t === 'function' ? t('tools_modals.delete_entry_confirm') : '¿Deseas eliminar este registro de la bitácora?')) return;
     let entries = getBitacoraEntries();
     entries = entries.filter(e => e.id !== id);
     saveBitacoraEntries(entries);
@@ -853,11 +899,12 @@
     if (!entry) return;
 
     if (typeof window.crearNotaCartelito === 'function') {
-      const textoNota = `[Bitácora] ${entry.titulo}\n${entry.texto}`;
+      const pfx = typeof t === 'function' ? t('tools_modals.journal_note_prefix') : '[Bitácora]';
+      const textoNota = `${pfx} ${entry.titulo}\n${entry.texto}`;
       window.crearNotaCartelito(textoNota);
       cerrarModalBitacora();
       if (typeof window.showToast === 'function') {
-        window.showToast('Nota fijada en el lienzo', 'success');
+        window.showToast(typeof t === 'function' ? t('tools_modals.note_pinned_toast') : 'Nota fijada en el lienzo', 'success');
       }
       desbloquearLogro('l30');
     }

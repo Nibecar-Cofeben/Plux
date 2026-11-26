@@ -62,26 +62,26 @@
             badge.style.background = 'rgba(245, 158, 11, 0.18)';
             badge.style.border = '1px solid rgba(245, 158, 11, 0.45)';
             badge.style.color = '#fbbf24';
-            badge.title = 'Modo Offline activo: Guardando cambios en el dispositivo. Clic para abrir Centro Modo Avión.';
-            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> Offline · Local`;
+            badge.title = t('pro.pill_offline_title');
+            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> ${t('pro.pill_offline_label')}`;
         } else if (pendingSync) {
             badge.style.background = 'rgba(56, 189, 248, 0.16)';
             badge.style.border = '1px solid rgba(56, 189, 248, 0.45)';
             badge.style.color = '#38bdf8';
-            badge.title = 'Sincronizando cambios offline con la nube... Clic para ver estado.';
-            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#38bdf8;display:inline-block;"></span> Sincronizando...`;
+            badge.title = t('pro.pill_syncing_title');
+            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#38bdf8;display:inline-block;"></span> ${t('pro.pill_syncing_label')}`;
         } else if (collabs > 1) {
             badge.style.background = 'rgba(16, 185, 129, 0.18)';
             badge.style.border = '1px solid rgba(16, 185, 129, 0.45)';
             badge.style.color = '#10b981';
-            badge.title = `Sincronización en vivo activa (${collabs} viajeros).`;
-            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;display:inline-block;"></span> En vivo (${collabs})`;
+            badge.title = t('pro.pill_live_title', { count: collabs });
+            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;display:inline-block;"></span> ${t('pro.pill_live_label', { count: collabs })}`;
         } else {
             badge.style.background = 'rgba(16, 185, 129, 0.14)';
             badge.style.border = '1px solid rgba(16, 185, 129, 0.35)';
             badge.style.color = '#10b981';
-            badge.title = 'Sincronizado en la nube y listo para Modo Avión. Clic para abrir Centro Offline.';
-            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;"></span> Nube & Offline ✓`;
+            badge.title = t('pro.pill_cloud_title');
+            badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;"></span> ${t('pro.pill_cloud_label')}`;
         }
     }
     window.updateLiveCollabBadge = updateLiveCollabBadge;
@@ -161,7 +161,7 @@
         const origCallAIText = window.callAIText;
         window.callAIText = async function (messages) {
             if (!navigator.onLine) {
-                return '📵 No hay señal.';
+                return t('offline.pluxy_offline_reply');
             }
             try {
                 // 1. Intentar Cloudflare Worker original
@@ -179,7 +179,7 @@
             } catch (e) {
                 console.warn('Worker offline, activando IA de respaldo...', e);
                 if (!navigator.onLine) {
-                    return '📵 No hay señal.';
+                    return t('offline.pluxy_offline_reply');
                 }
             }
 
@@ -189,7 +189,7 @@
                 return fallbackText;
             }
 
-            return '📵 No hay señal.';
+            return t('offline.pluxy_offline_reply');
         };
     }
 
@@ -200,7 +200,7 @@
 
     window.deshacerUltimaAccionPluxy = function (btnEl) {
         if (!window.pluxyUndoStack || window.pluxyUndoStack.length === 0) {
-            if (typeof showToast === 'function') showToast('No hay cambios recientes de Pluxy para deshacer.', 'info');
+            if (typeof showToast === 'function') showToast(t('pro.undo_nothing'), 'info');
             return;
         }
         const snapshot = window.pluxyUndoStack.pop();
@@ -214,11 +214,11 @@
                 if (destinos[0] && typeof renderDias === 'function') renderDias(destinos[0].id);
                 if (btnEl) {
                     btnEl.disabled = true;
-                    btnEl.innerHTML = '✓ Cambio revertido';
+                    btnEl.innerHTML = t('pro.undo_reverted_btn');
                     btnEl.style.opacity = '0.6';
                 }
                 if (typeof showToast === 'function') {
-                    showToast('↩️ Se revirtió el último cambio de Pluxy en el itinerario.', 'success');
+                    showToast(t('pro.undo_reverted_toast'), 'success');
                 }
             }
         } catch (e) {
@@ -249,10 +249,10 @@
                     undoBar.style.cssText = 'margin:6px 0 12px 0; display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.35); border-radius:12px; padding:8px 12px; font-size:0.78rem;';
                     undoBar.innerHTML = `
                         <span style="color:var(--texto, #fff); font-weight:700;">
-                            ✨ Pluxy actualizó tu viaje
+                            ${t('pro.pluxy_updated_trip')}
                         </span>
                         <button type="button" onclick="window.deshacerUltimaAccionPluxy(this)" style="background:var(--card, #1e293b); color:var(--texto, #fff); border:1px solid var(--border, #334155); border-radius:8px; padding:5px 12px; font-size:0.75rem; font-weight:800; cursor:pointer;">
-                            ↩️ Deshacer cambio
+                            ${t('pro.undo_btn')}
                         </button>
                     `;
                     container.appendChild(undoBar);
@@ -370,7 +370,7 @@
         const eventos = dia.eventos || dia.bloques || [];
         if (eventos.length === 0) {
             window.map.setView([baseCoord.lat, baseCoord.lon], 13);
-            if (typeof showToast === 'function') showToast(`El Día ${diaIdx + 1} aún no tiene eventos cargados.`, 'info');
+            if (typeof showToast === 'function') showToast(t('pro.day_no_events_toast', { day: diaIdx + 1 }), 'info');
             return;
         }
 
@@ -418,12 +418,13 @@
         }
 
         let pillsHtml = `<div style="display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; max-width:100%; flex:1;">`;
-        pillsHtml += `<button type="button" class="plux-map-pill" onclick="window.filtrarMapaPorDiaPlux('all', 0, this)" style="background:var(--verde, #10b981); color:#000; border:1px solid var(--verde, #10b981); padding:6px 14px; border-radius:20px; font-size:0.76rem; font-weight:800; cursor:pointer; white-space:nowrap;">🌍 Ruta General</button>`;
+        pillsHtml += `<button type="button" class="plux-map-pill" onclick="window.filtrarMapaPorDiaPlux('all', 0, this)" style="background:var(--verde, #10b981); color:#000; border:1px solid var(--verde, #10b981); padding:6px 14px; border-radius:20px; font-size:0.76rem; font-weight:800; cursor:pointer; white-space:nowrap;">${t('pro.general_route')}</button>`;
 
         if (Array.isArray(destinos)) {
             destinos.forEach((dest, destIdx) => {
                 (dest.dias || []).forEach((dia, diaIdx) => {
-                    const label = destinos.length > 1 ? `${dest.nombre}: Día ${diaIdx + 1}` : `📅 Día ${diaIdx + 1}`;
+                    const dayStr = t('pro.day_label', { day: diaIdx + 1 });
+                    const label = destinos.length > 1 ? `${dest.nombre}: ${dayStr}` : `📅 ${dayStr}`;
                     pillsHtml += `<button type="button" class="plux-map-pill" onclick="window.filtrarMapaPorDiaPlux(${destIdx}, ${diaIdx}, this)" style="background:rgba(255,255,255,0.06); color:var(--gris, #94a3b8); border:1px solid var(--border, #334155); padding:6px 14px; border-radius:20px; font-size:0.76rem; font-weight:700; cursor:pointer; white-space:nowrap;">${label}</button>`;
                 });
             });
@@ -432,7 +433,7 @@
 
         pillsHtml += `
             <button type="button" onclick="window.abrirRutaGoogleMapsActual()" style="background:linear-gradient(135deg,#10b981,#059669); color:#000; border:none; padding:7px 15px; border-radius:20px; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; box-shadow:0 4px 12px rgba(16,185,129,0.3);">
-                🗺️ Abrir en Google Maps
+                🗺️ ${t('pro.open_gmaps')}
             </button>
         `;
 
@@ -530,22 +531,26 @@
     window.copiarLiquidacionPlux = function () {
         const data = window.calcularLiquidacionDeudasPlux();
         if (!data || data.transferencias.length === 0) {
-            if (typeof showToast === 'function') showToast('¡Todos al día! No hay deudas pendientes.', 'info');
+            if (typeof showToast === 'function') showToast(t('pro.settlement_all_clear_toast'), 'info');
             return;
         }
+        const loc = typeof getLangLocale === 'function' ? getLangLocale() : undefined;
         const simbolo = (typeof window.simboloMoneda === 'string') ? window.simboloMoneda : '$';
         const lineas = [
-            `💸 *Cuentas Claras — Plux*`,
-            `Total pagado: ${simbolo}${Math.round(data.totalPagadoIndividual).toLocaleString()} (${simbolo}${Math.round(data.cuotaIdeal).toLocaleString()} c/u)`,
+            t('pro.wa_header'),
+            t('pro.wa_total_paid', {
+                total: `${simbolo}${Math.round(data.totalPagadoIndividual).toLocaleString(loc)}`,
+                per_person: `${simbolo}${Math.round(data.cuotaIdeal).toLocaleString(loc)}`
+            }),
             ``,
-            `🔄 *Transferencias:*`
+            t('pro.wa_transfers_hdr')
         ];
-        data.transferencias.forEach(t => {
-            lineas.push(`• *${t.de}* ➡️ *${t.para}*: *${simbolo}${t.monto.toLocaleString()}*`);
+        data.transferencias.forEach(tr => {
+            lineas.push(`• *${tr.de}* ➡️ *${tr.para}*: *${simbolo}${tr.monto.toLocaleString(loc)}*`);
         });
-        lineas.push(``, `✨ _Calculado automáticamente con Plux_`);
+        lineas.push(``, t('pro.wa_footer'));
         navigator.clipboard.writeText(lineas.join('\n')).then(() => {
-            if (typeof showToast === 'function') showToast('📋 ¡Cuentas copiadas para WhatsApp!', 'success');
+            if (typeof showToast === 'function') showToast(t('pro.copied_settlement'), 'success');
         });
     };
 
@@ -562,13 +567,14 @@
         }
 
         const data = window.calcularLiquidacionDeudasPlux();
+        const loc = typeof getLangLocale === 'function' ? getLangLocale() : undefined;
         const simbolo = (typeof window.simboloMoneda === 'string') ? window.simboloMoneda : '$';
 
         if (!data || data.totalPagadoIndividual <= 0) {
             wrap.innerHTML = `
                 <div style="padding:14px 18px; border-radius:14px; background:rgba(99,102,241,0.08); border:1px dashed rgba(99,102,241,0.35); font-size:0.84rem; color:var(--gris, #94a3b8); display:flex; align-items:center; gap:10px;">
                     <span style="font-size:1.3rem;">🤝</span>
-                    <div><strong>¿Quién le debe a quién? (Cuentas Claras)</strong><br>Asigná quién pagó cada gasto en el selector <em>"Pagado por"</em> para que Plux calcule automáticamente las transferencias mínimas entre viajeros.</div>
+                    <div><strong>${t('pro.settlement_empty_title')}</strong><br>${t('pro.settlement_empty_desc')}</div>
                 </div>
             `;
             return;
@@ -579,29 +585,29 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
                     <div>
                         <h4 style="margin:0; font-size:0.95rem; font-weight:800; color:var(--texto, #fff);">
-                            💸 Cuentas Claras: ¿Quién le transfiere a quién?
+                            💸 ${t('pro.settlement_title')}
                         </h4>
-                        <span style="font-size:0.78rem; color:var(--gris, #94a3b8);">Cuota individual justa: <strong>${simbolo}${Math.round(data.cuotaIdeal).toLocaleString()}</strong> por persona</span>
+                        <span style="font-size:0.78rem; color:var(--gris, #94a3b8);">${t('pro.settlement_fair_share', { amount: `${simbolo}${Math.round(data.cuotaIdeal).toLocaleString(loc)}` })}</span>
                     </div>
                     <button type="button" onclick="window.copiarLiquidacionPlux()" style="background:var(--card, #1e293b); color:var(--texto, #fff); border:1px solid var(--border, #334155); padding:7px 14px; border-radius:10px; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                        📲 Copiar para WhatsApp
+                        ${t('pro.copy_whatsapp')}
                     </button>
                 </div>
         `;
 
         if (data.transferencias.length === 0) {
-            html += `<div style="padding:12px; border-radius:10px; background:rgba(16,185,129,0.12); color:#10b981; font-weight:700; font-size:0.85rem; text-align:center;">🎉 ¡Todas las cuentas están saldadas en partes iguales!</div>`;
+            html += `<div style="padding:12px; border-radius:10px; background:rgba(16,185,129,0.12); color:#10b981; font-weight:700; font-size:0.85rem; text-align:center;">🎉 ${t('pro.settlement_all_even')}</div>`;
         } else {
             html += `<div style="display:flex; flex-direction:column; gap:8px;">`;
-            data.transferencias.forEach(t => {
+            data.transferencias.forEach(tr => {
                 html += `
                     <div style="display:flex; align-items:center; justify-content:space-between; background:var(--card, #1e293b); padding:10px 14px; border-radius:12px; border:1px solid var(--border, #334155);">
                         <div style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700;">
-                            <span style="color:#ef4444;">${t.de}</span>
+                            <span style="color:#ef4444;">${tr.de}</span>
                             <span style="color:var(--gris, #94a3b8);">➡️</span>
-                            <span style="color:#10b981;">${t.para}</span>
+                            <span style="color:#10b981;">${tr.para}</span>
                         </div>
-                        <span style="font-weight:900; font-size:0.95rem; color:var(--verde, #10b981);">${simbolo}${t.monto.toLocaleString()}</span>
+                        <span style="font-weight:900; font-size:0.95rem; color:var(--verde, #10b981);">${simbolo}${tr.monto.toLocaleString(loc)}</span>
                     </div>
                 `;
             });

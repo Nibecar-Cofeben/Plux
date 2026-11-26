@@ -1274,11 +1274,11 @@
               <div class="descubrir-header-left">
                 <button class="mobile-back-btn" onclick="window.cerrarDescubrir()">
                   <i class="fa-solid fa-arrow-left"></i>
-                  <span class="txt-volver">Volver</span>
+                  <span class="txt-volver" data-i18n="common.back">Volver</span>
                 </button>
                 <div class="descubrir-title-group">
-                  <h2 id="descubrirTitle"><i class="fa-solid fa-compass" style="color:var(--verde); margin-right:8px;"></i>Descubrir</h2>
-                  <span class="descubrir-subtitle" id="descubrirSubtitle">Inspiración, itinerarios inteligentes y comparador</span>
+                  <h2 id="descubrirTitle"><i class="fa-solid fa-compass" style="color:var(--verde); margin-right:8px;"></i><span data-i18n="descubrir_title">Descubrir</span></h2>
+                  <span class="descubrir-subtitle" id="descubrirSubtitle" data-i18n="discover.subtitle">Inspiración, itinerarios inteligentes y comparador</span>
                 </div>
               </div>
               <span class="close-panel" onclick="window.cerrarDescubrir()">&times;</span>
@@ -1288,31 +1288,31 @@
             <div class="descubrir-nav-tabs">
               <button class="descubrir-tab-btn active" id="tabBtn-para_ti" onclick="window.cambiarTabDescubrir('para_ti')">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
-                <span id="txtTabParaTi">Para ti</span>
+                <span id="txtTabParaTi" data-i18n="discover.tab_for_you">Para ti</span>
               </button>
               <button class="descubrir-tab-btn" id="tabBtn-embajadores" onclick="window.cambiarTabDescubrir('embajadores')">
                 <i class="fa-solid fa-award" style="color:var(--verde);"></i>
-                <span id="txtTabEmbajadores">Embajadores</span>
+                <span id="txtTabEmbajadores" data-i18n="discover.tab_ambassadors">Embajadores</span>
               </button>
               <button class="descubrir-tab-btn" id="tabBtn-destinos" onclick="window.cambiarTabDescubrir('destinos')">
                 <i class="fa-solid fa-earth-americas"></i>
-                <span id="txtTabDestinos">Explorar Destinos</span>
+                <span id="txtTabDestinos" data-i18n="discover.tab_destinations">Explorar Destinos</span>
               </button>
               <button class="descubrir-tab-btn" id="tabBtn-actividades" onclick="window.cambiarTabDescubrir('actividades')">
                 <i class="fa-solid fa-ticket"></i>
-                <span id="txtTabActividades">Actividades</span>
+                <span id="txtTabActividades" data-i18n="discover.tab_activities">Actividades</span>
               </button>
               <button class="descubrir-tab-btn" id="tabBtn-comparador" onclick="window.cambiarTabDescubrir('comparador')">
                 <i class="fa-solid fa-code-compare"></i>
-                <span id="txtTabComparador">Comparador</span>
+                <span id="txtTabComparador" data-i18n="discover.tab_comparator">Comparador</span>
               </button>
               <button class="descubrir-tab-btn" id="tabBtn-reservas" onclick="window.cambiarTabDescubrir('reservas')">
                 <i class="fa-solid fa-file-import"></i>
-                <span id="txtTabReservas">Importar Reservas</span>
+                <span id="txtTabReservas" data-i18n="discover.tab_bookings">Importar Reservas</span>
               </button>
               <button class="descubrir-tab-btn" id="tabBtn-comunidad" onclick="window.cambiarTabDescubrir('comunidad')">
                 <i class="fa-solid fa-comments"></i>
-                <span id="txtTabComunidad">Comunidad y Foros</span>
+                <span id="txtTabComunidad" data-i18n="discover.tab_community">Comunidad y Foros</span>
               </button>
             </div>
 
@@ -1333,15 +1333,15 @@
                 <div class="descubrir-search-filter-bar">
                   <div class="descubrir-search-input-wrapper">
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" id="destinosSearchInput" placeholder="Buscar destino por ciudad, país o estilo..." oninput="window.filtrarDestinosDescubrir(this.value)">
+                    <input type="text" id="destinosSearchInput" data-i18n-ph="discover.search_dest_ph" placeholder="Buscar destino por ciudad, país o estilo..." oninput="window.filtrarDestinosDescubrir(this.value)">
                   </div>
                   <div class="descubrir-chips-filter" id="destinosCategoryChips">
-                    <button class="filter-chip active" onclick="window.filtrarDestinosPorTag('todos', this)">Todos</button>
-                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('cultura', this)">Cultura e Historia</button>
-                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('playa', this)">Playa y Sol</button>
-                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('gastronomia', this)">Gastronomía</button>
-                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('metropolis', this)">Grandes Ciudades</button>
-                    <button class="filter-chip" onclick="window.filtrarDestinosPorTag('economico', this)">Bajo Presupuesto</button>
+                    <button class="filter-chip active" data-i18n="discover.tag_all" onclick="window.filtrarDestinosPorTag('todos', this)">Todos</button>
+                    <button class="filter-chip" data-i18n="discover.tag_culture" onclick="window.filtrarDestinosPorTag('cultura', this)">Cultura e Historia</button>
+                    <button class="filter-chip" data-i18n="discover.tag_beach" onclick="window.filtrarDestinosPorTag('playa', this)">Playa y Sol</button>
+                    <button class="filter-chip" data-i18n="discover.tag_gastronomy" onclick="window.filtrarDestinosPorTag('gastronomia', this)">Gastronomía</button>
+                    <button class="filter-chip" data-i18n="discover.tag_metropolis" onclick="window.filtrarDestinosPorTag('metropolis', this)">Grandes Ciudades</button>
+                    <button class="filter-chip" data-i18n="discover.tag_budget" onclick="window.filtrarDestinosPorTag('economico', this)">Bajo Presupuesto</button>
                   </div>
                 </div>
                 <div class="descubrir-grid-destinos" id="gridDestinosCatalogo"></div>
@@ -1352,15 +1352,15 @@
                 <div class="descubrir-search-filter-bar">
                   <div class="descubrir-search-input-wrapper">
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" id="actividadesSearchInput" placeholder="Buscar actividad (ej: Museo, Mirador, Tour gastronómico)..." oninput="window.filtrarActividadesDescubrir(this.value)">
+                    <input type="text" id="actividadesSearchInput" data-i18n-ph="discover.search_act_ph" placeholder="Buscar actividad..." oninput="window.filtrarActividadesDescubrir(this.value)">
                   </div>
                   <div class="descubrir-chips-filter" id="actividadesCategoryChips">
-                    <button class="filter-chip active" onclick="window.filtrarActividadesPorCategoria('todas', this)">Todas</button>
-                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('imperdibles', this)">Imperdibles</button>
-                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('cultura', this)">Museos y Arte</button>
-                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('gastronomia', this)">Comida y Bebida</button>
-                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('naturaleza', this)">Aire Libre</button>
-                    <button class="filter-chip" onclick="window.filtrarActividadesPorCategoria('gratis', this)">Gratis / Económicas</button>
+                    <button class="filter-chip active" data-i18n="discover.cat_all" onclick="window.filtrarActividadesPorCategoria('todas', this)">Todas</button>
+                    <button class="filter-chip" data-i18n="discover.cat_must" onclick="window.filtrarActividadesPorCategoria('imperdibles', this)">Imperdibles</button>
+                    <button class="filter-chip" data-i18n="discover.cat_museums" onclick="window.filtrarActividadesPorCategoria('cultura', this)">Museos y Arte</button>
+                    <button class="filter-chip" data-i18n="discover.cat_food" onclick="window.filtrarActividadesPorCategoria('gastronomia', this)">Comida y Bebida</button>
+                    <button class="filter-chip" data-i18n="discover.cat_outdoors" onclick="window.filtrarActividadesPorCategoria('naturaleza', this)">Aire Libre</button>
+                    <button class="filter-chip" data-i18n="discover.cat_free" onclick="window.filtrarActividadesPorCategoria('gratis', this)">Gratis / Económicas</button>
                   </div>
                 </div>
                 <div class="descubrir-grid-actividades" id="gridActividadesCatalogo"></div>
@@ -1371,10 +1371,10 @@
                 <div class="comparador-subswitch-wrapper">
                   <div class="comparador-subswitch">
                     <button class="subswitch-btn active" id="subswitch-destinos" onclick="window.cambiarSubswitchComparador('destinos')">
-                      <i class="fa-solid fa-city"></i> Comparar Destinos
+                      <i class="fa-solid fa-city"></i> <span data-i18n="discover.compare_dest">Comparar Destinos</span>
                     </button>
                     <button class="subswitch-btn" id="subswitch-actividades" onclick="window.cambiarSubswitchComparador('actividades')">
-                      <i class="fa-solid fa-ticket-simple"></i> Comparar Actividades
+                      <i class="fa-solid fa-ticket-simple"></i> <span data-i18n="discover.compare_act">Comparar Actividades</span>
                     </button>
                   </div>
                 </div>
@@ -1383,16 +1383,16 @@
                 <div id="comparador-seccion-destinos" class="comparador-seccion active">
                   <div class="comparador-selectors-row">
                     <div class="comp-select-box">
-                      <label for="compDestino1"><i class="fa-solid fa-location-dot"></i> Destino 1</label>
+                      <label for="compDestino1"><i class="fa-solid fa-location-dot"></i> <span data-i18n="discover.dest_1">Destino 1</span></label>
                       <select id="compDestino1" onchange="window.actualizarComparativaDestinos()"></select>
                     </div>
                     <div class="comp-vs-badge">VS</div>
                     <div class="comp-select-box">
-                      <label for="compDestino2"><i class="fa-solid fa-location-dot"></i> Destino 2</label>
+                      <label for="compDestino2"><i class="fa-solid fa-location-dot"></i> <span data-i18n="discover.dest_2">Destino 2</span></label>
                       <select id="compDestino2" onchange="window.actualizarComparativaDestinos()"></select>
                     </div>
                     <div class="comp-select-box comp-select-optional" id="compDestino3Wrapper">
-                      <label for="compDestino3"><i class="fa-solid fa-location-dot"></i> Destino 3 (Opcional)</label>
+                      <label for="compDestino3"><i class="fa-solid fa-location-dot"></i> <span data-i18n="discover.dest_3_opt">Destino 3 (Opcional)</span></label>
                       <select id="compDestino3" onchange="window.actualizarComparativaDestinos()"></select>
                     </div>
                   </div>
@@ -1403,12 +1403,12 @@
                 <div id="comparador-seccion-actividades" class="comparador-seccion" style="display:none;">
                   <div class="comparador-selectors-row">
                     <div class="comp-select-box">
-                      <label for="compActividad1"><i class="fa-solid fa-ticket"></i> Actividad 1</label>
+                      <label for="compActividad1"><i class="fa-solid fa-ticket"></i> <span data-i18n="discover.act_1">Actividad 1</span></label>
                       <select id="compActividad1" onchange="window.actualizarComparativaActividades()"></select>
                     </div>
                     <div class="comp-vs-badge">VS</div>
                     <div class="comp-select-box">
-                      <label for="compActividad2"><i class="fa-solid fa-ticket"></i> Actividad 2</label>
+                      <label for="compActividad2"><i class="fa-solid fa-ticket"></i> <span data-i18n="discover.act_2">Actividad 2</span></label>
                       <select id="compActividad2" onchange="window.actualizarComparativaActividades()"></select>
                     </div>
                   </div>
@@ -1428,6 +1428,9 @@
             </div>
           </div>
         `;
+      }
+      if (typeof window.applyDeclarativeI18n === 'function') {
+        window.applyDeclarativeI18n(modal);
       }
     }
 
@@ -1492,26 +1495,28 @@
     function buildEmbajadorSpotlightBannerHtml() {
       const embs = Array.isArray(window.PLUX_EMBAJADORES) ? window.PLUX_EMBAJADORES : [];
       if (!embs.length) return '';
-      const emb = embs[0];
+      const rawEmb = embs[0];
+      const emb = typeof window.getLocalizedEmbajador === 'function' ? window.getLocalizedEmbajador(rawEmb) : rawEmb;
       const seal = typeof window.getEmbajadorSealSvg === 'function' ? window.getEmbajadorSealSvg(15) : '';
       const rutas = typeof window.getEmbajadorTemplates === 'function' ? window.getEmbajadorTemplates(emb.slug) : [];
       const firstRouteId = rutas[0]?.id || 'oficial_carretera_austral_mochila';
+      const numStr = String(emb.numero).padStart(2, '0');
       return `
         <div class="descubrir-embajador-banner" onclick="window.cambiarTabDescubrir('embajadores')" style="background-image:url('${escapeHtml(emb.cover)}'); margin: 0 0 20px 0;">
           <div class="descubrir-embajador-overlay"></div>
           <div class="descubrir-embajador-inner">
             <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="descubrir-embajador-avatar" />
             <div style="flex:1; min-width:220px;">
-              <div class="descubrir-embajador-kicker">${seal}<span>EMBAJADOR FUNDADOR #${String(emb.numero).padStart(2, '0')} · RUTAS OFICIALES DESTACADAS</span></div>
+              <div class="descubrir-embajador-kicker">${seal}<span>${escapeHtml(t('templates.ambassador_kicker_tpl', { num: numStr }))}</span></div>
               <div class="descubrir-embajador-name">${escapeHtml(emb.nombre)} <span style="font-weight:500; opacity:0.85;">· ${escapeHtml(emb.subtitulo)}</span></div>
-              <div class="descubrir-embajador-sub">${escapeHtml(emb.especialidad)} · ${rutas.length} itinerarios reales listos para clonar offline</div>
+              <div class="descubrir-embajador-sub">${escapeHtml(t('templates.ambassador_sub_tpl', { specialty: emb.especialidad, count: rutas.length }))}</div>
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button type="button" class="descubrir-embajador-btn" style="background:var(--verde,#10b981); color:#04120c;" onclick="event.stopPropagation(); window.clonarPlantillaCompleta && window.clonarPlantillaCompleta('${escapeHtml(firstRouteId)}', 'oficial')">
-                <i class="fa-solid fa-clone"></i> Clonar Carretera Austral
+                <i class="fa-solid fa-clone"></i> ${escapeHtml(t('templates.clone_carretera'))}
               </button>
               <button type="button" class="descubrir-embajador-btn" onclick="event.stopPropagation(); window.cambiarTabDescubrir('embajadores')">
-                Ver perfil y rutas <i class="fa-solid fa-arrow-right"></i>
+                ${escapeHtml(t('templates.view_profile_routes'))} <i class="fa-solid fa-arrow-right"></i>
               </button>
             </div>
           </div>
@@ -1526,11 +1531,12 @@
       const seal = typeof window.getEmbajadorSealSvg === 'function' ? window.getEmbajadorSealSvg(15) : '';
 
       if (!embs.length) {
-        container.innerHTML = `<div style="padding:36px; text-align:center; color:var(--gris);">Próximamente nuevos Embajadores Fundadores.</div>`;
+        container.innerHTML = `<div style="padding:36px; text-align:center; color:var(--gris);">${escapeHtml(t('templates.coming_soon_ambassadors'))}</div>`;
         return;
       }
 
-      container.innerHTML = embs.map(emb => {
+      container.innerHTML = embs.map(rawEmb => {
+        const emb = typeof window.getLocalizedEmbajador === 'function' ? window.getLocalizedEmbajador(rawEmb) : rawEmb;
         const rutas = typeof window.getEmbajadorTemplates === 'function' ? window.getEmbajadorTemplates(emb.slug) : [];
         const numStr = String(emb.numero).padStart(2, '0');
         const redesHtml = (emb.redes || []).map(r => {
@@ -1538,7 +1544,8 @@
           return `<button type="button" class="emb-pill-btn emb-pill-${escapeHtml(r.tipo)}" onclick="window.abrirRedEmbajador && window.abrirRedEmbajador('${escapeHtml(emb.slug)}', '${escapeHtml(r.label)}', '${escapeHtml(r.url)}', event)">${icon}<span>${escapeHtml(r.label)}</span></button>`;
         }).join('');
 
-        const rutasHtml = rutas.map(tpl => {
+        const rutasHtml = rutas.map(rawTpl => {
+          const tpl = typeof window.getLocalizedTemplateMeta === 'function' ? window.getLocalizedTemplateMeta(rawTpl) : rawTpl;
           const daysCount = (tpl.destinos || []).reduce((acc, d) => acc + ((d.dias || []).length || 0), 0);
           const eventsCount = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + (dia.eventos?.length || 0), 0), 0);
           const paradas = (tpl.destinos || []).map(d => d.nombre).join(' → ');
@@ -1549,8 +1556,8 @@
               <div class="embajador-route-cover" style="background-image:url('${escapeHtml(cover)}'); min-height:142px;">
                 <div class="embajador-route-cover-overlay"></div>
                 <div class="embajador-route-cover-top">
-                  <span class="emb-route-tag">Oficial Destacada</span>
-                  <span class="emb-route-meta">${daysCount} días · ${eventsCount} paradas ${tpl.presupuestoAprox ? '· Est. ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
+                  <span class="emb-route-tag">${escapeHtml(t('templates.featured_badge'))}</span>
+                  <span class="emb-route-meta">${daysCount} ${escapeHtml(t('templates.days_label'))} · ${eventsCount} ${escapeHtml(t('templates.stops_label'))} ${tpl.presupuestoAprox ? '· ' + escapeHtml(t('templates.est_short')) + ' ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
                 </div>
                 <div class="embajador-route-cover-bottom">
                   <div class="embajador-route-title" style="font-size:1.12rem;">${escapeHtml(tpl.nombre)}</div>
@@ -1561,10 +1568,10 @@
                 <div class="embajador-route-desc">${escapeHtml(tpl.descripcion)}</div>
                 <div class="embajador-route-actions">
                   <button type="button" class="embajador-btn-clone" onclick="window.clonarPlantillaCompleta && window.clonarPlantillaCompleta('${escapeHtml(tpl.id)}', '${originType}')">
-                    <i class="fa-solid fa-clone"></i> Clonar ruta en mi viaje
+                    <i class="fa-solid fa-clone"></i> ${escapeHtml(t('templates.clone_route_trip'))}
                   </button>
                   <button type="button" class="embajador-btn-save" onclick="window.guardarPlantillaEnMisPlantillas && window.guardarPlantillaEnMisPlantillas('${escapeHtml(tpl.id)}', '${originType}', event)">
-                    <i class="fa-regular fa-bookmark"></i> Guardar
+                    <i class="fa-regular fa-bookmark"></i> ${escapeHtml(t('common.save'))}
                   </button>
                 </div>
               </div>
@@ -1579,7 +1586,7 @@
               <div class="embajador-modal-identity">
                 <img src="${escapeHtml(emb.avatar)}" alt="${escapeHtml(emb.nombre)}" class="embajador-avatar-img-lg" style="width:76px; height:76px;" />
                 <div style="flex:1; min-width:200px;">
-                  <div class="embajador-founder-tag">${seal}<span>EMBAJADOR FUNDADOR #${numStr}</span></div>
+                  <div class="embajador-founder-tag">${seal}<span>${escapeHtml(t('templates.ambassador_badge', { num: numStr, name: emb.nombre }).toUpperCase())}</span></div>
                   <div class="embajador-modal-name" style="font-size:1.6rem;">${escapeHtml(emb.nombre)}</div>
                   <div class="embajador-modal-sub">${escapeHtml(emb.subtitulo)} · ${escapeHtml(emb.especialidad)}</div>
                 </div>
@@ -1590,10 +1597,10 @@
               <div class="embajador-modal-socials" style="margin-bottom:22px;">
                 ${redesHtml}
                 <button type="button" class="emb-pill-btn emb-pill-share" onclick="window.copiarLinkEmbajador && window.copiarLinkEmbajador('${escapeHtml(emb.slug)}', event)">
-                  <i class="fa-solid fa-link"></i><span>Copiar enlace oficial</span>
+                  <i class="fa-solid fa-link"></i><span>${escapeHtml(t('templates.copy_link'))}</span>
                 </button>
               </div>
-              <div class="embajador-routes-heading" style="margin-bottom:14px;">Rutas oficiales destacadas de ${escapeHtml(emb.nombre)} (${rutas.length})</div>
+              <div class="embajador-routes-heading" style="margin-bottom:14px;">${escapeHtml(t('templates.ambassador_routes_heading', { name: emb.nombre, count: rutas.length }))}</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(290px, 1fr)); gap:16px;">
                 ${rutasHtml}
               </div>
@@ -1631,7 +1638,7 @@
         // MODO B: Usuario con viaje en planificación
         const nombresDestinos = (validDestinos.length > 0) 
           ? validDestinos.map(d => d.nombre).join(', ') 
-          : 'Tu viaje en curso';
+          : t('discover.active_trip_fallback');
 
         const mainCity = (validDestinos.length > 0 && validDestinos[0].nombre) ? validDestinos[0].nombre.toLowerCase().trim() : '';
 
@@ -1650,7 +1657,10 @@
           if (!c) continue;
           for (const k in PLUX_NEARBY_GETAWAYS) {
             if (c === k || k.split(/[\s,]+/).includes(c) || c.split(/[\s,]+/).includes(k)) {
-              escapadas = escapadas.concat(PLUX_NEARBY_GETAWAYS[k]);
+              const locEsc = typeof window.getLocalizedNearbyGetaways === 'function'
+                ? window.getLocalizedNearbyGetaways(k, PLUX_NEARBY_GETAWAYS[k])
+                : PLUX_NEARBY_GETAWAYS[k];
+              escapadas = escapadas.concat(locEsc);
             }
           }
         }
@@ -1659,13 +1669,13 @@
           <!-- Active Trip Banner -->
           <div class="descubrir-hero-banner">
             <div class="descubrir-hero-banner-content">
-              <div class="descubrir-hero-badge"><i class="fa-solid fa-plane-departure"></i> Viaje en Planificación</div>
-              <h3>Optimizando tu aventura en ${escapeHtml(nombresDestinos)}</h3>
-              <p>Basado en tu itinerario actual, te recomendamos las mejores actividades para agregar a tus días y escapadas cercanas.</p>
+              <div class="descubrir-hero-badge"><i class="fa-solid fa-plane-departure"></i> ${escapeHtml(t('discover.active_trip_badge'))}</div>
+              <h3>${escapeHtml(t('discover.optimizing_trip_title', { dests: nombresDestinos }))}</h3>
+              <p>${escapeHtml(t('discover.optimizing_trip_desc'))}</p>
             </div>
             <div>
               <button class="btn-card-secondary" onclick="window.cerrarDescubrir()" style="padding:10px 18px;">
-                <i class="fa-solid fa-calendar-days"></i> Ver mi itinerario
+                <i class="fa-solid fa-calendar-days"></i> ${escapeHtml(t('discover.view_my_itinerary'))}
               </button>
             </div>
           </div>
@@ -1680,9 +1690,9 @@
                   <i class="fa-solid fa-file-import"></i>
                 </div>
                 <div>
-                  <div style="font-size:0.72rem; font-weight:800; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px;">Nuevo · Automatización</div>
-                  <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#ffffff; font-weight:800;">Importar Mails y Reservas</h4>
-                  <p style="margin:0; font-size:0.82rem; color:var(--gris); line-height:1.4;">Pega confirmaciones de vuelos, Booking, Airbnb o trenes y agrégalas al itinerario en 1 clic.</p>
+                  <div style="font-size:0.72rem; font-weight:800; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(t('discover.new_automation_badge'))}</div>
+                  <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#ffffff; font-weight:800;">${escapeHtml(t('discover.quick_import_title'))}</h4>
+                  <p style="margin:0; font-size:0.82rem; color:var(--gris); line-height:1.4;">${escapeHtml(t('discover.quick_import_desc'))}</p>
                 </div>
               </div>
               <i class="fa-solid fa-chevron-right" style="color:var(--gris);"></i>
@@ -1694,9 +1704,9 @@
                   <i class="fa-solid fa-comments"></i>
                 </div>
                 <div>
-                  <div style="font-size:0.72rem; font-weight:800; color:var(--verde); text-transform:uppercase; letter-spacing:0.5px;">Comunidad Plux</div>
-                  <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#ffffff; font-weight:800;">Comunidad: Foros y Más</h4>
-                  <p style="margin:0; font-size:0.82rem; color:var(--gris); line-height:1.4;">Debates entre viajeros, dudas por destino, presupuestos reales y consejos verificados.</p>
+                  <div style="font-size:0.72rem; font-weight:800; color:var(--verde); text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(t('discover.plux_community_badge'))}</div>
+                  <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#ffffff; font-weight:800;">${escapeHtml(t('discover.quick_community_title'))}</h4>
+                  <p style="margin:0; font-size:0.82rem; color:var(--gris); line-height:1.4;">${escapeHtml(t('discover.quick_community_desc'))}</p>
                 </div>
               </div>
               <i class="fa-solid fa-chevron-right" style="color:var(--gris);"></i>
@@ -1708,8 +1718,8 @@
         html += `
           <div class="descubrir-section-header" style="margin-top:24px;">
             <div>
-              <h4><i class="fa-solid fa-star" style="color:#fbbf24;"></i> Actividades Imperdibles para tu viaje</h4>
-              <p>Selecciona y añade directamente a cualquiera de los días de tu itinerario</p>
+              <h4><i class="fa-solid fa-star" style="color:#fbbf24;"></i> ${escapeHtml(t('discover.must_do_title'))}</h4>
+              <p>${escapeHtml(t('discover.must_do_sub'))}</p>
             </div>
           </div>
         `;
@@ -1723,9 +1733,9 @@
         } else {
           html += `
             <div style="background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.15); border-radius:16px; padding:24px; text-align:center;">
-              <p style="color:var(--gris); margin:0 0 12px 0;">¿Buscás qué hacer en ${escapeHtml(nombresDestinos)}?</p>
+              <p style="color:var(--gris); margin:0 0 12px 0;">${escapeHtml(t('discover.looking_for_things', { dests: nombresDestinos }))}</p>
               <button class="btn-card-primary" style="max-width:280px; margin:0 auto;" onclick="window.buscarLugaresPorDestino('${escapeHtml(validDestinos[0]?.nombre || '')}')">
-                <i class="fa-solid fa-magnifying-glass"></i> Buscar lugares reales
+                <i class="fa-solid fa-magnifying-glass"></i> ${escapeHtml(t('discover.search_real_places'))}
               </button>
             </div>
           `;
@@ -1736,13 +1746,14 @@
           html += `
             <div class="descubrir-section-header" style="margin-top:30px;">
               <div>
-                <h4><i class="fa-solid fa-route" style="color:#38bdf8;"></i> Escapadas y Destinos Cercanos (Day Trips)</h4>
-                <p>Lugares que puedes visitar en el día desde tus destinos principales</p>
+                <h4><i class="fa-solid fa-route" style="color:#38bdf8;"></i> ${escapeHtml(t('discover.day_trips_title'))}</h4>
+                <p>${escapeHtml(t('discover.day_trips_sub'))}</p>
               </div>
             </div>
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
           `;
           escapadas.forEach(esc => {
+            const excLabel = t('discover.excursion_to', { name: esc.nombre });
             html += `
               <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1753,8 +1764,8 @@
                 </div>
                 <p style="font-size:0.83rem; color:rgba(255,255,255,0.75); margin:0; line-height:1.4;">${escapeHtml(esc.desc)}</p>
                 <div style="margin-top:8px; text-align:right;">
-                  <button class="btn-card-secondary" style="padding:6px 14px; font-size:0.78rem;" onclick="window.añadirDesdeFeed('Excursión a ${escapeHtml(esc.nombre)}')">
-                    <i class="fa-solid fa-plus"></i> Añadir excursión
+                  <button class="btn-card-secondary" style="padding:6px 14px; font-size:0.78rem;" onclick="window.añadirDesdeFeed('${escapeHtml(excLabel)}')">
+                    <i class="fa-solid fa-plus"></i> ${escapeHtml(t('discover.add_excursion'))}
                   </button>
                 </div>
               </div>
@@ -1768,12 +1779,12 @@
           <div style="margin-top:30px; background:rgba(15,23,42,0.7); border:1px solid rgba(99,102,241,0.25); border-radius:20px; padding:22px;">
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
               <i class="fa-solid fa-compass" style="color:#818cf8; font-size:1.2rem;"></i>
-              <strong style="color:#ffffff; font-size:1rem;">Buscador de Lugares y Atracciones Reales</strong>
+              <strong style="color:#ffffff; font-size:1rem;">${escapeHtml(t('discover.search_places_title'))}</strong>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <input type="text" id="aiCustomSearchInput" placeholder="Escribe cualquier ciudad o atracción (ej: Trastevere, Kioto, Montmartre)..." style="flex:1; min-width:240px; padding:12px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:12px; color:white; font-size:0.9rem; outline:none;">
+              <input type="text" id="aiCustomSearchInput" placeholder="${escapeHtml(t('discover.search_places_ph'))}" style="flex:1; min-width:240px; padding:12px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:12px; color:white; font-size:0.9rem; outline:none;">
               <button class="btn-card-primary" style="padding:10px 22px;" onclick="window.buscarLugaresPorDestino(document.getElementById('aiCustomSearchInput').value)">
-                <i class="fa-solid fa-magnifying-glass"></i> Explorar
+                <i class="fa-solid fa-magnifying-glass"></i> ${escapeHtml(t('discover.wiki_explore'))}
               </button>
             </div>
             <div id="feed-resultados" style="margin-top:16px;"></div>
@@ -1788,13 +1799,13 @@
           <!-- Hero Banner Sin Viaje -->
           <div class="descubrir-hero-banner" style="background:linear-gradient(135deg, rgba(16,185,129,0.2), rgba(56,189,248,0.2)); border-color:rgba(16,185,129,0.35);">
             <div class="descubrir-hero-banner-content">
-              <div class="descubrir-hero-badge"><i class="fa-solid fa-compass"></i> Comienza una nueva aventura</div>
-              <h3>¿A dónde quieres viajar en tu próxima escapada?</h3>
-              <p>Elige un destino icónico o clona un itinerario de la comunidad con presupuesto y días ya organizados.</p>
+              <div class="descubrir-hero-badge"><i class="fa-solid fa-compass"></i> ${escapeHtml(t('discover.hero_new_badge'))}</div>
+              <h3>${escapeHtml(t('discover.hero_new_title'))}</h3>
+              <p>${escapeHtml(t('discover.hero_new_desc'))}</p>
             </div>
             <div>
               <button class="btn-card-primary" onclick="window.decisionViajeNuevo(); window.cerrarDescubrir();" style="padding:12px 22px; font-size:0.9rem;">
-                <i class="fa-solid fa-plus"></i> Crear viaje desde cero
+                <i class="fa-solid fa-plus"></i> ${escapeHtml(t('discover.create_from_scratch'))}
               </button>
             </div>
           </div>
@@ -1809,9 +1820,9 @@
                   <i class="fa-solid fa-file-import"></i>
                 </div>
                 <div>
-                  <div style="font-size:0.72rem; font-weight:800; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px;">Nuevo · Automatización</div>
-                  <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#ffffff; font-weight:800;">Importar Mails y Reservas</h4>
-                  <p style="margin:0; font-size:0.82rem; color:var(--gris); line-height:1.4;">Pega confirmaciones de vuelos, Booking, Airbnb o trenes y agrégalas al itinerario en 1 clic.</p>
+                  <div style="font-size:0.72rem; font-weight:800; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(t('discover.new_automation_badge'))}</div>
+                  <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#ffffff; font-weight:800;">${escapeHtml(t('discover.quick_import_title'))}</h4>
+                  <p style="margin:0; font-size:0.82rem; color:var(--gris); line-height:1.4;">${escapeHtml(t('discover.quick_import_desc'))}</p>
                 </div>
               </div>
               <i class="fa-solid fa-chevron-right" style="color:var(--gris);"></i>
@@ -1823,9 +1834,9 @@
                   <i class="fa-solid fa-comments"></i>
                 </div>
                 <div>
-                  <div style="font-size:0.72rem; font-weight:800; color:var(--verde); text-transform:uppercase; letter-spacing:0.5px;">Comunidad Plux</div>
-                  <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#ffffff; font-weight:800;">Comunidad: Foros y Más</h4>
-                  <p style="margin:0; font-size:0.82rem; color:var(--gris); line-height:1.4;">Debates entre viajeros, dudas por destino, presupuestos reales y consejos verificados.</p>
+                  <div style="font-size:0.72rem; font-weight:800; color:var(--verde); text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(t('discover.plux_community_badge'))}</div>
+                  <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#ffffff; font-weight:800;">${escapeHtml(t('discover.quick_community_title'))}</h4>
+                  <p style="margin:0; font-size:0.82rem; color:var(--gris); line-height:1.4;">${escapeHtml(t('discover.quick_community_desc'))}</p>
                 </div>
               </div>
               <i class="fa-solid fa-chevron-right" style="color:var(--gris);"></i>
@@ -1836,8 +1847,8 @@
           <!-- Destinos Destacados en Tendencia -->
           <div class="descubrir-section-header" style="margin-top:24px;">
             <div>
-              <h4><i class="fa-solid fa-fire" style="color:#f43f5e;"></i> Destinos Más Populares y en Tendencia</h4>
-              <p>Guías detalladas con presupuestos diarios estimados e itinerarios recomendados</p>
+              <h4><i class="fa-solid fa-fire" style="color:#f43f5e;"></i> ${escapeHtml(t('discover.trending_dest_title'))}</h4>
+              <p>${escapeHtml(t('discover.trending_dest_sub'))}</p>
             </div>
           </div>
           <div class="descubrir-grid-destinos">
@@ -1851,22 +1862,22 @@
           </div>
           <div style="text-align:center; margin-top:24px;">
             <button class="btn-card-secondary" style="padding:12px 28px; font-size:0.92rem;" onclick="window.cambiarTabDescubrir('destinos')">
-              <i class="fa-solid fa-earth-americas"></i> Ver el catálogo completo de destinos (${PLUX_CURATED_DESTINATIONS.length})
+              <i class="fa-solid fa-earth-americas"></i> ${escapeHtml(t('discover.view_all_dests_tpl', { count: PLUX_CURATED_DESTINATIONS.length }))}
             </button>
           </div>
 
           <!-- Plantillas Sincronizadas con Tus Viajes -->
           <div class="descubrir-section-header" style="margin-top:34px;">
             <div>
-              <h4><i class="fa-solid fa-layer-group" style="color:#a855f7;"></i> Plantillas de Viaje Sincronizadas</h4>
-              <p>Conectadas en tiempo real con la sección Plantillas de Tus Viajes</p>
+              <h4><i class="fa-solid fa-layer-group" style="color:#a855f7;"></i> ${escapeHtml(t('discover.synced_tpl_title'))}</h4>
+              <p>${escapeHtml(t('discover.synced_tpl_sub'))}</p>
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="btn-card-secondary" onclick="window.cambiarTabDescubrir('comunidad'); window.cambiarSubtabComunidad('itinerarios');">
-                <i class="fa-solid fa-compass"></i> Ver todas aquí
+                <i class="fa-solid fa-compass"></i> ${escapeHtml(t('discover.view_all_here'))}
               </button>
               <button class="btn-card-secondary" onclick="window.cerrarDescubrir(); if(typeof verPlantillas==='function') verPlantillas();">
-                <i class="fa-solid fa-folder-open"></i> Abrir en Tus Viajes
+                <i class="fa-solid fa-folder-open"></i> ${escapeHtml(t('discover.open_in_trips'))}
               </button>
             </div>
           </div>
@@ -1877,7 +1888,8 @@
                 : { oficiales: [], comunidad: [], mias: [], likedSet: new Set() };
               const topOficiales = (syncData.oficiales || []).slice(0, 3);
               if (topOficiales.length === 0) return '';
-              return topOficiales.map(tpl => {
+              return topOficiales.map(rawTpl => {
+                const tpl = typeof window.getLocalizedTemplateMeta === 'function' ? window.getLocalizedTemplateMeta(rawTpl) : rawTpl;
                 const isLiked = syncData.likedSet && syncData.likedSet.has(tpl.id);
                 const votes = (tpl.likes || 0) + (isLiked ? 1 : 0);
                 const eventsCount = (tpl.destinos || []).reduce((acc, dest) => acc + (dest.dias || []).reduce((a, d) => a + (d.eventos?.length || 0), 0), 0);
@@ -1889,24 +1901,24 @@
                     <div style="padding:16px 18px 18px; display:flex; flex-direction:column; justify-content:space-between; gap:12px; flex:1;">
                     <div>
                       <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px;">
-                        <span style="font-size:0.72rem; color:var(--verde); font-weight:800; text-transform:uppercase; background:rgba(16,185,129,0.12); padding:3px 9px; border-radius:20px;">${tpl.destacadaOficial ? 'Oficial Destacada' : 'Plux Oficial'} · ${(tpl.tags && tpl.tags[0]) || '3 Días'}</span>
-                        <span style="font-size:0.75rem; color:var(--gris);">${tpl.presupuestoAprox ? 'Est. ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
+                        <span style="font-size:0.72rem; color:var(--verde); font-weight:800; text-transform:uppercase; background:rgba(16,185,129,0.12); padding:3px 9px; border-radius:20px;">${escapeHtml(tpl.destacadaOficial ? t('templates.featured_badge') : t('templates.official_badge'))} · ${escapeHtml((tpl.tags && tpl.tags[0]) || t('templates.three_days_tag'))}</span>
+                        <span style="font-size:0.75rem; color:var(--gris);">${tpl.presupuestoAprox ? escapeHtml(t('templates.est_short')) + ' ' + escapeHtml(tpl.presupuestoAprox) : ''}</span>
                       </div>
                       ${embBadge ? `<div style="margin-bottom:6px;">${embBadge}</div>` : ''}
                       <h5 style="color:#ffffff; font-size:1.05rem; margin:4px 0 6px 0; font-weight:800;">${escapeHtml(tpl.nombre)}</h5>
                       <p style="font-size:0.82rem; color:var(--gris); margin:0 0 8px 0; line-height:1.45;">${escapeHtml(tpl.descripcion)}</p>
-                      <span style="font-size:0.74rem; color:#38bdf8; font-weight:700;"><i class="fa-solid fa-calendar-check"></i> ${eventsCount} actividades incluidas</span>
+                      <span style="font-size:0.74rem; color:#38bdf8; font-weight:700;"><i class="fa-solid fa-calendar-check"></i> ${escapeHtml(t('templates.activities_included', { count: eventsCount }))}</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.06);">
                       <button type="button" class="foro-action-btn ${isLiked ? 'voted' : ''}" onclick="window.toggleLikePlantilla && window.toggleLikePlantilla('${tpl.id}', event)">
                         <i class="fa-solid fa-heart" style="color:${isLiked ? '#f472b6' : 'inherit'};"></i> ${votes}
                       </button>
                       <div style="display:flex; gap:6px;">
-                        <button type="button" class="btn-card-secondary" style="padding:7px 11px; font-size:0.78rem;" onclick="window.guardarPlantillaEnMisPlantillas && window.guardarPlantillaEnMisPlantillas('${tpl.id}', '${originType}', event)" title="Guardar en Mis Plantillas">
-                          <i class="fa-regular fa-bookmark"></i> Guardar
+                        <button type="button" class="btn-card-secondary" style="padding:7px 11px; font-size:0.78rem;" onclick="window.guardarPlantillaEnMisPlantillas && window.guardarPlantillaEnMisPlantillas('${tpl.id}', '${originType}', event)" title="${escapeHtml(t('templates.save_to_mine_title'))}">
+                          <i class="fa-regular fa-bookmark"></i> ${escapeHtml(t('common.save'))}
                         </button>
                         <button type="button" class="btn-card-primary" style="padding:7px 13px; font-size:0.8rem;" onclick="window.clonarPlantillaCompleta && window.clonarPlantillaCompleta('${tpl.id}', '${originType}')">
-                          <i class="fa-solid fa-clone"></i> Clonar
+                          <i class="fa-solid fa-clone"></i> ${escapeHtml(t('templates.clone_short'))}
                         </button>
                       </div>
                     </div>
@@ -1923,18 +1935,21 @@
     }
 
     // Render HTML de Tarjeta de Destino
-    function renderTarjetaDestinoHTML(dest) {
+    function renderTarjetaDestinoHTML(rawDest) {
+      const dest = typeof window.getLocalizedDestination === 'function' ? window.getLocalizedDestination(rawDest) : rawDest;
       const estiloLabels = {
-        cultura: 'Cultura e Historia',
-        playa: 'Playa y Relax',
-        gastronomia: 'Gastronomía',
-        metropolis: 'Gran Metrópolis',
-        economico: 'Bajo Presupuesto'
+        cultura: t('discover.tag_culture'),
+        playa: t('discover.tag_beach'),
+        gastronomia: t('discover.tag_gastronomy'),
+        metropolis: t('discover.tag_metropolis'),
+        economico: t('discover.tag_budget'),
+        aventura: t('discover.tag_adventure'),
+        naturaleza: t('discover.tag_nature')
       };
 
       const guiaBtn = dest.guiaUrl ? `
-        <button class="btn-card-secondary" onclick="window.location.href='${dest.guiaUrl}'" title="Ver guía turística completa">
-          <i class="fa-solid fa-book-open"></i> Guía
+        <button class="btn-card-secondary" onclick="window.location.href='${dest.guiaUrl}'" title="${escapeHtml(t('discover.view_guide'))}">
+          <i class="fa-solid fa-book-open"></i> ${escapeHtml(t('discover.info_btn'))}
         </button>
       ` : '';
 
@@ -1951,19 +1966,19 @@
           <div class="dest-card-rich-content">
             <div class="dest-card-title-row">
               <h5>${escapeHtml(dest.nombre)}</h5>
-              <span class="dest-card-budget">~$${dest.presupuestoDia} USD / día</span>
+              <span class="dest-card-budget">~$${dest.presupuestoDia} USD ${escapeHtml(t('discover.per_day'))}</span>
             </div>
             <p class="dest-card-desc">${escapeHtml(dest.descripcion)}</p>
             <div class="dest-card-tags">
-              <span class="dest-tag-pill"><i class="fa-solid fa-tag"></i> ${estiloLabels[dest.estilo] || dest.estilo}</span>
+              <span class="dest-tag-pill"><i class="fa-solid fa-tag"></i> ${escapeHtml(estiloLabels[dest.estilo] || dest.estilo)}</span>
               <span class="dest-tag-pill"><i class="fa-solid fa-calendar"></i> ${escapeHtml(dest.mejorEpoca.split('/')[0])}</span>
             </div>
             <div class="dest-card-actions">
               <button class="btn-card-primary" onclick="window.empezarViajeDesdeDescubrir('${escapeHtml(dest.nombre)}')">
-                <i class="fa-solid fa-plane"></i> Planear Viaje
+                <i class="fa-solid fa-plane"></i> ${escapeHtml(t('discover.start_trip_here'))}
               </button>
               ${guiaBtn}
-              <button class="btn-card-secondary" onclick="window.seleccionarEnComparador('${dest.id}')" title="Comparar este destino">
+              <button class="btn-card-secondary" onclick="window.seleccionarEnComparador('${dest.id}')" title="${escapeHtml(t('discover.compare_btn'))}">
                 <i class="fa-solid fa-code-compare"></i>
               </button>
             </div>
@@ -1972,17 +1987,28 @@
       `;
     }
 
+    function getBookingRequirementLabel(rawVal) {
+      if (!rawVal) return '';
+      const low = String(rawVal).toLowerCase().trim();
+      if (low === 'obligatoria' || low === 'required') return t('discover.booking_required');
+      if (low === 'recomendada' || low === 'recommended') return t('discover.booking_recommended');
+      if (low === 'libre' || low.startsWith('sin reserva') || low === 'no booking') return t('discover.booking_free');
+      return rawVal;
+    }
+
     // Render HTML de Tarjeta de Actividad
-    function renderTarjetaActividadHTML(act, showAddDropdown = true) {
+    function renderTarjetaActividadHTML(rawAct, showAddDropdown = true) {
+      const act = typeof window.getLocalizedActivity === 'function' ? window.getLocalizedActivity(rawAct) : rawAct;
       const catLabels = {
-        imperdibles: 'Imperdible',
-        cultura: 'Cultura y Arte',
-        gastronomia: 'Comida y Bebida',
-        naturaleza: 'Aire Libre',
-        gratis: 'Gratis'
+        imperdibles: t('discover.cat_must'),
+        cultura: t('discover.cat_museums'),
+        gastronomia: t('discover.cat_food'),
+        naturaleza: t('discover.cat_outdoors'),
+        gratis: t('discover.cat_free')
       };
 
-      const precioTxt = act.costo === 0 ? 'Gratis' : `~$${act.costo} USD`;
+      const precioTxt = act.costo === 0 ? t('discover.free_entry') : `~$${act.costo} USD`;
+      const reservaTxt = getBookingRequirementLabel(act.reserva);
 
       return `
         <div class="activity-card-rich">
@@ -1991,18 +2017,18 @@
               <span style="font-size:0.75rem; color:#38bdf8; font-weight:700; text-transform:uppercase;">${escapeHtml(act.ciudad)}</span>
               <h5>${escapeHtml(act.nombre)}</h5>
             </div>
-            <span class="activity-card-cat-badge">${catLabels[act.categoria] || act.categoria}</span>
+            <span class="activity-card-cat-badge">${escapeHtml(catLabels[act.categoria] || act.categoria)}</span>
           </div>
           <p class="activity-card-desc">${escapeHtml(act.descripcion)}</p>
           <div class="activity-card-meta">
             <span class="activity-meta-item"><i class="fa-regular fa-clock"></i> ${escapeHtml(act.duracion)}</span>
             <span class="activity-meta-item"><i class="fa-solid fa-sun"></i> ${escapeHtml(act.mejorMomento)}</span>
-            <span class="activity-meta-item"><i class="fa-solid fa-ticket"></i> ${escapeHtml(act.reserva)}</span>
+            <span class="activity-meta-item"><i class="fa-solid fa-ticket"></i> ${escapeHtml(reservaTxt)}</span>
           </div>
           <div class="activity-card-footer">
-            <span class="activity-price-tag">${precioTxt}</span>
+            <span class="activity-price-tag">${escapeHtml(precioTxt)}</span>
             <button class="btn-add-activity-trip" onclick="window.añadirDesdeFeed('${escapeHtml(act.nombre)}', ${act.costo}, '${escapeHtml(act.duracion)}')">
-              <i class="fa-solid fa-plus"></i> Añadir al viaje
+              <i class="fa-solid fa-plus"></i> ${escapeHtml(t('discover.add_to_trip'))}
             </button>
           </div>
         </div>
@@ -2018,10 +2044,13 @@
       const grid = document.getElementById('gridDestinosCatalogo');
       if (!grid) return;
 
-      const filtrados = PLUX_CURATED_DESTINATIONS.filter(d => {
+      const filtrados = PLUX_CURATED_DESTINATIONS.filter(rawD => {
+        const d = typeof window.getLocalizedDestination === 'function' ? window.getLocalizedDestination(rawD) : rawD;
         const matchesTag = (currentDestinosFilter === 'todos') || (d.estilo === currentDestinosFilter);
         const q = currentDestinosSearch.toLowerCase().trim();
-        const matchesSearch = !q || d.nombre.toLowerCase().includes(q) || d.pais.toLowerCase().includes(q) || d.continente.toLowerCase().includes(q);
+        const matchesSearch = !q ||
+          rawD.nombre.toLowerCase().includes(q) || rawD.pais.toLowerCase().includes(q) || rawD.continente.toLowerCase().includes(q) ||
+          d.nombre.toLowerCase().includes(q) || d.pais.toLowerCase().includes(q) || d.continente.toLowerCase().includes(q);
         return matchesTag && matchesSearch;
       });
 
@@ -2029,7 +2058,7 @@
         grid.innerHTML = `
           <div style="grid-column: 1 / -1; padding:40px; text-align:center; color:var(--gris);">
             <i class="fa-solid fa-magnifying-glass" style="font-size:2rem; margin-bottom:12px; display:block; opacity:0.4;"></i>
-            No encontramos destinos con ese filtro. Prueba otra búsqueda.
+            ${escapeHtml(t('discover.no_dest_results'))}
           </div>
         `;
         return;
@@ -2064,10 +2093,13 @@
       const grid = document.getElementById('gridActividadesCatalogo');
       if (!grid) return;
 
-      const filtradas = PLUX_CURATED_ACTIVITIES.filter(a => {
+      const filtradas = PLUX_CURATED_ACTIVITIES.filter(rawA => {
+        const a = typeof window.getLocalizedActivity === 'function' ? window.getLocalizedActivity(rawA) : rawA;
         const matchesCat = (currentActividadesFilter === 'todas') || (a.categoria === currentActividadesFilter);
         const q = currentActividadesSearch.toLowerCase().trim();
-        const matchesSearch = !q || a.nombre.toLowerCase().includes(q) || a.ciudad.toLowerCase().includes(q) || a.descripcion.toLowerCase().includes(q);
+        const matchesSearch = !q ||
+          rawA.nombre.toLowerCase().includes(q) || rawA.ciudad.toLowerCase().includes(q) || rawA.descripcion.toLowerCase().includes(q) ||
+          a.nombre.toLowerCase().includes(q) || a.ciudad.toLowerCase().includes(q) || a.descripcion.toLowerCase().includes(q);
         return matchesCat && matchesSearch;
       });
 
@@ -2075,7 +2107,7 @@
         grid.innerHTML = `
           <div style="grid-column: 1 / -1; padding:40px; text-align:center; color:var(--gris);">
             <i class="fa-solid fa-ticket" style="font-size:2rem; margin-bottom:12px; display:block; opacity:0.4;"></i>
-            No se encontraron actividades con ese criterio.
+            ${escapeHtml(t('discover.no_act_results'))}
           </div>
         `;
         return;
@@ -2109,12 +2141,13 @@
 
       if (sel1 && sel2 && sel3) {
         let opts = '';
-        PLUX_CURATED_DESTINATIONS.forEach(d => {
+        PLUX_CURATED_DESTINATIONS.forEach(rawD => {
+          const d = typeof window.getLocalizedDestination === 'function' ? window.getLocalizedDestination(rawD) : rawD;
           opts += `<option value="${d.id}">${escapeHtml(d.nombre)} (${escapeHtml(d.pais)})</option>`;
         });
         sel1.innerHTML = opts;
         sel2.innerHTML = opts;
-        sel3.innerHTML = `<option value="">-- Ninguno (Comparar 2) --</option>` + opts;
+        sel3.innerHTML = `<option value="">${escapeHtml(t('discover.compare_none_opt'))}</option>` + opts;
 
         sel1.value = 'roma';
         sel2.value = 'tokio';
@@ -2128,7 +2161,8 @@
       const actSel2 = document.getElementById('compActividad2');
       if (actSel1 && actSel2) {
         let actOpts = '';
-        PLUX_CURATED_ACTIVITIES.forEach(a => {
+        PLUX_CURATED_ACTIVITIES.forEach(rawA => {
+          const a = typeof window.getLocalizedActivity === 'function' ? window.getLocalizedActivity(rawA) : rawA;
           actOpts += `<option value="${a.id}">${escapeHtml(a.ciudad)}: ${escapeHtml(a.nombre)}</option>`;
         });
         actSel1.innerHTML = actOpts;
@@ -2181,10 +2215,10 @@
         PLUX_CURATED_DESTINATIONS.find(d => d.id === d1Id),
         PLUX_CURATED_DESTINATIONS.find(d => d.id === d2Id),
         PLUX_CURATED_DESTINATIONS.find(d => d.id === d3Id)
-      ].filter(Boolean);
+      ].filter(Boolean).map(rawD => typeof window.getLocalizedDestination === 'function' ? window.getLocalizedDestination(rawD) : rawD);
 
       if (selected.length < 2) {
-        resContainer.innerHTML = '<p style="color:var(--gris); text-align:center; padding:20px;">Selecciona al menos 2 destinos para comparar.</p>';
+        resContainer.innerHTML = `<p style="color:var(--gris); text-align:center; padding:20px;">${escapeHtml(t('discover.select_two_dests'))}</p>`;
         return;
       }
 
@@ -2201,35 +2235,35 @@
             </div>
             <div class="comp-metrics-list">
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-coins"></i> Presupuesto / día</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-coins"></i> ${escapeHtml(t('discover.daily_budget'))}</span>
                 <span class="comp-metric-value highlight-green">~$${d.presupuestoDia} USD</span>
               </div>
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-star"></i> Puntuación Plux</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-star"></i> ${escapeHtml(t('discover.rating'))}</span>
                 <span class="comp-metric-value highlight-blue">${d.rating} / 5.0</span>
               </div>
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-cloud-sun"></i> Mejor época</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-cloud-sun"></i> ${escapeHtml(t('discover.best_time'))}</span>
                 <span class="comp-metric-value" style="font-size:0.75rem;">${escapeHtml(d.mejorEpoca)}</span>
               </div>
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-heart"></i> Vibe de viaje</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-heart"></i> ${escapeHtml(t('discover.vibe'))}</span>
                 <span class="comp-metric-value" style="font-size:0.75rem;">${escapeHtml(d.vibe)}</span>
               </div>
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-train-subway"></i> Movilidad</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-train-subway"></i> ${escapeHtml(t('discover.transport_label'))}</span>
                 <span class="comp-metric-value">${escapeHtml(d.transporte)}</span>
               </div>
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-shield-halved"></i> Seguridad</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-shield-halved"></i> ${escapeHtml(t('discover.safety'))}</span>
                 <span class="comp-metric-value">${escapeHtml(d.seguridad)}</span>
               </div>
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-money-bill"></i> Moneda / Idioma</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-money-bill"></i> ${escapeHtml(t('discover.currency'))} / ${escapeHtml(t('discover.language'))}</span>
                 <span class="comp-metric-value">${escapeHtml(d.moneda)} / ${escapeHtml(d.idioma)}</span>
               </div>
               <div style="margin-top:6px;">
-                <span class="comp-metric-label" style="margin-bottom:6px;"><i class="fa-solid fa-monument"></i> Lugares icónicos:</span>
+                <span class="comp-metric-label" style="margin-bottom:6px;"><i class="fa-solid fa-monument"></i> ${escapeHtml(t('discover.must_sees'))}:</span>
                 <div style="display:flex; flex-wrap:wrap; gap:4px;">
                   ${d.lugaresClave.map(l => `<span class="dest-tag-pill">${escapeHtml(l)}</span>`).join('')}
                 </div>
@@ -2237,7 +2271,7 @@
             </div>
             <div style="margin-top:auto; padding-top:12px;">
               <button class="btn-card-primary" style="width:100%;" onclick="window.empezarViajeDesdeDescubrir('${escapeHtml(d.nombre)}')">
-                <i class="fa-solid fa-check"></i> Elegir ${escapeHtml(d.nombre)}
+                <i class="fa-solid fa-check"></i> ${escapeHtml(t('discover.compare_choose', { name: d.nombre }))}
               </button>
             </div>
           </div>
@@ -2254,14 +2288,16 @@
       const resContainer = document.getElementById('comparador-actividades-resultado');
       if (!resContainer) return;
 
-      const act1 = PLUX_CURATED_ACTIVITIES.find(a => a.id === a1Id);
-      const act2 = PLUX_CURATED_ACTIVITIES.find(a => a.id === a2Id);
+      const rawAct1 = PLUX_CURATED_ACTIVITIES.find(a => a.id === a1Id);
+      const rawAct2 = PLUX_CURATED_ACTIVITIES.find(a => a.id === a2Id);
 
-      if (!act1 || !act2) {
-        resContainer.innerHTML = '<p style="color:var(--gris); text-align:center; padding:20px;">Selecciona 2 actividades para comparar.</p>';
+      if (!rawAct1 || !rawAct2) {
+        resContainer.innerHTML = `<p style="color:var(--gris); text-align:center; padding:20px;">${escapeHtml(t('discover.select_two_acts'))}</p>`;
         return;
       }
 
+      const act1 = typeof window.getLocalizedActivity === 'function' ? window.getLocalizedActivity(rawAct1) : rawAct1;
+      const act2 = typeof window.getLocalizedActivity === 'function' ? window.getLocalizedActivity(rawAct2) : rawAct2;
       const items = [act1, act2];
       let html = '<div class="comp-matrix-grid">';
       items.forEach(a => {
@@ -2279,25 +2315,25 @@
             <p style="font-size:0.83rem; color:rgba(255,255,255,0.75); margin:0;">${escapeHtml(a.descripcion)}</p>
             <div class="comp-metrics-list">
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-coins"></i> Costo estimado</span>
-                <span class="comp-metric-value highlight-green">${a.costo === 0 ? 'Gratis' : `~$${a.costo} USD`}</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-coins"></i> ${escapeHtml(t('discover.cost'))}</span>
+                <span class="comp-metric-value highlight-green">${a.costo === 0 ? escapeHtml(t('discover.free_entry')) : `~$${a.costo} USD`}</span>
               </div>
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-regular fa-clock"></i> Duración sugerida</span>
+                <span class="comp-metric-label"><i class="fa-regular fa-clock"></i> ${escapeHtml(t('discover.duration'))}</span>
                 <span class="comp-metric-value">${escapeHtml(a.duracion)}</span>
               </div>
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-sun"></i> Momento ideal</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-sun"></i> ${escapeHtml(t('discover.best_moment'))}</span>
                 <span class="comp-metric-value highlight-blue">${escapeHtml(a.mejorMomento)}</span>
               </div>
               <div class="comp-metric-row">
-                <span class="comp-metric-label"><i class="fa-solid fa-ticket"></i> Tipo de reserva</span>
-                <span class="comp-metric-value">${escapeHtml(a.reserva)}</span>
+                <span class="comp-metric-label"><i class="fa-solid fa-ticket"></i> ${escapeHtml(t('discover.booking_req'))}</span>
+                <span class="comp-metric-value">${escapeHtml(getBookingRequirementLabel(a.reserva))}</span>
               </div>
             </div>
             <div style="margin-top:auto; padding-top:12px;">
               <button class="btn-add-activity-trip" style="width:100%; justify-content:center; padding:10px;" onclick="window.añadirDesdeFeed('${escapeHtml(a.nombre)}', ${a.costo}, '${escapeHtml(a.duracion)}')">
-                <i class="fa-solid fa-plus"></i> Añadir a mi itinerario
+                <i class="fa-solid fa-plus"></i> ${escapeHtml(t('discover.add_to_my_itinerary'))}
               </button>
             </div>
           </div>
@@ -2323,7 +2359,7 @@
           window.agregarDestino();
         }
         if (typeof window.showToast === 'function') {
-          window.showToast(`Destino ${ciudad} añadido a tu nuevo viaje`, 'success');
+          window.showToast(t('discover.dest_added_toast', { city: ciudad }), 'success');
         }
       }, 250);
     }
@@ -2337,7 +2373,7 @@
       }
 
       if (destinos.length === 0) {
-        const destName = ciudadOpcional || 'Mi Viaje';
+        const destName = ciudadOpcional || t('discover.my_trip_default');
         destinos.push({
           id: Date.now(),
           nombre: destName,
@@ -2365,7 +2401,7 @@
       targetDest.dias[0].eventos.push({
         hora: '10:00',
         titulo: titulo,
-        notas: 'Añadido desde Descubrir Plux',
+        notas: t('discover.added_from_discover_note'),
         costo: Number(costo) || 0,
         duracion: durMin
       });
@@ -2374,7 +2410,7 @@
       if (typeof autoSave === 'function') autoSave();
 
       if (typeof window.showToast === 'function') {
-        window.showToast(`"${titulo}" añadido a ${targetDest.nombre} (Día 1)`, 'success');
+        window.showToast(t('discover.added_to_day1_toast', { title: titulo, dest: targetDest.nombre }), 'success');
       }
     }
 
@@ -2388,10 +2424,13 @@
       const norm = qRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
       // 1. Buscar primero en el catálogo verificado de Plux
-      const locales = PLUX_CURATED_ACTIVITIES.filter(act => {
-        const c = (act.ciudad || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const n = (act.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        return c.includes(norm) || n.includes(norm);
+      const locales = PLUX_CURATED_ACTIVITIES.filter(rawAct => {
+        const act = typeof window.getLocalizedActivity === 'function' ? window.getLocalizedActivity(rawAct) : rawAct;
+        const c = (rawAct.ciudad || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const n = (rawAct.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const lc = (act.ciudad || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const ln = (act.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return c.includes(norm) || n.includes(norm) || lc.includes(norm) || ln.includes(norm);
       });
 
       if (locales.length > 0) {
@@ -2405,17 +2444,18 @@
       }
 
       // 2. Si no está en el catálogo local, consultar lugares reales en Wikipedia (sin inventar precios ni duraciones)
-      resultados.innerHTML = `<p style="color:var(--gris); padding:25px; text-align:center; font-size:1.05rem;"><i class="fa-solid fa-magnifying-glass" style="color:var(--verde);"></i> Buscando lugares reales en ${escapeHtml(qRaw)}...</p>`;
+      resultados.innerHTML = `<p style="color:var(--gris); padding:25px; text-align:center; font-size:1.05rem;"><i class="fa-solid fa-magnifying-glass" style="color:var(--verde);"></i> ${escapeHtml(t('discover.wiki_searching_tpl', { query: qRaw }))}</p>`;
 
       try {
-        const wikiUrl = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(qRaw + ' turismo atracciones')}&srlimit=6&utf8=1&format=json&origin=*`;
+        const wikiLang = typeof window.getWikiLang === 'function' ? window.getWikiLang() : 'es';
+        const wikiUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(qRaw + ' ' + t('discover.wiki_tourism_suffix'))}&srlimit=6&utf8=1&format=json&origin=*`;
         const resp = await fetch(wikiUrl);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         const items = data?.query?.search || [];
 
         if (items.length === 0) {
-          resultados.innerHTML = `<p style="color:var(--gris); padding:20px; text-align:center;">No encontramos lugares verificados en el catálogo para "${escapeHtml(qRaw)}". Prueba con el nombre principal de la ciudad.</p>`;
+          resultados.innerHTML = `<p style="color:var(--gris); padding:20px; text-align:center;">${escapeHtml(t('discover.wiki_no_results', { query: qRaw }))}</p>`;
           return;
         }
 
@@ -2434,11 +2474,11 @@
               </div>
               <p class="activity-card-desc">${escapeHtml(cleanDesc)}...</p>
               <div class="activity-card-footer">
-                <a href="https://es.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/ /g, '_'))}" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem; color:#38bdf8; text-decoration:none;">
-                  <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver info
+                <a href="https://${wikiLang}.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/ /g, '_'))}" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem; color:#38bdf8; text-decoration:none;">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> ${escapeHtml(t('discover.wiki_view_info'))}
                 </a>
                 <button class="btn-add-activity-trip" onclick="window.añadirDesdeFeed('${titleEsc}', 0, '60', '${escapeHtml(qRaw)}')">
-                  <i class="fa-solid fa-plus"></i> Añadir
+                  <i class="fa-solid fa-plus"></i> ${escapeHtml(t('common.add'))}
                 </button>
               </div>
             </div>
@@ -2448,7 +2488,7 @@
         resultados.innerHTML = html;
       } catch (e) {
         console.error('Error buscando lugares reales:', e);
-        resultados.innerHTML = '<p style="color:var(--gris); padding:20px; text-align:center;">No se pudieron consultar lugares verificados en este momento. Verifica tu conexión o busca una ciudad del catálogo.</p>';
+        resultados.innerHTML = `<p style="color:var(--gris); padding:20px; text-align:center;">${escapeHtml(t('discover.wiki_search_error'))}</p>`;
       }
     }
 
@@ -2476,28 +2516,29 @@
         const modal = document.getElementById('modal-detalle-lugar');
         const body = document.getElementById('detalleLugarBody');
         modal.style.display = 'flex';
-        body.innerHTML = `<div style="text-align:center; padding:40px; color:var(--gris);">${t('weather_loading') || 'Cargando...'}</div>`;
+        body.innerHTML = `<div style="text-align:center; padding:40px; color:var(--gris);">${escapeHtml(t('common.loading'))}</div>`;
         
         try {
-            const url = `https://es.wikipedia.org/w/api.php?action=query&prop=pageimages|extracts&exintro&explaintext&pithumbsize=600&pageids=${pageid}&format=json&origin=*`;
+            const wikiLang = typeof window.getWikiLang === 'function' ? window.getWikiLang() : 'es';
+            const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&prop=pageimages|extracts&exintro&explaintext&pithumbsize=600&pageids=${pageid}&format=json&origin=*`;
             const resp = await fetch(url);
             const data = await resp.json();
             const page = data.query.pages[pageid];
             
             const imgSrc = (page && page.thumbnail) ? page.thumbnail.source : '';
-            const summary = page ? page.extract : 'Sin descripción disponible.';
+            const summary = page ? page.extract : t('discover.wiki_no_desc');
             
             body.innerHTML = `
                 ${imgSrc ? `<img src="${imgSrc}" style="width:100%; border-radius:16px; margin-bottom:20px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">` : ''}
-                <h2 style="color:var(--rosa); margin-bottom:15px;">${titulo}</h2>
-                <p style="color:var(--texto); line-height:1.6; margin-bottom:25px; font-size:1.1rem;">${summary}</p>
+                <h2 style="color:var(--rosa); margin-bottom:15px;">${escapeHtml(titulo)}</h2>
+                <p style="color:var(--texto); line-height:1.6; margin-bottom:25px; font-size:1.1rem;">${escapeHtml(summary)}</p>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-add-feed" style="flex:1; padding:15px;" onclick="añadirDesdeFeed('${titulo.replace(/'/g, "\\'")}'); document.getElementById('modal-detalle-lugar').style.display='none';">Añadir a mi viaje</button>
-                    <button class="btn-add-feed" style="background:var(--gris); flex:1;" onclick="window.open('https://es.wikipedia.org/?curid=${pageid}','_blank')">Ver en Wikipedia</button>
+                    <button class="btn-add-feed" style="flex:1; padding:15px;" onclick="añadirDesdeFeed('${titulo.replace(/'/g, "\\'")}'); document.getElementById('modal-detalle-lugar').style.display='none';">${escapeHtml(t('discover.add_to_trip'))}</button>
+                    <button class="btn-add-feed" style="background:var(--gris); flex:1;" onclick="window.open('https://${wikiLang}.wikipedia.org/?curid=${pageid}','_blank')">${escapeHtml(t('discover.wiki_view_btn'))}</button>
                 </div>
             `;
         } catch(e) {
-            body.innerHTML = `<p style="color:var(--gris);">Error al cargar detalles.</p>`;
+            body.innerHTML = `<p style="color:var(--gris);">${escapeHtml(t('discover.wiki_load_error'))}</p>`;
         }
     }
 
@@ -2783,7 +2824,7 @@ function obtenerInfoViajeActivoImportador() {
   const hasTrip = Boolean(tripId || destinosCount > 0 || hasNamedTrip);
   const displayLabel = hasNamedTrip
     ? nombreRaw
-    : (destinosCount > 0 ? (nombreRaw || 'Viaje actual') : 'Viaje nuevo sin guardar');
+    : (destinosCount > 0 ? (nombreRaw || t('importer.current_trip_fallback')) : t('importer.new_unsaved_trip'));
   return {
     nombre: displayLabel,
     tripId,
@@ -2968,15 +3009,16 @@ function generarBannerArchivosReservaHTML(customStatusMsg = '') {
     const failedCount = pluxPendingImages.filter(img => img.status === 'failed').length;
     const procCount = pluxPendingImages.filter(img => img.status === 'processing').length;
 
+    const unit = pluxPendingImages.length === 1 ? t('importer.shot_singular') : t('importer.shot_plural');
     let statusSummary = '';
     if (pluxOcrInProgress) {
-      statusSummary = customStatusMsg || pluxOcrStatusText || `Analizando imágenes con Vision IA (${doneCount}/${pluxPendingImages.length})...`;
+      statusSummary = customStatusMsg || pluxOcrStatusText || t('importer.analyzing_imgs_progress', { done: doneCount, total: pluxPendingImages.length });
     } else if (failedCount > 0) {
-      statusSummary = `${pluxPendingImages.length} ${pluxPendingImages.length === 1 ? 'captura' : 'capturas'} · ${doneCount} listas · ${failedCount} fallidas`;
+      statusSummary = t('importer.shots_summary_failed', { total: pluxPendingImages.length, unit, done: doneCount, failed: failedCount });
     } else if (doneCount > 0) {
-      statusSummary = `${pluxPendingImages.length} ${pluxPendingImages.length === 1 ? 'captura' : 'capturas'} · ${doneCount} analizadas con éxito`;
+      statusSummary = t('importer.shots_summary_ok', { total: pluxPendingImages.length, unit, done: doneCount });
     } else {
-      statusSummary = `${pluxPendingImages.length} ${pluxPendingImages.length === 1 ? 'captura adjunta' : 'capturas adjuntas'}`;
+      statusSummary = `${pluxPendingImages.length} ${pluxPendingImages.length === 1 ? t('importer.shot_attached_sg') : t('importer.shot_attached_pl')}`;
     }
 
     return `
@@ -2992,10 +3034,10 @@ function generarBannerArchivosReservaHTML(customStatusMsg = '') {
         <div style="display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;">
           ${failedCount > 0 && !pluxOcrInProgress ? `
             <button type="button" class="reserva-retry-btn" onclick="window.reintentarImagenesFallidasReserva()">
-              <i class="fa-solid fa-rotate-right"></i> Reintentar fallidas (${failedCount})
+              <i class="fa-solid fa-rotate-right"></i> ${escapeHtml(t('importer.retry_failed_btn', { count: failedCount }))}
             </button>
           ` : ''}
-          <button type="button" onclick="window.quitarImagenReservaAdjunta()" style="background:transparent; border:none; color:var(--gris); cursor:pointer; font-size:0.75rem; padding:2px 6px;">Quitar todas</button>
+          <button type="button" onclick="window.quitarImagenReservaAdjunta()" style="background:transparent; border:none; color:var(--gris); cursor:pointer; font-size:0.75rem; padding:2px 6px;">${escapeHtml(t('importer.remove_all_btn'))}</button>
         </div>
       </div>
       <div class="reserva-thumb-grid">
@@ -3003,16 +3045,16 @@ function generarBannerArchivosReservaHTML(customStatusMsg = '') {
           const st = img.status || 'pending';
           let badgeHtml = '';
           if (st === 'processing') {
-            badgeHtml = '<span class="reserva-thumb-status reserva-thumb-status--processing reserva-thumb-status--loading" title="Analizando..."><i class="fa-solid fa-spinner fa-spin"></i></span>';
+            badgeHtml = `<span class="reserva-thumb-status reserva-thumb-status--processing reserva-thumb-status--loading" title="${escapeHtml(t('importer.status_analyzing'))}"><i class="fa-solid fa-spinner fa-spin"></i></span>`;
           } else if (st === 'done') {
-            badgeHtml = '<span class="reserva-thumb-status reserva-thumb-status--done reserva-thumb-status--ok" title="Analizada"><i class="fa-solid fa-check"></i></span>';
+            badgeHtml = `<span class="reserva-thumb-status reserva-thumb-status--done reserva-thumb-status--ok" title="${escapeHtml(t('importer.status_analyzed'))}"><i class="fa-solid fa-check"></i></span>`;
           } else if (st === 'failed') {
-            badgeHtml = `<span class="reserva-thumb-status reserva-thumb-status--failed" title="${escapeHtml(img.errorMsg || 'Error al analizar')}"><i class="fa-solid fa-exclamation"></i></span>`;
+            badgeHtml = `<span class="reserva-thumb-status reserva-thumb-status--failed" title="${escapeHtml(img.errorMsg || t('importer.status_error_analyze'))}"><i class="fa-solid fa-exclamation"></i></span>`;
           }
           return `
             <div class="reserva-thumb-item">
               <img class="reserva-thumb-img" src="${img.dataUrl}" title="${escapeHtml(img.name)}" alt="${escapeHtml(img.name)}">
-              <button type="button" class="reserva-thumb-remove" onclick="window.quitarImagenReservaIndividual(${i})" title="Quitar captura">&times;</button>
+              <button type="button" class="reserva-thumb-remove" onclick="window.quitarImagenReservaIndividual(${i})" title="${escapeHtml(t('importer.remove_shot_title'))}">&times;</button>
               ${badgeHtml}
             </div>
           `;
@@ -3026,9 +3068,9 @@ function generarBannerArchivosReservaHTML(customStatusMsg = '') {
       <div class="reserva-status-progress">
         <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
           <div class="reserva-thumb-item">
-            <img class="reserva-thumb-img" src="${pluxPendingImagePreview}" alt="Comprobante adjunto">
+            <img class="reserva-thumb-img" src="${pluxPendingImagePreview}" alt="${escapeHtml(t('importer.visual_receipt_alt'))}">
           </div>
-          <div style="font-size:0.78rem;">Comprobante visual adjunto (quedará guardado en el voucher de tu billetera)</div>
+          <div style="font-size:0.78rem;">${escapeHtml(t('importer.visual_receipt_note'))}</div>
         </div>
         <button type="button" onclick="window.quitarImagenReservaAdjunta()" style="background:transparent; border:none; color:var(--gris); cursor:pointer; font-size:1rem; padding:2px 6px;">&times;</button>
       </div>
@@ -3085,19 +3127,19 @@ function renderizarImportadorReservas() {
   container.innerHTML = `
     <div class="descubrir-section-header" style="margin-top:4px; margin-bottom:14px;">
       <div>
-        <h4><i class="fa-solid fa-file-import" style="color:#38bdf8;"></i> Centro Inteligente de Reservas & Billetera de Vouchers</h4>
-        <p>Importa PDFs de pasajes, capturas de pantalla, calendarios (.ics) o mails de confirmación. Se sincroniza con Transporte, Alojamiento, Días por fecha y Presupuesto sin duplicar gastos.</p>
+        <h4><i class="fa-solid fa-file-import" style="color:#38bdf8;"></i> ${escapeHtml(t('importer.center_title'))}</h4>
+        <p>${escapeHtml(t('importer.center_desc'))}</p>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <span class="importador-active-trip-pill ${activeTrip.hasTrip ? 'has-trip' : 'new-trip'}" title="Destino de sincronización actual">
+        <span class="importador-active-trip-pill ${activeTrip.hasTrip ? 'has-trip' : 'new-trip'}" title="${escapeHtml(t('importer.sync_target_title'))}">
           <i class="fa-solid fa-suitcase-rolling"></i>
           ${activeTrip.hasTrip
-            ? `Viaje activo: <strong>${escapeHtml(activeTrip.nombre)}</strong>`
-            : `<strong>Viaje nuevo sin guardar</strong>`}
+            ? `${escapeHtml(t('importer.active_trip_lbl'))} <strong>${escapeHtml(activeTrip.nombre)}</strong>`
+            : `<strong>${escapeHtml(t('importer.new_unsaved_trip'))}</strong>`}
         </span>
         ${hasActiveDestinos ? `
           <button class="btn-card-secondary" onclick="window.irAlItinerarioDesdeReservas()" style="padding:9px 15px;">
-            <i class="fa-solid fa-calendar-check" style="color:var(--verde);"></i> Ver itinerario (${destinos.length} ${destinos.length === 1 ? 'destino' : 'destinos'})
+            <i class="fa-solid fa-calendar-check" style="color:var(--verde);"></i> ${escapeHtml(t('importer.view_itinerary_btn'))} (${destinos.length} ${escapeHtml(destinos.length === 1 ? t('importer.dest_singular') : t('importer.dest_plural'))})
           </button>
         ` : ''}
       </div>
@@ -3107,26 +3149,26 @@ function renderizarImportadorReservas() {
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
       <div class="comparador-subswitch" style="margin:0;">
         <button type="button" class="subswitch-btn ${pluxReservaInputMode === 'smart' ? 'active' : ''}" onclick="window.cambiarModoImportadorReserva('smart')">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Pegar Mail / Subir PDF o Captura
+          <i class="fa-solid fa-wand-magic-sparkles"></i> ${escapeHtml(t('importer.mode_smart'))}
         </button>
         <button type="button" class="subswitch-btn ${pluxReservaInputMode === 'express' ? 'active' : ''}" onclick="window.cambiarModoImportadorReserva('express')">
-          <i class="fa-solid fa-bolt"></i> Carga Rápida Manual (Express)
+          <i class="fa-solid fa-bolt"></i> ${escapeHtml(t('importer.mode_express'))}
         </button>
         <button type="button" class="subswitch-btn ${pluxReservaInputMode === 'wallet' ? 'active' : ''}" onclick="window.cambiarModoImportadorReserva('wallet')">
-          <i class="fa-solid fa-wallet"></i> Billetera de Vouchers (<span id="walletTabCountBadge">${totalWalletCount}</span>)
+          <i class="fa-solid fa-wallet"></i> ${escapeHtml(t('importer.mode_wallet'))} (<span id="walletTabCountBadge">${totalWalletCount}</span>)
         </button>
       </div>
 
       <div class="importador-active-trip-bar" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
         <span style="display:inline-flex; align-items:center; gap:8px;">
           <i class="fa-solid fa-link" style="color:#38bdf8;"></i>
-          Sincronizando con: <strong style="color:#fff; font-size:0.86rem;">${escapeHtml(activeTrip.nombre || 'Viaje actual')}</strong>
-          <span style="font-size:0.75rem; color:#94a3b8;">(${activeTrip.destinosCount} ${activeTrip.destinosCount === 1 ? 'destino' : 'destinos'})</span>
+          ${escapeHtml(t('importer.syncing_with'))} <strong style="color:#fff; font-size:0.86rem;">${escapeHtml(activeTrip.nombre || t('importer.current_trip_fallback'))}</strong>
+          <span style="font-size:0.75rem; color:#94a3b8;">(${activeTrip.destinosCount} ${escapeHtml(activeTrip.destinosCount === 1 ? t('importer.dest_singular') : t('importer.dest_plural'))})</span>
         </span>
         <div style="display:flex; align-items:center; gap:10px;">
-          <span><i class="fa-regular fa-calendar" style="color:#38bdf8;"></i> Inicio: <strong style="color:#fff;">${fechaInicioActual || 'Se autodetecta al importar'}</strong></span>
+          <span><i class="fa-regular fa-calendar" style="color:#38bdf8;"></i> ${escapeHtml(t('importer.start_date'))} <strong style="color:#fff;">${escapeHtml(fechaInicioActual || t('importer.auto_detect_date'))}</strong></span>
           <span>·</span>
-          <span><i class="fa-solid fa-users" style="color:var(--verde);"></i> <strong style="color:#fff;">${numP} ${numP === 1 ? 'viajero' : 'viajeros'}</strong></span>
+          <span><i class="fa-solid fa-users" style="color:var(--verde);"></i> <strong style="color:#fff;">${numP} ${escapeHtml(numP === 1 ? t('common.traveler_singular') : t('common.traveler_plural'))}</strong></span>
         </div>
       </div>
     </div>
@@ -3136,8 +3178,8 @@ function renderizarImportadorReservas() {
         <!-- Columna Izquierda: Entrada Multi-Formato -->
         <div class="reservas-panel-card">
           <div class="reservas-panel-title">
-            <h4><i class="fa-solid fa-file-circle-plus" style="color:var(--verde);"></i> 1. Subir Comprobante o Pegar Mail</h4>
-            <span style="font-size:0.74rem; color:#38bdf8; font-weight:700;">PDF · Captura PNG/JPG · ICS · EML · Texto</span>
+            <h4><i class="fa-solid fa-file-circle-plus" style="color:var(--verde);"></i> ${escapeHtml(t('importer.panel1_title'))}</h4>
+            <span style="font-size:0.74rem; color:#38bdf8; font-weight:700;">${escapeHtml(t('importer.panel1_formats'))}</span>
           </div>
 
           <!-- Dropzone Universal con soporte Drag & Drop -->
@@ -3149,15 +3191,15 @@ function renderizarImportadorReservas() {
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
               <span style="font-size:0.82rem; color:#e2e8f0; font-weight:600;">
                 <i class="fa-solid fa-cloud-arrow-up" style="color:#38bdf8; margin-right:6px;"></i>
-                Arrastra uno o varios <strong>PDFs</strong>, <strong>capturas de pantalla</strong> o calendarios <strong>.ics</strong>:
+                ${t('importer.drop_text_html')}
               </span>
               <div style="display:flex; gap:6px; flex-wrap:wrap;">
                 <label style="cursor:pointer; background:linear-gradient(135deg, rgba(56,189,248,0.22), rgba(16,185,129,0.18)); border:1px solid rgba(56,189,248,0.45); color:#ffffff; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;">
-                  <i class="fa-solid fa-images" style="color:#38bdf8;"></i> Subir PDFs / Imágenes / ICS
+                  <i class="fa-solid fa-images" style="color:#38bdf8;"></i> ${escapeHtml(t('importer.upload_btn_lbl'))}
                   <input type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.ics,.eml,.txt,.html,.json" style="display:none;" onchange="window.subirArchivoReserva(event)">
                 </label>
                 <button type="button" onclick="window.pegarPortapapelesReserva()" style="cursor:pointer; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.16); color:#e2e8f0; padding:6px 11px; border-radius:8px; font-weight:700; font-size:0.78rem; display:inline-flex; align-items:center; gap:5px;">
-                  <i class="fa-solid fa-paste"></i> Pegar
+                  <i class="fa-solid fa-paste"></i> ${escapeHtml(t('importer.paste_short'))}
                 </button>
               </div>
             </div>
@@ -3168,16 +3210,16 @@ function renderizarImportadorReservas() {
 
           <textarea id="reservaRawInput" class="reserva-raw-textarea"
                     onpaste="setTimeout(() => window.analizarTextoReserva(true), 80)"
-                    placeholder="Pega aquí el mail de confirmación (Iberia, Aerolíneas, LATAM, Booking.com, Airbnb, Trenitalia, Renfe, Civitatis...) o arrastra un archivo PDF o captura arriba. Si pegas varios mails separados por '---', Plux los detecta todos de una vez."></textarea>
+                    placeholder="${escapeHtml(t('importer.paste_ph'))}"></textarea>
 
           <div class="reservas-actions-row">
             <button type="button" class="btn-card-primary" style="flex:1.5; padding:12px 18px;" onclick="window.analizarTextoReserva()">
-              <i class="fa-solid fa-bolt"></i> Detectar y Estructurar Reservas
+              <i class="fa-solid fa-bolt"></i> ${escapeHtml(t('importer.btn_detect'))}
             </button>
-            <button type="button" class="btn-card-secondary" style="flex:1; padding:12px 14px;" onclick="window.analizarReservaConIA()" title="Usar IA para extraer reservas de textos libres o desordenados">
-              <i class="fa-solid fa-wand-magic-sparkles" style="color:#a855f7;"></i> Extraer con IA
+            <button type="button" class="btn-card-secondary" style="flex:1; padding:12px 14px;" onclick="window.analizarReservaConIA()" title="${escapeHtml(t('importer.extract_ai_title'))}">
+              <i class="fa-solid fa-wand-magic-sparkles" style="color:#a855f7;"></i> ${escapeHtml(t('importer.extract_ai_btn'))}
             </button>
-            <button type="button" class="btn-card-secondary" style="padding:12px 14px;" onclick="window.limpiarImportadorReserva()" title="Limpiar">
+            <button type="button" class="btn-card-secondary" style="padding:12px 14px;" onclick="window.limpiarImportadorReserva()" title="${escapeHtml(t('importer.btn_clear'))}">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
@@ -3186,7 +3228,7 @@ function renderizarImportadorReservas() {
         <!-- Columna Derecha: Tarjetas Detectadas y Sincronización -->
         <div class="reservas-panel-card">
           <div class="reservas-panel-title">
-            <h4><i class="fa-solid fa-ticket-simple" style="color:#38bdf8;"></i> 2. Revisión, Presupuesto y Destino</h4>
+            <h4><i class="fa-solid fa-ticket-simple" style="color:#38bdf8;"></i> ${escapeHtml(t('importer.panel2_title'))}</h4>
             <span id="reservasDetectadasCounter" style="font-size:0.78rem; font-weight:800; color:var(--verde);"></span>
           </div>
           <div id="reservasDetectadasContainer"></div>
@@ -3201,36 +3243,36 @@ function renderizarImportadorReservas() {
       <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
         <div>
           <h4 style="margin:0; font-size:1.15rem; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:8px;">
-            <i class="fa-solid fa-wallet" style="color:var(--verde);"></i> Billetera Offline de Boarding Passes & Vouchers (<span id="walletCountBadge">${totalWalletCount}</span>)
+            <i class="fa-solid fa-wallet" style="color:var(--verde);"></i> ${escapeHtml(t('importer.wallet_title'))} (<span id="walletCountBadge">${totalWalletCount}</span>)
           </h4>
-          <p style="margin:2px 0 0 0; font-size:0.82rem; color:var(--gris);">Ordenados cronológicamente con código PNR, PIN de hotel y vista de pase completo para mostrar en recepción o embarque.</p>
+          <p style="margin:2px 0 0 0; font-size:0.82rem; color:var(--gris);">${escapeHtml(t('importer.wallet_offline_desc'))}</p>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-          <div id="walletScopeSwitch" class="wallet-scope-switch" role="tablist" aria-label="Alcance de vouchers">
+          <div id="walletScopeSwitch" class="wallet-scope-switch" role="tablist" aria-label="${escapeHtml(t('importer.wallet_scope_aria'))}">
             <button type="button" id="walletScopeBtnTrip" class="wallet-scope-btn ${pluxWalletScope === 'trip' ? 'active' : ''}" onclick="window.cambiarScopeWalletReservas('trip')">
-              <i class="fa-solid fa-suitcase-rolling"></i> De este viaje (<span id="walletTripCount">0</span>)
+              <i class="fa-solid fa-suitcase-rolling"></i> ${escapeHtml(t('importer.wallet_this_trip'))} (<span id="walletTripCount">0</span>)
             </button>
             <button type="button" id="walletScopeBtnAll" class="wallet-scope-btn ${pluxWalletScope === 'all' ? 'active' : ''}" onclick="window.cambiarScopeWalletReservas('all')">
-              <i class="fa-solid fa-layer-group"></i> Todos los viajes (<span id="walletAllCount">${totalWalletCount}</span>)
+              <i class="fa-solid fa-layer-group"></i> ${escapeHtml(t('importer.wallet_all_trips'))} (<span id="walletAllCount">${totalWalletCount}</span>)
             </button>
           </div>
-          <input type="text" id="walletSearchInput" value="${escapeHtml(pluxWalletSearch)}" placeholder="Buscar por PNR, ciudad, hotel..." oninput="window.buscarEnWalletReservas(this.value)" style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.14); border-radius:10px; padding:7px 12px; color:#fff; font-size:0.8rem; outline:none; min-width:190px;">
+          <input type="text" id="walletSearchInput" value="${escapeHtml(pluxWalletSearch)}" placeholder="${escapeHtml(t('importer.wallet_search_ph'))}" oninput="window.buscarEnWalletReservas(this.value)" style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.14); border-radius:10px; padding:7px 12px; color:#fff; font-size:0.8rem; outline:none; min-width:190px;">
           ${totalWalletCount > 0 ? `
             <button type="button" class="btn-card-secondary" style="padding:7px 12px; font-size:0.78rem;" onclick="window.sincronizarTodaLaWalletAlViaje()">
-              <i class="fa-solid fa-arrows-rotate" style="color:var(--verde);"></i> Volcar todas al viaje actual
+              <i class="fa-solid fa-arrows-rotate" style="color:var(--verde);"></i> ${escapeHtml(t('importer.dump_all_to_trip'))}
             </button>
           ` : ''}
         </div>
       </div>
 
       <div class="descubrir-chips-filter" id="walletCategoryChips" style="margin-top:12px;">
-        <button type="button" id="walletChipTodas" class="filter-chip ${pluxWalletFilter === 'todas' ? 'active' : ''}" onclick="window.filtrarWalletReservas('todas', this)">Todas (${totalWalletCount})</button>
-        <button type="button" class="filter-chip ${pluxWalletFilter === 'crucero' ? 'active' : ''}" onclick="window.filtrarWalletReservas('crucero', this)"><i class="fa-solid fa-ship"></i> Cruceros</button>
-        <button type="button" class="filter-chip ${pluxWalletFilter === 'vuelo' ? 'active' : ''}" onclick="window.filtrarWalletReservas('vuelo', this)"><i class="fa-solid fa-plane"></i> Vuelos</button>
-        <button type="button" class="filter-chip ${pluxWalletFilter === 'hotel' ? 'active' : ''}" onclick="window.filtrarWalletReservas('hotel', this)"><i class="fa-solid fa-hotel"></i> Hoteles / Airbnb</button>
-        <button type="button" class="filter-chip ${pluxWalletFilter === 'tren' ? 'active' : ''}" onclick="window.filtrarWalletReservas('tren', this)"><i class="fa-solid fa-train"></i> Trenes / Buses</button>
-        <button type="button" class="filter-chip ${pluxWalletFilter === 'actividad' ? 'active' : ''}" onclick="window.filtrarWalletReservas('actividad', this)"><i class="fa-solid fa-ticket"></i> Entradas / Tours</button>
-        <button type="button" class="filter-chip ${pluxWalletFilter === 'auto' ? 'active' : ''}" onclick="window.filtrarWalletReservas('auto', this)"><i class="fa-solid fa-car-side"></i> Autos</button>
+        <button type="button" id="walletChipTodas" class="filter-chip ${pluxWalletFilter === 'todas' ? 'active' : ''}" onclick="window.filtrarWalletReservas('todas', this)">${escapeHtml(t('importer.filter_all_count', { count: totalWalletCount }))}</button>
+        <button type="button" class="filter-chip ${pluxWalletFilter === 'crucero' ? 'active' : ''}" onclick="window.filtrarWalletReservas('crucero', this)"><i class="fa-solid fa-ship"></i> ${escapeHtml(t('importer.filter_cruises'))}</button>
+        <button type="button" class="filter-chip ${pluxWalletFilter === 'vuelo' ? 'active' : ''}" onclick="window.filtrarWalletReservas('vuelo', this)"><i class="fa-solid fa-plane"></i> ${escapeHtml(t('importer.filter_flights'))}</button>
+        <button type="button" class="filter-chip ${pluxWalletFilter === 'hotel' ? 'active' : ''}" onclick="window.filtrarWalletReservas('hotel', this)"><i class="fa-solid fa-hotel"></i> ${escapeHtml(t('importer.filter_hotels'))}</button>
+        <button type="button" class="filter-chip ${pluxWalletFilter === 'tren' ? 'active' : ''}" onclick="window.filtrarWalletReservas('tren', this)"><i class="fa-solid fa-train"></i> ${escapeHtml(t('importer.filter_trains'))}</button>
+        <button type="button" class="filter-chip ${pluxWalletFilter === 'actividad' ? 'active' : ''}" onclick="window.filtrarWalletReservas('actividad', this)"><i class="fa-solid fa-ticket"></i> ${escapeHtml(t('importer.filter_activities'))}</button>
+        <button type="button" class="filter-chip ${pluxWalletFilter === 'auto' ? 'active' : ''}" onclick="window.filtrarWalletReservas('auto', this)"><i class="fa-solid fa-car-side"></i> ${escapeHtml(t('importer.filter_cars'))}</button>
       </div>
 
       <div id="walletReservasContainer" class="wallet-cards-grid"></div>
@@ -3251,17 +3293,17 @@ function renderizarFormularioExpressReservaHTML(viajeros) {
   return `
     <div class="reservas-panel-card" style="margin-bottom:20px;">
       <div class="reservas-panel-title">
-        <h4><i class="fa-solid fa-bolt" style="color:var(--verde);"></i> Carga Rápida Estructurada (Sin pegar mail)</h4>
+        <h4><i class="fa-solid fa-bolt" style="color:var(--verde);"></i> ${escapeHtml(t('importer.express_title'))}</h4>
         <div class="descubrir-chips-filter">
           ${[
-            { id: 'vuelo', icon: 'fa-plane', label: 'Vuelo' },
-            { id: 'hotel', icon: 'fa-hotel', label: 'Hotel / Airbnb' },
-            { id: 'tren', icon: 'fa-train', label: 'Tren / Bus' },
-            { id: 'actividad', icon: 'fa-ticket', label: 'Entrada / Tour' },
-            { id: 'auto', icon: 'fa-car-side', label: 'Alquiler Auto' }
-          ].map(t => `
-            <button type="button" class="filter-chip ${pluxExpressTipo === t.id ? 'active' : ''}" onclick="window.cambiarTipoExpressReserva('${t.id}')">
-              <i class="fa-solid ${t.icon}"></i> ${t.label}
+            { id: 'vuelo', icon: 'fa-plane', label: t('importer.type_flight') },
+            { id: 'hotel', icon: 'fa-hotel', label: t('importer.filter_hotels') },
+            { id: 'tren', icon: 'fa-train', label: t('importer.type_train') },
+            { id: 'actividad', icon: 'fa-ticket', label: t('importer.type_activity') },
+            { id: 'auto', icon: 'fa-car-side', label: t('importer.type_car') }
+          ].map(tp => `
+            <button type="button" class="filter-chip ${pluxExpressTipo === tp.id ? 'active' : ''}" onclick="window.cambiarTipoExpressReserva('${tp.id}')">
+              <i class="fa-solid ${tp.icon}"></i> ${escapeHtml(tp.label)}
             </button>
           `).join('')}
         </div>
@@ -3269,56 +3311,56 @@ function renderizarFormularioExpressReservaHTML(viajeros) {
 
       <div class="voucher-fields-grid" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap:12px;">
         <div class="voucher-field" style="grid-column: span 2;">
-          <label>${pluxExpressTipo === 'vuelo' ? 'Aerolínea y N° de Vuelo' : (pluxExpressTipo === 'hotel' ? 'Nombre del Hotel / Airbnb' : (pluxExpressTipo === 'tren' ? 'Operador y Tren / Bus' : 'Nombre de la Actividad / Reserva'))}</label>
-          <input type="text" id="expInputTitulo" placeholder="${pluxExpressTipo === 'vuelo' ? 'Ej: Iberia IB6844' : (pluxExpressTipo === 'hotel' ? 'Ej: Hotel Artemide Roma' : (pluxExpressTipo === 'tren' ? 'Ej: Trenitalia Frecciarossa 9618' : 'Ej: Entrada Coliseo y Foro Romano'))}">
+          <label>${escapeHtml(pluxExpressTipo === 'vuelo' ? t('importer.lbl_flight_title') : (pluxExpressTipo === 'hotel' ? t('importer.lbl_hotel_title') : (pluxExpressTipo === 'tren' ? t('importer.lbl_train_title') : t('importer.lbl_act_title'))))}</label>
+          <input type="text" id="expInputTitulo" placeholder="${escapeHtml(pluxExpressTipo === 'vuelo' ? t('importer.ph_flight_title') : (pluxExpressTipo === 'hotel' ? t('importer.ph_hotel_title') : (pluxExpressTipo === 'tren' ? t('importer.ph_train_title') : t('importer.ph_act_title'))))}">
         </div>
 
         ${(pluxExpressTipo === 'vuelo' || pluxExpressTipo === 'tren') ? `
           <div class="voucher-field">
-            <label>Ciudad / Aeropuerto de Salida</label>
-            <input type="text" id="expInputOrigen" placeholder="Ej: Buenos Aires (EZE)" value="${escapeHtml(document.getElementById('lugarSalida')?.value || '')}">
+            <label>${escapeHtml(t('importer.lbl_dep_city'))}</label>
+            <input type="text" id="expInputOrigen" placeholder="${escapeHtml(t('importer.ph_dep_city'))}" value="${escapeHtml(document.getElementById('lugarSalida')?.value || '')}">
           </div>
         ` : ''}
 
         <div class="voucher-field">
-          <label>${(pluxExpressTipo === 'vuelo' || pluxExpressTipo === 'tren') ? 'Ciudad de Llegada / Destino' : 'Ciudad del Viaje'}</label>
-          <input type="text" id="expInputCiudad" placeholder="Ej: Roma, Madrid, Tokio..." value="${escapeHtml(defaultCity)}">
+          <label>${escapeHtml((pluxExpressTipo === 'vuelo' || pluxExpressTipo === 'tren') ? t('importer.lbl_arr_city') : t('importer.lbl_trip_city'))}</label>
+          <input type="text" id="expInputCiudad" placeholder="${escapeHtml(t('importer.ph_city_list'))}" value="${escapeHtml(defaultCity)}">
         </div>
 
         <div class="voucher-field">
-          <label>Código PNR / Confirmación / PIN</label>
-          <input type="text" id="expInputCodigo" placeholder="Ej: K8M4X9 o PIN 7391" style="font-family:monospace; font-weight:800; color:var(--verde);">
+          <label>${escapeHtml(t('importer.lbl_code_pin'))}</label>
+          <input type="text" id="expInputCodigo" placeholder="${escapeHtml(t('importer.ph_code_pin'))}" style="font-family:monospace; font-weight:800; color:var(--verde);">
         </div>
 
         <div class="voucher-field">
-          <label>${pluxExpressTipo === 'hotel' ? 'Fecha de Check-in' : 'Fecha'}</label>
+          <label>${escapeHtml(pluxExpressTipo === 'hotel' ? t('importer.lbl_checkin_date') : t('importer.date_label'))}</label>
           <input type="date" id="expInputFecha" value="${defaultDate}">
         </div>
 
         <div class="voucher-field">
-          <label>${pluxExpressTipo === 'hotel' ? 'Hora Check-in' : 'Hora Salida / Inicio'}</label>
+          <label>${escapeHtml(pluxExpressTipo === 'hotel' ? t('importer.lbl_checkin_time') : t('importer.lbl_dep_time'))}</label>
           <input type="time" id="expInputHora" value="${pluxExpressTipo === 'hotel' ? '15:00' : '10:00'}">
         </div>
 
         ${pluxExpressTipo === 'hotel' ? `
           <div class="voucher-field">
-            <label>Cantidad de Noches</label>
+            <label>${escapeHtml(t('importer.lbl_nights'))}</label>
             <input type="number" id="expInputNoches" min="1" max="60" value="3">
           </div>
         ` : `
           <div class="voucher-field">
-            <label>Hora Llegada / Fin (Opcional)</label>
+            <label>${escapeHtml(t('importer.lbl_arr_time_opt'))}</label>
             <input type="time" id="expInputHoraFin" value="">
           </div>
         `}
 
         <div class="voucher-field">
-          <label>Precio</label>
+          <label>${escapeHtml(t('importer.cost_label'))}</label>
           <input type="number" id="expInputCosto" min="0" step="0.01" placeholder="0.00" value="0">
         </div>
 
         <div class="voucher-field">
-          <label>Moneda y Tipo de Monto</label>
+          <label>${escapeHtml(t('importer.lbl_currency_mode'))}</label>
           <div style="display:flex; gap:6px;">
             <select id="expInputMoneda" style="width:82px;">
               <option value="USD">USD</option>
@@ -3326,29 +3368,29 @@ function renderizarFormularioExpressReservaHTML(viajeros) {
               <option value="ARS">ARS</option>
             </select>
             <select id="expInputModoPrecio" style="flex:1;">
-              <option value="persona">Por persona</option>
-              <option value="total">Total del grupo</option>
+              <option value="persona">${escapeHtml(t('importer.mode_per_person'))}</option>
+              <option value="total">${escapeHtml(t('importer.mode_total_group'))}</option>
             </select>
           </div>
         </div>
 
         <div class="voucher-field">
-          <label>Pagado por</label>
+          <label>${escapeHtml(t('importer.lbl_paid_by'))}</label>
           <select id="expInputPagadoPor">
-            <option value="Todos">Todos (Dividido)</option>
+            <option value="Todos">${escapeHtml(t('importer.everyone_split'))}</option>
             ${viajeros.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}
           </select>
         </div>
 
         <div class="voucher-field" style="grid-column: 1 / -1;">
-          <label>Detalles (Dirección, Terminal, Asiento, Equipaje, Punto de Encuentro)</label>
-          <input type="text" id="expInputNotas" placeholder="Ej: Terminal A · Asiento 18A · 1 valija de 23kg incluida / Via Nazionale 22">
+          <label>${escapeHtml(t('importer.lbl_details_express'))}</label>
+          <input type="text" id="expInputNotas" placeholder="${escapeHtml(t('importer.ph_details_express'))}">
         </div>
       </div>
 
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
         <button type="button" class="btn-card-primary" style="padding:11px 22px;" onclick="window.guardarReservaExpressDirecto()">
-          <i class="fa-solid fa-calendar-plus"></i> Guardar en Billetera e Insertar al Viaje
+          <i class="fa-solid fa-calendar-plus"></i> ${escapeHtml(t('importer.save_express_btn'))}
         </button>
       </div>
     </div>
@@ -3374,14 +3416,14 @@ function guardarReservaExpressDirecto() {
   const moneda = document.getElementById('expInputMoneda')?.value || 'USD';
   const modoPrecio = document.getElementById('expInputModoPrecio')?.value || 'persona';
   const pagadoPor = document.getElementById('expInputPagadoPor')?.value || 'Todos';
-  const notas = document.getElementById('expInputNotas')?.value?.trim() || 'Cargado desde Formulario Express';
+  const notas = document.getElementById('expInputNotas')?.value?.trim() || t('importer.express_notes_default');
 
   let titulo = tituloRaw;
   if (!titulo) {
-    if (pluxExpressTipo === 'vuelo') titulo = `Vuelo ${origen ? origen + ' → ' : ''}${ciudad}`;
-    else if (pluxExpressTipo === 'hotel') titulo = `Check-in: Alojamiento en ${ciudad}`;
-    else if (pluxExpressTipo === 'tren') titulo = `Tren ${origen ? origen + ' → ' : ''}${ciudad}`;
-    else titulo = `Reserva en ${ciudad}`;
+    if (pluxExpressTipo === 'vuelo') titulo = `${t('importer.express_flight_pfx')} ${origen ? origen + ' → ' : ''}${ciudad}`;
+    else if (pluxExpressTipo === 'hotel') titulo = t('importer.express_checkin_hotel', { city: ciudad });
+    else if (pluxExpressTipo === 'tren') titulo = `${t('importer.express_train_pfx')} ${origen ? origen + ' → ' : ''}${ciudad}`;
+    else titulo = t('importer.express_booking_in', { city: ciudad });
   } else if (pluxExpressTipo === 'hotel' && !/check-in/i.test(titulo)) {
     titulo = `Check-in: ${titulo}`;
   }
@@ -3427,7 +3469,7 @@ function guardarReservaExpressDirecto() {
     pluxReservaInputMode = 'wallet';
     renderizarImportadorReservas();
     if (typeof window.showToast === 'function') {
-      window.showToast(`Reserva "${res.titulo}" sincronizada en ${targetDest ? targetDest.nombre : ciudad}`, 'success');
+      window.showToast(t('importer.express_synced_toast', { title: res.titulo, dest: targetDest ? targetDest.nombre : ciudad }), 'success');
     }
   });
 }
@@ -3501,11 +3543,11 @@ async function pegarPortapapelesReserva() {
       input.value = text;
       analizarTextoReserva();
     } else if (typeof window.showToast === 'function') {
-      window.showToast('El portapapeles está vacío', 'info');
+      window.showToast(t('importer.clipboard_empty'), 'info');
     }
   } catch (e) {
     if (typeof window.showToast === 'function') {
-      window.showToast('Usa Ctrl+V directamente dentro del cuadro de texto', 'info');
+      window.showToast(t('importer.clipboard_ctrlv'), 'info');
     }
   }
 }
@@ -5483,24 +5525,24 @@ function renderizarTarjetasReservasDetectadas() {
     cont.innerHTML = `
       <div style="text-align:center; padding:42px 20px; color:var(--gris); border:1px dashed rgba(255,255,255,0.12); border-radius:16px;">
         <i class="fa-solid fa-ticket" style="font-size:2.3rem; color:rgba(56,189,248,0.45); margin-bottom:12px; display:block;"></i>
-        <p style="margin:0 0 6px 0; font-weight:700; color:#e2e8f0; font-size:0.95rem;">Listo para analizar tus comprobantes</p>
-        <p style="margin:0; font-size:0.82rem; line-height:1.5;">Sube uno o varios <strong>PDFs</strong>, <strong>capturas de pantalla</strong>, un calendario <strong>.ics</strong> o pega tu mail de confirmación para que Plux organice escalas, transporte, alojamiento y presupuesto sin duplicar gastos.</p>
+        <p style="margin:0 0 6px 0; font-weight:700; color:#e2e8f0; font-size:0.95rem;">${escapeHtml(t('importer.ready_title'))}</p>
+        <p style="margin:0; font-size:0.82rem; line-height:1.5;">${t('importer.ready_desc_html')}</p>
       </div>
     `;
     return;
   }
 
   if (counter) {
-    counter.textContent = `${pluxDetectedReservas.length} ${pluxDetectedReservas.length === 1 ? 'detectada' : 'detectadas'}`;
+    counter.textContent = `${pluxDetectedReservas.length} ${pluxDetectedReservas.length === 1 ? t('importer.detected_singular') : t('importer.detected_plural')}`;
   }
 
   const tipoBadgeMap = {
-    crucero: { icon: 'fa-ship', label: 'Crucero / Travesía', destPresupuesto: 'Arma paradas reales + días de navegación sin duplicar costo' },
-    vuelo: { icon: 'fa-plane-departure', label: 'Vuelo / Aéreo', destPresupuesto: 'Se carga en Transporte del destino' },
-    hotel: { icon: 'fa-hotel', label: 'Alojamiento', destPresupuesto: 'Se carga en Alojamiento + Check-in/out' },
-    tren: { icon: 'fa-train', label: 'Tren / Bus', destPresupuesto: 'Se carga en Transporte del destino' },
-    actividad: { icon: 'fa-ticket', label: 'Entrada / Tour', destPresupuesto: 'Se carga en Actividades del Día' },
-    auto: { icon: 'fa-car-side', label: 'Alquiler de Auto', destPresupuesto: 'Se carga en el Día seleccionado' }
+    crucero: { icon: 'fa-ship', label: t('importer.badge_cruise'), destPresupuesto: t('importer.desc_cruise') },
+    vuelo: { icon: 'fa-plane-departure', label: t('importer.badge_flight'), destPresupuesto: t('importer.desc_flight') },
+    hotel: { icon: 'fa-hotel', label: t('importer.badge_hotel'), destPresupuesto: t('importer.desc_hotel') },
+    tren: { icon: 'fa-train', label: t('importer.badge_train'), destPresupuesto: t('importer.desc_train') },
+    actividad: { icon: 'fa-ticket', label: t('importer.badge_activity'), destPresupuesto: t('importer.desc_activity') },
+    auto: { icon: 'fa-car-side', label: t('importer.badge_car'), destPresupuesto: t('importer.desc_car') }
   };
 
   const viajeros = obtenerViajerosParaReserva();
@@ -5516,16 +5558,16 @@ function renderizarTarjetasReservasDetectadas() {
       <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35); padding:10px 14px; border-radius:12px;">
         <span style="font-size:0.84rem; font-weight:700; color:var(--texto);">
           <i class="fa-solid fa-layer-group" style="color:var(--verde); margin-right:6px;"></i>
-          Se detectaron <strong>${pluxDetectedReservas.length} reservas</strong> con fechas y destinos sincronizados
+          ${t('importer.multi_detected_html', { count: pluxDetectedReservas.length })}
         </span>
         <button type="button" class="btn-card-primary" style="padding:8px 14px; font-size:0.8rem;" onclick="window.importarTodasLasReservas()">
-          <i class="fa-solid fa-check-double"></i> Sincronizar Todas (${pluxDetectedReservas.length})
+          <i class="fa-solid fa-check-double"></i> ${escapeHtml(t('importer.sync_all_count', { count: pluxDetectedReservas.length }))}
         </button>
       </div>
       <div class="reservas-timeline-preview">
         ${timelineSorted.map(item => {
           const m = tipoBadgeMap[item.tipo] || tipoBadgeMap.actividad;
-          return `<span class="reservas-timeline-chip"><i class="fa-solid ${m.icon}" style="color:var(--verde);"></i> ${escapeHtml(item.fecha ? item.fecha.slice(0,5) : 'Día ' + ((Number(item.diaIndex)||0)+1))} · ${escapeHtml(item.ciudad || item.titulo || 'Sin destino')}</span>`;
+          return `<span class="reservas-timeline-chip"><i class="fa-solid ${m.icon}" style="color:var(--verde);"></i> ${escapeHtml(item.fecha ? item.fecha.slice(0,5) : t('importer.day_n_lbl', { n: (Number(item.diaIndex)||0)+1 }))} · ${escapeHtml(item.ciudad || item.titulo || t('importer.no_dest_label'))}</span>`;
         }).join('<span style="color:var(--gris); align-self:center; font-size:0.75rem;">→</span>')}
       </div>
     `;
@@ -5549,16 +5591,16 @@ function renderizarTarjetasReservasDetectadas() {
         <div class="voucher-card-top">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <span class="voucher-type-badge tipo-${r.tipo}">
-              <i class="fa-solid ${meta.icon}"></i> ${meta.label}
+              <i class="fa-solid ${meta.icon}"></i> ${escapeHtml(meta.label)}
             </span>
             <span style="font-size:0.72rem; color:var(--gris); background:rgba(255,255,255,0.05); padding:3px 8px; border-radius:6px;">
               ${escapeHtml(meta.destPresupuesto)}
             </span>
-            ${yaEnWallet ? `<span style="font-size:0.7rem; font-weight:800; color:#fbbf24; background:rgba(251,191,36,0.14); padding:3px 8px; border-radius:6px;"><i class="fa-solid fa-wallet"></i> Ya en Billetera</span>` : ''}
+            ${yaEnWallet ? `<span style="font-size:0.7rem; font-weight:800; color:#fbbf24; background:rgba(251,191,36,0.14); padding:3px 8px; border-radius:6px;"><i class="fa-solid fa-wallet"></i> ${escapeHtml(t('importer.already_in_wallet'))}</span>` : ''}
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             ${r.pin ? `<span style="font-size:0.74rem; font-family:monospace; background:rgba(251,191,36,0.15); color:#fbbf24; padding:3px 7px; border-radius:6px; font-weight:800;">PIN: ${escapeHtml(r.pin)}</span>` : ''}
-            <span class="voucher-pnr-pill" title="Código de reserva / PNR">
+            <span class="voucher-pnr-pill" title="${escapeHtml(t('importer.pnr_pill_title'))}">
               <i class="fa-solid fa-barcode"></i> ${escapeHtml(r.codigo || 'CONF')}
             </span>
           </div>
@@ -5569,15 +5611,15 @@ function renderizarTarjetasReservasDetectadas() {
             <!-- Cabecera compacta para itinerario multi-etapa (oculta campos de reserva simple) -->
             <div class="reserva-meta-grid">
               <div class="reserva-meta-item" style="grid-column: 1 / -1;">
-                <label>Concepto / Nombre del Itinerario</label>
+                <label>${escapeHtml(t('importer.lbl_itinerary_name'))}</label>
                 <input type="text" value="${escapeHtml(r.titulo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'titulo', this.value)">
               </div>
               <div class="reserva-meta-item">
-                <label>Código de Reserva / PNR</label>
+                <label>${escapeHtml(t('importer.lbl_pnr_full'))}</label>
                 <input type="text" value="${escapeHtml(r.codigo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'codigo', this.value.toUpperCase())">
               </div>
               <div class="reserva-meta-item">
-                <label>Fechas (${totalDaysLabel} días · ${r.noches || Math.max(0, totalDaysLabel - 1)} noches)</label>
+                <label>${escapeHtml(t('importer.lbl_dates_summary', { days: totalDaysLabel, nights: r.noches || Math.max(0, totalDaysLabel - 1) }))}</label>
                 <input type="text" value="${escapeHtml([r.fecha, r.fechaFin].filter(Boolean).join(' → '))}" readonly>
               </div>
             </div>
@@ -5585,53 +5627,53 @@ function renderizarTarjetasReservasDetectadas() {
             <!-- Campos estándar para reserva simple (vuelo, hotel, tren, actividad, auto) -->
             <div class="voucher-fields-grid">
               <div class="voucher-field voucher-field-full">
-                <label>Concepto / Título en tu Itinerario</label>
+                <label>${escapeHtml(t('importer.lbl_booking_title'))}</label>
                 <input type="text" value="${escapeHtml(r.titulo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'titulo', this.value)">
               </div>
 
               <div class="voucher-field">
-                <label>Ciudad / Destino</label>
+                <label>${escapeHtml(t('importer.lbl_city_dest'))}</label>
                 <input type="text" value="${escapeHtml(r.ciudad)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'ciudad', this.value)">
               </div>
 
               <div class="voucher-field">
-                <label>Ubicar en Destino del Viaje</label>
+                <label>${escapeHtml(t('importer.lbl_place_in_trip'))}</label>
                 <select onchange="window.actualizarCampoReservaDetectada(${idx}, 'targetDestMode', this.value)">
-                  <option value="auto" ${r.targetDestMode === 'auto' ? 'selected' : ''}>Automático (${escapeHtml(r.ciudad || 'Sin destino')})</option>
-                  ${destsActuales.map(d => `<option value="dest_${d.id}" ${r.targetDestMode === 'dest_' + d.id ? 'selected' : ''}>Destino existente: ${escapeHtml(d.nombre)}</option>`).join('')}
-                  ${(r.tipo === 'vuelo' || r.tipo === 'tren') ? `<option value="vuelta_casa" ${r.targetDestMode === 'vuelta_casa' ? 'selected' : ''}>Tramo de Regreso a Casa (Vuelta Global)</option>` : ''}
+                  <option value="auto" ${r.targetDestMode === 'auto' ? 'selected' : ''}>${escapeHtml(t('importer.opt_auto_dest', { dest: r.ciudad || t('importer.no_dest_label') }))}</option>
+                  ${destsActuales.map(d => `<option value="dest_${d.id}" ${r.targetDestMode === 'dest_' + d.id ? 'selected' : ''}>${escapeHtml(t('importer.opt_existing_dest', { dest: d.nombre }))}</option>`).join('')}
+                  ${(r.tipo === 'vuelo' || r.tipo === 'tren') ? `<option value="vuelta_casa" ${r.targetDestMode === 'vuelta_casa' ? 'selected' : ''}>${escapeHtml(t('importer.opt_return_home'))}</option>` : ''}
                 </select>
               </div>
 
               <div class="voucher-field">
-                <label>Fecha (${r.fechaISO ? 'Calcula el Día solo' : 'DD/MM/YYYY'})</label>
-                <input type="text" value="${escapeHtml(r.fecha)}" placeholder="Ej: 15/11/2026" onchange="window.actualizarFechaReservaDetectada(${idx}, this.value)">
+                <label>${escapeHtml(r.fechaISO ? t('importer.lbl_date_calc') : `${t('importer.date_label')} (DD/MM/YYYY)`)}</label>
+                <input type="text" value="${escapeHtml(r.fecha)}" placeholder="15/11/2026" onchange="window.actualizarFechaReservaDetectada(${idx}, this.value)">
               </div>
 
               <div class="voucher-field">
-                <label>Día asignado en el destino</label>
+                <label>${escapeHtml(t('importer.lbl_assigned_day'))}</label>
                 <select id="voucherDiaSelect-${idx}" onchange="window.actualizarCampoReservaDetectada(${idx}, 'diaIndex', Number(this.value))">
                   ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(dIdx => `
-                    <option value="${dIdx}" ${Number(r.diaIndex) === dIdx ? 'selected' : ''}>Día ${dIdx + 1}${Number(r.diaIndex) === dIdx && r.fecha ? ` (${escapeHtml(r.fecha)})` : ''}</option>
+                    <option value="${dIdx}" ${Number(r.diaIndex) === dIdx ? 'selected' : ''}>${escapeHtml(t('importer.day_n_lbl', { n: dIdx + 1 }))}${Number(r.diaIndex) === dIdx && r.fecha ? ` (${escapeHtml(r.fecha)})` : ''}</option>
                   `).join('')}
                 </select>
               </div>
 
               <div class="voucher-field">
-                <label>Hora Inicio / Fin</label>
+                <label>${escapeHtml(t('importer.lbl_time_start_end'))}</label>
                 <div style="display:flex; gap:6px;">
                   <input type="text" value="${escapeHtml(r.hora)}" placeholder="10:00" style="width:50%;" oninput="window.actualizarCampoReservaDetectada(${idx}, 'hora', this.value)">
-                  <input type="text" value="${escapeHtml(r.horaFin || '')}" placeholder="Fin" style="width:50%;" oninput="window.actualizarCampoReservaDetectada(${idx}, 'horaFin', this.value)">
+                  <input type="text" value="${escapeHtml(r.horaFin || '')}" placeholder="${escapeHtml(t('importer.ph_end_short'))}" style="width:50%;" oninput="window.actualizarCampoReservaDetectada(${idx}, 'horaFin', this.value)">
                 </div>
               </div>
 
               <div class="voucher-field">
-                <label>Código PNR / Referencia</label>
+                <label>${escapeHtml(t('importer.lbl_pnr_ref'))}</label>
                 <input type="text" value="${escapeHtml(r.codigo)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'codigo', this.value.toUpperCase())">
               </div>
 
               <div class="voucher-field voucher-field-full">
-                <label>Notas (Dirección, Asiento, Terminal, Escalas, Punto de encuentro)</label>
+                <label>${escapeHtml(t('importer.lbl_notes_extra'))}</label>
                 <input type="text" value="${escapeHtml(r.notas)}" oninput="window.actualizarCampoReservaDetectada(${idx}, 'notas', this.value)">
               </div>
             </div>
@@ -5640,8 +5682,8 @@ function renderizarTarjetasReservasDetectadas() {
           <!-- Metadatos dinámicos editables del comprobante -->
           <div style="margin-top:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <span style="font-size:0.72rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.4px;">Datos del comprobante</span>
-              <button type="button" onclick="window.agregarDetalleExtraReserva(${idx})" style="background:transparent; border:1px solid rgba(148,163,184,0.3); color:var(--texto); border-radius:6px; padding:2px 8px; font-size:0.7rem; cursor:pointer;">+ Dato</button>
+              <span style="font-size:0.72rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.4px;">${escapeHtml(t('importer.voucher_data_hdr'))}</span>
+              <button type="button" onclick="window.agregarDetalleExtraReserva(${idx})" style="background:transparent; border:1px solid rgba(148,163,184,0.3); color:var(--texto); border-radius:6px; padding:2px 8px; font-size:0.7rem; cursor:pointer;">${escapeHtml(t('importer.add_data_btn'))}</button>
             </div>
             ${Array.isArray(r.detallesExtra) && r.detallesExtra.length > 0 ? `
               <div class="reserva-meta-grid">
@@ -5658,7 +5700,7 @@ function renderizarTarjetasReservasDetectadas() {
           <!-- Barra Financiera Clara: Total / Pagado / Saldo pendiente -->
           <div class="reserva-finance-bar">
             <div class="reserva-finance-metric reserva-finance-pill">
-              <label>Total (${r.modoPrecio === 'total' ? 'Grupal' : 'Por persona'})</label>
+              <label>${escapeHtml(t('importer.lbl_total_group_mode', { mode: r.modoPrecio === 'total' ? t('importer.mode_group_short') : t('importer.mode_per_person') }))}</label>
               <div style="display:flex; gap:5px; align-items:center;">
                 <input type="number" value="${Number(r.costo || 0)}" min="0" step="0.01" style="flex:1; min-width:0;" oninput="window.actualizarFinanzasReservaDetectada(${idx}, 'costo', this.value)">
                 <select class="reserva-currency-select" style="min-width:82px; width:82px; padding:6px 8px; flex-shrink:0;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'moneda', this.value)">
@@ -5668,25 +5710,25 @@ function renderizarTarjetasReservasDetectadas() {
                 </select>
               </div>
               <select style="margin-top:4px; width:100%;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'modoPrecio', this.value); window.renderizarTarjetasReservasDetectadas();">
-                <option value="total" ${r.modoPrecio === 'total' ? 'selected' : ''}>Total del grupo (${numP > 1 ? '$' + unitPreview + '/p' : 'sin multiplicar'})</option>
-                <option value="persona" ${r.modoPrecio === 'persona' ? 'selected' : ''}>Por persona ($${Number(r.costo || 0)} × ${numP})</option>
+                <option value="total" ${r.modoPrecio === 'total' ? 'selected' : ''}>${escapeHtml(t('importer.opt_total_group_preview', { preview: numP > 1 ? '$' + unitPreview + '/p' : t('importer.no_mult_short') }))}</option>
+                <option value="persona" ${r.modoPrecio === 'persona' ? 'selected' : ''}>${escapeHtml(t('importer.mode_per_person'))} ($${Number(r.costo || 0)} × ${numP})</option>
               </select>
             </div>
 
             <div class="reserva-finance-metric reserva-finance-metric--paid reserva-finance-pill">
-              <label>Pagado (${escapeHtml(r.moneda || 'USD')})</label>
+              <label>${escapeHtml(t('importer.lbl_paid_amt', { cur: r.moneda || 'USD' }))}</label>
               <input type="number" value="${paidDisplay}" min="0" step="0.01" oninput="window.actualizarFinanzasReservaDetectada(${idx}, 'montoPagado', this.value)">
               <select style="margin-top:4px; width:100%;" onchange="window.actualizarCampoReservaDetectada(${idx}, 'pagadoPor', this.value)">
-                <option value="Todos" ${r.pagadoPor === 'Todos' ? 'selected' : ''}>Pagó: Todos</option>
-                ${viajeros.map(v => `<option value="${escapeHtml(v)}" ${r.pagadoPor === v ? 'selected' : ''}>Pagó: ${escapeHtml(v)}</option>`).join('')}
+                <option value="Todos" ${r.pagadoPor === 'Todos' ? 'selected' : ''}>${escapeHtml(t('importer.paid_by_prefix', { who: t('common.all') }))}</option>
+                ${viajeros.map(v => `<option value="${escapeHtml(v)}" ${r.pagadoPor === v ? 'selected' : ''}>${escapeHtml(t('importer.paid_by_prefix', { who: v }))}</option>`).join('')}
               </select>
             </div>
 
             <div class="reserva-finance-metric ${pendingDisplay > 0 ? 'reserva-finance-metric--pending' : 'reserva-finance-metric--paid'} reserva-finance-pill">
-              <label>${pendingDisplay > 0 ? 'Saldo pendiente' : 'Estado de pago'}</label>
+              <label>${escapeHtml(pendingDisplay > 0 ? t('importer.lbl_pending_balance') : t('importer.lbl_payment_status'))}</label>
               <input type="number" value="${pendingDisplay}" min="0" step="0.01" oninput="window.actualizarFinanzasReservaDetectada(${idx}, 'saldoPendiente', this.value)">
               <div style="font-size:0.7rem; margin-top:4px; font-weight:700; color:${pendingDisplay > 0 ? '#f59e0b' : '#10b981'};">
-                ${pendingDisplay > 0 ? `Falta abonar ${escapeHtml(r.moneda || 'USD')} ${pendingDisplay.toFixed(2)}` : 'Saldado completo ✓'}
+                ${pendingDisplay > 0 ? escapeHtml(t('importer.balance_due_tpl', { cur: r.moneda || 'USD', amt: pendingDisplay.toFixed(2) })) : escapeHtml(t('importer.paid_full_ok'))}
               </div>
             </div>
           </div>
@@ -5696,9 +5738,9 @@ function renderizarTarjetasReservasDetectadas() {
             <div class="reserva-stages-box">
               <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
                 <span style="font-size:0.76rem; font-weight:800; color:var(--verde);">
-                  <i class="fa-solid fa-route"></i> ${r.etapas.length} paradas reales · ${totalDaysLabel} días calendario
+                  <i class="fa-solid fa-route"></i> ${escapeHtml(t('importer.stages_summary', { stops: r.etapas.length, days: totalDaysLabel }))}
                 </span>
-                <span style="font-size:0.7rem; color:var(--gris);">Días de navegación se conectan automáticamente entre puertos</span>
+                <span style="font-size:0.7rem; color:var(--gris);">${escapeHtml(t('importer.sea_days_auto_note'))}</span>
               </div>
               <div class="reserva-stages-list">
                 ${r.etapas.map((et, eIdx) => {
@@ -5708,18 +5750,18 @@ function renderizarTarjetasReservasDetectadas() {
                     ${transitDays > 0 ? `
                       <div class="reserva-stage-transit-pill">
                         <i class="fa-solid fa-ship"></i>
-                        ${transitDays} ${transitDays === 1 ? 'día' : 'días'} · ${escapeHtml(et.transitoEtiqueta || 'En navegación')}
+                        ${transitDays} ${escapeHtml(transitDays === 1 ? t('common.day_singular') : t('common.day_plural'))} · ${escapeHtml(et.transitoEtiqueta || t('importer.at_sea_default'))}
                       </div>
                     ` : ''}
                     <div class="reserva-stage-row">
-                      <input type="text" value="${escapeHtml(et.fecha)}" onchange="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'fecha', this.value)" title="Fecha">
+                      <input type="text" value="${escapeHtml(et.fecha)}" onchange="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'fecha', this.value)" title="${escapeHtml(t('importer.date_label'))}">
                       <div style="display:flex; align-items:center; gap:5px; min-width:0;">
-                        <input type="text" value="${escapeHtml(et.ciudad)}" oninput="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'ciudad', this.value)" style="flex:1; min-width:0; font-weight:600;" title="Puerto / Ciudad">
-                        ${hasTender ? '<span class="reserva-stage-tender-badge" title="Servicio de tenders / bote auxiliar">Tender</span>' : ''}
+                        <input type="text" value="${escapeHtml(et.ciudad)}" oninput="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'ciudad', this.value)" style="flex:1; min-width:0; font-weight:600;" title="${escapeHtml(t('importer.lbl_city_dest'))}">
+                        ${hasTender ? `<span class="reserva-stage-tender-badge" title="${escapeHtml(t('importer.tender_title'))}">Tender</span>` : ''}
                       </div>
-                      <input type="text" value="${escapeHtml(et.horaLlegada)}" placeholder="Lleg." oninput="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'horaLlegada', this.value)" title="Hora de llegada">
-                      <input type="text" value="${escapeHtml(et.horaSalida)}" placeholder="Sal." oninput="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'horaSalida', this.value)" title="Hora de salida">
-                      <button type="button" onclick="window.eliminarEtapaReservaDetectada(${idx}, ${eIdx})" title="Quitar parada" style="background:transparent; border:none; color:#f87171; cursor:pointer; font-size:0.95rem; padding:0;">&times;</button>
+                      <input type="text" value="${escapeHtml(et.horaLlegada)}" placeholder="${escapeHtml(t('importer.ph_arr_short'))}" oninput="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'horaLlegada', this.value)" title="${escapeHtml(t('importer.title_arr_time'))}">
+                      <input type="text" value="${escapeHtml(et.horaSalida)}" placeholder="${escapeHtml(t('importer.ph_dep_short'))}" oninput="window.actualizarEtapaReservaDetectada(${idx}, ${eIdx}, 'horaSalida', this.value)" title="${escapeHtml(t('importer.title_dep_time'))}">
+                      <button type="button" onclick="window.eliminarEtapaReservaDetectada(${idx}, ${eIdx})" title="${escapeHtml(t('importer.remove_stop_title'))}" style="background:transparent; border:none; color:#f87171; cursor:pointer; font-size:0.95rem; padding:0;">&times;</button>
                     </div>
                   `;
                 }).join('')}
@@ -5731,25 +5773,25 @@ function renderizarTarjetasReservasDetectadas() {
             ${r.fechaISO ? `
               <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
                 <input type="checkbox" ${r.sincronizarFechaInicio ? 'checked' : ''} onchange="window.actualizarCampoReservaDetectada(${idx}, 'sincronizarFechaInicio', this.checked)">
-                Usar ${escapeHtml(r.fecha)} como fecha de inicio del viaje si está vacía
+                ${escapeHtml(t('importer.chk_use_start_date', { date: r.fecha }))}
               </label>
             ` : ''}
             ${r.tipo === 'hotel' ? `
               <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
                 <input type="checkbox" ${r.expandirNoches ? 'checked' : ''} onchange="window.actualizarCampoReservaDetectada(${idx}, 'expandirNoches', this.checked)">
-                Crear automáticamente los ${r.noches || 1} días de estadía + Check-out al final
+                ${escapeHtml(t('importer.chk_expand_nights', { nights: r.noches || 1 }))}
               </label>
             ` : ''}
           </div>
 
           <div class="voucher-card-footer">
             <button type="button" class="btn-card-secondary" style="padding:8px 12px; font-size:0.78rem;" onclick="window.guardarSoloEnWallet(${idx})">
-              <i class="fa-solid fa-bookmark"></i> Solo Billetera
+              <i class="fa-solid fa-bookmark"></i> ${escapeHtml(t('importer.wallet_only_btn'))}
             </button>
 
             <button type="button" class="btn-card-primary" style="padding:9px 16px; font-size:0.82rem; ${r.agregadoAlViaje ? 'background:rgba(16,185,129,0.25); color:var(--verde); border:1px solid var(--verde);' : ''}" onclick="window.importarReservaAlViaje(${idx})">
               <i class="fa-solid ${r.agregadoAlViaje ? 'fa-check' : 'fa-calendar-plus'}"></i>
-              ${r.agregadoAlViaje ? 'Sincronizada (actualizar)' : 'Sincronizar con mi Viaje'}
+              ${escapeHtml(r.agregadoAlViaje ? t('importer.synced_update_btn') : t('importer.sync_to_trip_btn'))}
             </button>
           </div>
         </div>
@@ -5985,12 +6027,12 @@ function solicitarDestinoSincronizacion(reservasArray, onConfirm) {
         isTemplate: Boolean(window.currentTripEmbajadorSlug || window.currentTripTemplateOrigin)
       };
 
-  const tripName = tripInfo?.nombre || 'Viaje actual';
+  const tripName = tripInfo?.nombre || t('importer.current_trip_fallback');
   const destCount = Number(tripInfo?.destinosCount) || (Array.isArray(destinos) ? destinos.length : 0);
   const firstRes = list[0];
   const labelItem = list.length === 1
-    ? `«${firstRes.titulo || firstRes.ciudad || 'esta reserva'}»`
-    : `estas ${list.length} reservas`;
+    ? t('importer.sync_choice_item_one', { item: firstRes.titulo || firstRes.ciudad || t('importer.sync_choice_this_booking') })
+    : t('importer.sync_choice_item_many', { count: list.length });
 
   const overlay = document.createElement('div');
   overlay.id = 'plux-sync-choice-modal';
@@ -6005,22 +6047,22 @@ function solicitarDestinoSincronizacion(reservasArray, onConfirm) {
           <i class="fa-solid fa-compass-drafting"></i>
         </span>
         <div>
-          <h4 style="margin:0; font-size:1.05rem; font-weight:800;">¿Dónde querés sincronizar?</h4>
-          <span style="font-size:0.75rem; color:var(--gris);">Tu viaje abierto «${escapeHtml(tripName)}» ya tiene ${destCount} ${destCount === 1 ? 'destino' : 'destinos'}</span>
+          <h4 style="margin:0; font-size:1.05rem; font-weight:800;">${escapeHtml(t('importer.sync_choice_title'))}</h4>
+          <span style="font-size:0.75rem; color:var(--gris);">${escapeHtml(t('importer.sync_choice_sub', { name: tripName, count: destCount, unit: destCount === 1 ? t('importer.dest_singular') : t('importer.dest_plural') }))}</span>
         </div>
       </div>
       <p style="margin:8px 0 16px 0; font-size:0.84rem; line-height:1.48; opacity:0.9;">
-        Podés crear un viaje nuevo limpio para ${escapeHtml(labelItem)} (manteniendo «${escapeHtml(tripName)}» intacto en <strong>Mis Viajes</strong>), o sumarla al itinerario que tenés abierto.
+        ${t('importer.sync_choice_body', { item: escapeHtml(labelItem), name: escapeHtml(tripName) })}
       </p>
       <div class="plux-sync-choice-actions">
         <button type="button" class="plux-sync-btn-primary" id="pluxSyncChoiceNewBtn">
-          <i class="fa-solid fa-plus"></i> Crear viaje nuevo con esta reserva
+          <i class="fa-solid fa-plus"></i> ${escapeHtml(t('importer.sync_choice_new'))}
         </button>
         <button type="button" class="plux-sync-btn-secondary" id="pluxSyncChoiceCurrentBtn">
-          <i class="fa-solid fa-layer-group"></i> Sumar a «${escapeHtml(tripName)}»
+          <i class="fa-solid fa-layer-group"></i> ${escapeHtml(t('importer.sync_choice_add', { name: tripName }))}
         </button>
         <button type="button" class="plux-sync-btn-cancel" id="pluxSyncChoiceCancelBtn">
-          Cancelar
+          ${escapeHtml(t('common.cancel'))}
         </button>
       </div>
     </div>
@@ -6743,7 +6785,7 @@ function renderizarWalletReservas() {
 
   const scopedWallet = pluxWalletScope === 'trip' ? tripScopedVouchers : allVouchers;
   if (badge) badge.textContent = String(scopedWallet.length);
-  if (chipTodas) chipTodas.textContent = `Todas (${scopedWallet.length})`;
+  if (chipTodas) chipTodas.textContent = t('importer.filter_all_count', { count: scopedWallet.length });
 
   // Ordenar cronológicamente por fechaISO y hora
   const sorted = [...scopedWallet].sort((a, b) => {
@@ -6765,11 +6807,12 @@ function renderizarWalletReservas() {
 
   if (filtered.length === 0) {
     const canShowAllHint = pluxWalletScope === 'trip' && allVouchers.length > 0;
+    const voucherUnit = allVouchers.length === 1 ? t('importer.voucher_saved_sg') : t('importer.voucher_saved_pl');
     cont.innerHTML = `
       <div style="grid-column:1 / -1; background:rgba(255,255,255,0.02); border:1px dashed rgba(255,255,255,0.1); border-radius:14px; padding:24px; text-align:center; color:var(--gris); font-size:0.85rem;">
         ${canShowAllHint
-          ? `Este viaje todavía no tiene vouchers sincronizados. Tienes <strong>${allVouchers.length}</strong> ${allVouchers.length === 1 ? 'voucher guardado' : 'vouchers guardados'} en otros viajes. <button type="button" class="btn-card-secondary" style="margin-left:8px; padding:5px 10px; font-size:0.76rem;" onclick="window.cambiarScopeWalletReservas('all')">Ver todos los viajes (${allVouchers.length})</button>`
-          : 'No hay vouchers en esta vista. Cuando importes un vuelo, hotel, tren o entrada quedará guardado aquí con su código PNR y vista de pase offline.'}
+          ? `${t('importer.wallet_empty_trip', { count: allVouchers.length, unit: escapeHtml(voucherUnit) })} <button type="button" class="btn-card-secondary" style="margin-left:8px; padding:5px 10px; font-size:0.76rem;" onclick="window.cambiarScopeWalletReservas('all')">${escapeHtml(t('importer.view_all_trips_count', { count: allVouchers.length }))}</button>`
+          : escapeHtml(t('importer.wallet_empty_all'))}
       </div>
     `;
     return;
@@ -6789,9 +6832,9 @@ function renderizarWalletReservas() {
       <div>
         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
           <span style="font-size:0.74rem; font-weight:800; color:#38bdf8; text-transform:uppercase;">
-            <i class="fa-solid ${iconMap[w.tipo] || 'fa-ticket'}"></i> ${escapeHtml(w.ciudad || 'Viaje')} · ${escapeHtml(w.proveedor || w.tipo)}
+            <i class="fa-solid ${iconMap[w.tipo] || 'fa-ticket'}"></i> ${escapeHtml(w.ciudad || t('importer.trip_fallback_lbl'))} · ${escapeHtml(w.proveedor || w.tipo)}
           </span>
-          <button type="button" onclick="window.copiarCodigoPNR('${escapeHtml(w.codigo || '')}')" style="background:rgba(16,185,129,0.14); border:1px solid rgba(16,185,129,0.35); color:var(--verde); border-radius:6px; padding:2px 8px; font-family:monospace; font-weight:800; font-size:0.78rem; cursor:pointer;" title="Copiar código PNR">
+          <button type="button" onclick="window.copiarCodigoPNR('${escapeHtml(w.codigo || '')}')" style="background:rgba(16,185,129,0.14); border:1px solid rgba(16,185,129,0.35); color:var(--verde); border-radius:6px; padding:2px 8px; font-family:monospace; font-weight:800; font-size:0.78rem; cursor:pointer;" title="${escapeHtml(t('importer.copy_pnr_title'))}">
             <i class="fa-regular fa-copy"></i> ${escapeHtml(w.codigo || 'CONF')}
           </button>
         </div>
@@ -6801,21 +6844,21 @@ function renderizarWalletReservas() {
           ${w.hora ? `<span><i class="fa-regular fa-clock"></i> ${escapeHtml(w.hora)}${w.horaFin ? ' - ' + escapeHtml(w.horaFin) : ''}</span>` : ''}
           ${w.costo ? `<span style="color:var(--verde); font-weight:700;">$${w.costo} ${escapeHtml(w.moneda || 'USD')}</span>` : ''}
           ${w.pin ? `<span style="color:#fbbf24; font-weight:700;">PIN: ${escapeHtml(w.pin)}</span>` : ''}
-          ${w._attachedToTrip ? `<span style="color:#34d399; font-weight:700;"><i class="fa-solid fa-paperclip"></i> Adjunto al viaje</span>` : ''}
-          ${Array.isArray(w.cloudinaryUrls) && w.cloudinaryUrls.length > 0 ? `<a href="${escapeHtml(w.cloudinaryUrls[0].url)}" target="_blank" rel="noopener" style="color:#38bdf8; font-weight:700; text-decoration:none;"><i class="fa-solid fa-cloud"></i> Nube (${w.cloudinaryUrls.length})</a>` : ''}
+          ${w._attachedToTrip ? `<span style="color:#34d399; font-weight:700;"><i class="fa-solid fa-paperclip"></i> ${escapeHtml(t('importer.wallet_attached'))}</span>` : ''}
+          ${Array.isArray(w.cloudinaryUrls) && w.cloudinaryUrls.length > 0 ? `<a href="${escapeHtml(w.cloudinaryUrls[0].url)}" target="_blank" rel="noopener" style="color:#38bdf8; font-weight:700; text-decoration:none;"><i class="fa-solid fa-cloud"></i> ${escapeHtml(t('importer.cloud_count', { count: w.cloudinaryUrls.length }))}</a>` : ''}
         </div>
         <p style="margin:0; font-size:0.78rem; color:rgba(255,255,255,0.68); line-height:1.4;">${escapeHtml(w.notas || '')}</p>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.06);">
         <div style="display:flex; gap:6px;">
           <button type="button" class="btn-card-primary" style="padding:5px 10px; font-size:0.75rem;" onclick="window.verVoucherCompletoModal('${escapeHtml(w.id)}')">
-            <i class="fa-solid fa-qrcode"></i> Ver Pase
+            <i class="fa-solid fa-qrcode"></i> ${escapeHtml(t('importer.view_pass_btn'))}
           </button>
-          <button type="button" class="btn-card-secondary" style="padding:5px 10px; font-size:0.75rem;" onclick="window.reinsertarReservaWallet('${escapeHtml(w.id)}')" title="Sincronizar con el viaje actual">
-            <i class="fa-solid fa-calendar-plus"></i> Al viaje
+          <button type="button" class="btn-card-secondary" style="padding:5px 10px; font-size:0.75rem;" onclick="window.reinsertarReservaWallet('${escapeHtml(w.id)}')" title="${escapeHtml(t('importer.sync_current_title'))}">
+            <i class="fa-solid fa-calendar-plus"></i> ${escapeHtml(t('importer.to_trip_btn'))}
           </button>
         </div>
-        <button type="button" onclick="window.eliminarReservaWallet('${escapeHtml(w.id)}')" style="background:transparent; border:none; color:var(--gris); cursor:pointer; font-size:0.82rem;" title="Eliminar de la billetera">
+        <button type="button" onclick="window.eliminarReservaWallet('${escapeHtml(w.id)}')" style="background:transparent; border:none; color:var(--gris); cursor:pointer; font-size:0.82rem;" title="${escapeHtml(t('importer.remove_wallet_title'))}">
           <i class="fa-solid fa-trash-can"></i>
         </button>
       </div>
@@ -6840,7 +6883,7 @@ function verVoucherCompletoModal(id) {
     <div style="background:linear-gradient(145deg, #0f172a, #090d16); border:1px solid rgba(56,189,248,0.35); border-radius:22px; max-width:480px; width:100%; overflow:hidden; box-shadow:0 25px 70px rgba(0,0,0,0.85); color:#fff;">
       <div style="background:linear-gradient(135deg, rgba(16,185,129,0.22), rgba(56,189,248,0.22)); padding:18px 22px; border-bottom:2px dashed rgba(255,255,255,0.15); display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <span style="font-size:0.72rem; font-weight:800; text-transform:uppercase; color:var(--verde); letter-spacing:1px;">PLUX BOARDING PASS / VOUCHER</span>
+          <span style="font-size:0.72rem; font-weight:800; text-transform:uppercase; color:var(--verde); letter-spacing:1px;">${escapeHtml(t('importer.pass_header'))}</span>
           <h3 style="margin:4px 0 0 0; font-size:1.15rem; font-weight:800;">${escapeHtml(w.titulo)}</h3>
         </div>
         <button type="button" onclick="document.getElementById('modal-plux-voucher-pass').remove()" style="background:rgba(255,255,255,0.08); border:none; color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:1.1rem;">&times;</button>
@@ -6849,55 +6892,55 @@ function verVoucherCompletoModal(id) {
       <div style="padding:20px 22px; display:flex; flex-direction:column; gap:14px; max-height:75vh; overflow-y:auto;">
         <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,0.08);">
           <div>
-            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase; font-weight:700;">LOCALIZADOR / PNR</div>
+            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase; font-weight:700;">${escapeHtml(t('importer.locator_pnr'))}</div>
             <div style="font-size:1.55rem; font-family:monospace; font-weight:900; color:var(--verde); letter-spacing:2px;">${escapeHtml(w.codigo || 'CONF-OK')}</div>
           </div>
           ${w.pin ? `
             <div style="text-align:right;">
-              <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase; font-weight:700;">PIN SEGURIDAD</div>
+              <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase; font-weight:700;">${escapeHtml(t('importer.security_pin'))}</div>
               <div style="font-size:1.3rem; font-family:monospace; font-weight:800; color:#fbbf24;">${escapeHtml(w.pin)}</div>
             </div>
           ` : `
             <button type="button" class="btn-card-secondary" onclick="window.copiarCodigoPNR('${escapeHtml(w.codigo || '')}')" style="padding:8px 12px; font-size:0.78rem;">
-              <i class="fa-regular fa-copy"></i> Copiar PNR
+              <i class="fa-regular fa-copy"></i> ${escapeHtml(t('importer.copy_pnr_btn'))}
             </button>
           `}
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.85rem;">
           <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:10px;">
-            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase;">DESTINO / CIUDAD</div>
+            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase;">${escapeHtml(t('importer.dest_city_hdr'))}</div>
             <strong style="color:#fff;">${escapeHtml(w.ciudad || '-')}</strong>
           </div>
           <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:10px;">
-            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase;">FECHA Y HORA</div>
-            <strong style="color:#fff;">${escapeHtml(w.fecha || 'Sin fecha')} · ${escapeHtml(w.hora || '')}</strong>
+            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase;">${escapeHtml(t('importer.date_time_hdr'))}</div>
+            <strong style="color:#fff;">${escapeHtml(w.fecha || t('importer.no_date_lbl'))} · ${escapeHtml(w.hora || '')}</strong>
           </div>
           <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:10px;">
-            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase;">PROVEEDOR</div>
+            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase;">${escapeHtml(t('importer.provider_hdr'))}</div>
             <strong style="color:#38bdf8;">${escapeHtml(w.proveedor || w.tipo)}</strong>
           </div>
           <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:10px;">
-            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase;">IMPORTE</div>
-            <strong style="color:var(--verde);">$${w.costo || 0} ${escapeHtml(w.moneda || 'USD')} (${w.pagado !== false ? 'Pagado' : 'Pendiente'})</strong>
+            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase;">${escapeHtml(t('importer.amount_hdr'))}</div>
+            <strong style="color:var(--verde);">$${w.costo || 0} ${escapeHtml(w.moneda || 'USD')} (${escapeHtml(w.pagado !== false ? t('budget.paid') : t('budget.pending'))})</strong>
           </div>
         </div>
 
         <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:10px; font-size:0.84rem; line-height:1.5; color:#e2e8f0;">
-          <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase; margin-bottom:4px; font-weight:700;">DETALLES / DIRECCIÓN / ASIENTO</div>
-          ${escapeHtml(w.notas || 'Sin notas adicionales')}
+          <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase; margin-bottom:4px; font-weight:700;">${escapeHtml(t('importer.details_hdr'))}</div>
+          ${escapeHtml(w.notas || t('importer.no_extra_notes'))}
         </div>
 
         ${w.imagePreview ? `
           <div>
-            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase; margin-bottom:6px; font-weight:700;">COMPROBANTE VISUAL ADJUNTO</div>
+            <div style="font-size:0.7rem; color:var(--gris); text-transform:uppercase; margin-bottom:6px; font-weight:700;">${escapeHtml(t('importer.visual_attached_hdr'))}</div>
             <img src="${w.imagePreview}" style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.15);">
           </div>
         ` : ''}
 
         ${w.rawEmail ? `
           <details style="background:rgba(0,0,0,0.25); padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.07);">
-            <summary style="cursor:pointer; font-size:0.78rem; font-weight:700; color:var(--gris);">Ver texto original del correo / voucher</summary>
+            <summary style="cursor:pointer; font-size:0.78rem; font-weight:700; color:var(--gris);">${escapeHtml(t('importer.view_raw_text'))}</summary>
             <pre style="white-space:pre-wrap; font-size:0.75rem; color:#cbd5e1; margin:8px 0 0 0; font-family:monospace; line-height:1.4;">${escapeHtml(w.rawEmail)}</pre>
           </details>
         ` : ''}
@@ -6909,7 +6952,7 @@ function verVoucherCompletoModal(id) {
         </div>
 
         <button type="button" class="btn-card-primary" style="width:100%; padding:10px; justify-content:center;" onclick="window.copiarResumenVoucher('${escapeHtml(w.id)}')">
-          <i class="fa-solid fa-share-nodes"></i> Copiar resumen para enviar al grupo
+          <i class="fa-solid fa-share-nodes"></i> ${escapeHtml(t('importer.copy_group_summary'))}
         </button>
       </div>
     </div>
@@ -6922,16 +6965,16 @@ function copiarResumenVoucher(id) {
   const w = allVouchers.find(item => String(item.id) === String(id));
   if (!w) return;
   const lines = [
-    `📌 *${w.titulo}* (${w.ciudad || 'Viaje'})`,
-    `🔖 Código / PNR: *${w.codigo || 'CONF'}*${w.pin ? ` | PIN: *${w.pin}*` : ''}`,
-    w.fecha ? `📅 Fecha: ${w.fecha}${w.hora ? ' · ' + w.hora : ''}` : '',
+    `📌 *${w.titulo}* (${w.ciudad || t('importer.trip_fallback_lbl')})`,
+    `🔖 ${t('importer.share_lbl_code')}: *${w.codigo || 'CONF'}*${w.pin ? ` | PIN: *${w.pin}*` : ''}`,
+    w.fecha ? `📅 ${t('importer.share_lbl_date')}: ${w.fecha}${w.hora ? ' · ' + w.hora : ''}` : '',
     w.notas ? `📝 ${w.notas}` : ''
   ].filter(Boolean).join('\n');
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(lines);
   }
   if (typeof window.showToast === 'function') {
-    window.showToast('Resumen de reserva copiado para compartir', 'success');
+    window.showToast(t('importer.summary_copied'), 'success');
   }
 }
 
@@ -6941,7 +6984,7 @@ function copiarCodigoPNR(codigo) {
     navigator.clipboard.writeText(codigo);
   }
   if (typeof window.showToast === 'function') {
-    window.showToast(`Código ${codigo} copiado al portapapeles`, 'success');
+    window.showToast(t('importer.pnr_copied', { code: codigo }), 'success');
   }
 }
 
@@ -6957,7 +7000,7 @@ function reinsertarReservaWallet(id) {
     guardarReservaEnWallet(item);
     finalizarSincronizacionImportacion();
     if (typeof window.showToast === 'function' && dest) {
-      window.showToast(`"${item.titulo}" sincronizado en ${dest.nombre}`, 'success');
+      window.showToast(t('importer.reinsert_synced_toast', { title: item.titulo, dest: dest.nombre }), 'success');
     }
   });
 }
@@ -6990,14 +7033,28 @@ let pluxOpenThreads = new Set(['hilo_1']);
 let pluxForoUnsubscribe = null;
 let pluxFirestoreForumThreads = [];
 
-const PLUX_STYLE_LABELS = {
-  mochilero: { label: 'Mochilero y Aventura', icon: 'fa-person-hiking', color: '#34d399' },
-  relax: { label: 'Relax y Playa', icon: 'fa-umbrella-beach', color: '#38bdf8' },
-  cultural: { label: 'Cultural y Museos', icon: 'fa-landmark', color: '#c084fc' },
-  gastronomico: { label: 'Gastronómico', icon: 'fa-utensils', color: '#fbbf24' },
-  urbano: { label: 'Urbano y Noche', icon: 'fa-city', color: '#f472b6' },
-  lujo: { label: 'Lujo y Confort', icon: 'fa-gem', color: '#facc15' }
-};
+function getPluxStyleLabels() {
+  return {
+    mochilero: { label: t('community_forum.style_mochilero'), icon: 'fa-person-hiking', color: '#34d399' },
+    relax: { label: t('community_forum.style_relax'), icon: 'fa-umbrella-beach', color: '#38bdf8' },
+    cultural: { label: t('community_forum.style_cultural'), icon: 'fa-landmark', color: '#c084fc' },
+    gastronomico: { label: t('community_forum.style_gastronomico'), icon: 'fa-utensils', color: '#fbbf24' },
+    urbano: { label: t('community_forum.style_urbano'), icon: 'fa-city', color: '#f472b6' },
+    lujo: { label: t('community_forum.style_lujo'), icon: 'fa-gem', color: '#facc15' }
+  };
+}
+function getPluxForumCategoryLabel(cat) {
+  const map = {
+    'todas': t('community_forum.all_topics_chip'),
+    'Consejos y Tips': t('community_forum.cat_opt_tips'),
+    'Rutas e Itinerarios': t('community_forum.cat_opt_routes'),
+    'Presupuesto': t('community_forum.cat_opt_budget'),
+    'Compañeros de Viaje': t('community_forum.cat_opt_buddies'),
+    'Transporte': t('community_forum.cat_opt_transport'),
+    'Bitácora de Viaje': t('community_forum.cat_opt_journal')
+  };
+  return map[cat] || cat;
+}
 
 const PLUX_INITIAL_FORUM_THREADS = [
   {
@@ -7158,18 +7215,19 @@ function obtenerDatosCuentaSocialPlux() {
 
   const totalTripsCount = savedTrips.length + (activeDests.length > 0 ? 1 : 0);
   const levelNum = Math.min(10, Math.max(1, 1 + Math.floor((totalTripsCount + destSet.size + savedTemplates.length) / 2)));
-  const levelTitles = ['Viajero Inicial', 'Explorador Urbano', 'Trotamundos', 'Viajero Experto', 'Nómada Global', 'Leyenda Plux'];
+  const levelTitles = [t('community_forum.lvl_0'), t('community_forum.lvl_1'), t('community_forum.lvl_2'), t('community_forum.lvl_3'), t('community_forum.lvl_4'), t('community_forum.lvl_5')];
   const levelTitle = levelTitles[Math.min(levelTitles.length - 1, Math.floor(levelNum / 2))];
 
   const styleKey = personalInfo.travelStyle || 'cultural';
-  const styleMeta = PLUX_STYLE_LABELS[styleKey] || PLUX_STYLE_LABELS.cultural;
+  const stylesMap = getPluxStyleLabels();
+  const styleMeta = stylesMap[styleKey] || stylesMap.cultural;
 
   return {
     isLogged: !!nick,
     nickname: nick || 'viajero_plux',
-    fullname: personalInfo.fullname || nick || 'Viajero Plux',
-    location: personalInfo.location || document.getElementById('lugarSalida')?.value || 'Ciudad de origen',
-    bio: personalInfo.bio || 'Planificando nuevas rutas y compartiendo tips en la comunidad Plux.',
+    fullname: personalInfo.fullname || nick || t('community_forum.verified_traveler_plux'),
+    location: personalInfo.location || document.getElementById('lugarSalida')?.value || t('community_forum.default_origin'),
+    bio: personalInfo.bio || t('community_forum.default_bio'),
     travelStyle: styleKey,
     styleMeta,
     photo,
@@ -7179,7 +7237,12 @@ function obtenerDatosCuentaSocialPlux() {
     activeDests,
     totalDestinosCount: destSet.size,
     levelNum,
-    levelBadge: `${levelTitle} Nv.${levelNum} · ${totalTripsCount} ${totalTripsCount === 1 ? 'viaje' : 'viajes'}`
+    levelBadge: t('community_forum.lvl_badge_tpl', {
+      title: levelTitle,
+      num: levelNum,
+      count: totalTripsCount,
+      unit: totalTripsCount === 1 ? t('community_forum.trip_singular') : t('community_forum.trip_plural')
+    })
   };
 }
 
@@ -7306,9 +7369,9 @@ function renderizarComunidadForos() {
           <p class="comunidad-social-bio" style="margin:4px 0 6px 0; font-size:0.8rem; line-height:1.35;">${escapeHtml(cuenta.bio)}</p>
           <div style="display:flex; gap:14px; flex-wrap:wrap; font-size:0.76rem; color:var(--gris);">
             <span><i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i> ${escapeHtml(cuenta.location)}</span>
-            <span><i class="fa-solid fa-suitcase-rolling" style="color:var(--verde);"></i> <strong>${cuenta.savedTrips.length}</strong> viajes guardados</span>
-            <span><i class="fa-solid fa-earth-americas" style="color:#a855f7;"></i> <strong>${cuenta.totalDestinosCount}</strong> destinos</span>
-            <span><i class="fa-solid fa-user-group" style="color:#f472b6;"></i> <strong>${cuenta.friends.length}</strong> amigos</span>
+            <span><i class="fa-solid fa-suitcase-rolling" style="color:var(--verde);"></i> ${escapeHtml(t('community_forum.saved_trips_count', { count: cuenta.savedTrips.length }))}</span>
+            <span><i class="fa-solid fa-earth-americas" style="color:#a855f7;"></i> ${escapeHtml(t('community_forum.dests_count', { count: cuenta.totalDestinosCount }))}</span>
+            <span><i class="fa-solid fa-user-group" style="color:#f472b6;"></i> ${escapeHtml(t('community_forum.friends_count', { count: cuenta.friends.length }))}</span>
           </div>
         </div>
       </div>
@@ -7316,17 +7379,17 @@ function renderizarComunidadForos() {
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         ${cuenta.isLogged ? `
           <button type="button" class="btn-card-secondary" style="padding:8px 12px; font-size:0.78rem;" onclick="window.cerrarDescubrir(); if(typeof abrirInfoPersonal==='function') abrirInfoPersonal(); else if(typeof abrirCuenta==='function') abrirCuenta();">
-            <i class="fa-solid fa-user-pen"></i> Editar mi Perfil
+            <i class="fa-solid fa-user-pen"></i> ${escapeHtml(t('community_forum.edit_my_profile'))}
           </button>
           <button type="button" class="btn-card-secondary" style="padding:8px 12px; font-size:0.78rem;" onclick="window.cerrarDescubrir(); if(typeof abrirAmigos==='function') abrirAmigos();">
-            <i class="fa-solid fa-user-group" style="color:#38bdf8;"></i> Amigos (${cuenta.friends.length})
+            <i class="fa-solid fa-user-group" style="color:#38bdf8;"></i> ${escapeHtml(t('community_forum.friends_btn', { count: cuenta.friends.length }))}
           </button>
           <button type="button" class="btn-card-secondary" style="padding:8px 12px; font-size:0.78rem;" onclick="window.cerrarDescubrir(); if(typeof toggleSocialChat==='function') toggleSocialChat();">
-            <i class="fa-solid fa-comments" style="color:var(--verde);"></i> Mis Chats
+            <i class="fa-solid fa-comments" style="color:var(--verde);"></i> ${escapeHtml(t('community_forum.my_chats_btn'))}
           </button>
         ` : `
           <button type="button" class="btn-card-primary" style="padding:8px 14px; font-size:0.8rem;" onclick="window.cerrarDescubrir(); if(typeof abrirCuenta==='function') abrirCuenta();">
-            <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión / Crear @nickname
+            <i class="fa-solid fa-right-to-bracket"></i> ${escapeHtml(t('community_forum.login_create_nick'))}
           </button>
         `}
       </div>
@@ -7336,19 +7399,19 @@ function renderizarComunidadForos() {
     <div class="comunidad-top-bar">
       <div class="comparador-subswitch" style="margin:0;">
         <button type="button" class="subswitch-btn ${pluxComunidadSubtab === 'foro' ? 'active' : ''}" onclick="window.cambiarSubtabComunidad('foro')">
-          <i class="fa-solid fa-users-rectangle"></i> Muro Social & Foro (${hilos.length})
+          <i class="fa-solid fa-users-rectangle"></i> ${escapeHtml(t('community_forum.subtab_wall', { count: hilos.length }))}
         </button>
         <button type="button" class="subswitch-btn ${pluxComunidadSubtab === 'itinerarios' ? 'active' : ''}" onclick="window.cambiarSubtabComunidad('itinerarios')">
-          <i class="fa-solid fa-layer-group"></i> Plantillas Sincronizadas (${totalPlantillasSincronizadas})
+          <i class="fa-solid fa-layer-group"></i> ${escapeHtml(t('community_forum.subtab_templates', { count: totalPlantillasSincronizadas }))}
         </button>
         <button type="button" class="subswitch-btn ${pluxComunidadSubtab === 'hacks' ? 'active' : ''}" onclick="window.cambiarSubtabComunidad('hacks')">
-          <i class="fa-solid fa-lightbulb"></i> Tips & Hacks Verificados (${PLUX_VERIFIED_HACKS.length})
+          <i class="fa-solid fa-lightbulb"></i> ${escapeHtml(t('community_forum.subtab_hacks', { count: PLUX_VERIFIED_HACKS.length }))}
         </button>
       </div>
 
       ${pluxComunidadSubtab === 'foro' ? `
         <button type="button" class="btn-card-primary" style="padding:10px 18px;" onclick="window.toggleFormularioNuevoHilo()">
-          <i class="fa-solid fa-pen-to-square"></i> Crear Publicación con mi Cuenta
+          <i class="fa-solid fa-pen-to-square"></i> ${escapeHtml(t('community_forum.create_post_btn'))}
         </button>
       ` : ''}
     </div>
@@ -7356,7 +7419,7 @@ function renderizarComunidadForos() {
 
   if (pluxComunidadSubtab === 'foro') {
     const resumenActual = cuenta.activeDests.length > 0
-      ? `Viaje actual: ${cuenta.activeDests.map(d => `${d.nombre} (${(d.dias || []).length || 1}d)`).join(' → ')}`
+      ? t('community_forum.current_trip_pfx', { route: cuenta.activeDests.map(d => `${d.nombre} (${(d.dias || []).length || 1}d)`).join(' → ') })
       : '';
 
     html += `
@@ -7367,7 +7430,7 @@ function renderizarComunidadForos() {
             ${renderAvatarSocialHTML(cuenta.nickname, cuenta.photo, 36)}
             <div>
               <h4 style="margin:0; font-size:1rem; color:#ffffff; font-weight:800;">
-                Publicando como <span style="color:var(--verde);">@${escapeHtml(cuenta.nickname)}</span>
+                ${escapeHtml(t('community_forum.posting_as'))} <span style="color:var(--verde);">@${escapeHtml(cuenta.nickname)}</span>
               </h4>
               <span style="font-size:0.74rem; color:var(--gris);">${escapeHtml(cuenta.styleMeta.label)} · ${escapeHtml(cuenta.location)}</span>
             </div>
@@ -7377,52 +7440,52 @@ function renderizarComunidadForos() {
 
         <div class="voucher-fields-grid" style="margin-bottom:12px;">
           <div class="voucher-field voucher-field-full">
-            <label>Título de tu publicación, consulta o bitácora</label>
-            <input type="text" id="foroInputTitulo" placeholder="Ej: Nuestra ruta y presupuesto real por Italia en tren / ¿Quién viaja a Tokio en noviembre?">
+            <label>${escapeHtml(t('community_forum.post_title_lbl'))}</label>
+            <input type="text" id="foroInputTitulo" placeholder="${escapeHtml(t('community_forum.post_title_ph'))}">
           </div>
 
           <div class="voucher-field">
-            <label>Categoría Social</label>
+            <label>${escapeHtml(t('community_forum.social_cat_lbl'))}</label>
             <select id="foroInputCategoria">
-              <option value="Consejos y Tips">Consejos y Tips</option>
-              <option value="Rutas e Itinerarios">Rutas e Itinerarios</option>
-              <option value="Presupuesto">Presupuesto y Monedas</option>
-              <option value="Compañeros de Viaje">Busco Compañeros de Viaje</option>
-              <option value="Transporte">Transporte y Vuelos</option>
-              <option value="Bitácora de Viaje">Bitácora / Experiencia Real</option>
+              <option value="Consejos y Tips">${escapeHtml(t('community_forum.cat_opt_tips'))}</option>
+              <option value="Rutas e Itinerarios">${escapeHtml(t('community_forum.cat_opt_routes'))}</option>
+              <option value="Presupuesto">${escapeHtml(t('community_forum.cat_opt_budget'))}</option>
+              <option value="Compañeros de Viaje">${escapeHtml(t('community_forum.cat_opt_buddies'))}</option>
+              <option value="Transporte">${escapeHtml(t('community_forum.cat_opt_transport'))}</option>
+              <option value="Bitácora de Viaje">${escapeHtml(t('community_forum.cat_opt_journal'))}</option>
             </select>
           </div>
 
           <div class="voucher-field">
-            <label>Destino Relacionado</label>
-            <input type="text" id="foroInputDestino" placeholder="Ej: Roma, Tokio, Europa..." value="${escapeHtml(cuenta.activeDests[0]?.nombre || 'General')}">
+            <label>${escapeHtml(t('community_forum.related_dest_lbl'))}</label>
+            <input type="text" id="foroInputDestino" placeholder="${escapeHtml(t('community_forum.related_dest_ph'))}" value="${escapeHtml(cuenta.activeDests[0]?.nombre || 'General')}">
           </div>
 
           <div class="voucher-field" style="grid-column: span 2;">
-            <label>Adjuntar Viaje o Plantilla de tu Cuenta (Para que otros puedan verlo o clonarlo)</label>
+            <label>${escapeHtml(t('community_forum.attach_trip_lbl'))}</label>
             <select id="foroInputAdjuntoSelect">
               ${resumenActual ? `<option value="actual|${escapeHtml(resumenActual)}">📌 ${escapeHtml(resumenActual)}</option>` : ''}
-              <option value="">Sin itinerario adjunto</option>
-              ${cuenta.savedTrips.map((tr, idx) => `<option value="trip_${idx}|Viaje guardado: ${escapeHtml(tr.nombre)} (${(tr.destinos || []).length} destinos)">🧳 Mi Viaje Guardado: ${escapeHtml(tr.nombre)}</option>`).join('')}
-              ${cuenta.savedTemplates.map((tp, idx) => `<option value="mia_${idx}|Plantilla: ${escapeHtml(tp.nombre)}">📋 Mi Plantilla: ${escapeHtml(tp.nombre)}</option>`).join('')}
+              <option value="">${escapeHtml(t('community_forum.no_attach_opt'))}</option>
+              ${cuenta.savedTrips.map((tr, idx) => `<option value="trip_${idx}|${escapeHtml(tr.nombre)} (${(tr.destinos || []).length})">🧳 ${escapeHtml(t('community_forum.my_saved_trip_pfx'))} ${escapeHtml(tr.nombre)}</option>`).join('')}
+              ${cuenta.savedTemplates.map((tp, idx) => `<option value="mia_${idx}|${escapeHtml(tp.nombre)}">📋 ${escapeHtml(t('community_forum.my_tpl_pfx'))} ${escapeHtml(tp.nombre)}</option>`).join('')}
             </select>
           </div>
 
           <div class="voucher-field voucher-field-full">
-            <label>Contenido del Post</label>
-            <textarea id="foroInputCuerpo" class="reserva-raw-textarea" style="min-height:105px;" placeholder="Comparte tu experiencia, pide recomendaciones a la comunidad o invita a otros viajeros a sumarse a tu ruta..."></textarea>
+            <label>${escapeHtml(t('community_forum.post_body_lbl'))}</label>
+            <textarea id="foroInputCuerpo" class="reserva-raw-textarea" style="min-height:105px;" placeholder="${escapeHtml(t('community_forum.post_body_ph'))}"></textarea>
           </div>
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
           <label style="display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; color:var(--gris); cursor:pointer;">
             <input type="checkbox" id="foroChkPublicarPlantilla" checked>
-            Si adjunto mi viaje actual, compartirlo también en Plantillas de la Comunidad
+            ${escapeHtml(t('community_forum.chk_share_tpl'))}
           </label>
           <div style="display:flex; gap:10px;">
-            <button type="button" class="btn-card-secondary" onclick="window.toggleFormularioNuevoHilo()">Cancelar</button>
+            <button type="button" class="btn-card-secondary" onclick="window.toggleFormularioNuevoHilo()">${escapeHtml(t('common.cancel'))}</button>
             <button type="button" class="btn-card-primary" onclick="window.publicarNuevoHiloForo()">
-              <i class="fa-solid fa-paper-plane"></i> Publicar en el Muro
+              <i class="fa-solid fa-paper-plane"></i> ${escapeHtml(t('community_forum.publish_wall_btn'))}
             </button>
           </div>
         </div>
@@ -7433,32 +7496,32 @@ function renderizarComunidadForos() {
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
           <div class="comparador-subswitch" style="margin:0;">
             <button type="button" class="subswitch-btn ${pluxForoFeedScope === 'todos' ? 'active' : ''}" onclick="window.cambiarScopeFeedForo('todos')">
-              <i class="fa-solid fa-globe"></i> Explorar Todo
+              <i class="fa-solid fa-globe"></i> ${escapeHtml(t('community_forum.scope_all'))}
             </button>
             <button type="button" class="subswitch-btn ${pluxForoFeedScope === 'amigos' ? 'active' : ''}" onclick="window.cambiarScopeFeedForo('amigos')">
-              <i class="fa-solid fa-user-group"></i> De mis Amigos (${cuenta.friends.length})
+              <i class="fa-solid fa-user-group"></i> ${escapeHtml(t('community_forum.scope_friends', { count: cuenta.friends.length }))}
             </button>
             <button type="button" class="subswitch-btn ${pluxForoFeedScope === 'mios' ? 'active' : ''}" onclick="window.cambiarScopeFeedForo('mios')">
-              <i class="fa-solid fa-user-check"></i> Mis Publicaciones
+              <i class="fa-solid fa-user-check"></i> ${escapeHtml(t('community_forum.scope_mine'))}
             </button>
           </div>
 
           <div class="descubrir-search-input-wrapper" style="flex:1; min-width:210px;">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" id="foroSearchInput" value="${escapeHtml(pluxForoBusqueda)}" placeholder="Buscar por destino, @usuario, tip..." oninput="window.buscarEnForo(this.value)">
+            <input type="text" id="foroSearchInput" value="${escapeHtml(pluxForoBusqueda)}" placeholder="${escapeHtml(t('community_forum.search_foro_ph'))}" oninput="window.buscarEnForo(this.value)">
           </div>
 
           <select onchange="window.cambiarOrdenForo(this.value)" style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.12); color:#ffffff; border-radius:12px; padding:0 14px; font-weight:700; font-size:0.82rem; height:42px;">
-            <option value="recientes" ${pluxForoOrden === 'recientes' ? 'selected' : ''}>Más recientes</option>
-            <option value="votados" ${pluxForoOrden === 'votados' ? 'selected' : ''}>Más útiles</option>
-            <option value="comentados" ${pluxForoOrden === 'comentados' ? 'selected' : ''}>Más respuestas</option>
+            <option value="recientes" ${pluxForoOrden === 'recientes' ? 'selected' : ''}>${escapeHtml(t('community_forum.sort_recent'))}</option>
+            <option value="votados" ${pluxForoOrden === 'votados' ? 'selected' : ''}>${escapeHtml(t('community_forum.sort_helpful'))}</option>
+            <option value="comentados" ${pluxForoOrden === 'comentados' ? 'selected' : ''}>${escapeHtml(t('community_forum.sort_replies'))}</option>
           </select>
         </div>
 
         <div class="descubrir-chips-filter">
           ${['todas', 'Consejos y Tips', 'Rutas e Itinerarios', 'Presupuesto', 'Compañeros de Viaje', 'Transporte', 'Bitácora de Viaje'].map(cat => `
             <button type="button" class="filter-chip ${pluxForoCategoriaActiva === cat ? 'active' : ''}" onclick="window.filtrarForoPorCategoria('${cat}')">
-              ${cat === 'todas' ? 'Todos los temas' : cat}
+              ${escapeHtml(getPluxForumCategoryLabel(cat))}
             </button>
           `).join('')}
         </div>
@@ -7488,13 +7551,14 @@ function renderizarComunidadForos() {
       filteredHilos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     }
 
+    const stylesMapForCards = getPluxStyleLabels();
     html += '<div class="foro-threads-list" id="foroThreadsListContainer">';
     if (filteredHilos.length === 0) {
       html += `
         <div style="text-align:center; padding:36px 20px; color:var(--gris); border:1px dashed rgba(255,255,255,0.12); border-radius:16px;">
-          ${pluxForoFeedScope === 'amigos'
-            ? 'Aún no hay publicaciones de tus amigos o todavía no seguiste a ningún viajero. ¡Haz clic en "+ Seguir / Amigo" en cualquier publicación para conectar!'
-            : 'No se encontraron publicaciones con ese filtro. ¡Comparte tu primera experiencia o consulta con tu cuenta!'}
+          ${escapeHtml(pluxForoFeedScope === 'amigos'
+            ? t('community_forum.empty_friends_feed')
+            : t('community_forum.empty_all_feed'))}
         </div>
       `;
     } else {
@@ -7505,7 +7569,15 @@ function renderizarComunidadForos() {
         const autorClean = (h.autor || 'viajero').replace(/^@/, '').trim();
         const isMe = autorClean.toLowerCase() === cuenta.nickname.replace(/^@/, '').trim().toLowerCase();
         const isFriend = esAmigoEnPlux(autorClean);
-        const stMeta = PLUX_STYLE_LABELS[h.autorEstilo || 'cultural'] || PLUX_STYLE_LABELS.cultural;
+        const stMeta = stylesMapForCards[h.autorEstilo || 'cultural'] || stylesMapForCards.cultural;
+
+        const isSeededHilo = /^hilo_[1-4]$/.test(h.id || '');
+        const hNivel = isSeededHilo ? t(`community_forum.${h.id}_level`) : (h.autorNivel || t('community_forum.verified_traveler_plux'));
+        const hFecha = isSeededHilo ? t(`community_forum.${h.id}_date`) : h.fecha;
+        const hDest = isSeededHilo ? t(`community_forum.${h.id}_dest`) : (h.destino || 'General');
+        const hTitulo = isSeededHilo ? t(`community_forum.${h.id}_title`) : h.titulo;
+        const hCuerpo = isSeededHilo ? t(`community_forum.${h.id}_body`) : h.cuerpo;
+        const hItinerario = (isSeededHilo && h.itinerarioAdjunto) ? t(`community_forum.${h.id}_itinerary`) : h.itinerarioAdjunto;
 
         html += `
           <div class="foro-thread-card">
@@ -7516,58 +7588,58 @@ function renderizarComunidadForos() {
                 <div>
                   <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                     <strong style="color:#ffffff; font-size:0.95rem;">@${escapeHtml(autorClean)}</strong>
-                    ${isMe ? `<span style="font-size:0.68rem; background:rgba(16,185,129,0.2); color:var(--verde); padding:2px 7px; border-radius:12px; font-weight:800;">Tú</span>` : ''}
-                    ${isFriend ? `<span style="font-size:0.68rem; background:rgba(56,189,248,0.18); color:#38bdf8; padding:2px 7px; border-radius:12px; font-weight:800;"><i class="fa-solid fa-user-check"></i> Amigo</span>` : ''}
+                    ${isMe ? `<span style="font-size:0.68rem; background:rgba(16,185,129,0.2); color:var(--verde); padding:2px 7px; border-radius:12px; font-weight:800;">${escapeHtml(t('community_forum.you_badge'))}</span>` : ''}
+                    ${isFriend ? `<span style="font-size:0.68rem; background:rgba(56,189,248,0.18); color:#38bdf8; padding:2px 7px; border-radius:12px; font-weight:800;"><i class="fa-solid fa-user-check"></i> ${escapeHtml(t('community_forum.friend_badge'))}</span>` : ''}
                     <span style="font-size:0.7rem; color:${stMeta.color}; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:12px; font-weight:700;">
                       <i class="fa-solid ${stMeta.icon}"></i> ${escapeHtml(stMeta.label)}
                     </span>
                   </div>
                   <div style="font-size:0.74rem; color:var(--gris); margin-top:2px;">
-                    ${escapeHtml(h.autorNivel || 'Viajero Plux')} ${h.autorCiudad ? `· <i class="fa-solid fa-location-dot"></i> ${escapeHtml(h.autorCiudad)}` : ''} · ${escapeHtml(h.fecha)}
+                    ${escapeHtml(hNivel)} ${h.autorCiudad ? `· <i class="fa-solid fa-location-dot"></i> ${escapeHtml(h.autorCiudad)}` : ''} · ${escapeHtml(hFecha)}
                   </div>
                 </div>
               </div>
 
               <!-- Acciones de Red Social con el Autor -->
               <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <span class="foro-cat-badge">${escapeHtml(h.categoria)}</span>
-                <span class="foro-dest-badge"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(h.destino || 'General')}</span>
+                <span class="foro-cat-badge">${escapeHtml(getPluxForumCategoryLabel(h.categoria))}</span>
+                <span class="foro-dest-badge"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(hDest)}</span>
                 ${!isMe ? `
                   <button type="button" class="foro-action-btn" style="padding:4px 9px; font-size:0.74rem; ${isFriend ? 'border-color:#38bdf8; color:#38bdf8;' : ''}" onclick="window.toggleAmigoDesdeComunidad('${escapeHtml(autorClean)}')">
-                    <i class="fa-solid ${isFriend ? 'fa-user-check' : 'fa-user-plus'}"></i> ${isFriend ? 'Amigo' : '+ Amigo'}
+                    <i class="fa-solid ${isFriend ? 'fa-user-check' : 'fa-user-plus'}"></i> ${escapeHtml(isFriend ? t('community_forum.friend_badge') : t('community_forum.add_friend_chip'))}
                   </button>
-                  <button type="button" class="foro-action-btn" style="padding:4px 9px; font-size:0.74rem;" onclick="window.chatearConViajeroComunidad('${escapeHtml(autorClean)}')" title="Enviar mensaje directo a @${escapeHtml(autorClean)}">
-                    <i class="fa-regular fa-paper-plane"></i> Chatear
+                  <button type="button" class="foro-action-btn" style="padding:4px 9px; font-size:0.74rem;" onclick="window.chatearConViajeroComunidad('${escapeHtml(autorClean)}')" title="${escapeHtml(t('community_forum.dm_to_title', { nick: autorClean }))}">
+                    <i class="fa-regular fa-paper-plane"></i> ${escapeHtml(t('community_forum.chat_btn'))}
                   </button>
                 ` : `
-                  <button type="button" class="foro-action-btn" style="padding:4px 9px; font-size:0.74rem; color:#f87171;" onclick="window.eliminarHiloForo('${escapeHtml(h.id)}')" title="Eliminar mi publicación">
+                  <button type="button" class="foro-action-btn" style="padding:4px 9px; font-size:0.74rem; color:#f87171;" onclick="window.eliminarHiloForo('${escapeHtml(h.id)}')" title="${escapeHtml(t('community_forum.delete_post_title'))}">
                     <i class="fa-solid fa-trash-can"></i>
                   </button>
                 `}
               </div>
             </div>
 
-            <h4 class="foro-thread-title" onclick="window.toggleRespuestasHilo('${escapeHtml(h.id)}')">${escapeHtml(h.titulo)}</h4>
-            <p class="foro-thread-body">${escapeHtml(h.cuerpo)}</p>
+            <h4 class="foro-thread-title" onclick="window.toggleRespuestasHilo('${escapeHtml(h.id)}')">${escapeHtml(hTitulo)}</h4>
+            <p class="foro-thread-body">${escapeHtml(hCuerpo)}</p>
 
-            ${h.itinerarioAdjunto ? `
+            ${hItinerario ? `
               <div style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.3); border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                 <div style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:#e9d5ff; font-weight:700;">
                   <i class="fa-solid fa-route" style="color:#c084fc;"></i>
-                  <span>Itinerario compartido: <strong>${escapeHtml(h.itinerarioAdjunto)}</strong></span>
+                  <span>${escapeHtml(t('community_forum.shared_itinerary_lbl'))} <strong>${escapeHtml(hItinerario)}</strong></span>
                 </div>
                 <div style="display:flex; gap:6px;">
                   ${h.plantillaIdAdjunta ? `
                     <button type="button" class="btn-card-primary" style="padding:5px 12px; font-size:0.76rem;" onclick="window.clonarPlantillaCompleta && window.clonarPlantillaCompleta('${escapeHtml(h.plantillaIdAdjunta)}', '${escapeHtml(h.plantillaOriginAdjunta || 'oficial')}')">
-                      <i class="fa-solid fa-clone"></i> Clonar ruta a mi viaje
+                      <i class="fa-solid fa-clone"></i> ${escapeHtml(t('community_forum.clone_to_my_trip'))}
                     </button>
                   ` : h.customDestinosAdjuntos ? `
                     <button type="button" class="btn-card-primary" style="padding:5px 12px; font-size:0.76rem;" onclick="window.clonarViajeAdjuntoDeHilo('${escapeHtml(h.id)}')">
-                      <i class="fa-solid fa-clone"></i> Clonar ruta a mi viaje
+                      <i class="fa-solid fa-clone"></i> ${escapeHtml(t('community_forum.clone_to_my_trip'))}
                     </button>
                   ` : `
                     <button type="button" class="btn-card-secondary" style="padding:5px 12px; font-size:0.76rem;" onclick="window.empezarViajeDesdeDescubrir('${escapeHtml(h.destino || 'Roma')}')">
-                      <i class="fa-solid fa-plus"></i> Armar ruta a ${escapeHtml(h.destino || 'destino')}
+                      <i class="fa-solid fa-plus"></i> ${escapeHtml(t('community_forum.build_route_to', { dest: hDest || t('importer.trip_fallback_lbl') }))}
                     </button>
                   `}
                 </div>
@@ -7577,29 +7649,33 @@ function renderizarComunidadForos() {
             <div class="foro-thread-footer">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 <button type="button" class="foro-action-btn ${voted ? 'voted' : ''}" onclick="window.votarHiloForo('${escapeHtml(h.id)}')">
-                  <i class="fa-solid fa-thumbs-up"></i> Útil (${h.votos || 0})
+                  <i class="fa-solid fa-thumbs-up"></i> ${escapeHtml(t('community_forum.helpful_votes', { count: h.votos || 0 }))}
                 </button>
                 <button type="button" class="foro-action-btn" onclick="window.toggleRespuestasHilo('${escapeHtml(h.id)}')">
-                  <i class="fa-regular fa-comment-dots"></i> ${replies.length} ${replies.length === 1 ? 'Comentario' : 'Comentarios'}
+                  <i class="fa-regular fa-comment-dots"></i> ${replies.length} ${escapeHtml(replies.length === 1 ? t('community_forum.comment_sg') : t('community_forum.comment_pl'))}
                 </button>
-                <button type="button" class="foro-action-btn" onclick="window.guardarHackEnViaje('${escapeHtml(h.titulo)}', '${escapeHtml(h.destino || 'Viaje')}')" title="Guardar este consejo como nota/evento en mi viaje">
-                  <i class="fa-regular fa-bookmark"></i> Guardar en mi viaje
+                <button type="button" class="foro-action-btn" onclick="window.guardarHackEnViaje('${escapeHtml(hTitulo)}', '${escapeHtml(hDest || t('importer.trip_fallback_lbl'))}')" title="${escapeHtml(t('community_forum.save_tip_title'))}">
+                  <i class="fa-regular fa-bookmark"></i> ${escapeHtml(t('community_forum.save_to_my_trip'))}
                 </button>
               </div>
               <button type="button" class="foro-action-btn" style="font-size:0.74rem;" onclick="window.verPerfilSocialViajero('${escapeHtml(autorClean)}')">
-                <i class="fa-regular fa-id-badge"></i> Ver perfil de @${escapeHtml(autorClean)}
+                <i class="fa-regular fa-id-badge"></i> ${escapeHtml(t('community_forum.view_user_profile', { nick: autorClean }))}
               </button>
             </div>
 
             ${isOpen ? `
               <div class="foro-replies-drawer">
                 <div style="font-size:0.76rem; font-weight:800; color:var(--gris); text-transform:uppercase; margin-bottom:8px;">
-                  Comentarios de la Comunidad (${replies.length})
+                  ${escapeHtml(t('community_forum.community_comments_hdr', { count: replies.length }))}
                 </div>
                 ${replies.length === 0 ? `
-                  <p style="font-size:0.84rem; color:var(--gris); margin:0 0 12px 0;">Aún no hay comentarios. ¡Responde con tu cuenta @${escapeHtml(cuenta.nickname)}!</p>
-                ` : replies.map(r => {
+                  <p style="font-size:0.84rem; color:var(--gris); margin:0 0 12px 0;">${escapeHtml(t('community_forum.no_comments_yet', { nick: cuenta.nickname }))}</p>
+                ` : replies.map((r, rIdx) => {
                   const rNick = (r.autor || 'viajero').replace(/^@/, '').trim();
+                  const rKeyDate = isSeededHilo ? `community_forum.${h.id}_r${rIdx}_date` : '';
+                  const rKeyText = isSeededHilo ? `community_forum.${h.id}_r${rIdx}_text` : '';
+                  const rFecha = (rKeyDate && t(rKeyDate) !== rKeyDate) ? t(rKeyDate) : r.fecha;
+                  const rTexto = (rKeyText && t(rKeyText) !== rKeyText) ? t(rKeyText) : r.texto;
                   return `
                     <div class="foro-reply-item">
                       <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:var(--gris); margin-bottom:4px;">
@@ -7608,20 +7684,20 @@ function renderizarComunidadForos() {
                           <strong style="color:var(--verde);">@${escapeHtml(rNick)}</strong>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
-                          <span>${escapeHtml(r.fecha)}</span>
-                          <button type="button" onclick="window.chatearConViajeroComunidad('${escapeHtml(rNick)}')" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:0.74rem;" title="Chatear con @${escapeHtml(rNick)}"><i class="fa-regular fa-paper-plane"></i></button>
+                          <span>${escapeHtml(rFecha)}</span>
+                          <button type="button" onclick="window.chatearConViajeroComunidad('${escapeHtml(rNick)}')" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:0.74rem;" title="${escapeHtml(t('community_forum.chat_with_title', { nick: rNick }))}"><i class="fa-regular fa-paper-plane"></i></button>
                         </div>
                       </div>
-                      <p style="margin:0; font-size:0.85rem; color:#e2e8f0; line-height:1.5; padding-left:32px;">${escapeHtml(r.texto)}</p>
+                      <p style="margin:0; font-size:0.85rem; color:#e2e8f0; line-height:1.5; padding-left:32px;">${escapeHtml(rTexto)}</p>
                     </div>
                   `;
                 }).join('')}
 
                 <div style="display:flex; gap:10px; margin-top:12px; align-items:center; flex-wrap:wrap;">
                   ${renderAvatarSocialHTML(cuenta.nickname, cuenta.photo, 32)}
-                  <input type="text" id="replyInput-${escapeHtml(h.id)}" placeholder="Comentar como @${escapeHtml(cuenta.nickname)}..." style="flex:1; min-width:200px; padding:9px 13px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-radius:10px; color:#ffffff; font-size:0.84rem; outline:none;" onkeydown="if(event.key==='Enter') window.publicarRespuestaHilo('${escapeHtml(h.id)}')">
+                  <input type="text" id="replyInput-${escapeHtml(h.id)}" placeholder="${escapeHtml(t('community_forum.reply_as_ph', { nick: cuenta.nickname }))}" style="flex:1; min-width:200px; padding:9px 13px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-radius:10px; color:#ffffff; font-size:0.84rem; outline:none;" onkeydown="if(event.key==='Enter') window.publicarRespuestaHilo('${escapeHtml(h.id)}')">
                   <button type="button" class="btn-card-primary" style="padding:8px 16px; font-size:0.82rem;" onclick="window.publicarRespuestaHilo('${escapeHtml(h.id)}')">
-                    <i class="fa-solid fa-paper-plane"></i> Responder
+                    <i class="fa-solid fa-paper-plane"></i> ${escapeHtml(t('community_forum.reply_send_btn'))}
                   </button>
                 </div>
               </div>
@@ -7642,12 +7718,12 @@ function renderizarComunidadForos() {
     html += `
       <div class="descubrir-section-header" style="margin-top:4px; margin-bottom:14px;">
         <div>
-          <h4><i class="fa-solid fa-layer-group" style="color:#a855f7;"></i> Plantillas de Viaje Sincronizadas con Tus Viajes</h4>
-          <p>Las plantillas que votes, guardes, clones o publiques aquí están sincronizadas en tiempo real con el panel <strong>Tus Viajes → Plantillas</strong>.</p>
+          <h4><i class="fa-solid fa-layer-group" style="color:#a855f7;"></i> ${escapeHtml(t('community_forum.synced_tpl_hdr'))}</h4>
+          <p>${t('community_forum.synced_tpl_sub_html')}</p>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button type="button" class="btn-card-secondary" onclick="window.cerrarDescubrir(); if(typeof verPlantillas==='function') verPlantillas();">
-            <i class="fa-solid fa-folder-open"></i> Ver en Tus Viajes
+            <i class="fa-solid fa-folder-open"></i> ${escapeHtml(t('community_forum.view_in_trips'))}
           </button>
         </div>
       </div>
@@ -7656,14 +7732,14 @@ function renderizarComunidadForos() {
       <div class="comunidad-sync-bar">
         <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:240px;">
           <i class="fa-solid fa-cloud-arrow-up" style="color:var(--verde); font-size:1.3rem;"></i>
-          <input type="text" id="syncInputNombrePlantilla" placeholder="Nombre para guardar tu itinerario actual como plantilla..." style="flex:1; padding:9px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-radius:10px; color:#fff; font-size:0.84rem; outline:none;">
+          <input type="text" id="syncInputNombrePlantilla" placeholder="${escapeHtml(t('community_forum.save_tpl_name_ph'))}" style="flex:1; padding:9px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-radius:10px; color:#fff; font-size:0.84rem; outline:none;">
         </div>
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
           <label style="font-size:0.78rem; color:#cbd5e1; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
-            <input type="checkbox" id="syncChkPublicarComunidad" checked> Publicar en Comunidad (@${escapeHtml(cuenta.nickname)})
+            <input type="checkbox" id="syncChkPublicarComunidad" checked> ${escapeHtml(t('community_forum.publish_community_as', { nick: cuenta.nickname }))}
           </label>
           <button type="button" class="btn-card-primary" style="padding:9px 16px; font-size:0.82rem;" onclick="window.guardarPlantillaSincronizadaDesdeDescubrir()">
-            <i class="fa-solid fa-floppy-disk"></i> Guardar Plantilla
+            <i class="fa-solid fa-floppy-disk"></i> ${escapeHtml(t('community_forum.save_tpl_btn'))}
           </button>
         </div>
       </div>
@@ -7672,21 +7748,21 @@ function renderizarComunidadForos() {
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
         <div class="descubrir-chips-filter" style="margin-bottom:0;">
           <button type="button" class="filter-chip ${pluxPlantillasSubFilter === 'todas' ? 'active' : ''}" onclick="window.cambiarSubfiltroPlantillasDescubrir('todas')">
-            Todas (${oficiales.length + comunidad.length + mias.length})
+            ${escapeHtml(t('community_forum.subfilter_all', { count: oficiales.length + comunidad.length + mias.length }))}
           </button>
           <button type="button" class="filter-chip ${pluxPlantillasSubFilter === 'comunidad' ? 'active' : ''}" onclick="window.cambiarSubfiltroPlantillasDescubrir('comunidad')">
-            <i class="fa-solid fa-users"></i> Comunidad (${comunidad.length})
+            <i class="fa-solid fa-users"></i> ${escapeHtml(t('community_forum.subfilter_community', { count: comunidad.length }))}
           </button>
           <button type="button" class="filter-chip ${pluxPlantillasSubFilter === 'oficiales' ? 'active' : ''}" onclick="window.cambiarSubfiltroPlantillasDescubrir('oficiales')">
-            <i class="fa-solid fa-certificate"></i> Oficiales Plux (${oficiales.length})
+            <i class="fa-solid fa-certificate"></i> ${escapeHtml(t('community_forum.subfilter_official', { count: oficiales.length }))}
           </button>
           <button type="button" class="filter-chip ${pluxPlantillasSubFilter === 'mias' ? 'active' : ''}" onclick="window.cambiarSubfiltroPlantillasDescubrir('mias')">
-            <i class="fa-solid fa-bookmark"></i> Mis Plantillas Guardadas (${mias.length})
+            <i class="fa-solid fa-bookmark"></i> ${escapeHtml(t('community_forum.subfilter_mine', { count: mias.length }))}
           </button>
         </div>
         <div class="reservas-search-box" style="min-width:220px;">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="plantillasSearchInput" value="${escapeHtml(pluxPlantillasBusqueda)}" placeholder="Buscar plantilla o destino..." oninput="window.buscarEnPlantillasDescubrir(this.value)">
+          <input type="text" id="plantillasSearchInput" value="${escapeHtml(pluxPlantillasBusqueda)}" placeholder="${escapeHtml(t('community_forum.search_tpl_ph'))}" oninput="window.buscarEnPlantillasDescubrir(this.value)">
         </div>
       </div>
 
@@ -7695,23 +7771,24 @@ function renderizarComunidadForos() {
 
     const itemsToRender = [];
     if (pluxPlantillasSubFilter === 'todas' || pluxPlantillasSubFilter === 'comunidad') {
-      comunidad.forEach(t => itemsToRender.push({ tpl: t, origin: 'comunidad' }));
+      comunidad.forEach(tItem => itemsToRender.push({ tpl: tItem, origin: 'comunidad' }));
     }
     if (pluxPlantillasSubFilter === 'todas' || pluxPlantillasSubFilter === 'oficiales') {
-      oficiales.forEach(t => itemsToRender.push({ tpl: t, origin: 'oficial' }));
+      oficiales.forEach(tItem => itemsToRender.push({ tpl: tItem, origin: 'oficial' }));
     }
     if (pluxPlantillasSubFilter === 'todas' || pluxPlantillasSubFilter === 'mias') {
-      mias.forEach((t, idx) => itemsToRender.push({ tpl: t, origin: 'mia', miaIdx: idx }));
+      mias.forEach((tItem, idx) => itemsToRender.push({ tpl: tItem, origin: 'mia', miaIdx: idx }));
     }
 
     const qTpl = (pluxPlantillasBusqueda || '').trim().toLowerCase();
     const filteredTemplates = qTpl
-      ? itemsToRender.filter(({ tpl }) => {
+      ? itemsToRender.filter(({ tpl: rawTpl }) => {
+          const tpl = typeof window.getLocalizedTemplateMeta === 'function' ? window.getLocalizedTemplateMeta(rawTpl) : rawTpl;
           const destNames = (tpl.destinos || []).map(d => d.nombre || '').join(' ');
-          const tagsStr = (tpl.tags || []).join(' ');
+          const tagsStr = [...(rawTpl.tags || []), ...(tpl.tags || [])].join(' ');
           const emb = (tpl.embajadorSlug && typeof window.getEmbajadorBySlug === 'function') ? window.getEmbajadorBySlug(tpl.embajadorSlug) : null;
           const embStr = emb ? `${emb.nombre} ${emb.subtitulo} ${emb.especialidad} embajador` : '';
-          const hay = `${tpl.nombre || ''} ${tpl.descripcion || ''} ${tpl.autor || ''} ${destNames} ${tagsStr} ${embStr}`.toLowerCase();
+          const hay = `${rawTpl.nombre || ''} ${tpl.nombre || ''} ${rawTpl.descripcion || ''} ${tpl.descripcion || ''} ${tpl.autor || ''} ${destNames} ${tagsStr} ${embStr}`.toLowerCase();
           return hay.includes(qTpl);
         })
       : itemsToRender;
@@ -7719,16 +7796,17 @@ function renderizarComunidadForos() {
     if (filteredTemplates.length === 0) {
       html += `
         <div style="grid-column:1/-1; text-align:center; padding:32px; color:var(--gris); border:1px dashed rgba(255,255,255,0.12); border-radius:16px;">
-          ${qTpl ? `No se encontraron plantillas que coincidan con "${escapeHtml(pluxPlantillasBusqueda)}".` : 'No tienes plantillas en esta categoría todavía. Puedes guardar cualquier plantilla con el botón "Guardar" o crear una desde tu viaje actual.'}
+          ${escapeHtml(qTpl ? t('community_forum.empty_tpl_search', { query: pluxPlantillasBusqueda }) : t('community_forum.empty_tpl_cat'))}
         </div>
       `;
     } else {
-      filteredTemplates.forEach(({ tpl, origin, miaIdx }) => {
+      filteredTemplates.forEach(({ tpl: rawTpl, origin, miaIdx }) => {
+        const tpl = typeof window.getLocalizedTemplateMeta === 'function' ? window.getLocalizedTemplateMeta(rawTpl) : rawTpl;
         const isLiked = likedSet.has(tpl.id);
         const daysCount = (tpl.destinos || []).reduce((acc, d) => acc + ((d.dias || []).length || 1), 0);
         const eventsCount = (tpl.destinos || []).reduce((acc, d) => acc + (d.dias || []).reduce((a, dia) => a + ((dia.eventos || []).length), 0), 0);
         const votes = (tpl.likes || 0) + (origin === 'oficial' && isLiked ? 1 : 0);
-        const autorClean = (tpl.autor || (origin === 'oficial' ? 'Plux Oficial' : cuenta.nickname)).replace(/^@/, '');
+        const autorClean = (tpl.autor || (origin === 'oficial' ? t('templates.official_badge') : cuenta.nickname)).replace(/^@/, '');
         const embBadge = (origin === 'oficial' && typeof window.getEmbajadorBadgeHtml === 'function') ? window.getEmbajadorBadgeHtml(tpl) : '';
 
         html += `
@@ -7737,13 +7815,13 @@ function renderizarComunidadForos() {
               ${tpl.coverImg ? `<div style="height:96px; margin:-16px -16px 12px -16px; border-radius:14px 14px 0 0; background:url('${escapeHtml(tpl.coverImg)}') center/cover no-repeat; position:relative;"><div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(9,13,22,0.1), rgba(15,23,42,0.85)); border-radius:14px 14px 0 0;"></div></div>` : ''}
               <div class="activity-card-header" style="margin-bottom:6px;">
                 <span style="font-size:0.72rem; font-weight:800; text-transform:uppercase; padding:3px 9px; border-radius:20px; background:${origin === 'oficial' ? 'rgba(16,185,129,0.15)' : (origin === 'mia' ? 'rgba(251,191,36,0.15)' : 'rgba(56,189,248,0.15)')}; color:${origin === 'oficial' ? 'var(--verde)' : (origin === 'mia' ? '#fbbf24' : '#38bdf8')};">
-                  ${origin === 'oficial' ? (tpl.destacadaOficial ? 'Oficial Destacada' : 'Plux Oficial') : (origin === 'mia' ? 'En Mis Plantillas' : `@${escapeHtml(autorClean)}`)}
+                  ${escapeHtml(origin === 'oficial' ? (tpl.destacadaOficial ? t('templates.featured_badge') : t('templates.official_badge')) : (origin === 'mia' ? t('community_forum.in_my_templates') : `@${autorClean}`))}
                 </span>
-                <span style="font-size:0.75rem; color:var(--gris); font-weight:700;">${daysCount}d · ${eventsCount} act.</span>
+                <span style="font-size:0.75rem; color:var(--gris); font-weight:700;">${daysCount}d · ${eventsCount} ${escapeHtml(t('common.activity_plural').slice(0, 3))}.</span>
               </div>
               ${embBadge ? `<div style="margin-bottom:6px;">${embBadge}</div>` : ''}
               <h5 style="margin:4px 0 6px 0; font-size:1.05rem; color:#fff; font-weight:800;">${escapeHtml(tpl.nombre)}</h5>
-              <p class="activity-card-desc" style="margin-bottom:10px;">${escapeHtml(tpl.descripcion || `Ruta por ${(tpl.destinos || []).map(d => d.nombre).join(', ')}`)}</p>
+              <p class="activity-card-desc" style="margin-bottom:10px;">${escapeHtml(tpl.descripcion || t('community_forum.route_by_prefix', { dests: (tpl.destinos || []).map(d => d.nombre).join(', ') }))}</p>
               <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
                 ${(tpl.tags || []).map(tg => `<span style="font-size:0.7rem; background:rgba(255,255,255,0.06); color:#cbd5e1; padding:2px 8px; border-radius:8px;">${escapeHtml(tg)}</span>`).join('')}
               </div>
@@ -7756,23 +7834,23 @@ function renderizarComunidadForos() {
                 </button>
               ` : `
                 <button type="button" class="foro-action-btn" style="color:#f87171;" onclick="window.eliminarPlantilla && window.eliminarPlantilla(${miaIdx})">
-                  <i class="fa-solid fa-trash-can"></i> Eliminar
+                  <i class="fa-solid fa-trash-can"></i> ${escapeHtml(t('common.delete'))}
                 </button>
               `}
 
               <div style="display:flex; gap:6px;">
                 ${tpl.id ? `
-                  <button type="button" class="btn-card-secondary" style="padding:6px 9px; font-size:0.76rem;" onclick="window.compartirPlantillaPublica && window.compartirPlantillaPublica('${escapeHtml(tpl.id)}', '${origin}', event)" title="Copiar enlace de esta plantilla">
+                  <button type="button" class="btn-card-secondary" style="padding:6px 9px; font-size:0.76rem;" onclick="window.compartirPlantillaPublica && window.compartirPlantillaPublica('${escapeHtml(tpl.id)}', '${origin}', event)" title="${escapeHtml(t('community_forum.copy_tpl_link_title'))}">
                     <i class="fa-solid fa-share-nodes"></i>
                   </button>
                 ` : ''}
                 ${origin !== 'mia' ? `
-                  <button type="button" class="btn-card-secondary" style="padding:6px 10px; font-size:0.76rem;" onclick="window.guardarPlantillaEnMisPlantillas && window.guardarPlantillaEnMisPlantillas('${escapeHtml(tpl.id)}', '${origin}', event)" title="Guardar en Mis Plantillas (Tus Viajes)">
-                    <i class="fa-regular fa-bookmark"></i> Guardar
+                  <button type="button" class="btn-card-secondary" style="padding:6px 10px; font-size:0.76rem;" onclick="window.guardarPlantillaEnMisPlantillas && window.guardarPlantillaEnMisPlantillas('${escapeHtml(tpl.id)}', '${origin}', event)" title="${escapeHtml(t('community_forum.save_tpl_title'))}">
+                    <i class="fa-regular fa-bookmark"></i> ${escapeHtml(t('common.save'))}
                   </button>
                 ` : ''}
                 <button type="button" class="btn-add-activity-trip" onclick="window.clonarPlantillaCompleta && window.clonarPlantillaCompleta(${origin === 'mia' ? miaIdx : `'${escapeHtml(tpl.id)}'`}, '${origin}')">
-                  <i class="fa-solid fa-clone"></i> Clonar
+                  <i class="fa-solid fa-clone"></i> ${escapeHtml(t('templates.clone_short'))}
                 </button>
               </div>
             </div>
@@ -7787,29 +7865,35 @@ function renderizarComunidadForos() {
     html += `
       <div class="descubrir-section-header" style="margin-top:4px;">
         <div>
-          <h4><i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i> Hacks de Viaje y Consejos Verificados por la Comunidad</h4>
-          <p>Trucos reales votados por viajeros de Plux para ahorrar dinero, evitar filas y moverse como un local. Puedes sumarlos a tu viaje con 1 clic.</p>
+          <h4><i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i> ${escapeHtml(t('community_forum.hacks_hdr'))}</h4>
+          <p>${escapeHtml(t('community_forum.hacks_sub'))}</p>
         </div>
       </div>
       <div class="descubrir-grid-actividades">
-        ${PLUX_VERIFIED_HACKS.map(hk => `
+        ${PLUX_VERIFIED_HACKS.map((hk, hkIdx) => {
+          const hkCity = t(`community_forum.hack_${hkIdx}_city`) || hk.ciudad;
+          const hkCat = t(`community_forum.hack_${hkIdx}_cat`) || hk.categoria;
+          const hkTitle = t(`community_forum.hack_${hkIdx}_title`) || hk.titulo;
+          const hkDetail = t(`community_forum.hack_${hkIdx}_detail`) || hk.detalle;
+          return `
           <div class="activity-card-rich">
             <div class="activity-card-header">
               <div>
-                <span style="font-size:0.74rem; color:var(--verde); font-weight:800; text-transform:uppercase;"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(hk.ciudad)}</span>
-                <h5 style="margin-top:3px;">${escapeHtml(hk.titulo)}</h5>
+                <span style="font-size:0.74rem; color:var(--verde); font-weight:800; text-transform:uppercase;"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(hkCity)}</span>
+                <h5 style="margin-top:3px;">${escapeHtml(hkTitle)}</h5>
               </div>
-              <span class="activity-card-cat-badge">${escapeHtml(hk.categoria)}</span>
+              <span class="activity-card-cat-badge">${escapeHtml(hkCat)}</span>
             </div>
-            <p class="activity-card-desc">${escapeHtml(hk.detalle)}</p>
+            <p class="activity-card-desc">${escapeHtml(hkDetail)}</p>
             <div class="activity-card-footer">
-              <span style="font-size:0.8rem; color:#38bdf8; font-weight:700;"><i class="fa-solid fa-circle-check"></i> ${hk.votos} viajeros lo verificaron</span>
-              <button type="button" class="btn-add-activity-trip" onclick="window.guardarHackEnViaje('${escapeHtml(hk.titulo)}: ${escapeHtml(hk.detalle)}', '${escapeHtml(hk.ciudad)}')">
-                <i class="fa-solid fa-plus"></i> Sumar a mi viaje
+              <span style="font-size:0.8rem; color:#38bdf8; font-weight:700;"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(t('community_forum.hack_verified_by', { count: hk.votos }))}</span>
+              <button type="button" class="btn-add-activity-trip" onclick="window.guardarHackEnViaje('${escapeHtml(hkTitle)}: ${escapeHtml(hkDetail)}', '${escapeHtml(hkCity)}')">
+                <i class="fa-solid fa-plus"></i> ${escapeHtml(t('community_forum.add_to_trip_btn'))}
               </button>
             </div>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     `;
   }
@@ -7904,7 +7988,7 @@ function publicarNuevoHiloForo() {
 
   if (!titulo || !cuerpo) {
     if (typeof window.showToast === 'function') {
-      window.showToast('Completa el título y el mensaje para publicar', 'error');
+      window.showToast(t('community_forum.fill_title_body_err'), 'error');
     }
     return;
   }
@@ -7946,7 +8030,7 @@ function publicarNuevoHiloForo() {
     autorEstilo: cuenta.travelStyle,
     autorNivel: cuenta.levelBadge,
     autorPhoto: cuenta.photo,
-    fecha: 'Recién publicado',
+    fecha: t('community_forum.just_now'),
     timestamp: Date.now(),
     votos: 1,
     cuerpo,
@@ -7968,7 +8052,7 @@ function publicarNuevoHiloForo() {
 
   renderizarComunidadForos();
   if (typeof window.showToast === 'function') {
-    window.showToast(`Publicado en la comunidad con tu cuenta @${cuenta.nickname}`, 'success');
+    window.showToast(t('community_forum.published_as_toast', { nick: cuenta.nickname }), 'success');
   }
 }
 
@@ -7983,7 +8067,7 @@ function clonarViajeAdjuntoDeHilo(hiloId) {
   cerrarDescubrir();
   if (typeof empezar === 'function') empezar();
   if (typeof window.showToast === 'function') {
-    window.showToast(`Ruta de @${h.autor} clonada a tu planificador`, 'success');
+    window.showToast(t('community_forum.cloned_user_route_toast', { nick: h.autor }), 'success');
   }
 }
 
@@ -8000,7 +8084,7 @@ function eliminarHiloForo(hiloId) {
 
   renderizarComunidadForos();
   if (typeof window.showToast === 'function') {
-    window.showToast('Publicación eliminada', 'info');
+    window.showToast(t('community_forum.post_deleted_toast'), 'info');
   }
 }
 
@@ -8015,14 +8099,14 @@ function toggleAmigoDesdeComunidad(nickAutor) {
     if (typeof saveFriends === 'function') saveFriends(friends);
     else localStorage.setItem('Plux_Amigos', JSON.stringify(friends));
     if (typeof window.showToast === 'function') {
-      window.showToast(`Dejaste de seguir a @${clean}`, 'info');
+      window.showToast(t('community_forum.unfollowed_toast', { nick: clean }), 'info');
     }
   } else {
     friends.push(clean);
     if (typeof saveFriends === 'function') saveFriends(friends);
     else localStorage.setItem('Plux_Amigos', JSON.stringify(friends));
     if (typeof window.showToast === 'function') {
-      window.showToast(`¡Agregaste a @${clean} a tu lista de Amigos de Plux!`, 'success');
+      window.showToast(t('community_forum.followed_toast', { nick: clean }), 'success');
     }
   }
   if (typeof renderAmigosList === 'function') renderAmigosList();
@@ -8047,7 +8131,8 @@ function verPerfilSocialViajero(nickAutor) {
   const postsAutor = hilos.filter(h => (h.autor || '').replace(/^@/, '').toLowerCase() === clean.toLowerCase());
   const sample = postsAutor[0] || {};
   const isFriend = esAmigoEnPlux(clean);
-  const stMeta = PLUX_STYLE_LABELS[sample.autorEstilo || 'cultural'] || PLUX_STYLE_LABELS.cultural;
+  const stylesMap = getPluxStyleLabels();
+  const stMeta = stylesMap[sample.autorEstilo || 'cultural'] || stylesMap.cultural;
 
   const existing = document.getElementById('modal-plux-social-profile');
   if (existing) existing.remove();
@@ -8064,9 +8149,9 @@ function verPerfilSocialViajero(nickAutor) {
           ${renderAvatarSocialHTML(clean, sample.autorPhoto || '', 58)}
           <div>
             <h3 style="margin:0; font-size:1.2rem; font-weight:800;">@${escapeHtml(clean)}</h3>
-            <div style="font-size:0.82rem; color:var(--gris); margin-top:2px;">${escapeHtml(sample.autorNombre || clean)} · ${escapeHtml(sample.autorCiudad || 'Comunidad Plux')}</div>
+            <div style="font-size:0.82rem; color:var(--gris); margin-top:2px;">${escapeHtml(sample.autorNombre || clean)} · ${escapeHtml(sample.autorCiudad || t('discover.plux_community_badge'))}</div>
             <span style="display:inline-block; margin-top:6px; font-size:0.72rem; font-weight:800; padding:3px 9px; border-radius:20px; background:rgba(16,185,129,0.16); color:var(--verde);">
-              ${escapeHtml(sample.autorNivel || 'Viajero Verificado Plux')}
+              ${escapeHtml(/^hilo_[1-4]$/.test(sample.id || '') ? t(`community_forum.${sample.id}_level`) : (sample.autorNivel || t('community_forum.verified_member_plux')))}
             </span>
           </div>
         </div>
@@ -8074,18 +8159,18 @@ function verPerfilSocialViajero(nickAutor) {
       </div>
 
       <div style="margin:16px 0; padding:12px 14px; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid rgba(255,255,255,0.07); font-size:0.84rem;">
-        <div style="color:${stMeta.color}; font-weight:800; margin-bottom:4px;"><i class="fa-solid ${stMeta.icon}"></i> Estilo: ${escapeHtml(stMeta.label)}</div>
-        <div style="color:#cbd5e1;">Publicaciones en la comunidad: <strong>${postsAutor.length}</strong> · Destinos compartidos: <strong>${postsAutor.map(p => p.destino).filter(Boolean).join(', ') || 'Varios'}</strong></div>
+        <div style="color:${stMeta.color}; font-weight:800; margin-bottom:4px;"><i class="fa-solid ${stMeta.icon}"></i> ${escapeHtml(t('community_forum.profile_style_lbl'))} ${escapeHtml(stMeta.label)}</div>
+        <div style="color:#cbd5e1;">${t('community_forum.profile_posts_stats', { count: postsAutor.length, dests: escapeHtml(postsAutor.map(p => /^hilo_[1-4]$/.test(p.id || '') ? t(`community_forum.${p.id}_dest`) : p.destino).filter(Boolean).join(', ') || t('community_forum.various_dests')) })}</div>
       </div>
 
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button type="button" class="btn-card-primary" style="flex:1; padding:10px;" onclick="window.toggleAmigoDesdeComunidad('${escapeHtml(clean)}'); document.getElementById('modal-plux-social-profile').remove();">
-          <i class="fa-solid ${isFriend ? 'fa-user-check' : 'fa-user-plus'}"></i> ${isFriend ? 'En tus Amigos' : 'Agregar a Amigos'}
+          <i class="fa-solid ${isFriend ? 'fa-user-check' : 'fa-user-plus'}"></i> ${escapeHtml(isFriend ? t('community_forum.in_your_friends') : t('community_forum.add_to_friends'))}
         </button>
         <button type="button" class="btn-card-secondary" style="flex:1; padding:10px;" onclick="document.getElementById('modal-plux-social-profile').remove(); window.chatearConViajeroComunidad('${escapeHtml(clean)}');">
-          <i class="fa-regular fa-paper-plane"></i> Enviar Mensaje
+          <i class="fa-regular fa-paper-plane"></i> ${escapeHtml(t('community_forum.send_message_btn'))}
         </button>
-        <button type="button" class="btn-card-secondary" style="padding:10px 12px;" onclick="document.getElementById('modal-plux-social-profile').remove(); if(typeof abrirDetalleAmigo==='function') abrirDetalleAmigo('${escapeHtml(clean)}');" title="Ver ficha completa de cuenta en Firestore">
+        <button type="button" class="btn-card-secondary" style="padding:10px 12px;" onclick="document.getElementById('modal-plux-social-profile').remove(); if(typeof abrirDetalleAmigo==='function') abrirDetalleAmigo('${escapeHtml(clean)}');" title="${escapeHtml(t('community_forum.view_full_firestore_title'))}">
           <i class="fa-solid fa-expand"></i>
         </button>
       </div>
@@ -8145,7 +8230,7 @@ function publicarRespuestaHilo(hiloId) {
     autor: cuenta.nickname,
     autorPhoto: cuenta.photo,
     autorEstilo: cuenta.travelStyle,
-    fecha: 'Ahora mismo',
+    fecha: t('community_forum.just_now_reply'),
     texto
   });
 
@@ -8161,12 +8246,12 @@ function publicarRespuestaHilo(hiloId) {
   renderizarComunidadForos();
 
   if (typeof window.showToast === 'function') {
-    window.showToast(`Comentario publicado como @${cuenta.nickname}`, 'success');
+    window.showToast(t('community_forum.reply_posted_toast', { nick: cuenta.nickname }), 'success');
   }
 }
 
 function guardarHackEnViaje(textoTip, ciudad) {
-  añadirDesdeFeed(`Tip Comunidad: ${textoTip.slice(0, 95)}`, 0, '30', ciudad);
+  añadirDesdeFeed(`${t('community_forum.tip_community_pfx')} ${textoTip.slice(0, 95)}`, 0, '30', ciudad);
 }
 
 // Exponer funciones en window

@@ -1,0 +1,37 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Plux · Nibecar Cofeben",
+    "documentationUrl": "https://plux.nibecarcofeben.com/llms.txt",
+    "logoUrl": "https://plux.nibecarcofeben.com/icon-512.png"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:plux.nibecarcofeben.com:travel:plux-planner",
+      "displayName": "Plux Travel Planner & Pluxy AI",
+      "type": "application/agent-skills+md",
+      "url": "https://plux.nibecarcofeben.com/llms.txt",
+      "description": "Collaborative travel itinerary planner, multi-currency budget calculator, offline travel maps, and Pluxy AI travel assistant.",
+      "capabilities": [
+        "ItineraryPlanning",
+        "MultiCurrencyBudget",
+        "OfflineTravelMaps",
+        "PluxyAITravelAssistant"
+      ],
+      "tags": [
+        "travel",
+        "itinerary",
+        "budget",
+        "offline-pwa",
+        "ai-assistant"
+      ],
+      "representativeQueries": [
+        "Plan a day-by-day travel itinerary with shared budget",
+        "Organize a collaborative trip with offline maps and vouchers",
+        "Generate a personalized travel guide with Pluxy AI"
+      ],
+      "version": "7.0.0",
+      "updatedAt": "2026-11-27T20:00:00Z"
+    }
+  ]
+}

@@ -154,7 +154,7 @@
         codigoPais: 'AR',
         continente: 'América del Sur',
         estilo: 'aventura',
-        img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&q=80',
+        img: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80',
         presupuestoDia: 55,
         mejorEpoca: 'Julio a Septiembre (temporada de nieve) / Diciembre a Marzo (lagos y senderos)',
         vibe: 'Montaña, Lagos Glaciares, Nieve, Chocolaterías Artesanales',
@@ -2393,7 +2393,7 @@
         targetDest.dias = [{ id: 0, eventos: [], costosAdicionales: [] }];
       }
 
-      const durMin = parseInt(duracion) || 60;
+      const durMin = Number.parseInt(duracion, 10) || 60;
       if (!Array.isArray(targetDest.dias[0].eventos)) {
         targetDest.dias[0].eventos = [];
       }
@@ -2461,7 +2461,7 @@
 
         let html = '<div class="descubrir-grid-actividades" style="margin-top:16px;">';
         items.forEach(item => {
-          const cleanDesc = String(item.snippet || '').replace(/<[^>]+>/g, '').trim();
+          const cleanDesc = String(item.snippet || '').replace(/<[^<>]{0,200}>/g, '').trim();
           const titleEsc = escapeHtml(item.title);
           html += `
             <div class="activity-card-rich">
@@ -2628,7 +2628,7 @@ function normCityKeyImporter(city) {
 }
 
 function parseAmountSmart(s) {
-  if (typeof s === 'number') return isNaN(s) ? 0 : s;
+  if (typeof s === 'number') return Number.isNaN(s) ? 0 : s;
   if (!s) return 0;
   let cleaned = String(s).replace(/[^\d.,]/g, '').trim();
   if (!cleaned) return 0;
@@ -2651,8 +2651,8 @@ function parseAmountSmart(s) {
       cleaned = cleaned.replace(/\./g, '');
     }
   }
-  const v = parseFloat(cleaned);
-  return isNaN(v) ? 0 : v;
+  const v = Number.parseFloat(cleaned);
+  return Number.isNaN(v) ? 0 : v;
 }
 
 const PLUX_GENERIC_BOOKING_CODES = new Set(['', 'CONF', 'CONF-OK', 'CONF-IA', 'CRU-OK', 'EXP-OK', 'PLUX-PASS']);
@@ -2723,7 +2723,7 @@ function esTextoReservaValido(rawBlock) {
   const symbolChars = nonSpace.replace(/[a-zA-Z0-9ÁÉÍÓÚáéíóúÜüÑñ]/g, '');
   if ((symbolChars.length / nonSpace.length) > 0.35) return false;
 
-  const hasPrice = /(?:USD|EUR|ARS|US\$|€)\s*\d|\d[\d.,]*\s*(?:USD|EUR|ARS|€)/i.test(text);
+  const hasPrice = /(?:USD|EUR|ARS|US\$|€)[ \t]{0,4}\d|\d[\d.,]{0,16}[ \t]{0,4}(?:USD|EUR|ARS|€)/i.test(text);
   const hasExplicitCode = /(?:pnr|n[uú]mero\s+de\s+reserva|c[oó]digo(?:\s+de\s+reserva|\s+de\s+referencia)?|confirmaci[oó]n|localizador|booking\s*ref|ticket(?:\s*nr|\s*no|\s*n°)?)\s*[:#.]\s*[A-Z0-9-]{4,16}/i.test(text);
   const hasCruiseKeyword = /(?:msc\s+cruceros|costa\s+cruceros|royal\s+caribbean|norwegian\s+cruise|nave\s*:|cabina\s*:|puerto\s+de\s+embarque|en\s+navegaci[oó]n)/i.test(text);
   const hasTransportHotelKeyword = /(?:vuelo\b|flight|aerol[ií]nea|hotel\b|booking\.com|airbnb|hostel|check-?in|tren\b|frecciarossa|renfe|ave\b|ouigo|alquiler\s+de\s+auto)/i.test(text);
@@ -2942,7 +2942,7 @@ function normalizarFechaTexto(rawDateStr) {
   }
 
   // Caso "15 de noviembre de 2026" o "15 nov 2026"
-  m = s.match(/(\d{1,2})\s*(?:de\s+)?([a-záéíóúñ]{3,12})(?:\s*(?:de|,)?\s*(\d{4}))?/i);
+  m = s.match(/(\d{1,2})[ \t]+(?:de[ \t]+)?([a-záéíóúñ]{3,12})(?:[ \t]*(?:de[ \t]+|,[ \t]*|[ \t]+)(\d{4}))?/i);
   if (m) {
     const d = m[1].padStart(2, '0');
     const mKey = m[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -3412,8 +3412,8 @@ function guardarReservaExpressDirecto() {
   const normDate = normalizarFechaTexto(fechaISO);
   const hora = document.getElementById('expInputHora')?.value || '10:00';
   const horaFin = document.getElementById('expInputHoraFin')?.value || (pluxExpressTipo === 'hotel' ? '11:00' : '');
-  const noches = Math.max(1, parseInt(document.getElementById('expInputNoches')?.value) || 1);
-  const costo = parseFloat(document.getElementById('expInputCosto')?.value) || 0;
+  const noches = Math.max(1, Number.parseInt(document.getElementById('expInputNoches')?.value, 10) || 1);
+  const costo = Number.parseFloat(document.getElementById('expInputCosto')?.value) || 0;
   const moneda = document.getElementById('expInputMoneda')?.value || 'USD';
   const modoPrecio = document.getElementById('expInputModoPrecio')?.value || 'persona';
   const pagadoPor = document.getElementById('expInputPagadoPor')?.value || 'Todos';
@@ -3442,7 +3442,7 @@ function guardarReservaExpressDirecto() {
     fechaFin: '',
     hora,
     horaFin,
-    duracion: pluxExpressTipo === 'vuelo' ? 240 : (pluxExpressTipo === 'tren' ? 120 : 120),
+    duracion: pluxExpressTipo === 'vuelo' ? 240 : 120,
     noches,
     costo,
     moneda,
@@ -3562,14 +3562,14 @@ function manejarDropArchivoReserva(event) {
   }
   const files = event?.dataTransfer?.files ? Array.from(event.dataTransfer.files) : [];
   if (files.length > 0) {
-    procesarMultiplesArchivosReserva(files);
+    void procesarMultiplesArchivosReserva(files);
   }
 }
 
 function subirArchivoReserva(event) {
   const files = event?.target?.files ? Array.from(event.target.files) : [];
   if (files.length > 0) {
-    procesarMultiplesArchivosReserva(files);
+    void procesarMultiplesArchivosReserva(files);
   }
   if (event?.target) event.target.value = '';
 }
@@ -3609,8 +3609,13 @@ function comprimirImagenParaAnalisis(file, maxSide = 1100, quality = 0.80) {
 function extraerJsonDeRespuestaIA(rawText) {
   if (!rawText) return null;
   let cleaned = String(rawText).trim();
-  const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenceMatch) cleaned = fenceMatch[1].trim();
+  const fenceStart = cleaned.indexOf('```');
+  if (fenceStart !== -1) {
+    const afterStart = cleaned.indexOf('\n', fenceStart + 3);
+    const bodyStart = afterStart !== -1 ? afterStart + 1 : fenceStart + 3;
+    const fenceEnd = cleaned.indexOf('```', bodyStart);
+    if (fenceEnd !== -1) cleaned = cleaned.slice(bodyStart, fenceEnd).trim();
+  }
   try {
     return JSON.parse(cleaned);
   } catch (_) {}
@@ -3836,7 +3841,9 @@ async function leerTextoImagenesTesseractFallback(imagesList) {
     if (!window.Tesseract) {
       await new Promise((resolve, reject) => {
         const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+        s.integrity = 'sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F';
+        s.crossOrigin = 'anonymous';
         s.onload = resolve;
         s.onerror = reject;
         document.head.appendChild(s);
@@ -3962,13 +3969,13 @@ function parsearTextoDocumentoAReservas(rawText) {
   const cruiseParsed = intentarParsearCruceroOItinerario(clean);
   if (cruiseParsed) return [cruiseParsed];
 
-  const rawBlocks = clean.split(/\n\s*---+\s*\n|\n(?=RESERVA\s+\d+\s*:)/i).map(b => b.trim()).filter(Boolean);
+  const rawBlocks = clean.split(/\n[ \t]*-{3,}[ \t]*\n|\n(?=RESERVA[ \t]+\d+[ \t]*:)/i).map(b => b.trim()).filter(Boolean);
   const validBlocks = rawBlocks.filter(b => esTextoReservaValido(b));
   if (validBlocks.length === 0) return [];
 
   let earliestISO = (document.getElementById('fechaInicio')?.value || '').slice(0, 10);
   if (!earliestISO) {
-    const allDates = extraerFechasDeTexto(clean).map(d => d.iso).filter(Boolean).sort();
+    const allDates = extraerFechasDeTexto(clean).map(d => d.iso).filter(Boolean).sort((a, b) => a.localeCompare(b));
     if (allDates.length > 0) earliestISO = allDates[0];
   }
   const parsed = validBlocks.map((b, idx) => parsearBloqueIndividualReserva(b, idx, earliestISO));
@@ -4136,8 +4143,8 @@ function reconstructPageRows(items, yTolerance = 3.5) {
       }
       prev = c;
     }
-    const cleanedLine = line.replace(/[ ]+$/g, '').replace(/^[ ]+/g, '');
-    if (cleanedLine.trim()) lines.push(cleanedLine);
+    const cleanedLine = line.trim();
+    if (cleanedLine) lines.push(cleanedLine);
   }
   return lines.join('\n');
 }
@@ -4149,6 +4156,8 @@ async function extraerTextoDePDFBuffer(arrayBuffer) {
       await new Promise((resolve, reject) => {
         const s = document.createElement('script');
         s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.integrity = 'sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e';
+        s.crossOrigin = 'anonymous';
         s.onload = resolve;
         s.onerror = reject;
         document.head.appendChild(s);
@@ -4195,22 +4204,21 @@ async function extraerTextoDePDFBuffer(arrayBuffer) {
 function decodificarQuotedPrintableEml(raw) {
   return raw
     .replace(/=\r?\n/g, '')
-    .replace(/=([0-9A-F]{2})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    .replace(/=([0-9A-F]{2})/gi, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)));
 }
 
-function extraerTextoArchivoDocumento(file) {
-  return new Promise(async (resolve) => {
-    const name = (file.name || '').toLowerCase();
-    if (name.endsWith('.pdf') || file.type === 'application/pdf') {
-      if (typeof window.showToast === 'function') {
-        window.showToast(`Leyendo PDF "${file.name}"...`, 'info');
-      }
-      const arrayBuffer = await file.arrayBuffer();
-      const extracted = await extraerTextoDePDFBuffer(arrayBuffer);
-      resolve(extracted || `Comprobante PDF: ${file.name}`);
-      return;
+async function extraerTextoArchivoDocumento(file) {
+  const name = (file.name || '').toLowerCase();
+  if (name.endsWith('.pdf') || file.type === 'application/pdf') {
+    if (typeof window.showToast === 'function') {
+      window.showToast(`Leyendo PDF "${file.name}"...`, 'info');
     }
+    const arrayBuffer = await file.arrayBuffer();
+    const extracted = await extraerTextoDePDFBuffer(arrayBuffer);
+    return extracted || `Comprobante PDF: ${file.name}`;
+  }
 
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = function(e) {
       let raw = String(e.target?.result || '');
@@ -4262,7 +4270,7 @@ function parseMonthDayFromRaw(rawStr) {
     return { year: y, month: Number(m[2]), day: Number(m[1]), hasYear: true };
   }
   // "23 ENE" or "23 de enero 2027"
-  m = s.match(/(\d{1,2})\s*(?:de\s+)?([a-záéíóúñ]{3,12})(?:\s*(?:de|,)?\s*(\d{4}))?/i);
+  m = s.match(/(\d{1,2})[ \t]+(?:de[ \t]+)?([a-záéíóúñ]{3,12})(?:[ \t]*(?:de[ \t]+|,[ \t]*|[ \t]+)(\d{4}))?/i);
   if (m) {
     const mKey = m[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const monthNum = PLUX_MONTH_MAP[mKey] || PLUX_MONTH_MAP[mKey.slice(0, 3)];
@@ -4491,13 +4499,15 @@ function extraerEtapasItinerarioTexto(clean) {
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     .replace(/\(\s+/g, '(')
-    .replace(/\s+\)/g, ')')
+    .split(')')
+    .map(p => p.trimEnd())
+    .join(')')
     .split('\n')
-    .map(l => l.replace(/^[ \t]+|[ \t]+$/g, ''))
+    .map(l => l.trim())
     .filter(Boolean);
 
   // Caso A: Filas de tabla de crucero (acepta espacios o \t entre columnas y líneas envueltas de tenders)
-  const rowRegex = /^(?:(?:lunes|martes|mi[eé]rcoles|miercoles|jueves|viernes|s[aá]bado|sabado|domingo)[\s\t]+)?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})[\s\t]+(.+?)[\s\t]+(\d{1,2}:\d{2}|--:--)[\s\t]+(\d{1,2}:\d{2}|--:--)\s*$/i;
+  const rowRegex = /^(?:(?:lunes|martes|mi[eé]rcoles|miercoles|jueves|viernes|s[aá]bado|sabado|domingo)[ \t]+)?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})[ \t]+([^\r\n]{1,160}?)[ \t]+(\d{1,2}:\d{2}|--:--)[ \t]+(\d{1,2}:\d{2}|--:--)$/i;
   const dateRowStartRegex = /^(?:(?:lunes|martes|mi[eé]rcoles|miercoles|jueves|viernes|s[aá]bado|sabado|domingo)[\s\t]+)?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})[\s\t]+/i;
   const timesOnlyRegex = /^(\d{1,2}:\d{2}|--:--)[\s\t]+(\d{1,2}:\d{2}|--:--)$/;
   const tenderContRegex = /^\(?\s*(?:(?:servicio(?:\s+de)?|de)\s+)?(?:tenders?|bote\s+auxiliar)(?:\s*\))?$/i;
@@ -4532,7 +4542,7 @@ function extraerEtapasItinerarioTexto(clean) {
       let notas = '';
 
       // Detectar nota tender completa inline: "(servicio de tenders)"
-      const tenderCompleteM = puertoRaw.match(/\(([^)]*(?:tender|bote\s+auxiliar)[^)]*)\)/i);
+      const tenderCompleteM = puertoRaw.match(/\(([^()]{0,80}(?:tender|bote[ \t]+auxiliar)[^()]{0,80})\)/i);
       if (tenderCompleteM) {
         notas = tenderCompleteM[1].trim();
         puertoRaw = puertoRaw.replace(tenderCompleteM[0], '').trim();
@@ -4590,7 +4600,7 @@ function extraerEtapasItinerarioTexto(clean) {
     const rawDayStages = [];
     let dm;
     while ((dm = dayBlockRegex.exec(clean)) !== null) {
-      const diaNum = parseInt(dm[1], 10);
+      const diaNum = Number.parseInt(dm[1], 10);
       const fechaRaw = dm[2].trim();
       const body = dm[3];
       const bodyLines = body.split(/\n/).map(s => s.trim()).filter(Boolean);
@@ -4639,23 +4649,23 @@ function intentarParsearCruceroOItinerario(raw) {
 
   // Todos los regex de metadatos cortan en [^\t\n\r]+ para aislar columnas derechas en PDFs
   const naveM = clean.match(/(?:^|[\t\n\r])Nave\s*:[ \t]*([^\t\n\r]+)/i) ||
-                clean.match(/\b(MSC\s+[A-ZÁÉÍÓÚÑ0-9 ]+|Costa\s+[A-ZÁÉÍÓÚÑ0-9 ]+|Symphony of the Seas|Wonder of the Seas)\b/i);
+                clean.match(/\b((?:MSC|Costa)[ \t]+[A-ZÁÉÍÓÚÑ0-9](?:[A-ZÁÉÍÓÚÑ0-9]| [A-ZÁÉÍÓÚÑ0-9]){0,40}|Symphony of the Seas|Wonder of the Seas)\b/i);
   const nave = naveM ? naveM[1].trim() : '';
 
-  const reservaM = clean.match(/N[uú]mero\s+de\s+Reserva\s*(?:\/\s*Presupuesto)?\s*[:#][ \t]*([A-Z0-9-]{4,16})/i) ||
+  const reservaM = clean.match(/N[uú]mero[ \t]+de[ \t]+Reserva(?:[ \t]*\/[ \t]*Presupuesto)?[ \t]*[:#][ \t]*([A-Z0-9-]{4,16})/i) ||
                    clean.match(/(?:^|[\t\n\r])(?:Reserva|Confirmaci[oó]n|Booking)\s*[:#][ \t]*([A-Z0-9-]{5,14})/i);
-  const ticketM = clean.match(/Ticket\s*(?:nr|no|n°|#)?\s*[:.][ \t]*([A-Z0-9-]{5,18})/i);
+  const ticketM = clean.match(/Ticket(?:[ \t]+(?:nr|no|n°|#))?[ \t]*[:.][ \t]*([A-Z0-9-]{5,18})/i);
   const codigo = (reservaM?.[1] || ticketM?.[1] || 'CRU-OK').toUpperCase();
 
   const cabinaM = clean.match(/(?:^|[\t\n\r])Cabina\s*:[ \t]*([^\t\n\r]+)/i);
-  const cabinaClean = cabinaM ? cabinaM[1].replace(/[−–\-]+\s*$/g, '').trim() : '';
-  const catM = clean.match(/(?:^|[\t\n\r])Categor[ií]a\s*:?[ \t]*([^\t\n\r]+)/i);
+  const cabinaClean = cabinaM ? cabinaM[1].trim().replace(/[−–\-]{1,10}$/, '').trim() : '';
+  const catM = clean.match(/(?:^|[\t\n\r])Categor[ií]a(?:[ \t]*:)?[ \t]*([^\t\n\r]+)/i);
   const expM = clean.match(/(?:^|[\t\n\r])(?:Tu|Su)\s+experiencia\s*:[ \t]*([^\t\n\r]+)/i);
   const cenaM = clean.match(/(?:^|[\t\n\r])Turno\s+De\s+Cena\s*:[ \t]*([^\t\n\r*]+)/i);
   const paxCountM = clean.match(/Total\s+pasajeros\s*:[ \t]*(\d+)/i);
   const guestsSet = new Set();
   const guestsMatches = [];
-  for (const gm of clean.matchAll(/\b([A-ZÁÉÍÓÚÑ]{2,},\s*[A-ZÁÉÍÓÚÑ ]+?)\s*\(fecha\s+de\s+nacimiento[\s\S]{0,20}?\d{1,2}\/\d{1,2}\/\d{2,4}\)/gi)) {
+  for (const gm of clean.matchAll(/\b([A-ZÁÉÍÓÚÑ]{2,25},[ \t]{0,3}[A-ZÁÉÍÓÚÑ]{2,25}(?:[ \t][A-ZÁÉÍÓÚÑ]{1,25}){0,3})[ \t]{0,4}\(fecha[ \t]+de[ \t]+nacimiento[^()\n]{0,20}\d{1,2}\/\d{1,2}\/\d{2,4}\)/gi)) {
     const gName = gm[1].replace(/\s+/g, ' ').trim();
     const gKey = gName.toLowerCase();
     if (gName && !guestsSet.has(gKey)) {
@@ -5066,7 +5076,7 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
   if (pnrMatch && pnrMatch[1] && !/^(PARA|COPIA|ESTE|FECHA|TOTAL)$/i.test(pnrMatch[1])) {
     codigo = pnrMatch[1].toUpperCase();
   } else {
-    const fallbackPnr = clean.match(/\b([A-Z0-9]{2,4}-[0-9]{4,8}|[A-Z]{2}[0-9]{3,4}[A-Z]{1,2}|[A-Z]*\d+[A-Z0-9]*)\b/);
+    const fallbackPnr = clean.match(/\b([A-Z0-9]{2,4}-[0-9]{4,8}|[A-Z]{2}[0-9]{3,4}[A-Z]{1,2}|[A-Z]{0,6}\d[A-Z0-9]{4,11})\b/);
     if (fallbackPnr && fallbackPnr[1].length >= 5 && fallbackPnr[1].length <= 12) codigo = fallbackPnr[1];
   }
   const pinMatch = clean.match(/\bPIN(?:\s+de\s+seguridad)?[:\s#]*(\d{4,6})\b/i);
@@ -5155,9 +5165,9 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
 
   // 6. Detectar Noches
   let noches = 1;
-  const nochesMatch = clean.match(/(\d+)\s*(?:noches|nights|notti|nuits)/i);
+  const nochesMatch = clean.match(/\b(\d{1,3})[ \t]{0,4}(?:noches|nights|notti|nuits)\b/i);
   if (nochesMatch) {
-    noches = Math.max(1, parseInt(nochesMatch[1]) || 1);
+    noches = Math.max(1, Number.parseInt(nochesMatch[1], 10) || 1);
   } else if (tipo === 'hotel' && fechaISO && fechaFinISO) {
     const dIn = new Date(fechaISO + 'T00:00:00');
     const dOut = new Date(fechaFinISO + 'T00:00:00');
@@ -5166,9 +5176,9 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
   }
 
   let duracion = tipo === 'vuelo' ? 240 : (tipo === 'tren' ? 105 : (tipo === 'hotel' ? 45 : 150));
-  const durMatch = clean.match(/(\d+)\s*(?:min|minutos)/i);
+  const durMatch = clean.match(/\b(\d{1,4})[ \t]{0,4}(?:min|minutos)\b/i);
   if (durMatch) {
-    duracion = parseInt(durMatch[1]) || duracion;
+    duracion = Number.parseInt(durMatch[1], 10) || duracion;
   }
 
   // 7. Detectar Precio y Moneda
@@ -5176,7 +5186,7 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
   let moneda = 'USD';
   const priceMatch = clean.match(/(?:total(?:\s+pagado)?|precio(?:\s+total)?|importe(?:\s+abonado)?|tarifa)[:\s]*(USD|EUR|ARS|US\$|\$|€)\s*([\d.,]+)/i) ||
                      clean.match(/(USD|EUR|ARS|€)\s*([\d.,]+)/i) ||
-                     clean.match(/([\d.,]+)\s*(USD|EUR|ARS|€)/i);
+                     clean.match(/\b(\d[\d.,]{0,15})[ \t]{0,4}(USD|EUR|ARS|€)\b/i);
   if (priceMatch) {
     const p1 = (priceMatch[1] || '').trim();
     const p2 = (priceMatch[2] || '').trim();
@@ -5186,8 +5196,8 @@ function parsearBloqueIndividualReserva(text, idx = 0, earliestBatchISO = '') {
     if (sym.includes('EUR') || sym.includes('€')) moneda = 'EUR';
     else if (sym.includes('ARS')) moneda = 'ARS';
     else moneda = 'USD';
-    const parsedVal = parseFloat(rawNum.replace(/\.(?=\d{3})/g, '').replace(',', '.'));
-    if (!isNaN(parsedVal)) costo = parsedVal;
+    const parsedVal = Number.parseFloat(rawNum.replace(/\.(?=\d{3})/g, '').replace(',', '.'));
+    if (!Number.isNaN(parsedVal)) costo = parsedVal;
   }
 
   // 8. Detectar Proveedor y Construir Título
@@ -5497,7 +5507,7 @@ ${raw.slice(0, 14000)}`;
 function actualizarFinanzasReservaDetectada(idx, field, value) {
   const r = pluxDetectedReservas[idx];
   if (!r) return;
-  const numVal = Math.max(0, parseFloat(value) || 0);
+  const numVal = Math.max(0, Number.parseFloat(value) || 0);
   r[field] = numVal;
   if (field === 'costo') {
     if (Number(r.montoPagado) > 0 && Number(r.montoPagado) <= numVal) {
@@ -6434,7 +6444,7 @@ function upsertBookingInTrip(res) {
 
   // 5. Asegurar cantidad de días suficientes para el día asignado
   const fechaInicioInput = document.getElementById('fechaInicio');
-  let diaIdx = Math.max(0, parseInt(res.diaIndex) || 0);
+  let diaIdx = Math.max(0, Number.parseInt(res.diaIndex, 10) || 0);
   if (res.fechaISO && fechaInicioInput && fechaInicioInput.value && diaIdx === 0) {
     diaIdx = calcularDiaViajePorFechaISO(res.fechaISO, fechaInicioInput.value);
   }
@@ -6646,7 +6656,7 @@ function importarReservaAlViaje(idx) {
     res.agregadoAlViaje = true;
     res.tripId = window.pluxTripApi?.getActiveTripInfo?.()?.tripId || null;
     guardarReservaEnWallet(res);
-    subirAdjuntosVoucherCloudinary(res);
+    void subirAdjuntosVoucherCloudinary(res);
 
     finalizarSincronizacionImportacion();
     renderizarTarjetasReservasDetectadas();
@@ -6672,7 +6682,7 @@ function importarTodasLasReservas() {
       res.agregadoAlViaje = true;
       res.tripId = activeTripId;
       guardarReservaEnWallet(res);
-      subirAdjuntosVoucherCloudinary(res);
+      void subirAdjuntosVoucherCloudinary(res);
     });
 
     finalizarSincronizacionImportacion();
@@ -6972,7 +6982,7 @@ function copiarResumenVoucher(id) {
     w.notas ? `📝 ${w.notas}` : ''
   ].filter(Boolean).join('\n');
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(lines);
+    void navigator.clipboard.writeText(lines).catch(() => {});
   }
   if (typeof window.showToast === 'function') {
     window.showToast(t('importer.summary_copied'), 'success');
@@ -6982,7 +6992,7 @@ function copiarResumenVoucher(id) {
 function copiarCodigoPNR(codigo) {
   if (!codigo) return;
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(codigo);
+    void navigator.clipboard.writeText(codigo).catch(() => {});
   }
   if (typeof window.showToast === 'function') {
     window.showToast(t('importer.pnr_copied', { code: codigo }), 'success');
@@ -8008,12 +8018,12 @@ function publicarNuevoHiloForo() {
         window.guardarComoPlantilla();
       }
     } else if (key.startsWith('trip_')) {
-      const idx = parseInt(key.replace('trip_', ''), 10);
+      const idx = Number.parseInt(key.replace('trip_', ''), 10);
       if (cuenta.savedTrips[idx]?.destinos) {
         customDestinosAdjuntos = JSON.parse(JSON.stringify(cuenta.savedTrips[idx].destinos));
       }
     } else if (key.startsWith('mia_')) {
-      const idx = parseInt(key.replace('mia_', ''), 10);
+      const idx = Number.parseInt(key.replace('mia_', ''), 10);
       if (cuenta.savedTemplates[idx]?.destinos) {
         customDestinosAdjuntos = JSON.parse(JSON.stringify(cuenta.savedTemplates[idx].destinos));
       }
@@ -8119,7 +8129,7 @@ function chatearConViajeroComunidad(nickAutor) {
   const clean = nickAutor.replace(/^@/, '').trim();
   cerrarDescubrir();
   if (typeof window.iniciarChatConUsuario === 'function') {
-    window.iniciarChatConUsuario(clean);
+    void window.iniciarChatConUsuario(clean);
   } else if (typeof window.toggleSocialChat === 'function') {
     window.toggleSocialChat();
   }

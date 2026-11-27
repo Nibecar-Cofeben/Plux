@@ -457,11 +457,19 @@
     ctx.fillText('PLUX', cx, cy);
   }
 
+  let ruletaAudioCtx = null;
   function playTickSound() {
     try {
+      if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
-      const ctx = new AudioCtx();
+      if (!ruletaAudioCtx || ruletaAudioCtx.state === 'closed') {
+        ruletaAudioCtx = new AudioCtx();
+      }
+      if (ruletaAudioCtx.state === 'suspended') {
+        void ruletaAudioCtx.resume().catch(() => {});
+      }
+      const ctx = ruletaAudioCtx;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';

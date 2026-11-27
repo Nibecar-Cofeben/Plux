@@ -292,7 +292,7 @@
     if (pluxActiveChatId && pluxActiveChatId.startsWith('dm_')) {
       const myNick = (currentNickname || 'yo').toLowerCase().trim();
       const otherNick = pluxActiveChatId.replace('dm_', '').toLowerCase().trim();
-      const pair = [myNick, otherNick].sort().join('_');
+      const pair = [myNick, otherNick].sort((a, b) => a.localeCompare(b)).join('_');
       return `dm_${pair}`;
     }
     return pluxActiveChatId || 'trip_local';
@@ -1290,7 +1290,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
       showToast(t('social.enter_nick_or_code'), 'info');
       return;
     }
-    iniciarChatConUsuario(val);
+    void iniciarChatConUsuario(val);
   }
   window.confirmarNuevaConversacion = confirmarNuevaConversacion;
 
@@ -1394,7 +1394,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
       
       const encoder = new TextEncoder();
       const data = encoder.encode(toSign);
-      const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
@@ -1424,7 +1424,7 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = (e) => reject(e);
+      reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsDataURL(file);
     });
   }

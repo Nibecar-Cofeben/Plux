@@ -92,8 +92,9 @@
       width: 44px; height: 44px; border-radius: 14px; background: rgba(255, 255, 255, 0.05);
       display: flex; align-items: center; justify-content: center; color: var(--verde); flex-shrink: 0;
     }
-    .stat-meta label { font-size: 0.72rem; color: var(--gris); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .stat-meta .stat-label { display: block;  font-size: 0.72rem; color: var(--gris); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
     .stat-meta p { font-size: 1rem; font-weight: 700; color: white; margin-top: 1px; }
+    button.lang-option, button.theme-option { width: 100%; border: none; background: transparent; font: inherit; color: inherit; text-align: left; } button.lang-button, button.theme-button { font: inherit; }
 
     .destiny-container { max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
     .section-head { margin-bottom: 24px; margin-top: 45px; }
@@ -149,27 +150,27 @@
 
     <div style="display:flex; align-items:center; gap:12px;">
       <div style="position:relative;">
-        <div class="lang-button" id="langButton" onclick="window.toggleLangDropdown(event)" style="width:38px; height:38px; font-size:0.85rem;" title="Idioma">ES</div>
+        <button type="button" class="lang-button" id="langButton" onclick="window.toggleLangDropdown(event)" style="width:38px; height:38px; font-size:0.85rem;" title="Idioma">ES</button>
         <div class="lang-dropdown" id="langDropdown" style="top:48px; right:0;">
-          <div class="lang-option active" data-lang="es" onclick="window.setLanguage('es')">ES</div>
-          <div class="lang-option" data-lang="en" onclick="window.setLanguage('en')">EN</div>
-          <div class="lang-option" data-lang="fr" onclick="window.setLanguage('fr')">FR</div>
-          <div class="lang-option" data-lang="de" onclick="window.setLanguage('de')">DE</div>
-          <div class="lang-option" data-lang="it" onclick="window.setLanguage('it')">IT</div>
-          <div class="lang-option" data-lang="pt" onclick="window.setLanguage('pt')">PT</div>
+          <button type="button" class="lang-option active" data-lang="es" onclick="window.setLanguage('es')">ES</button>
+          <button type="button" class="lang-option" data-lang="en" onclick="window.setLanguage('en')">EN</button>
+          <button type="button" class="lang-option" data-lang="fr" onclick="window.setLanguage('fr')">FR</button>
+          <button type="button" class="lang-option" data-lang="de" onclick="window.setLanguage('de')">DE</button>
+          <button type="button" class="lang-option" data-lang="it" onclick="window.setLanguage('it')">IT</button>
+          <button type="button" class="lang-option" data-lang="pt" onclick="window.setLanguage('pt')">PT</button>
         </div>
       </div>
 
       <div style="position:relative;">
-        <div class="theme-button" id="themeButton" onclick="window.toggleThemeDropdown(event)" style="width:38px; height:38px; font-size:1rem;" title="Tema">🎨</div>
+        <button type="button" class="theme-button" id="themeButton" onclick="window.toggleThemeDropdown(event)" style="width:38px; height:38px; font-size:1rem;" title="Tema">🎨</button>
         <div class="theme-dropdown" id="themeDropdown" style="top:48px; right:0;">
-          <div class="theme-option" data-theme="theme-claro" onclick="window.setTheme('theme-claro')">Claro</div>
-          <div class="theme-option active" data-theme="theme-oscuro" onclick="window.setTheme('theme-oscuro')">Oscuro</div>
-          <div class="theme-option" data-theme="theme-tokyo" onclick="window.setTheme('theme-tokyo')">Tokyo Night</div>
-          <div class="theme-option" data-theme="theme-grid" onclick="window.setTheme('theme-grid')">The Grid</div>
-          <div class="theme-option" data-theme="theme-terminal" onclick="window.setTheme('theme-terminal')">Terminal</div>
-          <div class="theme-option" data-theme="theme-starship" onclick="window.setTheme('theme-starship')">Starship</div>
-          <div class="theme-option" data-theme="theme-ares" onclick="window.setTheme('theme-ares')">Ares</div>
+          <button type="button" class="theme-option" data-theme="theme-claro" onclick="window.setTheme('theme-claro')">Claro</button>
+          <button type="button" class="theme-option active" data-theme="theme-oscuro" onclick="window.setTheme('theme-oscuro')">Oscuro</button>
+          <button type="button" class="theme-option" data-theme="theme-tokyo" onclick="window.setTheme('theme-tokyo')">Tokyo Night</button>
+          <button type="button" class="theme-option" data-theme="theme-grid" onclick="window.setTheme('theme-grid')">The Grid</button>
+          <button type="button" class="theme-option" data-theme="theme-terminal" onclick="window.setTheme('theme-terminal')">Terminal</button>
+          <button type="button" class="theme-option" data-theme="theme-starship" onclick="window.setTheme('theme-starship')">Starship</button>
+          <button type="button" class="theme-option" data-theme="theme-ares" onclick="window.setTheme('theme-ares')">Ares</button>
         </div>
       </div>
 
@@ -197,7 +198,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
         </div>
         <div class="stat-meta">
-          <label>Estadía Sugerida</label>
+          <span class="stat-label">Estadía Sugerida</span>
           <p>4 - 7 Días</p>
         </div>
       </div>
@@ -206,7 +207,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
         </div>
         <div class="stat-meta">
-          <label>Mejor Época</label>
+          <span class="stat-label">Mejor Época</span>
           <p>Sep - Nov / Diciembre</p>
         </div>
       </div>
@@ -215,7 +216,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
         </div>
         <div class="stat-meta">
-          <label>Moneda Local</label>
+          <span class="stat-label">Moneda Local</span>
           <p>Dólar ($ USD)</p>
         </div>
       </div>
@@ -224,7 +225,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
         </div>
         <div class="stat-meta">
-          <label>Idioma</label>
+          <span class="stat-label">Idioma</span>
           <p>Inglés</p>
         </div>
       </div>
@@ -302,7 +303,7 @@
     </div>
     <div id="pluxy-chat-body" style="flex:1; padding:16px; overflow-y:auto; font-size:0.88rem; display:flex; flex-direction:column; gap:12px;"></div>
     <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px; background:rgba(11,15,25,0.5);">
-      <input type="text" id="pluxy-input" placeholder="Pregúntale a Pluxy..." style="flex:1; background:rgba(255,255,255,0.08); border:1px solid var(--border); border-radius:16px; padding:8px 14px; color:white; font-size:0.85rem; outline:none;" onkeypress="if(event.key==='Enter') enviarMensajePluxy()">
+      <input type="text" id="pluxy-input" aria-label="Pregúntale a Pluxy" placeholder="Pregúntale a Pluxy..." style="flex:1; background:rgba(255,255,255,0.08); border:1px solid var(--border); border-radius:16px; padding:8px 14px; color:white; font-size:0.85rem; outline:none;" onkeypress="if(event.key==='Enter') enviarMensajePluxy()">
       <button onclick="enviarMensajePluxy()" style="background:linear-gradient(135deg, var(--verde), var(--azul)); border:none; border-radius:16px; color:#000; padding:8px 14px; font-weight:700; cursor:pointer;">➤</button>
     </div>
   </div>

@@ -1453,16 +1453,16 @@
           origen: tr.origen || '',
           destino: tr.destino || dest.nombre || '',
           medio: tr.medio || '',
-          precio: parseFloat(tr.precio) || 0,
+          precio: Number.parseFloat(tr.precio) || 0,
           moneda: tr.moneda || 'EUR',
           alojamiento: tr.alojamiento || '',
-          precioAlojamiento: parseFloat(tr.precioAlojamiento) || 0,
+          precioAlojamiento: Number.parseFloat(tr.precioAlojamiento) || 0,
           monedaAlojamiento: tr.monedaAlojamiento || 'EUR',
           escalas: Array.isArray(tr.escalas) ? [...tr.escalas] : [],
           cubreParadas: Boolean(tr.cubreParadas),
           modoPrecio: tr.modoPrecio === 'total' ? 'total' : 'persona',
-          montoPagado: tr.montoPagado !== undefined ? (parseFloat(tr.montoPagado) || 0) : undefined,
-          saldoPendiente: tr.saldoPendiente !== undefined ? (parseFloat(tr.saldoPendiente) || 0) : undefined,
+          montoPagado: tr.montoPagado !== undefined ? (Number.parseFloat(tr.montoPagado) || 0) : undefined,
+          saldoPendiente: tr.saldoPendiente !== undefined ? (Number.parseFloat(tr.saldoPendiente) || 0) : undefined,
           pagado: Boolean(tr.pagado),
           pagadoPor: tr.pagadoPor || 'Todos',
           codigoReserva: tr.codigoReserva || ''
@@ -1470,7 +1470,7 @@
         dias: (dest.dias || []).map((dia, diaIdx) => ({
           id: diaIdx,
           eventos: (dia.eventos || []).map((ev, evIdx) => {
-            const evCosto = parseFloat(ev.costo !== undefined ? ev.costo : ev.precio) || 0;
+            const evCosto = Number.parseFloat(ev.costo !== undefined ? ev.costo : ev.precio) || 0;
             return {
               id: idBase + dIdx * 1000 + (diaIdx + 1) * 100 + evIdx + 1,
               hora: ev.hora || '10:00',
@@ -1479,13 +1479,13 @@
               costo: evCosto,
               precio: evCosto,
               moneda: ev.moneda || 'EUR',
-              duracion: parseInt(ev.duracion, 10) || 60
+              duracion: Number.parseInt(ev.duracion, 10) || 60
             };
           }),
           costosAdicionales: (dia.costosAdicionales || []).map((c, cIdx) => ({
             id: idBase + dIdx * 1000 + (diaIdx + 1) * 100 + cIdx + 50,
             concepto: c.concepto || '',
-            precio: parseFloat(c.precio) || 0
+            precio: Number.parseFloat(c.precio) || 0
           }))
         }))
       }));
@@ -1510,7 +1510,7 @@
         ? window.normalizarDestinosLegacy(clonedDestinos)
         : clonedDestinos;
       vueltaGlobal = tpl.vueltaGlobal || '';
-      vueltaPrecioGlobal = parseFloat(tpl.vueltaPrecioGlobal) || 0;
+      vueltaPrecioGlobal = Number.parseFloat(tpl.vueltaPrecioGlobal) || 0;
       vueltaCostosAdicionales = Array.isArray(tpl.vueltaCostosAdicionales)
         ? JSON.parse(JSON.stringify(tpl.vueltaCostosAdicionales))
         : [];

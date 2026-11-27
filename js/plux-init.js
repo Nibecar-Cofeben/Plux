@@ -1,15 +1,18 @@
 (function () {
   var h = window.location.hostname;
   var p = window.location.pathname;
-  if (h === 'nibecarcofeben.com' || h === 'nibecar-cofeben.web.app' || h === 'nibecarcofeben.web.app') {
-    if (p.startsWith('/plux')) {
-      var clean = p.replace(/^\/plux\/?/, '/');
-      window.location.replace('https://plux.nibecarcofeben.com' + (clean.startsWith('/') ? clean : '/' + clean) + window.location.search + window.location.hash);
-      return;
+  var shouldRedirectToPlux =
+    ((h === 'nibecarcofeben.com' || h === 'nibecar-cofeben.web.app' || h === 'nibecarcofeben.web.app') && p.startsWith('/plux')) ||
+    h === 'plux-nibecarcofeben.web.app';
+  if (shouldRedirectToPlux) {
+    var cleanPath = String(p || '/').replace(/^\/plux\/?/, '/').replace(/^[/\\]+/, '').replace(/[^a-zA-Z0-9\-._~/]/g, '');
+    var target = new URL('https://plux.nibecarcofeben.com');
+    target.pathname = '/' + cleanPath;
+    target.search = window.location.search;
+    target.hash = window.location.hash;
+    if (target.origin === 'https://plux.nibecarcofeben.com') {
+      window.location.replace(target.href);
     }
-  } else if (h === 'plux-nibecarcofeben.web.app') {
-    var cleanPlux = p.replace(/^\/plux\/?/, '/');
-    window.location.replace('https://plux.nibecarcofeben.com' + (cleanPlux.startsWith('/') ? cleanPlux : '/' + cleanPlux) + window.location.search + window.location.hash);
     return;
   }
 
@@ -98,6 +101,10 @@
     if (firebaseAuthPromise) return firebaseAuthPromise;
     firebaseAuthPromise = injectScriptPromise('/firebase/firebase-app-compat.js').then(function () {
       return injectScriptPromise('/firebase/firebase-auth-compat.js');
+    }).then(function () {
+      if (typeof firebase === 'undefined' || typeof firebase.auth !== 'function') {
+        firebaseAuthPromise = null;
+      }
     });
     return firebaseAuthPromise;
   }
@@ -108,6 +115,7 @@
   function ensurePluxFirebaseData() {
     if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function' && typeof firebase.database === 'function') {
       if (typeof window.getFirestoreDb === 'function') window.getFirestoreDb();
+      if (typeof window.getRealtimeDb === 'function') window.getRealtimeDb();
       return Promise.resolve();
     }
     if (firebaseDataPromise) return firebaseDataPromise;
@@ -119,6 +127,9 @@
     }).then(function () {
       if (typeof window.getFirestoreDb === 'function') window.getFirestoreDb();
       if (typeof window.getRealtimeDb === 'function') window.getRealtimeDb();
+      if (typeof firebase === 'undefined' || typeof firebase.firestore !== 'function') {
+        firebaseDataPromise = null;
+      }
     });
     return firebaseDataPromise;
   }
@@ -171,9 +182,9 @@
   var heavyLibsLoaded = false;
   function loadHeavyLibs() {
     loadGA4();
-    ensurePluxFirebaseData();
-    ensurePluxDiscover();
-    ensurePluxFeatureModules();
+    void ensurePluxFirebaseData().catch(function () {});
+    void ensurePluxDiscover().catch(function () {});
+    void ensurePluxFeatureModules().catch(function () {});
     if (heavyLibsLoaded) return;
     heavyLibsLoaded = true;
     injectStylesheet(
@@ -184,24 +195,24 @@
       'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
       'sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H'
     );
-    injectScriptPromise(
+    void injectScriptPromise(
       'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
       'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH'
-    );
-    injectScriptPromise('/js/jspdf.umd.min.js').then(function () {
-      injectScriptPromise(
+    ).catch(function () {});
+    void injectScriptPromise('/js/jspdf.umd.min.js').then(function () {
+      return injectScriptPromise(
         'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
         'sha384-fCAW/rDWORTbQXSiB7mOg0QtQ5c+r0f544y6XoKjuVva0nMBlCpNUjiFeG5iMdS3'
       );
-    });
-    injectScriptPromise(
+    }).catch(function () {});
+    void injectScriptPromise(
       'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
       'sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU'
-    );
-    injectScriptPromise(
+    ).catch(function () {});
+    void injectScriptPromise(
       'https://cdn.jsdelivr.net/npm/chart.js@4.6.2/dist/chart.umd.min.js',
       'sha384-wFIO1nJgUOP2XDesMi2Xqyej8+jLnzOfBrJbdvz7Pp+UI88xOiL08fKFupi2KqR0'
-    );
+    ).catch(function () {});
   }
   window.ensurePluxHeavyLibs = loadHeavyLibs;
 

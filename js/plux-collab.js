@@ -97,8 +97,8 @@ function activarListenerNube() {
       const urlParams = new URLSearchParams(window.location.search);
       const isForcedReader = urlParams.get('mode') === 'reader' || urlParams.get('role') === 'reader';
       if (!isForcedReader && typeof currentNickname !== 'undefined' && currentNickname) {
-        const myClean = currentNickname.toLowerCase().replace(/^@/, '');
-        const ownerClean = (docData.propietario || '').toLowerCase().replace(/^@/, '');
+        const myClean = String(currentNickname || '').toLowerCase().replace(/^@/, '');
+        const ownerClean = String(docData.propietario || '').toLowerCase().replace(/^@/, '');
         if (ownerClean && myClean === ownerClean) {
           window.currentTripRole = 'owner';
           if (typeof ocultarAdvertenciaSoloLectura === 'function') ocultarAdvertenciaSoloLectura();
@@ -192,7 +192,7 @@ async function generarCodigoInApp() {
     if (container) container.style.display = 'block';
     await garantizarDocumentoColaborativoEnNube();
     activarListenerNube();
-    if (typeof abrirColaboradores === 'function') abrirColaboradores();
+    if (typeof abrirColaboradores === 'function') void abrirColaboradores().catch(() => {});
     showToast(t('social.collab_code_active', { code: syncCode }), 'info');
     return syncCode;
   }
@@ -239,7 +239,7 @@ async function generarCodigoInApp() {
 
   const modalColab = document.getElementById('modal-colaboradores');
   if (modalColab && modalColab.style.display === 'flex') {
-    abrirColaboradores();
+    void abrirColaboradores().catch(() => {});
   }
 
   showToast(t('social.collab_code_generated', { code }), 'success');
@@ -366,9 +366,9 @@ function renderListaColaboradoresDOM(docData) {
     }
   }
 
-  const myName = (typeof currentNickname !== 'undefined' && currentNickname) ? currentNickname : 'Anónimo';
+  const myName = (typeof currentNickname !== 'undefined' && currentNickname) ? String(currentNickname) : 'Anónimo';
   const myClean = myName.toLowerCase().replace(/^@/, '');
-  const ownerRaw = docData?.propietario || window.currentTripOwner || myName;
+  const ownerRaw = String(docData?.propietario || window.currentTripOwner || myName || 'Anónimo');
   const ownerClean = ownerRaw.toLowerCase().replace(/^@/, '');
   const isMeOwner = (myName !== 'Anónimo' && myClean === ownerClean) || (!docData?.propietario && !window.isExternalSharedTrip);
 
@@ -511,7 +511,7 @@ async function abrirColaboradores() {
 
         // Cargar fotos de perfil de los colaboradores en segundo plano si faltan en caché
         if (typeof fetchFriendProfile === 'function' && Array.isArray(data.colaboradores)) {
-          Promise.all(data.colaboradores.map(c => fetchFriendProfile(String(c).replace(/^@/, '')))).then(() => {
+          void Promise.all(data.colaboradores.filter(Boolean).map(c => fetchFriendProfile(String(c).replace(/^@/, '')))).then(() => {
             if (modal.style.display === 'flex') renderListaColaboradoresDOM(data);
           }).catch(() => {});
         }
@@ -532,7 +532,7 @@ window.abrirColab = abrirColaboradores;
 
 function mobileActionInvitar() {
   if (typeof toggleMobileTripMenu === 'function') toggleMobileTripMenu();
-  abrirColaboradores();
+  void abrirColaboradores().catch(() => {});
 }
 window.mobileActionInvitar = mobileActionInvitar;
 
@@ -541,16 +541,20 @@ window.mobileActionInvitar = mobileActionInvitar;
  */
 window.copiarCodigoColaborativo = function() {
   if (!syncCode) return;
-  navigator.clipboard?.writeText(syncCode).then(() => {
-    showToast(t('social.collab_code_copied', { code: syncCode }), 'success');
-  });
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    void navigator.clipboard.writeText(syncCode).then(() => {
+      showToast(t('social.collab_code_copied', { code: syncCode }), 'success');
+    }).catch(() => {});
+  }
 };
 
 window.copiarEnlaceColaborativo = async function(mode = 'editor') {
   const url = await asegurarViajeEnNubeParaCompartir(mode);
-  navigator.clipboard?.writeText(url).then(() => {
-    showToast(mode === 'editor' ? t('social.collab_edit_link_copied') : t('social.collab_read_link_copied'), 'success');
-  });
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    void navigator.clipboard.writeText(url).then(() => {
+      showToast(mode === 'editor' ? t('social.collab_edit_link_copied') : t('social.collab_read_link_copied'), 'success');
+    }).catch(() => {});
+  }
 };
 
 /**
@@ -583,9 +587,9 @@ window.eliminarColaboradorDeViaje = async function(targetNick) {
     await db.collection('plux_viajes_compartidos').doc(syncCode).update({
       colaboradores: firebase.firestore.FieldValue.arrayRemove(clean)
     });
-    window.colaboradoresActuales = (window.colaboradoresActuales || []).filter(c => c.toLowerCase() !== clean.toLowerCase());
+    window.colaboradoresActuales = (window.colaboradoresActuales || []).filter(c => String(c || '').toLowerCase() !== clean.toLowerCase());
     showToast(t('social.collab_removed_toast', { nick: clean }), 'info');
-    abrirColaboradores();
+    void abrirColaboradores().catch(() => {});
   } catch (e) {
     console.error('Error quitando colaborador:', e);
     showToast(t('social.collab_remove_err'), 'error');
@@ -631,7 +635,7 @@ async function invitarColaboradorPorNickname() {
   }
 
   const cleanInput = rawTarget.replace(/^@/, '').trim();
-  if (cleanInput.toLowerCase() === myNick.toLowerCase()) {
+  if (cleanInput.toLowerCase() === String(myNick || '').toLowerCase()) {
     showToast(t('social.collab_already_in'), 'info');
     return;
   }
@@ -681,7 +685,7 @@ async function invitarColaboradorPorNickname() {
     }, { merge: true });
 
     const formattedNick = '@' + resolvedNick;
-    if (typeof listaViajeros !== 'undefined' && !listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === resolvedNick.toLowerCase())) {
+    if (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros) && !listaViajeros.some(v => String(v || '').toLowerCase().replace(/^@/, '') === resolvedNick.toLowerCase())) {
       listaViajeros.push(formattedNick);
       if (typeof window.renderTravelerChips === 'function') window.renderTravelerChips();
       autoSave();
@@ -692,7 +696,7 @@ async function invitarColaboradorPorNickname() {
 
     showToast(t('social.collab_invited_toast', { nick: resolvedNick, role: role === 'editor' ? t('social.collab_role_editor_word') : t('social.collab_role_traveler_word') }), 'success');
     if (nickInput) nickInput.value = '';
-    abrirColaboradores();
+    void abrirColaboradores().catch(() => {});
   } catch (e) {
     console.error('Error al invitar colaborador:', e);
     showToast(t('social.collab_invite_err'), 'error');
@@ -763,7 +767,7 @@ async function cargarViajeCompartido(rawCode) {
     if (existingLocalIdx !== -1) {
       loadedTripIndex = existingLocalIdx;
       window.isExternalSharedTrip = false;
-    } else if (myNick && owner && myNick.toLowerCase() === owner.toLowerCase()) {
+    } else if (myNick && owner && String(myNick).toLowerCase() === String(owner).toLowerCase()) {
       window.isExternalSharedTrip = false;
     } else {
       // Es un viaje compartido por otra persona: NO clonarlo en "Guardados", mantenerlo en "Viajes compartidos con vos"
@@ -813,9 +817,10 @@ async function cargarViajeCompartido(rawCode) {
       const allParticipants = [...window.colaboradoresActuales];
       if (owner && !allParticipants.includes(owner)) allParticipants.unshift(owner);
       allParticipants.forEach(c => {
+        if (c == null) return;
         const norm = String(c).toLowerCase().replace(/^@/, '');
         if (norm && norm !== 'anónimo' && norm !== 'viajero') {
-          if (!listaViajeros.some(v => v.toLowerCase().replace(/^@/, '') === norm)) {
+          if (typeof listaViajeros !== 'undefined' && Array.isArray(listaViajeros) && !listaViajeros.some(v => String(v || '').toLowerCase().replace(/^@/, '') === norm)) {
             listaViajeros.push('@' + norm);
           }
         }
@@ -825,10 +830,11 @@ async function cargarViajeCompartido(rawCode) {
       }
 
       // Determinar el rol del usuario
-      if (myNick && owner && myNick.toLowerCase() === owner.toLowerCase()) {
+      if (myNick && owner && String(myNick).toLowerCase() === String(owner).toLowerCase()) {
         window.currentTripRole = 'owner';
       } else if (myNick) {
-        window.currentTripRole = window.colaboradoresRolesActuales[myNick] || window.colaboradoresRolesActuales[myNick.toLowerCase()] || 'editor';
+        const myNickStr = String(myNick);
+        window.currentTripRole = window.colaboradoresRolesActuales[myNickStr] || window.colaboradoresRolesActuales[myNickStr.toLowerCase()] || 'editor';
       } else {
         window.currentTripRole = 'editor';
       }
@@ -874,20 +880,35 @@ window.cargarViajeCompartido = cargarViajeCompartido;
  * Renderiza "Viajes compartidos con vos" con nombre real del viaje, destinos, propietario y rol
  */
 async function renderSharedTripsList() {
-  if (typeof currentNickname === 'undefined' || !currentNickname || typeof db === 'undefined' || !db) return;
+  const activeNick = (typeof currentNickname !== 'undefined' && currentNickname !== null)
+    ? String(currentNickname).trim()
+    : '';
+  if (!activeNick || typeof db === 'undefined' || !db) return;
   const section = document.getElementById('colab-trips-section');
   const list = document.getElementById('sharedTripList');
   if (!section || !list) return;
 
+  const activeNickLower = activeNick.toLowerCase();
+
   try {
     const query = await db.collection('plux_viajes_compartidos')
-      .where('colaboradores', 'array-contains', currentNickname)
+      .where('colaboradores', 'array-contains', activeNick)
       .limit(20)
       .get();
 
-    const sharedDocs = query.docs.filter(doc => {
-      const data = doc.data() || {};
-      return !data.propietario || data.propietario.toLowerCase() !== currentNickname.toLowerCase();
+    const stillLoggedInNick = (typeof currentNickname !== 'undefined' && currentNickname !== null)
+      ? String(currentNickname).trim().toLowerCase()
+      : '';
+    if (!stillLoggedInNick || stillLoggedInNick !== activeNickLower) {
+      section.style.display = 'none';
+      return;
+    }
+
+    const docs = (query && Array.isArray(query.docs)) ? query.docs : [];
+    const sharedDocs = docs.filter(doc => {
+      const data = (doc && typeof doc.data === 'function' ? doc.data() : null) || {};
+      const ownerLower = (data.propietario || '').toString().trim().toLowerCase();
+      return !ownerLower || ownerLower !== activeNickLower;
     });
 
     if (sharedDocs.length === 0) {
@@ -899,21 +920,21 @@ async function renderSharedTripsList() {
     list.innerHTML = '';
 
     sharedDocs.forEach(doc => {
-      const data = doc.data() || {};
+      const data = (doc && typeof doc.data === 'function' ? doc.data() : null) || {};
       const code = doc.id;
-      const owner = data.propietario || 'viajero';
-      const roles = data.colaboradores_roles || {};
-      const myRole = roles[currentNickname] || roles[currentNickname.toLowerCase()] || 'editor';
+      const owner = (data.propietario || 'viajero').toString();
+      const roles = (data.colaboradores_roles && typeof data.colaboradores_roles === 'object') ? data.colaboradores_roles : {};
+      const myRole = roles[activeNick] || roles[activeNickLower] || 'editor';
 
       // Extraer nombre y destinos del viaje compartido
-      let tripName = data.nombreViaje || '';
-      let destSummary = data.destinosResumen || '';
+      let tripName = (data.nombreViaje || '').toString();
+      let destSummary = (data.destinosResumen || '').toString();
       if ((!tripName || !destSummary) && data.data) {
         try {
           const parsed = JSON.parse(data.data);
-          if (!tripName && parsed.nombre) tripName = parsed.nombre;
-          if (!destSummary && Array.isArray(parsed.destinos)) {
-            destSummary = parsed.destinos.map(d => d.nombre).filter(Boolean).join(', ');
+          if (!tripName && parsed && parsed.nombre) tripName = String(parsed.nombre);
+          if (!destSummary && parsed && Array.isArray(parsed.destinos)) {
+            destSummary = parsed.destinos.map(d => (d && d.nombre) ? String(d.nombre) : '').filter(Boolean).join(', ');
           }
           if (!tripName && destSummary) tripName = t('social.collab_trip_to', { dests: destSummary });
         } catch (err) {}
@@ -959,6 +980,6 @@ async function abrirCompartirModal(tripIndex) {
   if (typeof tripIndex === 'number' && tripIndex !== loadedTripIndex) {
     cargarViaje(tripIndex, false);
   }
-  abrirColaboradores();
+  await abrirColaboradores();
 }
 window.abrirCompartirModal = abrirCompartirModal;

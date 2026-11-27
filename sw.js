@@ -3,7 +3,7 @@
  * App Shell + Librerías CDN + Caché de Tiles de Mapas + Caché de APIs de Viaje
  */
 
-const SW_VERSION = 'v8.0.26';
+const SW_VERSION = 'v8.0.27';
 const STATIC_CACHE = `plux-static-${SW_VERSION}`;
 const CDN_CACHE = `plux-cdn-${SW_VERSION}`;
 const TILES_CACHE = `plux-tiles-${SW_VERSION}`;
@@ -214,6 +214,9 @@ self.addEventListener('fetch', (event) => {
 
   const isSameOrigin = url.origin === self.location.origin;
 
+  // Permitir que Firebase Hosting sirva directamente archivos de descubrimiento /.well-known/
+  if (isSameOrigin && url.pathname.startsWith('/.well-known/')) return;
+
   // A) NAVEGACIÓN HTML (App Shell): Network-First con timeout rápido -> Fallback a /index.html
   if (request.mode === 'navigate' || (isSameOrigin && request.headers.get('accept')?.includes('text/html'))) {
     event.respondWith(
@@ -222,7 +225,7 @@ self.addEventListener('fetch', (event) => {
           const networkRes = await fetchWithTimeout(request, 3200);
           if (networkRes && networkRes.status === 200) {
             const cache = await caches.open(STATIC_CACHE);
-            cache.put('/index.html', networkRes.clone());
+            void cache.put('/index.html', networkRes.clone()).catch(() => {});
             return networkRes;
           }
         } catch (err) {
@@ -247,20 +250,23 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('unsplash.com') ||
     url.hostname.includes('wikimedia.org')
   ) {
+    const isWikimedia = url.hostname.includes('wikimedia.org');
     event.respondWith(
       (async () => {
         const tileCache = await caches.open(TILES_CACHE);
         const cached = await tileCache.match(request);
-        if (cached && (cached.status === 200 || cached.type === 'opaque')) return cached;
-        if (cached && cached.status !== 200 && cached.type !== 'opaque') {
-          tileCache.delete(request);
+        const isCachedValid = cached && (isWikimedia ? cached.status === 200 : (cached.status === 200 || cached.type === 'opaque'));
+        if (isCachedValid) return cached;
+        if (cached) {
+          void tileCache.delete(request).catch(() => {});
         }
 
         try {
           const netRes = await fetch(request);
-          if (netRes && (netRes.status === 200 || netRes.type === 'opaque')) {
-            tileCache.put(request, netRes.clone());
-            trimCache(TILES_CACHE, 750);
+          const canCache = netRes && (isWikimedia ? netRes.status === 200 : (netRes.status === 200 || netRes.type === 'opaque'));
+          if (canCache) {
+            void tileCache.put(request, netRes.clone()).catch(() => {});
+            void trimCache(TILES_CACHE, 750).catch(() => {});
           }
           return netRes;
         } catch (err) {
@@ -301,7 +307,7 @@ self.addEventListener('fetch', (event) => {
         try {
           const netRes = await fetchWithTimeout(request, 4000);
           if (netRes && netRes.status === 200) {
-            apiCache.put(request, netRes.clone());
+            void apiCache.put(request, netRes.clone()).catch(() => {});
             return netRes;
           }
         } catch (err) {
@@ -330,7 +336,7 @@ self.addEventListener('fetch', (event) => {
           try {
             const netRes = await fetchWithTimeout(request, 2500);
             if (netRes && netRes.status === 200) {
-              staticCache.put(url.pathname, netRes.clone());
+              void staticCache.put(url.pathname, netRes.clone()).catch(() => {});
               return netRes;
             }
           } catch (e) {}
@@ -344,7 +350,7 @@ self.addEventListener('fetch', (event) => {
         const fetchPromise = fetch(request)
           .then((netRes) => {
             if (netRes && netRes.status === 200) {
-              staticCache.put(url.pathname, netRes.clone());
+              void staticCache.put(url.pathname, netRes.clone()).catch(() => {});
             }
             return netRes;
           })
@@ -373,7 +379,7 @@ self.addEventListener('fetch', (event) => {
       try {
         const netRes = await fetch(request);
         if (netRes && (netRes.status === 200 || netRes.type === 'opaque')) {
-          cdnCache.put(request, netRes.clone());
+          void cdnCache.put(request, netRes.clone()).catch(() => {});
         }
         return netRes;
       } catch (err) {
@@ -422,10 +428,11 @@ function buildTileUrlsForCoordinate(lat, lon) {
 
 // 4. MENSAJERÍA CON EL CLIENTE (Estadísticas y Pre-descarga de Mapas para Modo Avión)
 self.addEventListener('message', (event) => {
+  if (event.origin !== self.location.origin) return;
   const data = event.data || {};
 
   if (data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+    event.waitUntil(self.skipWaiting());
     return;
   }
 

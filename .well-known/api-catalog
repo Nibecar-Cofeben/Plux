@@ -1,0 +1,40 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://plux.nibecarcofeben.com/",
+      "service-desc": [
+        {
+          "href": "https://plux.nibecarcofeben.com/.well-known/ard.json",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://plux.nibecarcofeben.com/llms.txt",
+          "type": "text/markdown"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://plux.nibecarcofeben.com/manifest.json",
+          "type": "application/manifest+json"
+        }
+      ]
+    },
+    {
+      "anchor": "https://pluxy.nibecar-cofeben.workers.dev/",
+      "service-desc": [
+        {
+          "href": "https://plux.nibecarcofeben.com/.well-known/ard.json",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://plux.nibecarcofeben.com/llms.txt",
+          "type": "text/markdown"
+        }
+      ]
+    }
+  ]
+}

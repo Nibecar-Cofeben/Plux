@@ -33,7 +33,7 @@
         }
         const d = new Date(dateVal);
         const loc = typeof getLangLocale === 'function' ? getLangLocale() : undefined;
-        if (!isNaN(d.getTime())) return d.toLocaleDateString(loc);
+        if (!Number.isNaN(d.getTime())) return d.toLocaleDateString(loc);
       } catch (e) {
         console.warn('safeFormatDateStr error:', e);
       }
@@ -231,7 +231,7 @@ window.ocultarAdvertenciaSoloLectura = ocultarAdvertenciaSoloLectura;
 // ================== CLONAR VIAJE (CREAR COPIA EDITABLE) ==================
 function clonarViajeActual() {
   const trips = (typeof getStoredTrips === 'function') ? getStoredTrips() : [];
-  const currentTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle().replace(/\s*·\s*PLUX$/i, '') : (document.getElementById('display-trip-title')?.innerText || t('social.my_trip_fallback'));
+  const currentTitle = (typeof getTripCustomTitle === 'function') ? getTripCustomTitle().replace(/·[ \t]{0,4}PLUX$/i, '').trimEnd() : (document.getElementById('display-trip-title')?.innerText || t('social.my_trip_fallback'));
   const cleanBaseTitle = currentTitle.replace(/^(VIAJE A |EXPEDICIÓN A |TRIP TO |VOYAGE À |REISE NACH |VIAGGIO A )/i, '').trim();
   const nuevoNombre = `${cleanBaseTitle || t('cards.trip_fallback')} (${t('cards.copy_suffix')})`;
   const newTripId = 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
@@ -482,7 +482,7 @@ async function recopilarDatosTravelCard() {
 
   if (typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0) {
     destinos.forEach((d, idx) => {
-      const dDays = (d.dias && Array.isArray(d.dias)) ? d.dias.length : (parseInt(d.dias, 10) || 1);
+      const dDays = (d.dias && Array.isArray(d.dias)) ? d.dias.length : (Number.parseInt(d.dias, 10) || 1);
       const transitPrev = (idx > 0 && Number(d.diasTransitoPrevio) > 0) ? Math.floor(Number(d.diasTransitoPrevio)) : 0;
       totalDays += (dDays > 0 ? dDays : 1) + transitPrev;
 
@@ -494,15 +494,15 @@ async function recopilarDatosTravelCard() {
           if (dia.eventos && Array.isArray(dia.eventos)) {
             dActsCount += dia.eventos.length;
             dia.eventos.forEach(ev => {
-              dCost += conv(parseFloat(ev.costo || ev.precio || 0) || 0, ev.moneda) * (numPersonas || 1);
+              dCost += conv(Number.parseFloat(ev.costo || ev.precio || 0) || 0, ev.moneda) * (numPersonas || 1);
             });
           }
           if (dia.alojamiento) {
-            dCost += conv(parseFloat(dia.alojamiento.precio || 0) || 0, dia.alojamiento.moneda);
+            dCost += conv(Number.parseFloat(dia.alojamiento.precio || 0) || 0, dia.alojamiento.moneda);
           }
           if (dia.costosAdicionales && Array.isArray(dia.costosAdicionales)) {
             dia.costosAdicionales.forEach(c => {
-              dCost += conv(parseFloat(c.precio || c.monto || 0) || 0, c.moneda);
+              dCost += conv(Number.parseFloat(c.precio || c.monto || 0) || 0, c.moneda);
             });
           }
         });
@@ -511,25 +511,25 @@ async function recopilarDatosTravelCard() {
       if (Array.isArray(d.actividades)) {
         dActsCount += d.actividades.length;
         d.actividades.forEach(a => {
-          dCost += conv(parseFloat(a.precio || a.costo || 0) || 0, a.moneda) * (numPersonas || 1);
+          dCost += conv(Number.parseFloat(a.precio || a.costo || 0) || 0, a.moneda) * (numPersonas || 1);
         });
       }
 
       if (d.tramos && Array.isArray(d.tramos) && d.tramos.length > 0) {
         d.tramos.forEach(tramo => {
           const mult = tramo.modoPrecio === 'total' ? 1 : (numPersonas || 1);
-          const tTransp = conv(parseFloat(tramo.precio || 0) || 0, tramo.moneda);
-          const tAloj = conv(parseFloat(tramo.precioAlojamiento || 0) || 0, tramo.monedaAlojamiento);
+          const tTransp = conv(Number.parseFloat(tramo.precio || 0) || 0, tramo.moneda);
+          const tAloj = conv(Number.parseFloat(tramo.precioAlojamiento || 0) || 0, tramo.monedaAlojamiento);
           dCost += (tTransp + tAloj) * mult;
         });
       } else {
-        dCost += (parseFloat(d.precioIda || 0) || 0) * (numPersonas || 1);
-        dCost += (parseFloat(d.precioAlojamiento || 0) || 0);
+        dCost += (Number.parseFloat(d.precioIda || 0) || 0) * (numPersonas || 1);
+        dCost += (Number.parseFloat(d.precioAlojamiento || 0) || 0);
       }
 
       if (Array.isArray(d.costosAdicionales)) {
         d.costosAdicionales.forEach(c => {
-          dCost += (parseFloat(c.precio || c.monto || 0) || 0);
+          dCost += (Number.parseFloat(c.precio || c.monto || 0) || 0);
         });
       }
 
@@ -551,11 +551,11 @@ async function recopilarDatosTravelCard() {
   }
 
   if (typeof vueltaPrecioGlobal !== 'undefined') {
-    totalBudget += (parseFloat(vueltaPrecioGlobal) || 0) * (numPersonas || 1);
+    totalBudget += (Number.parseFloat(vueltaPrecioGlobal) || 0) * (numPersonas || 1);
   }
   if (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales)) {
     vueltaCostosAdicionales.forEach(vc => {
-      totalBudget += (parseFloat(vc.precio || vc.monto || 0) || 0);
+      totalBudget += (Number.parseFloat(vc.precio || vc.monto || 0) || 0);
     });
   }
 
@@ -1874,7 +1874,7 @@ async function exportarPDF() {
 
   if (typeof destinos !== 'undefined' && Array.isArray(destinos) && destinos.length > 0) {
     destinos.forEach((d, idx) => {
-      const dDays = (d.dias && Array.isArray(d.dias)) ? d.dias.length : (parseInt(d.dias, 10) || 1);
+      const dDays = (d.dias && Array.isArray(d.dias)) ? d.dias.length : (Number.parseInt(d.dias, 10) || 1);
       const transitPrev = (idx > 0 && Number(d.diasTransitoPrevio) > 0) ? Math.floor(Number(d.diasTransitoPrevio)) : 0;
       totalDays += (dDays > 0 ? dDays : 1) + transitPrev;
 
@@ -1888,7 +1888,7 @@ async function exportarPDF() {
           if (dia.eventos && Array.isArray(dia.eventos)) {
             dActsCount += dia.eventos.length;
             dia.eventos.forEach(ev => {
-              const evCost = convPdf(parseFloat(ev.costo || ev.precio || 0) || 0, ev.moneda);
+              const evCost = convPdf(Number.parseFloat(ev.costo || ev.precio || 0) || 0, ev.moneda);
               dCost += evCost * (numPersonas || 1);
               dActivitiesList.push({
                 dia: diaNum,
@@ -1901,11 +1901,11 @@ async function exportarPDF() {
             });
           }
           if (dia.alojamiento) {
-            dCost += convPdf(parseFloat(dia.alojamiento.precio || 0) || 0, dia.alojamiento.moneda);
+            dCost += convPdf(Number.parseFloat(dia.alojamiento.precio || 0) || 0, dia.alojamiento.moneda);
           }
           if (dia.costosAdicionales && Array.isArray(dia.costosAdicionales)) {
             dia.costosAdicionales.forEach(c => {
-              dCost += convPdf(parseFloat(c.precio || c.monto || 0) || 0, c.moneda);
+              dCost += convPdf(Number.parseFloat(c.precio || c.monto || 0) || 0, c.moneda);
             });
           }
         });
@@ -1914,7 +1914,7 @@ async function exportarPDF() {
       if (Array.isArray(d.actividades)) {
         dActsCount += d.actividades.length;
         d.actividades.forEach(a => {
-          const aCost = convPdf(parseFloat(a.precio || a.costo || 0) || 0, a.moneda);
+          const aCost = convPdf(Number.parseFloat(a.precio || a.costo || 0) || 0, a.moneda);
           dCost += aCost * (numPersonas || 1);
           dActivitiesList.push({
             dia: a.dia || 1,
@@ -1933,26 +1933,26 @@ async function exportarPDF() {
       if (d.tramos && Array.isArray(d.tramos) && d.tramos.length > 0) {
         d.tramos.forEach(tramo => {
           const mult = tramo.modoPrecio === 'total' ? 1 : (numPersonas || 1);
-          const tTransp = convPdf(parseFloat(tramo.precio || 0) || 0, tramo.moneda);
-          const tAloj = convPdf(parseFloat(tramo.precioAlojamiento || 0) || 0, tramo.monedaAlojamiento);
+          const tTransp = convPdf(Number.parseFloat(tramo.precio || 0) || 0, tramo.moneda);
+          const tAloj = convPdf(Number.parseFloat(tramo.precioAlojamiento || 0) || 0, tramo.monedaAlojamiento);
           dCost += (tTransp + tAloj) * mult;
           if (tramo.medio || tramo.transporte) transportSummary = tramo.medio || tramo.transporte;
           if (tramo.alojamiento) lodgingSummary = tramo.alojamiento;
-          else if (tramo.precioAlojamiento && parseFloat(tramo.precioAlojamiento) > 0) lodgingSummary = t('cards.pdf_lodging');
+          else if (tramo.precioAlojamiento && Number.parseFloat(tramo.precioAlojamiento) > 0) lodgingSummary = t('cards.pdf_lodging');
         });
       } else if (sharedPdf && sharedPdf.tramo) {
         transportSummary = sharedPdf.tramo.medio || t('cards.pdf_shared_booking');
         lodgingSummary = sharedPdf.tramo.alojamiento || t('cards.pdf_included');
       } else {
-        dCost += (parseFloat(d.precioIda || 0) || 0) * (numPersonas || 1);
-        dCost += (parseFloat(d.precioAlojamiento || 0) || 0);
+        dCost += (Number.parseFloat(d.precioIda || 0) || 0) * (numPersonas || 1);
+        dCost += (Number.parseFloat(d.precioAlojamiento || 0) || 0);
         if (d.transporteIda) transportSummary = d.transporteIda;
         if (d.tipoAlojamiento) lodgingSummary = d.tipoAlojamiento;
       }
 
       if (Array.isArray(d.costosAdicionales)) {
         d.costosAdicionales.forEach(c => {
-          dCost += convPdf(parseFloat(c.precio || c.monto || 0) || 0, c.moneda);
+          dCost += convPdf(Number.parseFloat(c.precio || c.monto || 0) || 0, c.moneda);
         });
       }
 
@@ -1967,9 +1967,9 @@ async function exportarPDF() {
         transitPrev,
         transitLabel: d.transitoEtiqueta || t('cards.pdf_sailing'),
         transport: transportSummary,
-        priceIda: parseFloat(d.precioIda || 0) || 0,
+        priceIda: Number.parseFloat(d.precioIda || 0) || 0,
         lodging: lodgingSummary,
-        priceLodging: parseFloat(d.precioAlojamiento || 0) || 0,
+        priceLodging: Number.parseFloat(d.precioAlojamiento || 0) || 0,
         activities: dActivitiesList,
         costosExtra: Array.isArray(d.costosAdicionales) ? d.costosAdicionales : []
       });
@@ -1977,11 +1977,11 @@ async function exportarPDF() {
   }
 
   if (typeof vueltaPrecioGlobal !== 'undefined') {
-    totalBudget += (parseFloat(vueltaPrecioGlobal) || 0) * (numPersonas || 1);
+    totalBudget += (Number.parseFloat(vueltaPrecioGlobal) || 0) * (numPersonas || 1);
   }
   if (typeof vueltaCostosAdicionales !== 'undefined' && Array.isArray(vueltaCostosAdicionales)) {
     vueltaCostosAdicionales.forEach(vc => {
-      totalBudget += (parseFloat(vc.precio || vc.monto || 0) || 0);
+      totalBudget += (Number.parseFloat(vc.precio || vc.monto || 0) || 0);
     });
   }
 
@@ -2217,7 +2217,7 @@ async function exportarPDF() {
           dest.name,
           act.nombre || t('social.card_act_default'),
           act.hora || t('cards.pdf_flexible'),
-          (act.precio && parseFloat(act.precio) > 0) ? `${act.precio} ${currencySymbol}` : t('cards.pdf_free_incl'),
+          (act.precio && Number.parseFloat(act.precio) > 0) ? `${act.precio} ${currencySymbol}` : t('cards.pdf_free_incl'),
           act.completada ? t('cards.pdf_status_done') : t('cards.pdf_status_planned')
         ]);
       });

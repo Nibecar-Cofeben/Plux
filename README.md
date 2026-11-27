@@ -25,38 +25,6 @@ Organize multi-city trips day by day, calculate multi-currency budgets, import r
 
 ---
 
-## 🛠️ Quick Start (Run Locally)
-
-Plux is built with modern vanilla web technologies, requiring no complex build tools or compilers.
-
-### Prerequisites
-Any static file server or Python 3.
-
-### 1. Clone the repository
-```bash
-git clone https://github.com/Nibecar-Cofeben/Plux.git
-cd Plux
-```
-
-### 2. Start a local server
-Using Python:
-```bash
-python -m http.server 8088
-```
-
-Or using Node.js (`npx`):
-```bash
-npx serve -l 8088
-```
-
-### 3. Open in your browser
-Navigate to:
-```
-http://localhost:8088
-```
-
----
-
 ## 🏗️ Architecture & Tech Stack
 
 - **Frontend Core**: Vanilla JavaScript (ES6+ Modules), HTML5 semantic markup, CSS3 custom properties with responsive layout.

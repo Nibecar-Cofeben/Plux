@@ -733,6 +733,22 @@
   }
   window.handleArchivosMultimediaBitacora = handleArchivosMultimediaBitacora;
 
+  function _escHtml(str) {
+    if (typeof window.escapeHtml === 'function') return window.escapeHtml(str);
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  function _safeMedia(url, isVideo = false) {
+    if (typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (isVideo) {
+      return /^(https?:\/\/|data:video\/[a-z0-9.+-]+;base64,|blob:|\/|\.\/|static\/)/i.test(trimmed) ? trimmed : '';
+    }
+    if (typeof window.safeMediaUrl === 'function') return window.safeMediaUrl(trimmed);
+    return /^(https?:\/\/|data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,|\/|\.\/|static\/)/i.test(trimmed) ? trimmed : '';
+  }
+
   function renderizarPreviewMultimedia() {
     const container = document.getElementById('bitacora-preview-media');
     if (!container) return;
@@ -742,16 +758,18 @@
       const box = document.createElement('div');
       box.style.position = 'relative';
       box.style.display = 'inline-block';
+      const safeUrl = _safeMedia(m.url, m.type === 'video');
+      if (!safeUrl) return;
 
       if (m.type === 'video') {
         box.innerHTML = `
-          <video src="${m.url}" class="bitacora-media-item" style="pointer-events:none;"></video>
+          <video src="${_escHtml(safeUrl)}" class="bitacora-media-item" style="pointer-events:none;"></video>
           <span style="position:absolute; bottom:4px; left:4px; font-size:0.7rem; background:rgba(0,0,0,0.75); padding:2px 6px; border-radius:4px; color:#fff;">Video</span>
           <button type="button" onclick="window.eliminarMultimediaPendiente(${idx})" style="position:absolute; top:4px; right:4px; background:rgba(239,68,68,0.9); border:none; color:white; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:0.8rem;">&times;</button>
         `;
       } else {
         box.innerHTML = `
-          <img src="${m.url}" class="bitacora-media-item" alt="Vista previa">
+          <img src="${_escHtml(safeUrl)}" class="bitacora-media-item" alt="Vista previa">
           <button type="button" onclick="window.eliminarMultimediaPendiente(${idx})" style="position:absolute; top:4px; right:4px; background:rgba(239,68,68,0.9); border:none; color:white; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:0.8rem;">&times;</button>
         `;
       }
@@ -821,7 +839,8 @@
       destSelect.innerHTML = `<option value="">${genLbl}</option>`;
       window.destinos.forEach(d => {
         if (d && d.nombre) {
-          destSelect.innerHTML += `<option value="${d.nombre}">${d.nombre}</option>`;
+          const safeDest = _escHtml(d.nombre);
+          destSelect.innerHTML += `<option value="${safeDest}">${safeDest}</option>`;
         }
       });
     }
@@ -852,32 +871,37 @@
       if (Array.isArray(e.media) && e.media.length > 0) {
         mediaHtml = '<div class="bitacora-media-grid">';
         e.media.forEach(m => {
+          const safeUrl = _safeMedia(m.url, m.type === 'video');
+          if (!safeUrl) return;
           if (m.type === 'video') {
-            mediaHtml += `<video src="${m.url}" controls playsinline class="bitacora-video-player"></video>`;
+            mediaHtml += `<video src="${_escHtml(safeUrl)}" controls playsinline class="bitacora-video-player"></video>`;
           } else {
-            mediaHtml += `<img src="${m.url}" class="bitacora-media-item" alt="Media" onclick="if(window.abrirFotoGrande) window.abrirFotoGrande('${m.url}', '${e.titulo.replace(/'/g, "\\'")}')">`;
+            const safeTitleJs = _escHtml(String(e.titulo || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+            const safeUrlJs = _escHtml(safeUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+            mediaHtml += `<img src="${_escHtml(safeUrl)}" class="bitacora-media-item" alt="Media" onclick="if(window.abrirFotoGrande) window.abrirFotoGrande('${safeUrlJs}', '${safeTitleJs}')">`;
           }
         });
         mediaHtml += '</div>';
       }
 
       const destBadge = e.destino 
-        ? `<span class="bitacora-dest-badge"><i class="fa-solid fa-location-dot" style="margin-right:4px;"></i>${e.destino}</span>` 
+        ? `<span class="bitacora-dest-badge"><i class="fa-solid fa-location-dot" style="margin-right:4px;"></i>${_escHtml(e.destino)}</span>` 
         : '';
 
+      const safeId = _escHtml(String(e.id || '').replace(/[^a-zA-Z0-9_-]/g, ''));
       card.innerHTML = `
         <div class="bitacora-entry-header">
-          <h3 class="bitacora-entry-title">${e.titulo}</h3>
+          <h3 class="bitacora-entry-title">${_escHtml(e.titulo)}</h3>
           <div style="display:flex; gap:6px;">
-            <button onclick="window.pegarEntradaEnLienzo('${e.id}')" title="${pinTitle}" class="bitacora-action-btn"><i class="fa-solid fa-thumbtack"></i> ${pinBtn}</button>
-            <button onclick="window.eliminarEntradaBitacora('${e.id}')" title="${delTitle}" class="bitacora-action-btn bitacora-del-btn"><i class="fa-solid fa-trash-can"></i></button>
+            <button onclick="window.pegarEntradaEnLienzo('${safeId}')" title="${_escHtml(pinTitle)}" class="bitacora-action-btn"><i class="fa-solid fa-thumbtack"></i> ${_escHtml(pinBtn)}</button>
+            <button onclick="window.eliminarEntradaBitacora('${safeId}')" title="${_escHtml(delTitle)}" class="bitacora-action-btn bitacora-del-btn"><i class="fa-solid fa-trash-can"></i></button>
           </div>
         </div>
         <div class="bitacora-entry-meta">
-          <span><i class="fa-solid fa-calendar-day" style="margin-right:5px;"></i>${e.fecha || ''}</span>
+          <span><i class="fa-solid fa-calendar-day" style="margin-right:5px;"></i>${_escHtml(e.fecha || '')}</span>
           ${destBadge}
         </div>
-        <div class="bitacora-entry-body">${e.texto}</div>
+        <div class="bitacora-entry-body">${_escHtml(e.texto)}</div>
         ${mediaHtml}
       `;
       container.appendChild(card);

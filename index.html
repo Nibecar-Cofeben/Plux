@@ -2,23 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <script>
-    (function() {
-      var h = window.location.hostname;
-      var p = window.location.pathname;
-      if (h === 'nibecarcofeben.com' || h === 'nibecar-cofeben.web.app' || h === 'nibecarcofeben.web.app') {
-        if (p.startsWith('/plux')) {
-          var clean = p.replace(/^\/plux\/?/, '/');
-          window.location.replace('https://plux.nibecarcofeben.com' + (clean.startsWith('/') ? clean : '/' + clean) + window.location.search + window.location.hash);
-          return;
-        }
-      } else if (h === 'plux-nibecarcofeben.web.app') {
-        var cleanPlux = p.replace(/^\/plux\/?/, '/');
-        window.location.replace('https://plux.nibecarcofeben.com' + (cleanPlux.startsWith('/') ? cleanPlux : '/' + cleanPlux) + window.location.search + window.location.hash);
-        return;
-      }
-    })();
-  </script>
+  <script defer src="/js/plux-init.js?v=1790010000065"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Plux · Planificador Inteligente de Viajes e Itinerarios</title>
   
@@ -97,71 +81,24 @@
   }
   </script>
 
-  <!-- Google Analytics 4 (GA4) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-W5GX3XSCER"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    window.GA_MEASUREMENT_ID = 'G-W5GX3XSCER';
-    gtag('config', 'G-W5GX3XSCER', {
-      send_page_view: true,
-      app_name: 'Plux Web'
-    });
-    window.trackEvent = window.trackEvent || function(eventName, params) {
-      if (typeof window.gtag === 'function') {
-        window.gtag('event', eventName, params || {});
-      }
-      console.log('📊 [GA4 Event]', eventName, params);
-    };
-  </script>
-
   <base href="/" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="preconnect" href="https://unpkg.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
 
-  <link rel="stylesheet" href="/css/plux-herramientas.css">
-  <link rel="stylesheet" href="/css/plux-wrapped.css">
-  <link rel="stylesheet" href="/styles.css?v=1790010000050">
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-  <link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></noscript>
-  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
-  <script defer src="/js/jspdf.umd.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000050">
+  <link rel="stylesheet" href="/styles.css?v=1790010000065">
+  <link rel="stylesheet" href="/css/plux-doodles.css?v=1790010000065">
+  <link rel="preload" as="image" href="/static/doodles/curiosity.jpg?v=1790010000065" media="(min-width: 901px)" fetchpriority="high">
+  <link rel="preload" href="/css/plux-herramientas.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/css/plux-herramientas.css"></noscript>
+  <link rel="preload" href="/css/plux-wrapped.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/css/plux-wrapped.css"></noscript>
   
-  <!-- Firebase (compat) Local Offline SDK -->
-  <script defer src="/firebase/firebase-app-compat.js"></script>
-  <script defer src="/firebase/firebase-auth-compat.js"></script>
-  <script defer src="/firebase/firebase-database-compat.js"></script>
-  <script defer src="/firebase/firebase-firestore-compat.js"></script>
-  <!-- Plux Modular Architecture -->
-  <script defer src="/js/plux-i18n.js?v=1790010000050"></script>
-  <script defer src="/js/plux-i18n-catalog.js?v=1790010000050"></script>
-  <script defer src="/script.js?v=1790010000050"></script>
-  <script defer src="/js/plux-export-cards.js?v=1790010000050"></script>
-  <script defer src="/js/plux-templates.js?v=1790010000050"></script>
-  <script defer src="/js/plux-discover.js?v=1790010000050"></script>
-  <script defer src="/js/plux-social-chat.js?v=1790010000050"></script>
-  <script defer src="/js/plux-collab.js?v=1790010000050"></script>
-  <script defer src="/js/plux-doodles.js?v=1790010000050"></script>
-    <script defer src="/js/plux-herramientas.js?v=1790010000050"></script>
-  <script defer src="/js/plux-wrapped.js?v=1790010000050"></script>
-<script defer src="/plux-pro.js?v=1790010000050"></script>
-  <script defer src="/js/plux-offline.js?v=1790010000050"></script>
+  <!-- Firebase (compat) Local Offline SDK, FontAwesome & feature modules lazy-loaded on demand by plux-init.js -->
+  <!-- Plux Core Welcome Architecture -->
+  <script defer src="/js/plux-i18n.js?v=1790010000065"></script>
+  <script defer src="/script.js?v=1790010000065"></script>
+  <script defer src="/js/plux-doodles.js?v=1790010000065"></script>
 </head>
-<body class="theme-oscuro lang-es">
+<body class="theme-oscuro lang-es lang-es-active">
   <div id="toast-container"></div>
   <div id="ares-esc-banner"></div>
   <div id="bg-parallax"></div>
@@ -251,7 +188,7 @@
     </div>
     
     <!-- ESCENARIO HERO PANORAMICO: COSTADOS Y CENTRO EQUILIBRADOS -->
-    <div class="doodle-panoramic-stage disabled" id="doodlePanoramicStage">
+    <div class="doodle-panoramic-stage" id="doodlePanoramicStage">
       
       <!-- COSTADO IZQUIERDO: ILUSTRACION FLOTANDO COMO PARTE DEL FONDO (SIN BORDES) -->
       <div class="doodle-wing-left">
@@ -280,7 +217,7 @@
               </div>
             </div>
           </div>
-          <img id="doodleImgAsset" src="static/doodles/concorde.jpg" alt="Pluxee Art" width="320" height="200" fetchpriority="high" />
+          <img id="doodleImgAsset" src="static/doodles/curiosity.jpg?v=1790010000065" alt="Pluxee Art" width="270" height="210" fetchpriority="high" decoding="async" />
         </div>
       </div>
 
@@ -308,15 +245,15 @@
       <div class="doodle-wing-right">
         <div class="doodle-info-card">
           <button class="btn-card-dismiss" onclick="window.desactivarDoodle()" title="Ocultar Pluxee" data-i18n-title="welcome.doodle_hide">✕</button>
-          <div class="doodle-card-date" id="doodleCardDate"></div>
-          <div class="doodle-card-title" id="doodleCardTitle"></div>
-          <div class="doodle-card-desc" id="doodleCardDesc"></div>
+          <div class="doodle-card-date" id="doodleCardDate">🔴 26 DE NOVIEMBRE</div>
+          <div class="doodle-card-title" id="doodleCardTitle">Lanzamiento del Rover Curiosity a Marte</div>
+          <div class="doodle-card-desc" id="doodleCardDesc">Despega la misión más audaz de la NASA en busca de huellas de agua y habitabilidad en el Planeta Rojo.</div>
           <div class="doodle-card-actions">
             <button class="btn-card-info" onclick="window.abrirModalInfo()">
               <span data-i18n="welcome.doodle_history">ℹ️ Historia</span>
             </button>
             <button class="btn-card-action" id="btnCardAction" onclick="window.dispararAccionActual()" title="Activar interacción" data-i18n-title="welcome.doodle_click_hint">
-              <span id="btnCardActionText" data-i18n="welcome.doodle_try">✨ Probar</span>
+              <span id="btnCardActionText" data-i18n="welcome.doodle_try">📡 Disparar ChemCam</span>
             </button>
           </div>
         </div>
@@ -330,42 +267,50 @@
       <button class="main-btn" id="tripsBtn" data-i18n="trips_btn" onclick="window.abrirModalViajes()" style="flex: 1 1 45%;">Tus viajes</button>
       <button class="main-btn discover-btn" id="discoverBtn" data-i18n="discover_btn" onclick="window.abrirDescubrir()" style="flex: 1 1 100%; font-size: 1.5rem; padding: 25px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);">Descubrir Destinos</button>
       <button class="main-btn tools-btn" id="toolsBtn" data-i18n="tools_btn" onclick="window.abrirPanelHerramientas()" style="flex: 1 1 45%; opacity: 0.8;">Más herramientas</button>
-      <button class="main-btn" onclick="window.abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/pet.png" alt="Pluxy" width="24" height="24" loading="lazy" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
+      <button class="main-btn" onclick="window.abrirChatIA()" style="flex: 1 1 45%; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem; display:flex; align-items:center; justify-content:center; gap:8px;"><img src="/pet.png?v=1790010000065" alt="Pluxy" width="24" height="24" loading="lazy" decoding="async" style="width:24px; height:24px; border-radius:50%;"> <span id="pluxyBtnText">PLUXY</span></button>
     </div>
 
     <!-- Inspiration Cards -->
     <div class="inspo-section">
       <div class="inspo-title" id="inspoTitle" data-i18n="inspo_title">Inspiración · Destinos Populares</div>
       <div class="inspo-scroll">
-        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=400&q=80')" onclick="explorarInspo('Roma')">
+        <div class="inspo-card" onclick="explorarInspo('Roma')">
+          <img class="inspo-card-bg" src="https://images.unsplash.com/photo-1531572753322-ad063cecc140?auto=format&fit=crop&w=200&q=60" alt="" width="155" height="88" loading="lazy" decoding="async" fetchpriority="low" aria-hidden="true">
           <div class="inspo-card-flag">IT</div>
           <div class="inspo-card-label" data-i18n="cities.roma">Roma</div>
         </div>
-        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80')" onclick="explorarInspo('Tokio')">
+        <div class="inspo-card" onclick="explorarInspo('Tokio')">
+          <img class="inspo-card-bg" src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=200&q=60" alt="" width="155" height="88" loading="lazy" decoding="async" fetchpriority="low" aria-hidden="true">
           <div class="inspo-card-flag">JP</div>
           <div class="inspo-card-label" data-i18n="cities.tokio">Tokio</div>
         </div>
-        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=400&q=80')" onclick="explorarInspo('Buenos Aires')">
+        <div class="inspo-card" onclick="explorarInspo('Buenos Aires')">
+          <img class="inspo-card-bg" src="https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=200&q=60" alt="" width="155" height="88" loading="lazy" decoding="async" fetchpriority="low" aria-hidden="true">
           <div class="inspo-card-flag">AR</div>
           <div class="inspo-card-label" data-i18n="cities.buenos_aires">Bs. Aires</div>
         </div>
-        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?w=400&q=80')" onclick="explorarInspo('Nueva York')">
+        <div class="inspo-card" onclick="explorarInspo('Nueva York')">
+          <img class="inspo-card-bg" src="https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?auto=format&fit=crop&w=200&q=60" alt="" width="155" height="88" loading="lazy" decoding="async" fetchpriority="low" aria-hidden="true">
           <div class="inspo-card-flag">US</div>
           <div class="inspo-card-label" data-i18n="cities.nueva_york">Nueva York</div>
         </div>
-        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80')" onclick="explorarInspo('París')">
+        <div class="inspo-card" onclick="explorarInspo('París')">
+          <img class="inspo-card-bg" src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=200&q=60" alt="" width="155" height="88" loading="lazy" decoding="async" fetchpriority="low" aria-hidden="true">
           <div class="inspo-card-flag">FR</div>
           <div class="inspo-card-label" data-i18n="cities.paris">París</div>
         </div>
-        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=400&q=80')" onclick="explorarInspo('Bangkok')">
+        <div class="inspo-card" onclick="explorarInspo('Bangkok')">
+          <img class="inspo-card-bg" src="https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=200&q=60" alt="" width="155" height="88" loading="lazy" decoding="async" fetchpriority="low" aria-hidden="true">
           <div class="inspo-card-flag">TH</div>
           <div class="inspo-card-label" data-i18n="cities.bangkok">Bangkok</div>
         </div>
-        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1527838832700-5059252407fa?w=400&q=80')" onclick="explorarInspo('Dubái')">
+        <div class="inspo-card" onclick="explorarInspo('Dubái')">
+          <img class="inspo-card-bg" src="https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=200&q=60" alt="" width="155" height="88" loading="lazy" decoding="async" fetchpriority="low" aria-hidden="true">
           <div class="inspo-card-flag">AE</div>
           <div class="inspo-card-label" data-i18n="cities.dubai">Dubái</div>
         </div>
-        <div class="inspo-card" style="background-image:url('https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80')" onclick="explorarInspo('Barcelona')">
+        <div class="inspo-card" onclick="explorarInspo('Barcelona')">
+          <img class="inspo-card-bg" src="https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=200&q=60" alt="" width="155" height="88" loading="lazy" decoding="async" fetchpriority="low" aria-hidden="true">
           <div class="inspo-card-flag">ES</div>
           <div class="inspo-card-label" data-i18n="cities.barcelona">Barcelona</div>
         </div>
@@ -753,7 +698,7 @@
       <!-- Preview Image Area -->
       <div style="flex:1; overflow-y:auto; padding:16px; display:flex; justify-content:center; align-items:center; background:radial-gradient(circle at center, rgba(30,41,59,0.5) 0%, rgba(10,15,30,0.95) 100%); min-height:280px;">
         <div id="travelCardPreviewWrapper" style="position:relative; max-width:380px; width:100%; border-radius:16px; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.75), 0 0 25px rgba(56,189,248,0.25); border:1.5px solid rgba(255,255,255,0.12); display:flex; justify-content:center; align-items:center; background:#000;">
-          <img id="travelCardPreviewImg" src="" alt="Previsualización de Tarjeta" data-i18n-alt="cards.preview_alt" style="width:100%; height:auto; max-height:54vh; display:block; object-fit:contain;">
+          <img id="travelCardPreviewImg" src="" alt="Previsualización de Tarjeta" data-i18n-alt="cards.preview_alt" width="600" height="400" loading="lazy" decoding="async" style="width:100%; height:auto; max-height:54vh; display:block; object-fit:contain;">
         </div>
       </div>
 
@@ -921,8 +866,8 @@
 
   <!-- FLOATING CHAT BUTTON -->
   
-  <button id="chat-float-btn" onclick="abrirChatIA()" title="Pluxy" style="display:flex !important; align-items:center; justify-content:center; padding:0; background:transparent !important; border:none !important;">
-    <img src="/pet.png" alt="Pluxy">
+  <button id="chat-float-btn" onclick="abrirChatIA()" title="Pluxy" aria-label="Abrir chat con Pluxy" style="display:flex !important; align-items:center; justify-content:center; padding:0; background:transparent !important; border:none !important;">
+    <img src="/pet.png?v=1790010000065" alt="Pluxy" width="48" height="48" loading="lazy" decoding="async">
     <span class="chat-badge" id="chat-badge" style="display:none;">✨</span>
   </button>
 
@@ -931,7 +876,7 @@
     <div class="chat-container" style="position:relative;">
       <div class="chat-header" style="padding:14px 18px; background:linear-gradient(135deg, #6366f1, #8b5cf6); display:flex; align-items:center; justify-content:space-between;">
         <div style="display:flex; align-items:center; gap:12px;">
-          <img src="/pet.png" alt="Pluxy" style="height:42px; width:auto; flex-shrink:0; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3));">
+          <img src="/pet.png?v=1790010000065" alt="Pluxy" width="42" height="42" loading="lazy" decoding="async" style="height:42px; width:auto; flex-shrink:0; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3));">
           <div>
             <h3 id="pluxyAssistant" style="margin:0; font-size:1.05rem; font-weight:700; color:white; display:flex; align-items:center; gap:6px;">Pluxy <span data-i18n="pluxy.ai_badge" style="font-size:0.65rem; padding:2px 8px; background:rgba(255,255,255,0.25); border-radius:10px; font-weight:700; text-transform:uppercase;">Agente IA</span></h3>
             <div class="chat-header-info" id="pluxyHint" data-i18n="pluxy_hint" style="font-size:0.75rem; color:rgba(255,255,255,0.85); font-weight:500;">Tu asistente inteligente de viaje</div>
@@ -948,7 +893,7 @@
       </div>
       <div class="chat-messages" id="chat-messages">
         <div class="chat-msg ai" style="display:flex; gap:10px; align-items:flex-start;">
-          <img src="/pet.png" alt="Pluxy" style="height:28px; width:auto; flex-shrink:0; margin-top:2px;">
+          <img src="/pet.png?v=1790010000065" alt="Pluxy" width="28" height="28" loading="lazy" decoding="async" style="height:28px; width:auto; flex-shrink:0; margin-top:2px;">
           <div id="pluxyWelcomeText" data-i18n="pluxy.welcome_msg">¡Hola! Soy tu asistente de viaje Pluxy ✨. Cuéntame qué tienes en mente; puedo ayudarte a armar tu itinerario, crear la checklist, calcular costos o sugerir actividades.</div>
         </div>
       </div>
@@ -1455,7 +1400,7 @@
         <!-- Nibecar Cofeben Account Section (Inline /public/login) -->
         <div style="padding-bottom:15px; border-bottom:1px solid var(--border); text-align:left;">
           <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px;">
-            <img src="/static/Logo.png" alt="Nibecar Cofeben" style="width:26px; height:26px; object-fit:contain; border-radius:6px;" onerror="this.src='/pet.png'">
+            <img src="/static/Logo.png" alt="Nibecar Cofeben" width="26" height="26" loading="lazy" decoding="async" style="width:26px; height:26px; object-fit:contain; border-radius:6px;" onerror="this.src='/pet.png'">
             <span style="color:var(--blanco, #fff); font-weight:bold; font-size:1.05rem;">Nibecar Cofeben</span>
           </div>
 
@@ -2137,7 +2082,7 @@
         <button class="photo-lightbox-close" onclick="window.cerrarFotoGrande()">×</button>
       </div>
       <div class="photo-lightbox-body">
-        <img id="photoLightboxImg" src="" alt="Foto en grande">
+        <img id="photoLightboxImg" src="" alt="Foto en grande" width="800" height="600" loading="lazy" decoding="async">
       </div>
       <div class="photo-lightbox-footer">
         <button id="photoLightboxDownload" type="button" class="photo-lightbox-btn" onclick="const url = this.getAttribute('data-url'); if (url) window.open(url, '_blank');">
@@ -2183,7 +2128,7 @@
           <div style="font-size:0.75rem; font-weight:700; color:#818cf8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:6px;"></i> <span data-i18n="social.travel_assistant_hdr">Asistente de Viaje</span></div>
           <div class="plux-contact-item" onclick="window.iniciarChatConUsuario('Pluxy')">
             <div class="plux-chat-avatar plux-avatar-pluxy" style="width:38px; height:38px; display:flex; align-items:center; justify-content:center; padding:0;">
-              <img src="/pet.png" alt="Pluxy" style="width:24px; height:24px; object-fit:contain; display:block;">
+              <img src="/pet.png?v=1790010000065" alt="Pluxy" width="24" height="24" loading="lazy" decoding="async" style="width:24px; height:24px; object-fit:contain; display:block;">
             </div>
             <div style="flex:1; min-width:0;">
               <div style="color:#ffffff; font-weight:700; font-size:0.9rem;">Pluxy</div>

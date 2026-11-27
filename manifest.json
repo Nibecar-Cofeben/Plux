@@ -7,6 +7,9 @@
   "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "launch_handler": {
+    "client_mode": ["focus-existing", "auto"]
+  },
   "orientation": "any",
   "background_color": "#090d16",
   "theme_color": "#34d399",
@@ -16,16 +19,28 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/plux-logo.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/plux-logo.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
@@ -37,8 +52,8 @@
       "label": "Plux en Escritorio · Planificador de Viajes"
     },
     {
-      "src": "/og-banner.png",
-      "sizes": "1200x630",
+      "src": "/screenshot-narrow.png",
+      "sizes": "720x1280",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Plux en Móvil · Planificador de Viajes"
@@ -50,14 +65,26 @@
       "short_name": "Viajes",
       "description": "Abrir tus itinerarios guardados en el dispositivo",
       "url": "/?offline=1",
-      "icons": [{ "src": "/plux-logo.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Descubrir y Billetera",
       "short_name": "Descubrir",
       "description": "Explorar rutas y abrir tu billetera de vouchers offline",
       "url": "/?view=discover",
-      "icons": [{ "src": "/plux-logo.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

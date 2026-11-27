@@ -79,9 +79,9 @@
       dbInst.ref(`plux_chats/${roomKey}/messages`).push({
         ...messageData,
         timestamp: serverTs
-      }).catch(e => console.log('RTDB push message error:', e));
+      }).catch(e => console.warn('RTDB push message error:', e));
     } catch(e) {
-      console.log('Error enviando mensaje a RTDB:', e);
+      console.warn('Error enviando mensaje a RTDB:', e);
     }
   }
   window.pushMessageToRealtimeDb = pushMessageToRealtimeDb;
@@ -172,7 +172,7 @@
       };
 
       convRef.on('value', onVal, (err) => {
-        console.log('Conversations listener fallback:', err.message);
+        console.warn('Conversations listener fallback:', err.message);
       });
 
       unsubscribeUserIncomingConv = () => {
@@ -368,14 +368,14 @@
         };
 
         chatRef.on('value', onValueCallback, (err) => {
-          console.log('Chat RTDB listener fallback to local:', err.message);
+          console.warn('Chat RTDB listener fallback to local:', err.message);
         });
 
         pluxChatUnsubscribe = () => {
           try { chatRef.off('value', onValueCallback); } catch(e){}
         };
       } catch (err) {
-        console.log('Error conectando realtime chat RTDB:', err);
+        console.warn('Error conectando realtime chat RTDB:', err);
       }
     }
   }
@@ -1412,7 +1412,6 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
       });
       const resData = await res.json();
       if (resData.secure_url) {
-        console.log('✅ Foto subida exitosamente a Cloudinary:', resData.secure_url);
         return resData.secure_url;
       } else {
         console.warn('Cloudinary upload response:', resData);
@@ -1460,13 +1459,16 @@ Responde siempre con tono alegre, amigable, experto en viajes y emojis ✨✈️
         db.collection('plux_usuarios').doc(currentNickname).set({
           photoUrl: photoUrl,
           ultimaConexion: new Date().toISOString()
-        }, { merge: true }).catch(e => console.log('Firestore user photo update error:', e));
+        }, { merge: true }).catch(e => console.warn('Firestore user photo update error:', e));
       }
 
       // Actualizar vista previa en el modal de perfil
       const avatarEl = document.getElementById('profileAvatarInner');
       if (avatarEl) {
-        avatarEl.innerHTML = `<img src="${photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+        const safePhoto = typeof window.safeMediaUrl === 'function' ? window.safeMediaUrl(photoUrl) : photoUrl;
+        if (safePhoto) {
+          avatarEl.innerHTML = `<img src="${typeof window.escapeHtml === 'function' ? window.escapeHtml(safePhoto) : safePhoto}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+        }
       }
 
       updateUserButtonDisplay();

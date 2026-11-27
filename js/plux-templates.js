@@ -21,7 +21,7 @@
         subtitulo: "De aquí pa' allá!",
         lema: 'Se descubre andando.',
         especialidad: 'Carretera Austral · Patagonia Chilena',
-        avatar: '/static/embajadores/mochila-al-hombro.jpg',
+        avatar: '/static/embajadores/mochila-al-hombro.jpg?v=1790010000065',
         cover: 'https://images.unsplash.com/photo-1518182170546-07661fd94144?w=1200&q=80',
         nicknames: ['mochilaalhombro', 'mochila-al-hombro', 'mochilaalhombrodeaquipaalla'],
         email: 'mochilaalhombrodeaquipaalla@gmail.com',
@@ -1000,7 +1000,6 @@
           new Image().src = bingUrl;
           new Image().src = apiNowUrl;
         }
-        console.log('[IndexNow] Despacho automatico enviado a Bing para:', targetUrl);
       } catch (err) {
         console.warn('[IndexNow] Error despachando URL:', err);
       }
@@ -1334,7 +1333,6 @@
             publicUrl: canonicalPublicUrl,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           }).then(() => {
-            console.log("Plantilla publicada en Firestore:", tplId);
             if (typeof notificarIndexNow === 'function') {
               notificarIndexNow(canonicalPublicUrl);
             }

@@ -559,7 +559,6 @@
     }
     try {
       swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-      console.log('✈️ [Plux Offline] Service Worker activo:', swRegistration.scope);
 
       swRegistration.addEventListener('updatefound', () => {
         const newWorker = swRegistration.installing;
@@ -650,14 +649,15 @@
 
     const resolvedLocations = [];
     const citiesArr = Array.from(cityNames);
+    let completedCount = 0;
 
-    for (let i = 0; i < citiesArr.length; i++) {
-      const city = citiesArr[i];
-      if (txt) txt.textContent = t('offline.geocoding_progress', { city, i: i + 1, total: citiesArr.length });
+    await Promise.allSettled(citiesArr.map(async (city) => {
       let coord = lookupLocalCoordinate(city);
       if (!coord && typeof window.geocode === 'function') {
         coord = await window.geocode(city);
       }
+      completedCount++;
+      if (txt) txt.textContent = t('offline.geocoding_progress', { city, i: completedCount, total: citiesArr.length });
       if (coord && typeof coord.lat === 'number' && typeof coord.lon === 'number') {
         saveGeocodeToStorage(city.toLowerCase(), coord);
         resolvedLocations.push({ nombre: city, lat: coord.lat, lon: coord.lon });
@@ -671,7 +671,7 @@
           fetch(wikiUrl).catch(() => {});
         }
       }
-    }
+    }));
 
     // Guardar registro de preparación offline
     try {

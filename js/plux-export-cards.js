@@ -124,7 +124,6 @@ async function asegurarViajeEnNubeParaCompartir() {
         colaboradores_roles: { [ownerName]: 'owner' },
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
-      console.log("✅ Viaje garantizado en Firestore para compartir:", syncCode);
     } catch (err) {
       console.error("Error guardando viaje en Firestore antes de compartir:", err);
     }

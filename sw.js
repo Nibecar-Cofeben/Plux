@@ -3,7 +3,7 @@
  * App Shell + Librerías CDN + Caché de Tiles de Mapas + Caché de APIs de Viaje
  */
 
-const SW_VERSION = 'v8.0.25';
+const SW_VERSION = 'v8.0.26';
 const STATIC_CACHE = `plux-static-${SW_VERSION}`;
 const CDN_CACHE = `plux-cdn-${SW_VERSION}`;
 const TILES_CACHE = `plux-tiles-${SW_VERSION}`;
@@ -17,6 +17,11 @@ const APP_SHELL_FILES = [
   '/script.js',
   '/plux-pro.js',
   '/plux-logo.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-maskable-192.png',
+  '/icon-maskable-512.png',
+  '/screenshot-narrow.png',
   '/favicon.ico',
   '/pet.png',
   '/og-banner.png',
@@ -114,7 +119,7 @@ self.addEventListener('install', (event) => {
           try {
             const req = new Request(url, { cache: 'reload' });
             const res = await fetch(req);
-            if (res && res.ok) {
+            if (res && res.status === 200) {
               await staticCache.put(url, res);
             }
           } catch (err) {
@@ -128,7 +133,7 @@ self.addEventListener('install', (event) => {
         CDN_RESOURCES.map(async (url) => {
           try {
             const res = await fetch(url, { mode: 'cors' }).catch(() => fetch(url, { mode: 'no-cors' }));
-            if (res && (res.ok || res.type === 'opaque')) {
+            if (res && (res.status === 200 || res.type === 'opaque')) {
               await cdnCache.put(url, res);
             }
           } catch (err) {
@@ -215,7 +220,7 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         try {
           const networkRes = await fetchWithTimeout(request, 3200);
-          if (networkRes && networkRes.ok) {
+          if (networkRes && networkRes.status === 200) {
             const cache = await caches.open(STATIC_CACHE);
             cache.put('/index.html', networkRes.clone());
             return networkRes;
@@ -246,14 +251,14 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         const tileCache = await caches.open(TILES_CACHE);
         const cached = await tileCache.match(request);
-        if (cached && (cached.ok || cached.type === 'opaque')) return cached;
-        if (cached && !cached.ok && cached.type !== 'opaque') {
+        if (cached && (cached.status === 200 || cached.type === 'opaque')) return cached;
+        if (cached && cached.status !== 200 && cached.type !== 'opaque') {
           tileCache.delete(request);
         }
 
         try {
           const netRes = await fetch(request);
-          if (netRes && (netRes.ok || netRes.type === 'opaque')) {
+          if (netRes && (netRes.status === 200 || netRes.type === 'opaque')) {
             tileCache.put(request, netRes.clone());
             trimCache(TILES_CACHE, 750);
           }
@@ -295,7 +300,7 @@ self.addEventListener('fetch', (event) => {
         const apiCache = await caches.open(API_CACHE);
         try {
           const netRes = await fetchWithTimeout(request, 4000);
-          if (netRes && netRes.ok) {
+          if (netRes && netRes.status === 200) {
             apiCache.put(request, netRes.clone());
             return netRes;
           }
@@ -324,7 +329,7 @@ self.addEventListener('fetch', (event) => {
         if (isCodeAsset) {
           try {
             const netRes = await fetchWithTimeout(request, 2500);
-            if (netRes && netRes.ok) {
+            if (netRes && netRes.status === 200) {
               staticCache.put(url.pathname, netRes.clone());
               return netRes;
             }
@@ -338,7 +343,7 @@ self.addEventListener('fetch', (event) => {
         const cached = (await staticCache.match(request)) || (await staticCache.match(request, { ignoreSearch: true }));
         const fetchPromise = fetch(request)
           .then((netRes) => {
-            if (netRes && netRes.ok) {
+            if (netRes && netRes.status === 200) {
               staticCache.put(url.pathname, netRes.clone());
             }
             return netRes;
@@ -367,7 +372,7 @@ self.addEventListener('fetch', (event) => {
 
       try {
         const netRes = await fetch(request);
-        if (netRes && (netRes.ok || netRes.type === 'opaque')) {
+        if (netRes && (netRes.status === 200 || netRes.type === 'opaque')) {
           cdnCache.put(request, netRes.clone());
         }
         return netRes;
@@ -493,7 +498,7 @@ self.addEventListener('message', (event) => {
                 const existing = await tileCache.match(item.url);
                 if (!existing) {
                   const res = await fetch(item.url, { mode: 'cors' }).catch(() => fetch(item.url, { mode: 'no-cors' }));
-                  if (res && (res.ok || res.type === 'opaque')) {
+                  if (res && (res.status === 200 || res.type === 'opaque')) {
                     await tileCache.put(item.url, res);
                   }
                 }

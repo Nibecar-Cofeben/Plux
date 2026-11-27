@@ -375,9 +375,9 @@
         <div class="wrapped-card card-gem">
           <div class="wrapped-card-icon">💎</div>
           <div class="wrapped-card-label">${t('wrapped.card_gem_lbl')}</div>
-          <div class="wrapped-card-val" style="font-size:1.35rem; color:#fbbf24;">${data.joyaActividad.titulo}</div>
+          <div class="wrapped-card-val" style="font-size:1.35rem; color:#fbbf24;">${typeof window.escapeHtml === 'function' ? window.escapeHtml(data.joyaActividad.titulo) : data.joyaActividad.titulo}</div>
           <div class="wrapped-card-sub">
-            ${t('wrapped.card_gem_sub', { cost: formatGasto(data.joyaActividad.costo), city: data.joyaActividad.ciudad })}
+            ${t('wrapped.card_gem_sub', { cost: formatGasto(data.joyaActividad.costo), city: typeof window.escapeHtml === 'function' ? window.escapeHtml(data.joyaActividad.ciudad) : data.joyaActividad.ciudad })}
           </div>
         </div>
 
@@ -514,8 +514,8 @@
         <div class="story-giant-emoji">🏆</div>
         <h1 class="story-title">${t('wrapped.story_s4_title')}</h1>
         <div class="story-metric-box">
-          <div style="font-size:1.4rem; font-weight:800; color:#fbbf24; margin-bottom:4px;">${data.joyaActividad.titulo}</div>
-          <div class="story-metric-lbl">${data.joyaActividad.ciudad} · ${formatGasto(data.joyaActividad.costo)}</div>
+          <div style="font-size:1.4rem; font-weight:800; color:#fbbf24; margin-bottom:4px;">${typeof window.escapeHtml === 'function' ? window.escapeHtml(data.joyaActividad.titulo) : data.joyaActividad.titulo}</div>
+          <div class="story-metric-lbl">${typeof window.escapeHtml === 'function' ? window.escapeHtml(data.joyaActividad.ciudad) : data.joyaActividad.ciudad} · ${formatGasto(data.joyaActividad.costo)}</div>
         </div>
         <p class="story-desc">
           ${t('wrapped.story_s4_desc', { ach: data.logrosCount, notes: data.bitacoraCount })}
@@ -812,7 +812,9 @@
   };
 
   // Enganchar switchResumenTab si se carga la pestaña 'wrapped'
+  let resumenHookAttempts = 0;
   const checkResumenHook = setInterval(() => {
+    resumenHookAttempts++;
     if (typeof window.switchResumenTab === 'function') {
       const origSwitch = window.switchResumenTab;
       window.switchResumenTab = function(tabName) {
@@ -825,6 +827,8 @@
           }, 60);
         }
       };
+      clearInterval(checkResumenHook);
+    } else if (resumenHookAttempts >= 50) {
       clearInterval(checkResumenHook);
     }
   }, 100);

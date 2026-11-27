@@ -2525,16 +2525,18 @@
             const data = await resp.json();
             const page = data.query.pages[pageid];
             
-            const imgSrc = (page && page.thumbnail) ? page.thumbnail.source : '';
+            const rawImgSrc = (page && page.thumbnail) ? page.thumbnail.source : '';
+            const imgSrc = typeof window.safeMediaUrl === 'function' ? window.safeMediaUrl(rawImgSrc) : rawImgSrc;
             const summary = page ? page.extract : t('discover.wiki_no_desc');
+            const safeTituloJs = escapeHtml(String(titulo || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
             
             body.innerHTML = `
-                ${imgSrc ? `<img src="${imgSrc}" style="width:100%; border-radius:16px; margin-bottom:20px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">` : ''}
+                ${imgSrc ? `<img src="${escapeHtml(imgSrc)}" style="width:100%; border-radius:16px; margin-bottom:20px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">` : ''}
                 <h2 style="color:var(--rosa); margin-bottom:15px;">${escapeHtml(titulo)}</h2>
                 <p style="color:var(--texto); line-height:1.6; margin-bottom:25px; font-size:1.1rem;">${escapeHtml(summary)}</p>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-add-feed" style="flex:1; padding:15px;" onclick="añadirDesdeFeed('${titulo.replace(/'/g, "\\'")}'); document.getElementById('modal-detalle-lugar').style.display='none';">${escapeHtml(t('discover.add_to_trip'))}</button>
-                    <button class="btn-add-feed" style="background:var(--gris); flex:1;" onclick="window.open('https://${wikiLang}.wikipedia.org/?curid=${pageid}','_blank')">${escapeHtml(t('discover.wiki_view_btn'))}</button>
+                    <button class="btn-add-feed" style="flex:1; padding:15px;" onclick="añadirDesdeFeed('${safeTituloJs}'); document.getElementById('modal-detalle-lugar').style.display='none';">${escapeHtml(t('discover.add_to_trip'))}</button>
+                    <button class="btn-add-feed" style="background:var(--gris); flex:1;" onclick="window.open('https://${encodeURIComponent(wikiLang)}.wikipedia.org/?curid=${encodeURIComponent(pageid)}','_blank')">${escapeHtml(t('discover.wiki_view_btn'))}</button>
                 </div>
             `;
         } catch(e) {
@@ -2867,7 +2869,6 @@ function purgarVouchersCorruptosDelViajeActivo() {
           (!Array.isArray(d.dias) || d.dias.length === 0 || d.dias.every(dia => !Array.isArray(dia.eventos) || dia.eventos.length === 0 || dia.eventos.every(ev => esTituloBasuraOCR(ev.titulo))))
         );
         if (romaIdx >= 0) {
-          console.log('🧹 [Plux Importer] Purgando destino fantasma Roma creado por OCR:', destinos[romaIdx].nombre);
           destinos.splice(romaIdx, 1);
           changed = true;
         }

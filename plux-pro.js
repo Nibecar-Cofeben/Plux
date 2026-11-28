@@ -326,6 +326,9 @@
     }
 
     window.filtrarMapaPorDiaPlux = async function (destIdx, diaIdx, pillBtn) {
+        if (window.PluxRoutingMap && typeof window.PluxRoutingMap.selectDay === 'function') {
+            return window.PluxRoutingMap.selectDay(destIdx, diaIdx);
+        }
         const bar = document.getElementById('plux-map-day-filter-bar');
         if (bar) {
             bar.querySelectorAll('.plux-map-pill').forEach(b => {
@@ -405,6 +408,9 @@
     };
 
     function injectMapDayFilterBar() {
+        if (window.PluxRoutingMap && typeof window.PluxRoutingMap.renderMapView === 'function') {
+            return;
+        }
         const mapEl = document.getElementById('map');
         if (!mapEl || !mapEl.parentElement) return;
 
@@ -555,6 +561,9 @@
     };
 
     function renderSplitwiseSettlementCard() {
+        if (window.PluxSplitwise && typeof window.PluxSplitwise.renderPanel === 'function') {
+            return window.PluxSplitwise.renderPanel();
+        }
         const container = document.getElementById('presupuesto-balances-list') || document.getElementById('resumen-gastos-lista');
         if (!container) return;
 

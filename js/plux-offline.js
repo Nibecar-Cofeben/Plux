@@ -14,7 +14,99 @@
   const PENDING_SYNC_KEY = 'Plux_Pending_Cloud_Sync';
   const PENDING_SYNC_TS_KEY = 'Plux_Pending_Cloud_Sync_Ts';
   const PENDING_COLLAB_KEY = 'Plux_Pending_Collab_Sync';
+  const PENDING_IDB_COUNT_KEY = 'Plux_Pending_IDB_Outbox_Count';
+  const GROUP_FINANCE_KEY = 'Plux_GroupFinance_V1';
   const OFFLINE_READY_TRIPS_KEY = 'Plux_Offline_Prepared_Trips';
+
+  const OUTBOX_I18N = {
+    es: {
+      card_title: 'IndexedDB v7.1 (Outbox · Rutas · Bóveda)',
+      status_clean: '✅ Outbox al día (0 pendientes)',
+      status_offline_pending: '🟠 Offline · {n} cambio(s) en cola',
+      status_online_pending: '🔄 {n} cambio(s) pendientes en Outbox',
+      summary_line: 'Viajes espejados: {trips} · Outbox pendiente: {outbox} · Rutas: {routes} · Bóveda: {vault} docs ({kb} KB)',
+      sync_now_btn: '🔄 Sincronizar outbox ahora',
+      syncing_btn: '⏳ Sincronizando outbox...',
+      offline_queued_toast: '🟠 Sin conexión: tus cambios siguen protegidos en IndexedDB y se sincronizarán al volver internet.',
+      sync_now_done: '✅ Outbox sincronizado ({flushed} cambio(s)).',
+      sync_now_clean: '✅ No había cambios pendientes en el outbox.',
+      sync_now_remaining: '⚠️ Quedaron {remaining} cambio(s) en cola (reintentará automáticamente).'
+    },
+    en: {
+      card_title: 'IndexedDB v7.1 (Outbox · Routes · Vault)',
+      status_clean: '✅ Outbox up to date (0 pending)',
+      status_offline_pending: '🟠 Offline · {n} change(s) queued',
+      status_online_pending: '🔄 {n} change(s) pending in Outbox',
+      summary_line: 'Mirrored trips: {trips} · Pending outbox: {outbox} · Routes: {routes} · Vault: {vault} docs ({kb} KB)',
+      sync_now_btn: '🔄 Sync outbox now',
+      syncing_btn: '⏳ Syncing outbox...',
+      offline_queued_toast: '🟠 Offline: your changes are safely queued in IndexedDB and will sync once online.',
+      sync_now_done: '✅ Outbox synced ({flushed} change(s)).',
+      sync_now_clean: '✅ No pending changes in the outbox.',
+      sync_now_remaining: '⚠️ {remaining} change(s) still queued (will retry automatically).'
+    },
+    fr: {
+      card_title: 'IndexedDB v7.1 (Outbox · Itinéraires · Coffre)',
+      status_clean: '✅ Outbox à jour (0 en attente)',
+      status_offline_pending: '🟠 Hors ligne · {n} modification(s) en file',
+      status_online_pending: '🔄 {n} modification(s) en attente',
+      summary_line: 'Voyages en miroir : {trips} · Outbox : {outbox} · Itinéraires : {routes} · Coffre : {vault} docs ({kb} Ko)',
+      sync_now_btn: '🔄 Synchroniser l’outbox maintenant',
+      syncing_btn: '⏳ Synchronisation...',
+      offline_queued_toast: '🟠 Hors ligne : vos modifications restent enregistrées dans IndexedDB.',
+      sync_now_done: '✅ Outbox synchronisé ({flushed} modification(s)).',
+      sync_now_clean: '✅ Aucune modification en attente dans l’outbox.',
+      sync_now_remaining: '⚠️ {remaining} modification(s) encore en attente.'
+    },
+    de: {
+      card_title: 'IndexedDB v7.1 (Outbox · Routen · Tresor)',
+      status_clean: '✅ Outbox aktuell (0 ausstehend)',
+      status_offline_pending: '🟠 Offline · {n} Änderung(en) in Warteschlange',
+      status_online_pending: '🔄 {n} Änderung(en) in Outbox ausstehend',
+      summary_line: 'Gespiegelte Reisen: {trips} · Outbox: {outbox} · Routen: {routes} · Tresor: {vault} Dok. ({kb} KB)',
+      sync_now_btn: '🔄 Outbox jetzt synchronisieren',
+      syncing_btn: '⏳ Outbox wird synchronisiert...',
+      offline_queued_toast: '🟠 Offline: Änderungen sind sicher in IndexedDB gespeichert.',
+      sync_now_done: '✅ Outbox synchronisiert ({flushed} Änderung(en)).',
+      sync_now_clean: '✅ Keine ausstehenden Änderungen in der Outbox.',
+      sync_now_remaining: '⚠️ {remaining} Änderung(en) noch in der Warteschlange.'
+    },
+    it: {
+      card_title: 'IndexedDB v7.1 (Outbox · Percorsi · Cassaforte)',
+      status_clean: '✅ Outbox aggiornato (0 in coda)',
+      status_offline_pending: '🟠 Offline · {n} modifica/he in coda',
+      status_online_pending: '🔄 {n} modifica/he in attesa nell’Outbox',
+      summary_line: 'Viaggi salvati: {trips} · Outbox: {outbox} · Percorsi: {routes} · Cassaforte: {vault} doc ({kb} KB)',
+      sync_now_btn: '🔄 Sincronizza outbox ora',
+      syncing_btn: '⏳ Sincronizzazione outbox...',
+      offline_queued_toast: '🟠 Offline: le modifiche sono al sicuro in IndexedDB.',
+      sync_now_done: '✅ Outbox sincronizzato ({flushed} modifica/he).',
+      sync_now_clean: '✅ Nessuna modifica in coda nell’outbox.',
+      sync_now_remaining: '⚠️ {remaining} modifica/he ancora in coda.'
+    }
+  };
+
+  function getOutboxLang() {
+    let lang = '';
+    if (typeof window.currentLang === 'string' && window.currentLang) lang = window.currentLang;
+    else {
+      try { if (typeof currentLang !== 'undefined' && currentLang) lang = String(currentLang); } catch (e) {}
+    }
+    if (!lang) {
+      try { lang = localStorage.getItem('Plux_Lang') || 'es'; } catch (e) { lang = 'es'; }
+    }
+    const code = String(lang || 'es').toLowerCase().slice(0, 2);
+    return OUTBOX_I18N[code] ? code : 'es';
+  }
+
+  function tOutbox(key, params = {}) {
+    const dict = OUTBOX_I18N[getOutboxLang()] || OUTBOX_I18N.es;
+    let str = dict[key] || OUTBOX_I18N.es[key] || key;
+    Object.keys(params).forEach((k) => {
+      str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), String(params[k]));
+    });
+    return str;
+  }
 
   // ===========================================================================
   // 1. DICCIONARIO LOCAL DE +140 CIUDADES MUNDIALES (GEOCODING 100% OFFLINE)
@@ -308,8 +400,27 @@
     } catch (e) {}
   }
 
+  function getIdbPendingHint() {
+    let n = 0;
+    try {
+      if (window.PluxIDB && typeof window.PluxIDB.getPendingOutboxCountSync === 'function') {
+        n = Number(window.PluxIDB.getPendingOutboxCountSync()) || 0;
+      }
+    } catch (e) {}
+    try {
+      n = Math.max(n, Number(localStorage.getItem(PENDING_IDB_COUNT_KEY) || 0) || 0);
+    } catch (e) {}
+    return n;
+  }
+
   function hasPendingCloudSync() {
-    return localStorage.getItem(PENDING_SYNC_KEY) === '1' || Boolean(localStorage.getItem(PENDING_COLLAB_KEY));
+    try {
+      return localStorage.getItem(PENDING_SYNC_KEY) === '1'
+        || Boolean(localStorage.getItem(PENDING_COLLAB_KEY))
+        || getIdbPendingHint() > 0;
+    } catch (e) {
+      return getIdbPendingHint() > 0;
+    }
   }
   window.hasPendingCloudSync = hasPendingCloudSync;
   window.markPendingCloudSync = markPendingCloudSync;
@@ -319,7 +430,12 @@
 
     const hadPending = hasPendingCloudSync();
     try {
-      // 1. Subir perfil completo y viajes locales a Firestore
+      // 1. Vaciar cola Outbox de IndexedDB v7.1
+      if (window.PluxIDB && typeof window.PluxIDB.flushOutbox === 'function') {
+        await window.PluxIDB.flushOutbox(true);
+      }
+
+      // 2. Subir perfil completo y viajes locales a Firestore
       if (typeof window.sincronizarPerfil === 'function') {
         window.sincronizarPerfil();
       }
@@ -341,7 +457,14 @@
         }
       }
 
-      localStorage.removeItem(PENDING_SYNC_KEY);
+      let idbRemaining = 0;
+      if (window.PluxIDB && typeof window.PluxIDB.getPendingOutboxCount === 'function') {
+        try { idbRemaining = await window.PluxIDB.getPendingOutboxCount(); } catch (e) {}
+      }
+      if (idbRemaining === 0) {
+        localStorage.removeItem(PENDING_SYNC_KEY);
+        localStorage.removeItem(PENDING_IDB_COUNT_KEY);
+      }
       updateOfflineTopIndicator();
       if (typeof window.updateLiveCollabBadge === 'function') {
         window.updateLiveCollabBadge();
@@ -739,6 +862,17 @@
       geocodeCount = Math.max(geocodeCount, Object.keys(OFFLINE_WORLD_COORDS).length + Object.keys(savedGeo).length);
     } catch (e) {}
 
+    let idbStats = { tripsCount: 0, outboxPending: 0, routesCount: 0, vaultCount: 0, vaultBytes: 0 };
+    if (window.PluxIDB && typeof window.PluxIDB.getStorageStats === 'function') {
+      try { idbStats = await window.PluxIDB.getStorageStats(); } catch (e) {}
+    }
+    const vaultKb = Math.round((idbStats.vaultBytes || 0) / 1024);
+    const outboxCount = idbStats.outboxPending || 0;
+    const outboxStatusText = outboxCount === 0
+      ? tOutbox('status_clean')
+      : (navigator.onLine ? tOutbox('status_online_pending', { n: outboxCount }) : tOutbox('status_offline_pending', { n: outboxCount }));
+    const outboxColor = outboxCount === 0 ? '#34d399' : (navigator.onLine ? '#38bdf8' : '#f59e0b');
+
     statsEl.innerHTML = `
       <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border, #334155); border-radius:14px; padding:12px;">
         <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">${t('offline.stat_trips_title')}</div>
@@ -759,6 +893,16 @@
         <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">${t('offline.stat_shell_title', { version: stats.version })}</div>
         <div style="font-size:1.25rem; font-weight:800; color:var(--texto, #fff); margin-top:4px;">${t('offline.stat_shell_val', { count: stats.staticCount + stats.cdnCount })}</div>
         <div style="font-size:0.75rem; color:#34d399; margin-top:2px;">${t('offline.stat_shell_sub')}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border, #334155); border-radius:14px; padding:12px; grid-column: 1 / -1;">
+        <div style="font-size:0.74rem; color:var(--gris, #94a3b8); text-transform:uppercase; font-weight:700;">${tOutbox('card_title')}</div>
+        <div id="pluxOutboxStatusIndicator" style="font-size:0.92rem; font-weight:800; margin-top:6px; color:${outboxColor};">${outboxStatusText}</div>
+        <div style="font-size:0.78rem; color:var(--gris, #94a3b8); margin-top:4px;">
+          ${tOutbox('summary_line', { trips: idbStats.tripsCount || 0, outbox: idbStats.outboxPending, routes: idbStats.routesCount, vault: idbStats.vaultCount, kb: vaultKb })}
+        </div>
+        <button type="button" id="btnSyncOutboxNow" onclick="window.syncOutboxNow()" ${!navigator.onLine ? 'disabled' : ''} style="margin-top:10px; width:100%; padding:10px 14px; border-radius:12px; border:1px solid ${navigator.onLine ? 'rgba(56,189,248,0.5)' : 'var(--border, #334155)'}; background:${navigator.onLine ? 'rgba(56,189,248,0.14)' : 'rgba(255,255,255,0.03)'}; color:${navigator.onLine ? '#38bdf8' : 'var(--gris, #64748b)'}; font-weight:800; font-size:0.84rem; cursor:${navigator.onLine ? 'pointer' : 'not-allowed'}; opacity:${navigator.onLine ? '1' : '0.6'};">
+          ${tOutbox('sync_now_btn')}
+        </button>
       </div>
     `;
   }
@@ -851,6 +995,30 @@
   }
   window.abrirPanelOffline = abrirPanelOffline;
 
+  async function syncOutboxNow() {
+    if (!navigator.onLine) {
+      if (typeof window.showToast === 'function') window.showToast(tOutbox('offline_queued_toast'), 'info');
+      return { flushed: 0, remaining: getIdbPendingHint() };
+    }
+    const btn = document.getElementById('btnSyncOutboxNow');
+    if (btn) { btn.disabled = true; btn.textContent = tOutbox('syncing_btn'); }
+    let result = { flushed: 0, remaining: 0 };
+    try {
+      if (window.PluxIDB && typeof window.PluxIDB.flushOutbox === 'function') {
+        result = await window.PluxIDB.flushOutbox(true);
+      }
+      await flushOfflineSyncQueue(true);
+    } catch (e) {}
+    if (typeof window.showToast === 'function') {
+      if (result.remaining > 0) window.showToast(tOutbox('sync_now_remaining', { remaining: result.remaining }), 'info');
+      else if (result.flushed > 0) window.showToast(tOutbox('sync_now_done', { flushed: result.flushed }), 'success');
+      else window.showToast(tOutbox('sync_now_clean'), 'info');
+    }
+    if (document.getElementById('pluxOfflineCacheStatsGrid')) refreshCacheStatsInModal();
+    return result;
+  }
+  window.syncOutboxNow = syncOutboxNow;
+
   // ===========================================================================
   // 6. EVENTOS DE RED (ONLINE / OFFLINE) EN TIEMPO REAL
   // ===========================================================================
@@ -861,6 +1029,9 @@
     }
     if (typeof window.showToast === 'function') {
       window.showToast(t('offline.offline_toast'), 'info');
+    }
+    if (window.PluxIDB && typeof window.PluxIDB.installOfflineHooks === 'function') {
+      try { window.PluxIDB.installOfflineHooks(); } catch (e) {}
     }
   });
 

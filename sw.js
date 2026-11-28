@@ -3,7 +3,7 @@
  * App Shell + Librerías CDN + Caché de Tiles de Mapas + Caché de APIs de Viaje
  */
 
-const SW_VERSION = 'v8.0.27';
+const SW_VERSION = 'v8.1.2';
 const STATIC_CACHE = `plux-static-${SW_VERSION}`;
 const CDN_CACHE = `plux-cdn-${SW_VERSION}`;
 const TILES_CACHE = `plux-tiles-${SW_VERSION}`;
@@ -31,6 +31,7 @@ const APP_SHELL_FILES = [
   '/css/plux-herramientas.css',
   '/css/plux-wrapped.css',
   '/css/plux-doodles.css',
+  '/css/plux-v71.css',
   '/js/jspdf.umd.min.js',
   '/js/plux-i18n.js',
   '/js/plux-i18n-catalog.js',
@@ -43,6 +44,10 @@ const APP_SHELL_FILES = [
   '/js/plux-herramientas.js',
   '/js/plux-wrapped.js',
   '/js/plux-offline.js',
+  '/js/plux-v71-offline-db.js',
+  '/js/plux-v71-routing-map.js',
+  '/js/plux-v71-splitwise.js',
+  '/js/plux-v71-vault-ingest.js',
   '/firebase/firebase-app-compat.js',
   '/firebase/firebase-auth-compat.js',
   '/firebase/firebase-database-compat.js',
@@ -95,7 +100,11 @@ const MAP_TILE_HOSTS = [
   'a.tile.openstreetmap.org',
   'b.tile.openstreetmap.org',
   'c.tile.openstreetmap.org',
-  'basemaps.cartocdn.com'
+  'basemaps.cartocdn.com',
+  'a.basemaps.cartocdn.com',
+  'b.basemaps.cartocdn.com',
+  'c.basemaps.cartocdn.com',
+  'd.basemaps.cartocdn.com'
 ];
 
 const CACHEABLE_API_HOSTS = [
@@ -103,6 +112,7 @@ const CACHEABLE_API_HOSTS = [
   'api.open-meteo.com',
   'photon.komoot.io',
   'nominatim.openstreetmap.org',
+  'router.project-osrm.org',
   'es.wikipedia.org',
   'api.frankfurter.app',
   'open.er-api.com',
@@ -254,7 +264,11 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       (async () => {
         const tileCache = await caches.open(TILES_CACHE);
-        const cached = await tileCache.match(request);
+        let cached = await tileCache.match(request);
+        if (!cached && url.hostname.endsWith('basemaps.cartocdn.com')) {
+          const canonicalCarto = `https://a.basemaps.cartocdn.com${url.pathname.replace(/@2x(?=\.png$)/, '')}`;
+          cached = await tileCache.match(canonicalCarto);
+        }
         const isCachedValid = cached && (isWikimedia ? cached.status === 200 : (cached.status === 200 || cached.type === 'opaque'));
         if (isCachedValid) return cached;
         if (cached) {
@@ -266,7 +280,7 @@ self.addEventListener('fetch', (event) => {
           const canCache = netRes && (isWikimedia ? netRes.status === 200 : (netRes.status === 200 || netRes.type === 'opaque'));
           if (canCache) {
             void tileCache.put(request, netRes.clone()).catch(() => {});
-            void trimCache(TILES_CACHE, 750).catch(() => {});
+            void trimCache(TILES_CACHE, 900).catch(() => {});
           }
           return netRes;
         } catch (err) {
@@ -402,27 +416,32 @@ function lat2tile(lat, zoom) {
 
 function buildTileUrlsForCoordinate(lat, lon) {
   const urls = [];
-  // Zooms estratégicos que usa Plux en abrirMapa() y filtrarMapaPorDiaPlux()
-  const zoomConfigs = [
-    { z: 5, radius: 1 },  // Vista regional/país
-    { z: 11, radius: 1 }, // Vista área metropolitana
-    { z: 12, radius: 1 }, // Vista ciudad general
-    { z: 13, radius: 1 }, // Vista barrios (usada en filtrarMapaPorDiaPlux)
-    { z: 14, radius: 1 }  // Vista calles/eventos
+  // Zooms estratégicos acotados para precarga rápida en Modo Avión (ArcGIS World Street Map + OSM, sin API keys)
+  const tileZoomConfigs = [
+    { z: 5, radius: 0 },  // Vista regional (1 tile)
+    { z: 12, radius: 1 }, // Vista ciudad general (9 tiles)
+    { z: 13, radius: 1 }, // Vista barrios / día (9 tiles)
+    { z: 14, radius: 0 }  // Vista calles centro (1 tile)
   ];
 
-  zoomConfigs.forEach(({ z, radius }) => {
-    const cx = lon2tile(lon, z);
-    const cy = lat2tile(lat, z);
-    const maxTile = Math.pow(2, z);
-    for (let dx = -radius; dx <= radius; dx++) {
-      for (let dy = -radius; dy <= radius; dy++) {
-        const x = (cx + dx + maxTile) % maxTile;
-        const y = Math.max(0, Math.min(maxTile - 1, cy + dy));
-        urls.push(`https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}`);
+  const pushGrid = (configs, builder) => {
+    configs.forEach(({ z, radius }) => {
+      const cx = lon2tile(lon, z);
+      const cy = lat2tile(lat, z);
+      const maxTile = Math.pow(2, z);
+      for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          const x = (cx + dx + maxTile) % maxTile;
+          const y = Math.max(0, Math.min(maxTile - 1, cy + dy));
+          urls.push(builder(z, x, y));
+        }
       }
-    }
-  });
+    });
+  };
+
+  pushGrid(tileZoomConfigs, (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}`);
+  pushGrid(tileZoomConfigs, (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`);
+
   return urls;
 }
 

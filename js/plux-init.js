@@ -153,6 +153,7 @@
     if (featureModulesPromise) return featureModulesPromise;
     injectStylesheet('/css/plux-herramientas.css' + assetVersionSuffix);
     injectStylesheet('/css/plux-wrapped.css' + assetVersionSuffix);
+    injectStylesheet('/css/plux-v71.css' + assetVersionSuffix);
     var paths = [
       '/js/plux-i18n-catalog.js' + assetVersionSuffix,
       '/js/plux-export-cards.js' + assetVersionSuffix,
@@ -167,6 +168,14 @@
     featureModulesPromise = Promise.all(paths.map(function (src) {
       return injectScriptPromise(src);
     })).then(function () {
+      return injectScriptPromise('/js/plux-v71-offline-db.js' + assetVersionSuffix);
+    }).then(function () {
+      return Promise.all([
+        injectScriptPromise('/js/plux-v71-routing-map.js' + assetVersionSuffix),
+        injectScriptPromise('/js/plux-v71-splitwise.js' + assetVersionSuffix),
+        injectScriptPromise('/js/plux-v71-vault-ingest.js' + assetVersionSuffix)
+      ]);
+    }).then(function () {
       if (document.getElementById('listaPlantillas') && typeof window.renderPlantillasOficiales === 'function') {
         window.renderPlantillasOficiales();
       }
